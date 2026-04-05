@@ -383,85 +383,91 @@ class EmployeeController extends AbstractController
         return $response;
     }
 
-    #[Route('/employee/list', name: 'employee_list')]
-    public function list(Request $request, EntityManagerInterface $em): Response
+#[Route('/employee/list', name: 'employee_list')]
+    public function list(Request $request, EntityManagerInterface $em, \Symfony\Contracts\Cache\CacheInterface $cache): Response
     {
-        // 1. 获取组织架构树
+        // 1. 获取组织架构树 (带缓存)
+        $tree = $cache->get('employee_list_tree', function () use ($em) {
+            $deptRepo = $em->getRepository(Department::class);
+            return $deptRepo->childrenHierarchy(null, false, [
+                'decorate' => true,
+                'rootOpen' => static function (array $tree): ?string {
+                    if ([] !== $tree && 0 == $tree[0]['lvl']) {
+                        return '<ol class="ol-left-tree">';
+                    }
+
+                    if ($tree[0]['type'] === 'department') {
+                        return '<span class="tree-indent" style="display: none;"></span><ol class="sub-tree-content" style="display: none;">';
+                    }
+
+                    return '<span class="tree-indent"></span><ol class="sub-tree-content">';
+                },
+                'rootClose' => static function (array $child): ?string {
+                    return '</ol>';
+                },
+                'childOpen' => '<li>',
+                'childClose' => '</li>',
+                'nodeDecorator' => static function (array $node) {
+                    if ($node['type'] === 'corperations') {
+                        return '
+                        <div class="item-content scroll-item" data-type="corperations" data-id="' . ($node['id'] ?? '') . '">
+                            <div class="arrow-icon">
+                                <i class="fa-solid fa-caret-down"></i>
+                            </div>
+                            <div class="org-icon">
+                                <i class="fa-solid fa-building"></i>
+                            </div>
+                            <div class="org-name">
+                                <div class="org-text-content">' .
+                                $node['name']
+                                . '</div>
+                            </div>
+                        </div>
+                        ';
+                    }
+
+                    if ($node['type'] === 'company') {
+                        $arrayIcon = !empty($node['__children']) ? '<i class="fa-solid fa-caret-right"></i>' : '';
+
+                        return '
+                        <div class="item-content scroll-item" data-type="company" data-id="' . ($node['id'] ?? '') . '">
+                            <div class="arrow-icon">' . $arrayIcon . '</div>
+                            <div class="org-icon">
+                                <i class="fa-solid fa-building-ngo"></i>
+                            </div>
+                            <div class="org-name">
+                                <div class="org-text-content">' .
+                                $node['name']
+                                . '</div>
+                            </div>
+                        </div>
+                        ';
+                    }
+
+                    if ($node['type'] === 'department') {
+                        $arrayIcon = !empty($node['__children']) ? '<i class="fa-solid fa-caret-right"></i>' : '';
+
+                        return '
+                        <div class="item-content scroll-item" data-id="' . $node['id'] . '" data-type="department">
+                            <div class="arrow-icon">' . $arrayIcon . '</div>
+                            <div class="org-icon">
+                                <i class="fa-solid fa-sitemap"></i>
+                            </div>
+                            <div class="org-name">
+                                <div class="org-text-content">' .
+                                $node['name']
+                                . '</div>
+                            </div>
+                        </div>
+                        ';
+                    }
+
+                    return '<div class="item-content scroll-item">' . $node['name'] . '</div>';
+                },
+            ]);
+        });
+
         $deptRepo = $em->getRepository(Department::class);
-        $tree = $deptRepo->childrenHierarchy(null, false, [
-            'decorate' => true,
-            'rootOpen' => static function (array $tree): ?string {
-                if ([] !== $tree && 0 == $tree[0]['lvl']) {
-                    return '<ol class="ol-left-tree">';
-                }
-
-                if ($tree[0]['type'] === 'department') {
-                    return '<span class="tree-indent" style="display: none;"></span><ol class="sub-tree-content" style="display: none;">';
-                }
-
-                return '<span class="tree-indent"></span><ol class="sub-tree-content">';
-            },
-            'rootClose' => static function (array $child): ?string {
-                return '</ol>';
-            },
-            'childOpen' => '<li>',
-            'childClose' => '</li>',
-            'nodeDecorator' => static function (array $node) {
-                if ($node['type'] === 'corperations') {
-                    return '
-                    <div class="item-content scroll-item">
-                        <div class="arrow-icon">
-                            <i class="fa-solid fa-caret-down"></i>
-                        </div>
-                        <div class="org-icon">
-                            <i class="fa-solid fa-building"></i>
-                        </div>
-                        <div class="org-name">
-                            <div class="org-text-content">' .
-                            $node['name']
-                            . '</div>
-                        </div>
-                    </div>
-                    ';
-                }
-
-                if ($node['type'] === 'company') {
-                    $arrayIcon = !empty($node['__children']) ? '<i class="fa-solid fa-caret-right"></i>' : '';
-
-                    return '
-                    <div class="item-content scroll-item">
-                        <div class="arrow-icon">' . $arrayIcon . '</div>
-                        <div class="org-icon">
-                            <i class="fa-solid fa-building-user"></i>
-                        </div>
-                        <div class="org-name">
-                            <div class="org-text-content company" type="company" id="' . $node['id'] . '">' .
-                            $node['name']
-                            . '</div>
-                        </div>
-                    </div>
-                    ';
-                }
-
-                if ($node['type'] === 'department') {
-                    $arrayIcon = !empty($node['__children']) ? '<i class="fa-solid fa-caret-right"></i>' : '';
-
-                    return '
-                    <div class="item-content scroll-item">
-                        <div class="arrow-icon">' . $arrayIcon . '</div>
-                        <div class="org-icon">
-                            <i class="fa-solid fa-user-group"></i>
-                        </div>
-                        <div class="org-name">
-                            <div class="org-text-content department" type="department" id="' . $node['id'] . '">' .
-                            $node['name']
-                            . '</div>
-                        </div>
-                    </div>
-                    ';
-                }
-            }
-        ]);
 
         // 2. 分页获取员工列表
         $page = $request->query->getInt('page', 1);
@@ -667,6 +673,40 @@ class EmployeeController extends AbstractController
             'average_tenure' => ['value' => '3.2', 'unit' => 'years', 'change' => '+0%', 'trend' => 'up'],
         ];
 
+        // Get saved column widths
+        $columnWidths = [];
+        $widthPref = $prefRepo->findOneBy(['userId' => $userId, 'prefKey' => 'employee_list_column_widths']);
+        if ($widthPref) {
+            $widthVal = $widthPref->getPrefValue();
+            if (is_string($widthVal)) {
+                $widthVal = json_decode($widthVal, true);
+            }
+            if (is_array($widthVal)) {
+                $columnWidths = $widthVal;
+            }
+        }
+
+        // Calculate total table width from column widths
+        $defaultWidths = [
+            'name' => 140, 'employeeNo' => 100, 'department' => 150,
+            'position' => 120, 'employmentStatus' => 100, 'workStatus' => 100,
+            'hireDate' => 110, 'email' => 200, 'mobile' => 130,
+            'gender' => 60, 'birthDate' => 110, 'idCard' => 180, 'englishName' => 120
+        ];
+        $tableWidth = 40; // checkbox column
+        foreach ($columns as $key => $config) {
+            if (isset($columnWidths[$key])) {
+                $w = str_replace('px', '', $columnWidths[$key]);
+                $tableWidth += (int)$w;
+            } else {
+                $tableWidth += $defaultWidths[$key] ?? 120;
+            }
+        }
+        $tableWidth += 60; // actions column
+
+        // If no user widths saved, use auto layout
+        $hasUserWidths = !empty($columnWidths);
+
         return $this->render('employee/list.html.twig', [
             'tree' => $tree,
             'entities' => $employees,
@@ -674,6 +714,9 @@ class EmployeeController extends AbstractController
             'show_stats' => $showStats,
             'columns' => $columns,
             'allColumns' => $allColumns,
+            'columnWidths' => $columnWidths,
+            'tableWidth' => $hasUserWidths ? ($tableWidth . 'px') : 'auto',
+            'hasUserWidths' => $hasUserWidths,
             'currentSort' => $sort,
             'currentOrder' => $order,
             'pagination' => [

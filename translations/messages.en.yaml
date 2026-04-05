@@ -6,6 +6,7 @@ action:
   edit_success: Updated successfully
   reselect: Reselect
   add: Add
+  import: Import Employee
 employee:
   avatar:
     edit:
@@ -63,6 +64,9 @@ employee:
     account_status: Account Status
     entry_date: Joining Date
     gender: Gender
+    gender_value:
+      male: Male
+      female: Female
     birth_date: Date of Birth
     id_card: ID Card
     english_name: English Name
@@ -70,6 +74,7 @@ employee:
   employment_status:
     active: Active
     inactive: Inactive
+    probation: Probation
   work_status:
     working: Working
     vacation: Vacation

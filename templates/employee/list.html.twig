@@ -61,9 +61,11 @@
         .right-content {
             padding: 20px;
             background-color: #f8fafc;
+            overflow-x: auto;
         }
         .right-content .ef-table {
-            width: 100% !important;
+            width: auto !important;
+            min-width: auto;
         }
         
         /* Custom Checkbox */
@@ -329,13 +331,40 @@
         
         /* Custom Table Styles */
         .custom-table {
-            width: 100%;
+            width: {{ tableWidth|default('auto') }};
+            {% if hasUserWidths|default(false) %}
+            table-layout: fixed;
+            {% else %}
+            table-layout: auto;
+            {% endif %}
             border-collapse: separate;
             border-spacing: 0;
             background: #fff;
             border-radius: 12px;
             border: 1px solid #e2e8f0;
             overflow: hidden;
+        }
+        .custom-table th {
+            position: relative;
+        }
+        .custom-table th .column-resize-handle {
+            position: absolute;
+            right: 0;
+            top: 8px;
+            width: 4px;
+            height: calc(100% - 16px);
+            cursor: col-resize;
+            background: #e2e8f0;
+            z-index: 10;
+            border-radius: 2px;
+            transition: background 0.2s;
+        }
+        .custom-table th .column-resize-handle:hover,
+        .custom-table th .column-resize-handle.resizing {
+            background: #3b82f6;
+        }
+        .custom-table th .column-resize-handle:active {
+            opacity: 1;
         }
         .custom-table th {
             text-align: left;
@@ -347,6 +376,7 @@
             background: #fcfcfc;
             text-transform: uppercase;
             letter-spacing: 0.02em;
+            box-sizing: border-box;
         }
         .custom-table th i {
             margin-left: 6px;
@@ -361,6 +391,10 @@
             color: #334155;
             font-size: 13px;
             background: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-sizing: border-box;
         }
         .custom-table tr:last-child td {
             border-bottom: none;
@@ -526,6 +560,10 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+        }
+        .action-btn::before,
+        .action-btn::after {
+            content: none;
         }
         .action-btn:hover {
             background-color: #f1f5f9;
@@ -762,22 +800,27 @@
                 {# List View #}
                 <div id="listView">
                     <div>
-                        <table class="custom-table">
+                        <table class="custom-table" id="employeeTable">
                             <thead>
                                 <tr>
-                                    <th style="width: 40px;"><input type="checkbox" class="custom-checkbox" id="selectAll"></th>
-                                    {% for key, config in columns %}
-                                        <th>
-                                            {% set sortIcon = 'fa-sort' %}
-                                            {% if currentSort == key %}
-                                                {% set sortIcon = currentOrder == 'asc' ? 'fa-sort-up' : 'fa-sort-down' %}
-                                            {% endif %}
-                                            <a href="{{ path('employee_list', app.request.query.all|merge({'sort': key, 'order': currentSort == key and currentOrder == 'desc' ? 'asc' : 'desc'})) }}" style="color: inherit; text-decoration: none; display: flex; align-items: center;">
-                                                {{ config.label|trans }} <i class="fa-solid {{ sortIcon }}" style="margin-left: 6px;"></i>
-                                            </a>
+                                    <th style="width: 40px;" data-col-key="checkbox"><input type="checkbox" class="custom-checkbox" id="selectAll"></th>
+{% for key, config in columns %}
+                                        {% set defaultWidths = {'name': '140px', 'employeeNo': '100px', 'department': '150px', 'position': '120px', 'employmentStatus': '100px', 'workStatus': '100px', 'hireDate': '110px', 'email': '200px', 'mobile': '130px', 'gender': '60px', 'birthDate': '110px', 'idCard': '180px', 'englishName': '120px'} %}
+                                        {% set colWidth = columnWidths[key]|default(defaultWidths[key]|default('120px')) %}
+                                        <th style="width: {{ colWidth }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" data-col-key="{{ key }}">
+                                            <div style="display: flex; align-items: center; width: 100%;">
+                                                <a href="javascript:void(0)" onclick="sortColumn('{{ key }}', '{{ currentSort == key and currentOrder == 'desc' ? 'asc' : 'desc' }}')" style="color: inherit; text-decoration: none; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                    {% set sortIcon = 'fa-sort' %}
+                                                    {% if currentSort == key %}
+                                                        {% set sortIcon = currentOrder == 'asc' ? 'fa-sort-up' : 'fa-sort-down' %}
+                                                    {% endif %}
+                                                    {{ config.label|trans }} <i class="fa-solid {{ sortIcon }}" style="margin-left: 6px;"></i>
+                                                </a>
+                                            </div>
+                                            <div class="column-resize-handle" data-resize-key="{{ key }}"></div>
                                         </th>
                                     {% endfor %}
-                                    <th></th>
+                                    <th style="width: 60px;" data-col-key="actions"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1023,7 +1066,7 @@
     <button class="btn outline medium" type="button" onclick="closeImportModalLogic()">关闭</button>
 {% endset %}
 
-{{ ui.modal('importModal', '导入员工'|trans({}, 'messages'), importModalBody, importModalFooter, {
+{{ ui.modal('importModal', 'action.import'|trans, importModalBody, importModalFooter, {
     'width': '500px',
     'onClose': 'closeImportModalLogic()'
 }) }}
@@ -1428,6 +1471,117 @@
         loadContent(url.toString());
     }
 
+    // Sort Column with Debounce
+    let sortDebounceTimer = null;
+    function sortColumn(key, order) {
+        if (sortDebounceTimer) return;
+        sortDebounceTimer = setTimeout(() => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', key);
+            url.searchParams.set('order', order);
+            loadContent(url.toString());
+            sortDebounceTimer = null;
+        }, 300);
+    }
+
+    // Column Resize Functionality
+    let isResizing = false;
+    let currentResizeCol = null;
+    let startX = 0;
+    let startWidth = 0;
+    let saveWidthDebounce = null;
+    const userColumnWidths = {{ columnWidths|json_encode|raw }};
+    let startTableWidth = 0;
+
+    document.addEventListener('mousedown', function(e) {
+        const resizeHandle = e.target.closest('.column-resize-handle');
+        if (resizeHandle) {
+            e.preventDefault();
+            e.stopPropagation();
+            isResizing = true;
+            currentResizeCol = resizeHandle.dataset.resizeKey;
+            
+            const th = resizeHandle.closest('th');
+            const rect = th.getBoundingClientRect();
+            startX = rect.right;
+            startWidth = th.offsetWidth;
+            
+            const table = document.getElementById('employeeTable');
+            if (table) {
+                startTableWidth = parseInt(table.style.width) || table.offsetWidth;
+            }
+            
+            resizeHandle.classList.add('resizing');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!isResizing) return;
+        
+        const table = document.getElementById('employeeTable');
+        if (!table) return;
+        
+        const th = table.querySelector(`th[data-col-key="${currentResizeCol}"]`);
+        if (!th) return;
+        
+        const diff = startX - e.clientX;
+        const newWidth = Math.max(60, startWidth - diff);
+        const widthDelta = newWidth - startWidth;
+        
+        th.style.width = newWidth + 'px';
+        table.style.width = (startTableWidth + widthDelta) + 'px';
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (isResizing) {
+            const resizeHandle = document.querySelector(`.column-resize-handle[data-resize-key="${currentResizeCol}"]`);
+            if (resizeHandle) {
+                resizeHandle.classList.remove('resizing');
+            }
+            
+            // Save widths with debounce
+            if (saveWidthDebounce) clearTimeout(saveWidthDebounce);
+            saveWidthDebounce = setTimeout(() => {
+                saveColumnWidths();
+            }, 500);
+            
+            isResizing = false;
+            currentResizeCol = null;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+    });
+
+    function saveColumnWidths() {
+        const table = document.getElementById('employeeTable');
+        if (!table) return;
+        
+        const widths = {};
+        table.querySelectorAll('th[data-col-key]').forEach(th => {
+            const key = th.dataset.colKey;
+            if (key && key !== 'checkbox' && key !== 'actions') {
+                const w = th.style.width;
+                widths[key] = (w && w.endsWith('px')) ? w : th.offsetWidth + 'px';
+            }
+        });
+        
+        // Save to preference
+        const data = {
+            key: 'employee_list_column_widths',
+            value: widths
+        };
+        
+        fetch('/api/user/preference/save', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => {
+            if (!res.ok) console.error('Failed to save column widths');
+        });
+    }
+
     // PJAX Loading Function
     async function loadContent(url, updateHistory = true) {
         const rightContent = document.querySelector('.right-content');
@@ -1571,9 +1725,9 @@
             e.preventDefault();
             e.stopPropagation(); 
             
-            const $this = $(this);
-            const type = $this.attr('type') || 'corperations'; 
-            const id = $this.attr('id');
+            const $this = $(this).closest('.item-content');
+            const type = $this.data('type') || 'corperations'; 
+            const id = $this.data('id');
             
             let newUrl = window.location.pathname;
             const params = new URLSearchParams(window.location.search);

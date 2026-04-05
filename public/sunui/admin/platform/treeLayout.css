@@ -113,6 +113,10 @@
   background-color: #f0f8ff;
 }
 
+.org-text-content:hover {
+  cursor: pointer;
+}
+
 .org-text-content.chosen {
   background-color: #f0f8ff;
 }

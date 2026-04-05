@@ -5,6 +5,7 @@ action:
   saving: 保存中...
   edit_success: 更新成功
   reselect: 重新选择
+  import: 导入员工
 employee:
   list:
     customize_columns: 自定义列
@@ -89,6 +90,9 @@ employee:
     account_status: 账号状态
     entry_date: 入职日期
     gender: 性别
+    gender_value:
+      male: 男
+      female: 女
     birth_date: 出生日期
     id_card: 身份证号
     english_name: 英文名
@@ -112,6 +116,7 @@ employee:
   employment_status:
     active: 在职
     inactive: 离职
+    probation: 试用期
   work_status:
     working: 工作
     vacation: 休假
