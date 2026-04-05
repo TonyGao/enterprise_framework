@@ -87,13 +87,17 @@ final class ExportEmployeeMessageHandler
             $column++;
         }
 
-        // Apply Header Styling
+        // Enable autofilter for header row
         $lastColumn = chr(ord('A') + count($headers) - 1);
+        $sheet->setAutoFilter('A1:' . $lastColumn . '1');
+
+        // Feishu/Lark-style Header Styling
         $headerStyle = [
             'font' => [
                 'bold' => true,
-                'color' => ['argb' => 'FFFFFFFF'],
-                'size' => 12,
+                'color' => ['argb' => 'FF1F2328'],
+                'size' => 13,
+                'name' => 'PingFang SC',
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -102,16 +106,16 @@ final class ExportEmployeeMessageHandler
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => 'FFDDDDDD'],
+                    'color' => ['argb' => 'FFE3E5E8'],
                 ],
             ],
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
-                'color' => ['argb' => 'FF0066CC'],
+                'color' => ['argb' => 'FFF1F3F4'],
             ],
         ];
         $sheet->getStyle('A1:' . $lastColumn . '1')->applyFromArray($headerStyle);
-        $sheet->getRowDimension(1)->setRowHeight(30);
+        $sheet->getRowDimension(1)->setRowHeight(36);
 
         // Set Data
         $row = 2;
@@ -145,33 +149,59 @@ final class ExportEmployeeMessageHandler
             $row++;
         }
 
-        // Apply Data Styling
+        // Apply Feishu/Lark-style Data Styling
         if ($row > 2) {
             $dataStyle = [
+                'font' => [
+                    'color' => ['argb' => 'FF464952'],
+                    'size' => 12,
+                    'name' => 'PingFang SC',
+                ],
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
-                        'color' => ['argb' => 'FFE5E5EA'],
+                        'color' => ['argb' => 'FFE3E5E8'],
                     ],
                 ],
                 'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_LEFT,
                     'vertical' => Alignment::VERTICAL_CENTER,
                 ],
             ];
             $sheet->getStyle('A2:' . $lastColumn . ($row - 1))->applyFromArray($dataStyle);
 
             for ($i = 2; $i < $row; $i++) {
-                $sheet->getRowDimension($i)->setRowHeight(25);
+                $sheet->getRowDimension($i)->setRowHeight(32);
                 if ($i % 2 === 0) {
                     $sheet->getStyle('A' . $i . ':' . $lastColumn . $i)->getFill()
                           ->setFillType(Fill::FILL_SOLID)
-                          ->getStartColor()->setARGB('FFF9FAFB');
+                          ->getStartColor()->setARGB('FFFFFFFF');
+                } else {
+                    $sheet->getStyle('A' . $i . ':' . $lastColumn . $i)->getFill()
+                          ->setFillType(Fill::FILL_SOLID)
+                          ->getStartColor()->setARGB('FFF6F8FA');
                 }
             }
         }
 
-        foreach (range('A', $lastColumn) as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
+        // Set column widths (Feishu-style)
+        $columnWidths = [
+            'A' => 12,  // 工号
+            'B' => 10,  // 姓名
+            'C' => 12,  // 英文名
+            'D' => 18,  // 部门
+            'E' => 12,  // 职位
+            'F' => 6,   // 性别
+            'G' => 24,  // 邮箱
+            'H' => 14,  // 手机号
+            'I' => 10,  // 在职状态
+            'J' => 10,  // 工作状态
+            'K' => 12,  // 入职日期
+            'L' => 12,  // 出生日期
+            'M' => 20,  // 身份证号
+        ];
+        foreach ($columnWidths as $col => $width) {
+            $sheet->getColumnDimension($col)->setWidth($width);
         }
 
         $writer = new Xlsx($spreadsheet);

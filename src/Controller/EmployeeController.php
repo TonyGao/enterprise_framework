@@ -160,15 +160,113 @@ class EmployeeController extends AbstractController
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        $headers = ['工号', '姓名', '英文名', '邮箱', '手机号', '性别(男/女)'];
+        $headers = ['工号', '姓名', '英文名', '部门', '职位', '性别', '邮箱', '手机号', '在职状态', '工作状态', '入职日期', '出生日期', '身份证号'];
         $column = 'A';
         foreach ($headers as $header) {
             $sheet->setCellValue($column . '1', $header);
             $column++;
         }
+
+        // Enable autofilter
+        $lastColumn = chr(ord('A') + count($headers) - 1);
+        $sheet->setAutoFilter('A1:' . $lastColumn . '1');
+
+        // Feishu/Lark-style Header Styling
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['argb' => 'FF1F2328'],
+                'size' => 13,
+                'name' => 'PingFang SC',
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FFE3E5E8'],
+                ],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'color' => ['argb' => 'FFF1F3F4'],
+            ],
+        ];
+        $sheet->getStyle('A1:' . $lastColumn . '1')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(1)->setRowHeight(36);
+
+        // Add sample data rows with styling
+        $sampleData = [
+            ['EMP001', '张三', 'Zhang San', '技术部', '工程师', '男', 'zhangsan@company.com', '13800138000', '在职', '工作', '2024-01-15', '1990-05-20', '110101199005201234'],
+            ['EMP002', '李四', 'Li Si', '市场部', '经理', '女', 'lisi@company.com', '13800138001', '在职', '休假', '2023-06-01', '1992-08-15', '110101199208151234'],
+        ];
+        $row = 2;
+        foreach ($sampleData as $data) {
+            $col = 'A';
+            foreach ($data as $value) {
+                $sheet->setCellValue($col . $row, $value);
+                $col++;
+            }
+            $row++;
+        }
+
+        // Apply data styling
+        $dataStyle = [
+            'font' => [
+                'color' => ['argb' => 'FF464952'],
+                'size' => 12,
+                'name' => 'PingFang SC',
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FFE3E5E8'],
+                ],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+        ];
+        $sheet->getStyle('A2:' . $lastColumn . ($row - 1))->applyFromArray($dataStyle);
+
+        for ($i = 2; $i < $row; $i++) {
+            $sheet->getRowDimension($i)->setRowHeight(32);
+            if ($i % 2 === 0) {
+                $sheet->getStyle('A' . $i . ':' . $lastColumn . $i)->getFill()
+                      ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                      ->getStartColor()->setARGB('FFFFFFFF');
+            } else {
+                $sheet->getStyle('A' . $i . ':' . $lastColumn . $i)->getFill()
+                      ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                      ->getStartColor()->setARGB('FFF6F8FA');
+            }
+        }
+
+        // Set column widths
+        $columnWidths = [
+            'A' => 12,  // 工号
+            'B' => 10,  // 姓名
+            'C' => 12,  // 英文名
+            'D' => 18,  // 部门
+            'E' => 12,  // 职位
+            'F' => 6,   // 性别
+            'G' => 24,  // 邮箱
+            'H' => 14,  // 手机号
+            'I' => 10,  // 在职状态
+            'J' => 10,  // 工作状态
+            'K' => 12,  // 入职日期
+            'L' => 12,  // 出生日期
+            'M' => 20,  // 身份证号
+        ];
+        foreach ($columnWidths as $col => $width) {
+            $sheet->getColumnDimension($col)->setWidth($width);
+        }
         
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $fileName = '导入模板.xlsx';
+        $fileName = '员工导入模板.xlsx';
         $temp_file = tempnam(sys_get_temp_dir(), $fileName);
         $writer->save($temp_file);
 

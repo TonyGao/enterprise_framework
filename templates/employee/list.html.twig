@@ -979,7 +979,7 @@
 
 {% set importModalBody %}
     <div style="margin-bottom: 20px; font-size: 14px; color: #475569;">
-        请先 <a href="{{ path('employee_import_template') }}" style="color: #3b82f6; text-decoration: none; font-weight: 500;"><i class="fa-solid fa-download"></i> 下载导入模板</a>，按照模板格式填写后上传。
+        请先 <a href="{{ path('employee_import_template') }}" target="_blank" style="color: #3b82f6; text-decoration: none; font-weight: 500;"><i class="fa-solid fa-download"></i> 下载导入模板</a>，按照模板格式填写后上传。
     </div>
 
     <div id="uploadArea" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 40px 20px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.3s;"
@@ -1049,8 +1049,7 @@
             success: function(res) {
                 if (window.$.alert) {
                     window.$.alert.success(res.message || '导出任务已提交，系统将在后台处理。生成完毕后会自动发送通知。', {
-                        title: '提示',
-                        closable: true
+                        title: '提示'
                     });
                 } else {
                     alert(res.message || '导出任务已提交，系统将在后台处理。生成完毕后会自动发送通知。');
