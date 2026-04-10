@@ -51,6 +51,12 @@ class PasswordPolicy
     #[ORM\Column(type: 'integer', options: ['default' => 30])]
     private int $lockMinutes = 30;
 
+    #[ORM\Column(type: 'string', length: 255, options: ['default' => 'Welcome@2024'])]
+    private string $defaultPassword = 'Welcome@2024';
+
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $forceResetPasswordOnFirstLogin = true;
+
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $createdAt = null;
 
@@ -202,6 +208,30 @@ class PasswordPolicy
     public function setLockMinutes(int $lockMinutes): static
     {
         $this->lockMinutes = $lockMinutes;
+
+        return $this;
+    }
+
+    public function getDefaultPassword(): string
+    {
+        return $this->defaultPassword;
+    }
+
+    public function setDefaultPassword(string $defaultPassword): static
+    {
+        $this->defaultPassword = $defaultPassword;
+
+        return $this;
+    }
+
+    public function isForceResetPasswordOnFirstLogin(): bool
+    {
+        return $this->forceResetPasswordOnFirstLogin;
+    }
+
+    public function setForceResetPasswordOnFirstLogin(bool $forceResetPasswordOnFirstLogin): static
+    {
+        $this->forceResetPasswordOnFirstLogin = $forceResetPasswordOnFirstLogin;
 
         return $this;
     }

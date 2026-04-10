@@ -2,6 +2,11 @@
 
 namespace App\Controller\Test;
 
+use App\Repository\Organization\CompanyRepository;
+use App\Repository\Organization\DepartmentRepository;
+use App\Repository\Organization\EmployeeRepository;
+use App\Repository\Organization\PositionRepository;
+use App\Repository\Security\PasswordPolicyRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -224,9 +229,39 @@ class EmployeeTestController extends AbstractController
     }
 
     #[Route('/test/employee/onboarding', name: 'test_employee_onboarding')]
-    public function onboarding(): Response
+    public function onboarding(
+        CompanyRepository $companyRepo,
+        DepartmentRepository $departmentRepo,
+        PositionRepository $positionRepo,
+        EmployeeRepository $employeeRepo,
+        PasswordPolicyRepository $passwordPolicyRepo
+    ): Response
     {
-        return $this->render('test/employee/onboarding.html.twig', []);
+        $companies = $companyRepo->createQueryBuilder('c')
+            ->where('c.lvl > :lvl')
+            ->setParameter('lvl', 0)
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+        $departments = $departmentRepo->findAll();
+        $positions = $positionRepo->findAll();
+        
+        $managers = $employeeRepo->createQueryBuilder('e')
+            ->select('e.id', 'e.name')
+            ->orderBy('e.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+        
+        $passwordPolicy = $passwordPolicyRepo->findOneBy([]);
+        $defaultPassword = $passwordPolicy?->getDefaultPassword() ?? 'Welcome@123';
+
+        return $this->render('test/employee/onboarding.html.twig', [
+            'companies' => $companies,
+            'departments' => $departments,
+            'positions' => $positions,
+            'managers' => $managers,
+            'defaultPassword' => $defaultPassword,
+        ]);
     }
 
     #[Route('/test/employee/dashboard', name: 'test_employee_dashboard')]

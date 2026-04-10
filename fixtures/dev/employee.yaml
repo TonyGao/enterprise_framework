@@ -7,7 +7,7 @@ App\Entity\Organization\Employee:
     englishName: <firstName()>
     email: 'emp_<current()>\@example.com'
     mobile: <chineseMobileNumber()>
-    gender: <randomElement(['Male', 'Female'])>
+    gender: <randomElement(['male', 'female'])>
     birthDate: <dateTimeBetween('-50 years', '-20 years')>
     idCard: <regexify('[1-9][0-9]{5}(19|20)[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[0-9]{3}[0-9Xx]')>
     hireDate: <dateTimeBetween('-10 years', 'now')>
@@ -19,7 +19,7 @@ App\Entity\Organization\Employee:
     position: '@position_<numberBetween(1, 100)>'
     orderNum: <current()>
     address: <chineseAddress()>
-    education: <randomElement(['Bachelor', 'Master', 'PhD', 'Diploma'])>
+    education: <randomElement(['junior_high', 'senior_high', 'secondary', 'associate', 'bachelor', 'master', 'phd', 'mba', 'emba'])>
     school: 'University of <city()>'
     major: <jobTitle()>
     roles: ['ROLE_USER']

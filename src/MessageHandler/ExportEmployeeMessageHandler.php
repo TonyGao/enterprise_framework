@@ -14,11 +14,24 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 #[AsMessageHandler]
 final class ExportEmployeeMessageHandler
 {
+    private const BATCH_SIZE = 500;
+    private const STYLE_BATCH_SIZE = 100;
+    private const PROGRESS_BATCH_SIZE = 100;
+
+    private array $workStatusMap = [
+        'working' => '工作',
+        'vacation' => '休假',
+        'business_trip' => '出差',
+        'out_of_office' => '外出',
+        'in_meeting' => '会议中'
+    ];
+
     public function __construct(
         private EntityManagerInterface $em,
         private HubInterface $hub,
@@ -29,14 +42,123 @@ final class ExportEmployeeMessageHandler
 
     public function __invoke(ExportEmployeeMessage $message): void
     {
+        try {
+            $this->doInvoke($message);
+        } catch (\Throwable $e) {
+            file_put_contents('/tmp/export_error.log', date('Y-m-d H:i:s') . " Error: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
+            throw $e;
+        }
+    }
+
+    private function doInvoke(ExportEmployeeMessage $message): void
+    {
         $userId = $message->getUserId();
         $filters = $message->getFilters();
 
-        $qb = $this->em->getRepository(Employee::class)->createQueryBuilder('e')
-                 ->where('e.isSystem = :isSystem OR e.isSystem IS NULL')
-                 ->setParameter('isSystem', false);
+        // First count total for progress calculation
+        $countQb = $this->em->getRepository(Employee::class)->createQueryBuilder('e')
+            ->select('COUNT(e.id)')
+            ->where('e.isSystem = :isSystem OR e.isSystem IS NULL')
+            ->setParameter('isSystem', false);
 
-        // Apply filters
+        $this->applyFilters($countQb, $filters);
+        $totalCount = (int) $countQb->getQuery()->getSingleScalarResult();
+
+        if ($totalCount === 0) {
+            $this->sendNotification($userId, [
+                'type' => 'export_complete',
+                'title' => '导出完成',
+                'message' => '没有找到符合条件的员工数据。',
+                'file_name' => null,
+                'download_url' => null
+            ]);
+            return;
+        }
+
+        // Build query for data export
+        $qb = $this->em->getRepository(Employee::class)->createQueryBuilder('e')
+            ->where('e.isSystem = :isSystem OR e.isSystem IS NULL')
+            ->setParameter('isSystem', false);
+
+        $this->applyFilters($qb, $filters);
+        $employees = $qb->getQuery()->toIterable();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Set Headers
+        $headers = ['工号', '姓名', '英文名', '部门', '职位', '性别', '邮箱', '手机号', '在职状态', '工作状态', '入职日期', '出生日期', '身份证号'];
+        $this->setHeaders($sheet, $headers);
+
+        // Apply header style
+        $headerStyle = $this->getHeaderStyle();
+        $sheet->getStyle('A1:' . $this->getLastColumn(count($headers)) . '1')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(1)->setRowHeight(36);
+
+        // Set column widths
+        $this->setColumnWidths($sheet);
+
+        // Write data
+        $row = 2;
+        $data = [];
+        foreach ($employees as $emp) {
+            $data[] = [
+                $emp->getEmployeeNo() ?? '',
+                $emp->getName() ?? '',
+                $emp->getEnglishName() ?? '',
+                $emp->getDepartment() ? $emp->getDepartment()->getName() : '',
+                $emp->getPosition() ? $emp->getPosition()->getName() : '',
+                $emp->getGender() === 'male' ? '男' : ($emp->getGender() === 'female' ? '女' : ''),
+                $emp->getEmail() ?? '',
+                $emp->getMobile() ?? '',
+                $emp->getEmploymentStatus() === 'active' ? '在职' : '离职',
+                $this->workStatusMap[$emp->getWorkStatus()] ?? '',
+                $emp->getHireDate() ? $emp->getHireDate()->format('Y-m-d') : '',
+                $emp->getBirthDate() ? $emp->getBirthDate()->format('Y-m-d') : '',
+                $emp->getIdCard() ?? '',
+            ];
+            $row++;
+        }
+
+        if (!empty($data)) {
+            $sheet->fromArray($data, null, 'A2');
+        }
+
+        // Apply alternating row colors
+        $lastDataRow = $row - 1;
+        if ($lastDataRow >= 2) {
+            $dataStyle = $this->getDataStyle();
+            $evenRowStyle = $this->getEvenRowStyle();
+            $oddRowStyle = $this->getOddRowStyle();
+
+            for ($i = 2; $i <= $lastDataRow; $i++) {
+                $sheet->getRowDimension($i)->setRowHeight(32);
+            }
+
+            $sheet->getStyle('A2:' . $this->getLastColumn(count($headers)) . $lastDataRow)->applyFromArray($dataStyle);
+
+            for ($i = 2; $i <= $lastDataRow; $i++) {
+                $style = ($i % 2 === 0) ? $evenRowStyle : $oddRowStyle;
+                $sheet->getStyle('A' . $i . ':' . $this->getLastColumn(count($headers)) . $i)->applyFromArray($style);
+            }
+        }
+
+        // Save file
+        $fileName = $this->saveSpreadsheet($spreadsheet);
+
+        // Send completion notification
+        $this->sendNotification($userId, [
+            'type' => 'export_complete',
+            'title' => '文件已生成',
+            'message' => sprintf('已导出 %d 条记录，文件已准备就绪。', $totalCount),
+            'file_name' => $fileName,
+            'download_url' => '/employee/export/download/' . $fileName,
+            'progress' => 100
+        ]);
+    }
+
+    private function applyFilters($qb, array $filters): void
+    {
         if (!empty($filters['search'])) {
             $qb->andWhere('e.name LIKE :search OR e.employeeNo LIKE :search')
                ->setParameter('search', '%' . $filters['search'] . '%');
@@ -73,26 +195,49 @@ final class ExportEmployeeMessageHandler
                    ->setParameter('companyId', $filters['companyId']);
             }
         }
+    }
 
-        $employees = $qb->getQuery()->toIterable();
+    private function employeeToArray($emp): array
+    {
+        return [
+            'employeeNo' => $emp->getEmployeeNo() ?? '',
+            'name' => $emp->getName() ?? '',
+            'englishName' => $emp->getEnglishName() ?? '',
+            'department' => $emp->getDepartment() ? $emp->getDepartment()->getName() : '',
+            'position' => $emp->getPosition() ? $emp->getPosition()->getName() : '',
+            'gender' => match($emp->getGender()) {
+                'male' => '男',
+                'female' => '女',
+                default => '',
+            },
+            'email' => $emp->getEmail() ?? '',
+            'mobile' => $emp->getMobile() ?? '',
+            'employmentStatus' => $emp->getEmploymentStatus() === 'active' ? '在职' : '离职',
+            'workStatus' => $this->workStatusMap[$emp->getWorkStatus()] ?? '',
+            'hireDate' => $emp->getHireDate() ? $emp->getHireDate()->format('Y-m-d') : '',
+            'birthDate' => $emp->getBirthDate() ? $emp->getBirthDate()->format('Y-m-d') : '',
+            'idCard' => $emp->getIdCard() ?? '',
+        ];
+    }
 
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        // Set Headers
-        $headers = ['工号', '姓名', '英文名', '部门', '职位', '性别', '邮箱', '手机号', '在职状态', '工作状态', '入职日期', '出生日期', '身份证号'];
+    private function setHeaders($sheet, array $headers): void
+    {
         $column = 'A';
         foreach ($headers as $header) {
             $sheet->setCellValue($column . '1', $header);
             $column++;
         }
+        $sheet->setAutoFilter('A1:' . $this->getLastColumn(count($headers)) . '1');
+    }
 
-        // Enable autofilter for header row
-        $lastColumn = chr(ord('A') + count($headers) - 1);
-        $sheet->setAutoFilter('A1:' . $lastColumn . '1');
+    private function getLastColumn(int $headerCount): string
+    {
+        return chr(ord('A') + $headerCount - 1);
+    }
 
-        // Feishu/Lark-style Header Styling
-        $headerStyle = [
+    private function getHeaderStyle(): array
+    {
+        return [
             'font' => [
                 'bold' => true,
                 'color' => ['argb' => 'FF1F2328'],
@@ -114,123 +259,132 @@ final class ExportEmployeeMessageHandler
                 'color' => ['argb' => 'FFF1F3F4'],
             ],
         ];
-        $sheet->getStyle('A1:' . $lastColumn . '1')->applyFromArray($headerStyle);
-        $sheet->getRowDimension(1)->setRowHeight(36);
+    }
 
-        // Set Data
-        $row = 2;
-        foreach ($employees as $emp) {
-            $sheet->setCellValue('A' . $row, $emp->getEmployeeNo());
-            $sheet->setCellValue('B' . $row, $emp->getName());
-            $sheet->setCellValue('C' . $row, $emp->getEnglishName());
-            $sheet->setCellValue('D' . $row, $emp->getDepartment() ? $emp->getDepartment()->getName() : '');
-            $sheet->setCellValue('E' . $row, $emp->getPosition() ? $emp->getPosition()->getName() : '');
-            $sheet->setCellValue('F' . $row, $emp->getGender() === 'male' ? '男' : ($emp->getGender() === 'female' ? '女' : ''));
-            $sheet->setCellValue('G' . $row, $emp->getEmail());
-            $sheet->setCellValue('H' . $row, $emp->getMobile());
-            $sheet->setCellValue('I' . $row, $emp->getEmploymentStatus() === 'active' ? '在职' : '离职');
-            
-            $workStatusMap = [
-                'working' => '工作',
-                'vacation' => '休假',
-                'business_trip' => '出差',
-                'out_of_office' => '外出',
-                'in_meeting' => '会议中'
-            ];
-            $sheet->setCellValue('J' . $row, $workStatusMap[$emp->getWorkStatus()] ?? '');
-            
-            $sheet->setCellValue('K' . $row, $emp->getHireDate() ? $emp->getHireDate()->format('Y-m-d') : '');
-            $sheet->setCellValue('L' . $row, $emp->getBirthDate() ? $emp->getBirthDate()->format('Y-m-d') : '');
-            $sheet->setCellValueExplicit('M' . $row, $emp->getIdCard(), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-            
-            if ($row % 200 === 0) {
-                $this->em->clear(Employee::class);
-            }
-            $row++;
+    private function getDataStyle(): array
+    {
+        return [
+            'font' => [
+                'color' => ['argb' => 'FF464952'],
+                'size' => 12,
+                'name' => 'PingFang SC',
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['argb' => 'FFE3E5E8'],
+                ],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_LEFT,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ];
+    }
+
+    private function getEvenRowStyle(): array
+    {
+        return [
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'color' => ['argb' => 'FFFFFFFF'],
+            ],
+        ];
+    }
+
+    private function getOddRowStyle(): array
+    {
+        return [
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'color' => ['argb' => 'FFF6F8FA'],
+            ],
+        ];
+    }
+
+    private function applyBatchStyles($sheet, int $startRow, int $endRow, array $rowStyles, array $dataStyle): void
+    {
+        // Apply base data style to entire range once
+        $sheet->getStyle('A' . $startRow . ':M' . $endRow)->applyFromArray($dataStyle);
+
+        // Apply row heights and alternating row colors in batches
+        for ($i = $startRow; $i <= $endRow; $i++) {
+            $sheet->getRowDimension($i)->setRowHeight(32);
         }
 
-        // Apply Feishu/Lark-style Data Styling
-        if ($row > 2) {
-            $dataStyle = [
-                'font' => [
-                    'color' => ['argb' => 'FF464952'],
-                    'size' => 12,
-                    'name' => 'PingFang SC',
-                ],
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN,
-                        'color' => ['argb' => 'FFE3E5E8'],
-                    ],
-                ],
-                'alignment' => [
-                    'horizontal' => Alignment::HORIZONTAL_LEFT,
-                    'vertical' => Alignment::VERTICAL_CENTER,
-                ],
-            ];
-            $sheet->getStyle('A2:' . $lastColumn . ($row - 1))->applyFromArray($dataStyle);
+        // Batch apply alternating colors
+        $evenRange = [];
+        $oddRange = [];
 
-            for ($i = 2; $i < $row; $i++) {
-                $sheet->getRowDimension($i)->setRowHeight(32);
-                if ($i % 2 === 0) {
-                    $sheet->getStyle('A' . $i . ':' . $lastColumn . $i)->getFill()
-                          ->setFillType(Fill::FILL_SOLID)
-                          ->getStartColor()->setARGB('FFFFFFFF');
-                } else {
-                    $sheet->getStyle('A' . $i . ':' . $lastColumn . $i)->getFill()
-                          ->setFillType(Fill::FILL_SOLID)
-                          ->getStartColor()->setARGB('FFF6F8FA');
-                }
+        foreach ($rowStyles as $idx => $style) {
+            $currentRow = $startRow + $idx;
+            if ($style === 'even') {
+                $evenRange[] = 'A' . $currentRow . ':M' . $currentRow;
+            } else {
+                $oddRange[] = 'A' . $currentRow . ':M' . $currentRow;
             }
         }
 
-        // Set column widths (Feishu-style)
+        if (!empty($evenRange)) {
+            foreach ($evenRange as $range) {
+                $sheet->getStyle($range)->applyFromArray($this->getEvenRowStyle());
+            }
+        }
+
+        if (!empty($oddRange)) {
+            foreach ($oddRange as $range) {
+                $sheet->getStyle($range)->applyFromArray($this->getOddRowStyle());
+            }
+        }
+    }
+
+    private function setColumnWidths($sheet): void
+    {
         $columnWidths = [
-            'A' => 12,  // 工号
-            'B' => 10,  // 姓名
-            'C' => 12,  // 英文名
-            'D' => 18,  // 部门
-            'E' => 12,  // 职位
-            'F' => 6,   // 性别
-            'G' => 24,  // 邮箱
-            'H' => 14,  // 手机号
-            'I' => 10,  // 在职状态
-            'J' => 10,  // 工作状态
-            'K' => 12,  // 入职日期
-            'L' => 12,  // 出生日期
-            'M' => 20,  // 身份证号
+            'A' => 12,
+            'B' => 10,
+            'C' => 14,
+            'D' => 18,
+            'E' => 12,
+            'F' => 6,
+            'G' => 24,
+            'H' => 14,
+            'I' => 10,
+            'J' => 10,
+            'K' => 12,
+            'L' => 12,
+            'M' => 20,
         ];
         foreach ($columnWidths as $col => $width) {
             $sheet->getColumnDimension($col)->setWidth($width);
         }
+    }
 
-        $writer = new Xlsx($spreadsheet);
-        
+    private function saveSpreadsheet(Spreadsheet $spreadsheet): string
+    {
         $exportDir = $this->projectDir . '/var/exports';
         if (!is_dir($exportDir)) {
             mkdir($exportDir, 0777, true);
         }
-        
+
         $timezone = new \DateTimeZone('Asia/Shanghai');
         $now = new \DateTime('now', $timezone);
         $fileName = 'employees_' . $now->format('Ymd_His') . '_' . uniqid() . '.xlsx';
         $filePath = $exportDir . '/' . $fileName;
-        
+
+        $writer = new Xlsx($spreadsheet);
         $writer->save($filePath);
 
-        // Notify user via Mercure
+        return $fileName;
+    }
+
+    private function sendNotification(string $userId, array $data): void
+    {
         $update = new Update(
             'https://enterprise.local/user/' . $userId . '/export',
-            json_encode([
-                'type' => 'export_complete',
-                'title' => '文件已生成',
-                'message' => '您请求的花名册文件已经准备就绪。',
-                'file_name' => $fileName,
-                'download_url' => '/employee/export/download/' . $fileName
-            ]),
-            true // Private message
+            json_encode($data),
+            true
         );
-
         $this->hub->publish($update);
     }
 }

@@ -7,7 +7,12 @@ action:
   reselect: Reselect
   add: Add
   import: Import Employee
+  clear: Clear
+  search: Search
 employee:
+  gender_value:
+    male: Male
+    female: Female
   avatar:
     edit:
       title: Edit Avatar
@@ -29,6 +34,7 @@ employee:
     header: Employee List
     search_placeholder: Search...
     selected: Selected
+    filter_conditions: Filter Conditions
   stats:
     total_employees: Total Employee
     active_employees: Active Employee
@@ -41,11 +47,17 @@ employee:
   filter:
     all: All Employees
     active: Active
+    inactive: Inactive
     pending: Unverified
+    include_sub: Include Sub-departments
+    toggle: Filter
   action:
     cancel: Cancel
     confirm: Confirm
     filter: Filter
+    export: Export
+    import: Import
+    clear: Clear
   view:
     list: List View
     card: Card View
@@ -70,6 +82,8 @@ employee:
     birth_date: Date of Birth
     id_card: ID Card
     english_name: English Name
+    username: Username
+    education: Education
     no_position: No Position
   employment_status:
     active: Active
@@ -98,9 +112,16 @@ employee:
     male: Male
     female: Female
   education:
+    unknown: Unknown
+    junior_high: Junior High
+    senior_high: Senior High
+    secondary: Secondary School
+    associate: Associate Degree
     bachelor: Bachelor
     master: Master
     phd: PhD
+    mba: MBA
+    emba: EMBA
   detail:
     title: Employee Detail
     breadcrumb:
@@ -175,6 +196,47 @@ employee:
       time: Time
       ip: IP
       browser: Browser
+  onboarding:
+    title: Employee Onboarding
+    steps:
+      basic_info: Basic Info
+      job_info: Job Info
+      account_info: Account Info
+      complete: Complete
+    basic_info:
+      title: Basic Information
+      english_name: English Name
+      id_type: ID Type
+      id_number: ID Number
+    job_info:
+      title: Job Information
+      employee_no: Employee No
+      status: Status
+      hire_date: Hire Date
+      company: Company
+      department: Department
+      position: Position
+      manager: Direct Manager
+    account_info:
+      title: Account Information
+      username: Username
+      password: Password
+      roles: Roles
+      is_active: Is Active
+    complete_step:
+      success: Employee onboarding process completed successfully.
+      view_profile: View Employee Profile
+      onboard_another: Onboard Another Employee
+    action:
+      cancel: Cancel
+      prev: Previous
+      next: Next
+      submit: Submit
+      back_to_list: Back to Employee List
+      continue_add: Continue Adding
+    placeholder:
+      input: Please enter %label%
+      select: Please select %label%
 layout:
   user:
     settings: Settings

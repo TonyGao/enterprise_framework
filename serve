@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Enterprise Framework FrankenPHP Launcher
-# Usage: ./serve [dev|prod|stop|restart]
+# Usage: ./serve [dev|prod|stop|restart|status|watch]
 
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$PROJECT_ROOT"
@@ -18,125 +18,367 @@ show_help() {
     echo "  prod    Production mode with optimal performance"
     echo "  stop    Stop the running FrankenPHP server"
     echo "  restart Restart the server in the previous mode"
+    echo "  status  Show server status"
+    echo "  watch   Watch mode - auto-restart on crash"
     echo ""
     echo "Examples:"
     echo "  ./serve          Start in dev mode"
     echo "  ./serve dev      Start in dev mode"
     echo "  ./serve prod     Start in prod mode"
     echo "  ./serve stop     Stop the server"
-    echo "  ./serve restart  Restart in dev mode"
+    echo "  ./serve watch    Start in watch mode (auto-restart)"
 }
 
 PID_FILE="$PROJECT_ROOT/var/frankenphp.pid"
 WORKER_PID_FILE="$PROJECT_ROOT/var/messenger_worker.pid"
+WATCHER_PID_FILE="$PROJECT_ROOT/var/watcher.pid"
 STATE_FILE="$PROJECT_ROOT/var/frankenphp.state"
+LOG_FILE="$PROJECT_ROOT/var/log/server.log"
+WORKER_LOG_FILE="$PROJECT_ROOT/var/log/messenger_worker.log"
+STOP_REASON_FILE="$PROJECT_ROOT/var/log/stop_reason.log"
+
+mkdir -p "$PROJECT_ROOT/var/log"
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$STOP_REASON_FILE"
+}
+
+is_running() {
+    # Simple check: is frankenphp process running?
+    if pgrep -f "[f]rankenphp.*Caddyfile" > /dev/null 2>&1; then
+        return 0
+    fi
+    return 1
+}
+
+is_watcher_running() {
+    if [ -f "$WATCHER_PID_FILE" ]; then
+        WPID=$(cat "$WATCHER_PID_FILE")
+        if [ -n "$WPID" ] && kill -0 "$WPID" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    return 1
+}
 
 stop_server() {
+    local reason="${1:-manual_stop}"
+    log "STOP REASON: $reason"
     echo "Stopping FrankenPHP and Messenger Worker..."
     
-    # 1. 尝试通过 PID 文件停止 FrankenPHP
-    if [ -f "$PID_FILE" ]; then
-        PID=$(cat "$PID_FILE")
-        if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
-            echo "Stopping FrankenPHP PID $PID..."
-            kill "$PID" 2>/dev/null || true
-            sleep 1
-            # 如果还没死，强制杀掉
-            if kill -0 "$PID" 2>/dev/null; then
-                echo "FrankenPHP PID $PID still running, forcing kill..."
-                kill -9 "$PID" 2>/dev/null || true
-            fi
+    # Signal watcher to stop if running
+    if [ -f "$WATCHER_PID_FILE" ]; then
+        WPID=$(cat "$WATCHER_PID_FILE")
+        if [ -n "$WPID" ] && kill -0 "$WPID" 2>/dev/null; then
+            kill -TERM "$WPID" 2>/dev/null || true
         fi
-        rm -f "$PID_FILE"
+        rm -f "$WATCHER_PID_FILE"
     fi
-
-    # 1.5 尝试通过 PID 文件停止 Messenger Worker
+    
+    # Stop Messenger Worker via PID file
     if [ -f "$WORKER_PID_FILE" ]; then
         WPID=$(cat "$WORKER_PID_FILE")
         if [ -n "$WPID" ] && kill -0 "$WPID" 2>/dev/null; then
             echo "Stopping Messenger Worker PID $WPID..."
-            kill "$WPID" 2>/dev/null || true
+            kill -TERM "$WPID" 2>/dev/null || true
             sleep 1
-            if kill -0 "$WPID" 2>/dev/null; then
-                kill -9 "$WPID" 2>/dev/null || true
-            fi
+            kill -9 "$WPID" 2>/dev/null || true
         fi
         rm -f "$WORKER_PID_FILE"
     fi
-
-    # 2. 兜底：查找所有名为 frankenphp 的进程并杀掉（防止由于 PID 文件失效导致的僵死进程）
-    REMAINING_PIDS=$(ps aux | grep "[f]rankenphp" | awk '{print $2}')
-    if [ -n "$REMAINING_PIDS" ]; then
-        echo "Cleaning up remaining frankenphp processes..."
-        for RPID in $REMAINING_PIDS; do
-            kill -9 "$RPID" 2>/dev/null || true
-        done
+    
+    pkill -f "messenger:consume async" 2>/dev/null || true
+    
+    # Stop FrankenPHP via PID file
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
+        if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+            echo "Stopping FrankenPHP PID $PID..."
+            kill -TERM "$PID" 2>/dev/null || true
+            sleep 1
+            kill -9 "$PID" 2>/dev/null || true
+        fi
+        rm -f "$PID_FILE"
     fi
-
-    # 3. 尝试通过内置 stop 命令清理（可选）
+    
+    pkill -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
     ./frankenphp stop 2>/dev/null || true
     
-    # 4. 兜底清理 symfony messenger worker
-    MESSENGER_PIDS=$(ps aux | grep "[p]hp bin/console messenger:consume async" | awk '{print $2}')
-    if [ -n "$MESSENGER_PIDS" ]; then
-        echo "Cleaning up remaining messenger worker processes..."
-        for MPID in $MESSENGER_PIDS; do
-            kill -9 "$MPID" 2>/dev/null || true
-        done
-    fi
-
     rm -f "$STATE_FILE"
     echo "Server stopped."
 }
 
+start_frankenphp() {
+    local mode="$1"
+    local extra_args=""
+    
+    # Note: In dev mode, FrankenPHP's hot reload is handled by the external watcher script
+    # The --watch flag was removed because it conflicts with our external watcher
+    # causing potential restart loops
+    
+    nohup ./frankenphp run --config Caddyfile $extra_args >> "$LOG_FILE" 2>&1 &
+    FPID=$!
+    echo $FPID > "$PID_FILE"
+    echo "FrankenPHP started (PID: $FPID)"
+}
+
+start_worker() {
+    local mode="$1"
+    local extra_args="-vv"
+    
+    if [ "$mode" = "prod" ]; then
+        extra_args=""
+    fi
+    
+    nohup php bin/console messenger:consume async $extra_args >> "$WORKER_LOG_FILE" 2>&1 &
+    WPID=$!
+    echo $WPID > "$WORKER_PID_FILE"
+    echo "Messenger Worker started (PID: $WPID)"
+}
+
+wait_for_server() {
+    local count=0
+    local max_wait=10
+    
+    while [ $count -lt $max_wait ]; do
+        if is_running; then
+            return 0
+        fi
+        sleep 1
+        count=$((count + 1))
+    done
+    return 1
+}
+
 start_dev() {
+    if is_running; then
+        echo "Server is already running. Use './serve stop' first."
+        return 1
+    fi
+    
     echo "Starting FrankenPHP in DEV mode (hot reload enabled)..."
     echo "dev" > "$STATE_FILE"
     
-    # Start Messenger Worker
-    php bin/console messenger:consume async -vv > "$PROJECT_ROOT/var/log/messenger_worker.log" 2>&1 &
-    echo $! > "$WORKER_PID_FILE"
-    echo "Messenger Worker started in background (PID: $(cat "$WORKER_PID_FILE"))."
+    mkdir -p "$(dirname "$LOG_FILE")"
     
-    ./frankenphp run --config Caddyfile --watch &
-    echo $! > "$PID_FILE"
-    echo "Server started in background (PID: $(cat "$PID_FILE"))."
-    echo "Press Ctrl+C to stop."
-    wait
+    start_worker "dev"
+    start_frankenphp "dev"
+    
+    sleep 2
+    
+    if wait_for_server; then
+        log "Server started successfully in DEV mode"
+        echo "Server is running. Access http://localhost:8000"
+        echo "Logs: $LOG_FILE"
+    else
+        log "ERROR: Server failed to start"
+        echo "Server may have failed to start. Check logs:"
+        tail -50 "$LOG_FILE"
+        return 1
+    fi
 }
 
 start_prod() {
+    if is_running; then
+        echo "Server is already running. Use './serve stop' first."
+        return 1
+    fi
+    
     echo "Starting FrankenPHP in PROD mode..."
     echo "prod" > "$STATE_FILE"
     
-    # Start Messenger Worker
-    php bin/console messenger:consume async > "$PROJECT_ROOT/var/log/messenger_worker.log" 2>&1 &
-    echo $! > "$WORKER_PID_FILE"
-    echo "Messenger Worker started in background (PID: $(cat "$WORKER_PID_FILE"))."
+    mkdir -p "$(dirname "$LOG_FILE")"
     
-    ./frankenphp run --config Caddyfile &
-    echo $! > "$PID_FILE"
-    echo "Server started in background (PID: $(cat "$PID_FILE"))."
-    echo "Press Ctrl+C to stop."
-    wait
+    start_worker "prod"
+    start_frankenphp "prod"
+    
+    sleep 2
+    
+    if wait_for_server; then
+        log "Server started successfully in PROD mode"
+        echo "Server is running. Access http://localhost:8000"
+        echo "Logs: $LOG_FILE"
+    else
+        log "ERROR: Server failed to start"
+        echo "Server may have failed to start. Check logs:"
+        tail -50 "$LOG_FILE"
+        return 1
+    fi
+}
+
+watch_mode() {
+    if is_watcher_running; then
+        echo "Watcher is already running. Use './serve stop' first."
+        return 1
+    fi
+    
+    echo "Starting in WATCH mode - server will auto-restart on crash..."
+    echo "dev" > "$STATE_FILE"
+    
+    mkdir -p "$(dirname "$LOG_FILE")"
+    
+    # Start watcher loop in background - ignore signals so Ctrl+C/terminal close doesn't kill it
+    (
+        trap '' HUP INT TERM
+        log "Watcher started with PID $$"
+        
+        restart_count=0
+        max_restarts=100
+        restart_delay=3
+        health_check_interval=15
+        
+        while [ $restart_count -lt $max_restarts ]; do
+            # Check if stop was requested (only check the LAST line of the file)
+            if [ -f "$STOP_REASON_FILE" ]; then
+                last_reason=$(tail -1 "$STOP_REASON_FILE" 2>/dev/null | grep -oE "STOP REASON:.*" | sed 's/STOP REASON: //')
+                if [ -n "$last_reason" ] && echo "$last_reason" | grep -qE "manual_stop|watch_mode_stopped"; then
+                    log "Watcher stopping due to stop request (last reason: $last_reason)"
+                    exit 0
+                fi
+            fi
+            
+            # Clean up any stale processes before starting
+            pkill -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
+            rm -f "$PID_FILE" 2>/dev/null || true
+            
+            # Start server
+            start_dev
+            server_started=$?
+            
+            if [ $server_started -ne 0 ]; then
+                log "Server failed to start, retrying..."
+                sleep $restart_delay
+                restart_count=$((restart_count + 1))
+                continue
+            fi
+            
+            log "Server started, monitoring for crashes..."
+            
+            # Monitor server - simple loop that checks if server is still running
+            while true; do
+                sleep 5
+                
+                # Check if server process is still alive
+                if ! pgrep -f "[f]rankenphp.*Caddyfile" > /dev/null 2>&1; then
+                    log "Server process died"
+                    break
+                fi
+                
+                # Check if server is responding to HTTP
+                http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 http://localhost:8000/ 2>/dev/null || echo "000")
+                if ! echo "$http_code" | grep -qE "^[23]"; then
+                    log "Server not responding (HTTP $http_code), will restart if persists"
+                    # Wait a bit more to confirm
+                    sleep 5
+                    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 http://localhost:8000/ 2>/dev/null || echo "000")
+                    if ! echo "$http_code" | grep -qE "^[23]"; then
+                        log "Server confirmed unresponsive, killing and restarting"
+                        pkill -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
+                        break
+                    fi
+                fi
+                
+                # Check for stop request periodically
+                health_check_interval=$((health_check_interval - 1))
+                if [ $health_check_interval -le 0 ]; then
+                    health_check_interval=15
+                    last_reason=$(tail -1 "$STOP_REASON_FILE" 2>/dev/null | grep -oE "STOP REASON:.*" | sed 's/STOP REASON: //')
+                    if [ -n "$last_reason" ] && echo "$last_reason" | grep -qE "manual_stop|watch_mode_stopped"; then
+                        log "Watcher stopping due to stop request"
+                        exit 0
+                    fi
+                fi
+            done
+            
+            # Server died or was killed, prepare for restart
+            restart_count=$((restart_count + 1))
+            log "Restarting server (attempt $restart_count/$max_restarts)"
+            
+            # Clean up
+            pkill -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
+            rm -f "$PID_FILE" 2>/dev/null || true
+            
+            sleep $restart_delay
+        done
+        
+        log "ERROR: Max restarts reached, watcher giving up"
+    ) &
+    
+    WATCHER_PID=$!
+    echo $WATCHER_PID > "$WATCHER_PID_FILE"
+    log "Watcher started with PID $WATCHER_PID"
+    echo "Watch mode started (Watcher PID: $WATCHER_PID)"
+}
+
+show_status() {
+    echo "=== FrankenPHP Status ==="
+    
+    if is_watcher_running; then
+        echo "Watcher: RUNNING (PID: $(cat "$WATCHER_PID_FILE"))"
+    else
+        echo "Watcher: NOT RUNNING"
+    fi
+    
+    if is_running; then
+        echo "FrankenPHP: RUNNING (PID: $(cat "$PID_FILE"))"
+    else
+        echo "FrankenPHP: STOPPED"
+    fi
+    
+    if [ -f "$WORKER_PID_FILE" ] && kill -0 "$(cat "$WORKER_PID_FILE")" 2>/dev/null; then
+        echo "Messenger Worker: RUNNING (PID: $(cat "$WORKER_PID_FILE"))"
+    else
+        echo "Messenger Worker: STOPPED"
+    fi
+    
+    echo ""
+    echo "Access: http://localhost:8000"
+    echo "Server Log: $LOG_FILE"
+    echo "Worker Log: $WORKER_LOG_FILE"
+    echo "Stop Reason Log: $STOP_REASON_FILE"
+    
+    if [ -f "$STOP_REASON_FILE" ]; then
+        echo ""
+        echo "=== Recent Events ==="
+        tail -10 "$STOP_REASON_FILE"
+    fi
+}
+
+setup_traps() {
+    trap 'log "Caught SIGTERM, graceful shutdown"; stop_server "sigterm"; exit 0' TERM
+    trap 'log "Caught SIGINT, graceful shutdown"; stop_server "sigint"; exit 0' INT
 }
 
 case "$MODE" in
     dev)
-        stop_server
+        setup_traps
+        stop_server "mode_switch"
         start_dev
+        wait
         ;;
     prod)
-        stop_server
+        setup_traps
+        stop_server "mode_switch"
         start_prod
+        wait
         ;;
     stop)
-        stop_server
+        stop_server "manual_stop"
+        ;;
+    status)
+        show_status
+        ;;
+    watch)
+        stop_server "watch_mode"
+        watch_mode
+        echo "Watch mode started in background. Use './serve status' to check."
+        echo "To stop: ./serve stop"
+        exit 0
         ;;
     restart)
         PREV_MODE=$(cat "$STATE_FILE" 2>/dev/null || echo "dev")
         echo "Restarting in $PREV_MODE mode..."
-        stop_server
+        stop_server "restart"
         sleep 1
         if [ "$PREV_MODE" = "prod" ]; then
             start_prod

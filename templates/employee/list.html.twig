@@ -47,6 +47,7 @@
             margin-bottom: 20px;
             border-radius: 12px;
             border: 1px solid #e2e8f0;
+            max-width: 1300px;
         }
         .custom-toolbar-wrap {
             display: flex;
@@ -202,6 +203,7 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin-bottom: 20px;
+            max-width: 1300px;
         }
 
         .stats-container.hidden {
@@ -210,31 +212,35 @@
         .stats-card {
             background: #fff;
             border-radius: 12px;
-            padding: 20px;
+            padding: 24px;
             border: 1px solid #e2e8f0;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
+            flex: 1;
+            min-width: 220px;
+            max-width: 320px;
         }
         .stats-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             color: #64748b;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 500;
         }
         .stats-value {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: 700;
             color: #0f172a;
+            line-height: 1.2;
         }
         .stats-trend {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            font-weight: 600;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 500;
             padding: 2px 8px;
             border-radius: 6px;
         }
@@ -359,7 +365,42 @@
             border-radius: 2px;
             transition: background 0.2s;
         }
-        .custom-table th .column-resize-handle:hover,
+        
+        /* Stats Container */
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .stats-container.collapsed {
+            margin-bottom: 0;
+        }
+        .stats-container.collapsed .stats-card {
+            display: none;
+        }
+        .stats-collapse-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0;
+            margin-right: 8px;
+            line-height: 1;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+        .stats-collapse-btn:hover {
+            color: #3b82f6;
+        }
+        
+        /* Filter Panel Toggle Button */
+        #filterToggleBtn.active {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        
+        /* Custom Table Styles */
         .custom-table th .column-resize-handle.resizing {
             background: #3b82f6;
         }
@@ -581,9 +622,24 @@
             margin-top: 20px;
             color: #64748b;
             font-size: 13px;
+            max-width: 1300px;
         }
         .pagination-info {
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .pagination-count {
+            color: #64748b;
+        }
+        .department-path-label {
+            color: #3b82f6;
+            font-weight: 500;
+            background: #eff6ff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 13px;
         }
         .pagination-controls {
             display: flex;
@@ -681,8 +737,8 @@
                 
                 {# Stats Cards #}
                 {% if stats is defined %}
-                <div class="stats-container {% if not show_stats %}hidden{% endif %}">
-            <div class="stats-card">
+                <div class="stats-container {% if statsCollapsed %}collapsed{% endif %}" id="statsContainer">
+                    <div class="stats-card">
                         <div class="stats-header">
                             <span>{{ 'employee.stats.total_employees'|trans }}</span>
                             <i class="fa-solid fa-circle-info" style="color: #cbd5e1;"></i>
@@ -729,23 +785,142 @@
                 </div>
                 {% endif %}
 
-                <h2 style="font-size: 18px; font-weight: 600; color: #0f172a; margin-bottom: 15px;">{{ 'employee.list.header'|trans }}</h2>
+                {# Filter Panel #}
+                <div id="filterPanel" class="filter-panel" style="display: none; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; max-width: 1300px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 14px; font-weight: 500; color: #1e293b;">{{ 'employee.list.filter_conditions'|trans|default('筛选条件') }}</span>
+                        <button onclick="toggleFilterPanel()" style="background: none; border: none; cursor: pointer; padding: 4px; color: #64748b;">
+                            <i class="fa-solid fa-xmark" style="font-size: 16px;"></i>
+                        </button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: flex-end;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.name'|trans }}</label>
+                            <span class="ef-input-wrapper ef-input-rounded">
+                                <input type="text" id="filterName" class="ef-input ef-input-size-medium" />
+                            </span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.employee_no'|trans }}</label>
+                            <span class="ef-input-wrapper ef-input-rounded">
+                                <input type="text" id="filterEmployeeNo" class="ef-input ef-input-size-medium" />
+                            </span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.username'|trans }}</label>
+                            <span class="ef-input-wrapper ef-input-rounded">
+                                <input type="text" id="filterUsername" class="ef-input ef-input-size-medium" />
+                            </span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.email'|trans }}</label>
+                            <span class="ef-input-wrapper ef-input-rounded">
+                                <input type="text" id="filterEmail" class="ef-input ef-input-size-medium" />
+                            </span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.mobile'|trans }}</label>
+                            <span class="ef-input-wrapper ef-input-rounded">
+                                <input type="text" id="filterMobile" class="ef-input ef-input-size-medium" />
+                            </span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.department'|trans }}</label>
+                            {{ ui.filterSelect(
+                                filterDepartments|map(d => { 'label': d.name, 'value': d.id }),
+                                '',
+                                '160px',
+                                'ef-input-rounded',
+                                'filter_department_id',
+                                'filterDepartment'
+                            ) }}
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.position'|trans }}</label>
+                            {{ ui.filterSelect(
+                                filterPositions|map(p => { 'label': p.name, 'value': p.id }),
+                                '',
+                                '140px',
+                                'ef-input-rounded',
+                                'filter_position_id',
+                                'filterPosition'
+                            ) }}
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.english_name'|trans }}</label>
+                            <span class="ef-input-wrapper ef-input-rounded">
+                                <input type="text" id="filterEnglishName" class="ef-input ef-input-size-medium" />
+                            </span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.id_card'|trans }}</label>
+                            <span class="ef-input-wrapper ef-input-rounded">
+                                <input type="text" id="filterIdCard" class="ef-input ef-input-size-medium" />
+                            </span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.employment_status'|trans }}</label>
+                            {{ ui.filterSelect([
+                                { label: 'employee.employment_status.active'|trans, value: 'active' },
+                                { label: 'employee.employment_status.inactive'|trans, value: 'inactive' },
+                                { label: 'employee.employment_status.probation'|trans, value: 'probation' }
+                            ], '', '140px', 'ef-input-rounded', 'filter_employment_status', 'filterEmploymentStatus') }}
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.work_status'|trans }}</label>
+                            {{ ui.filterSelect([
+                                { label: 'employee.work_status.working'|trans, value: 'working' },
+                                { label: 'employee.work_status.vacation'|trans, value: 'vacation' },
+                                { label: 'employee.work_status.business_trip'|trans, value: 'business_trip' },
+                                { label: 'employee.work_status.out_of_office'|trans, value: 'out_of_office' },
+                                { label: 'employee.work_status.in_meeting'|trans, value: 'in_meeting' }
+                            ], '', '140px', 'ef-input-rounded', 'filter_work_status', 'filterWorkStatus') }}
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.gender'|trans }}</label>
+                            {{ ui.filterSelect([
+                                { label: 'employee.gender_value.male'|trans, value: 'male' },
+                                { label: 'employee.gender_value.female'|trans, value: 'female' }
+                            ], '', '100px', 'ef-input-rounded', 'filter_gender', 'filterGender') }}
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label style="font-size: 12px; color: #64748b; font-weight: 500;">{{ 'employee.field.education'|trans }}</label>
+                            {{ ui.filterSelect([
+                                { label: 'employee.education.junior_high'|trans, value: 'junior_high' },
+                                { label: 'employee.education.senior_high'|trans, value: 'senior_high' },
+                                { label: 'employee.education.secondary'|trans, value: 'secondary' },
+                                { label: 'employee.education.associate'|trans, value: 'associate' },
+                                { label: 'employee.education.bachelor'|trans, value: 'bachelor' },
+                                { label: 'employee.education.master'|trans, value: 'master' },
+                                { label: 'employee.education.phd'|trans, value: 'phd' },
+                                { label: 'employee.education.mba'|trans, value: 'mba' },
+                                { label: 'employee.education.emba'|trans, value: 'emba' }
+                            ], '', '140px', 'ef-input-rounded', 'filter_education', 'filterEducation') }}
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px; justify-content: flex-end;">
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn outline medium" onclick="clearFilters()" style="height: 36px;">
+                                    {{ 'action.clear'|trans|default('清空') }}
+                                </button>
+                                <button class="btn primary medium" onclick="searchFilters()" style="height: 36px;">
+                                    {{ 'action.search'|trans|default('搜索') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {# Toolbar #}
                 <div class="custom-toolbar-box">
                     <div class="custom-toolbar-wrap">
                         <div class="custom-toolbar-content">
-                            <div class="search-wrapper">
-                                <form action="{{ path('employee_list') }}" method="get" style="display: flex; align-items: center; width: 100%;">
-                                    {% for key, value in app.request.query.all %}
-                                        {% if key != 'q' and key != 'page' %}
-                                            <input type="hidden" name="{{ key }}" value="{{ value }}">
-                                        {% endif %}
-                                    {% endfor %}
-                                    <i class="fa-solid fa-magnifying-glass"></i>
-                                    <input type="text" name="q" value="{{ app.request.query.get('q') }}" placeholder="{{ 'employee.list.search_placeholder'|trans }}" />
-                                </form>
-                            </div>
+                            <button class="stats-collapse-btn" onclick="toggleStats()" title="收起/展开统计">
+                                <i class="fa-solid fa-chevron-up" id="statsToggleIcon"></i>
+                            </button>
+                            <button class="btn outline medium mini round" onclick="toggleFilterPanel()" id="filterToggleBtn" style="color: #64748b; border-color: #e2e8f0; position: relative; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#3b82f6'; this.style.color='#ffffff'; this.style.borderColor='#3b82f6';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#64748b'; this.style.borderColor='#e2e8f0';">
+                                <i class="fa-solid fa-filter"></i> {{ 'employee.filter.toggle'|trans|default('筛选') }}
+                                <span id="filterActiveBadge" style="display: none; position: absolute; top: -4px; right: -4px; width: 10px; height: 10px; background-color: #ef4444; border-radius: 50%; border: 2px solid #fff;"></span>
+                            </button>
                             
                             <div class="filter-tabs">
                                 {% set current_status = app.request.query.get('employment_status', 'active') %}
@@ -754,7 +929,7 @@
                                 <button class="filter-tab {% if current_status == 'all' %}active{% endif %}" onclick="filterEmploymentStatus('all')">{{ 'employee.filter.all'|trans }}</button>
                             </div>
                             
-                            <button class="btn outline medium mini round icon" style="color: #64748b; border-color: #e2e8f0; margin-left: 10px;" onclick="openColumnModal()">
+                            <button class="btn outline medium mini round icon" style="color: #64748b; border-color: #e2e8f0; margin-left: 10px; transition: all 0.2s;" onclick="openColumnModal()" onmouseover="this.style.backgroundColor='#3b82f6'; this.style.color='#ffffff'; this.style.borderColor='#3b82f6';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#64748b'; this.style.borderColor='#e2e8f0';">
                                 <i class="fa-solid fa-table-columns"></i>
                             </button>
 
@@ -773,11 +948,14 @@
                                 </button>
                             </div>
 
-                            <button class="btn outline medium mini round" style="color: #64748b; border-color: #e2e8f0; display: inline-flex; align-items: center; gap: 6px;" onclick="exportEmployees()">
+                            <button class="btn outline medium mini round" style="color: #64748b; border-color: #e2e8f0; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;" onclick="exportEmployees()" onmouseover="this.style.backgroundColor='#3b82f6'; this.style.color='#ffffff'; this.style.borderColor='#3b82f6';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#64748b'; this.style.borderColor='#e2e8f0';">
                                 <i class="fa-solid fa-file-export"></i> {{ 'employee.action.export'|trans({}, 'messages')|default('导出') }}
                             </button>
-                            <button class="btn outline medium mini round" style="color: #64748b; border-color: #e2e8f0; display: inline-flex; align-items: center; gap: 6px;" onclick="openImportModal()">
+                            <button class="btn outline medium mini round" style="color: #64748b; border-color: #e2e8f0; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;" onclick="openImportModal()" onmouseover="this.style.backgroundColor='#3b82f6'; this.style.color='#ffffff'; this.style.borderColor='#3b82f6';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#64748b'; this.style.borderColor='#e2e8f0';">
                                 <i class="fa-solid fa-file-import"></i> {{ 'employee.action.import'|trans({}, 'messages')|default('导入') }}
+                            </button>
+                            <button id="devDeleteBtn" class="btn outline medium mini round" style="color: #ef4444; border-color: #ef4444; display: none; align-items: center; gap: 6px; background: transparent; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#ef4444'; this.style.color='#ffffff';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#ef4444';" onclick="deleteSelectedEmployees()">
+                                <i class="fa-solid fa-trash"></i> {{ 'employee.action.delete'|trans({}, 'messages')|default('删除') }}
                             </button>
                             <a href="{{ path('test_employee_onboarding') }}" class="btn primary medium mini round icon" style="background-color: #f97316; border-color: #f97316;">
                                 <i class="fa-solid fa-plus"></i>
@@ -805,7 +983,7 @@
                                 <tr>
                                     <th style="width: 40px;" data-col-key="checkbox"><input type="checkbox" class="custom-checkbox" id="selectAll"></th>
 {% for key, config in columns %}
-                                        {% set defaultWidths = {'name': '140px', 'employeeNo': '100px', 'department': '150px', 'position': '120px', 'employmentStatus': '100px', 'workStatus': '100px', 'hireDate': '110px', 'email': '200px', 'mobile': '130px', 'gender': '60px', 'birthDate': '110px', 'idCard': '180px', 'englishName': '120px'} %}
+                                        {% set defaultWidths = {'name': '140px', 'employeeNo': '100px', 'username': '150px', 'department': '150px', 'position': '120px', 'employmentStatus': '100px', 'workStatus': '100px', 'hireDate': '110px', 'email': '200px', 'mobile': '130px', 'gender': '60px', 'birthDate': '110px', 'idCard': '180px', 'englishName': '120px'} %}
                                         {% set colWidth = columnWidths[key]|default(defaultWidths[key]|default('120px')) %}
                                         <th style="width: {{ colWidth }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" data-col-key="{{ key }}">
                                             <div style="display: flex; align-items: center; width: 100%;">
@@ -881,6 +1059,8 @@
                                             <td>{{ item.idCard }}</td>
                                          {% elseif key == 'englishName' %}
                                             <td>{{ item.englishName }}</td>
+                                         {% elseif key == 'username' %}
+                                            <td>{{ item.username }}</td>
                                         {% else %}
                                             <td></td>
                                         {% endif %}
@@ -946,7 +1126,10 @@
                 {# Pagination #}
                 <div class="custom-pagination">
                     <div class="pagination-info">
-                        {{ 'pagination.info'|trans({'%start%': pagination.start, '%end%': pagination.end, '%total%': pagination.totalItems}) }}
+                        <span class="pagination-count">{{ 'pagination.info'|trans({'%start%': pagination.start, '%end%': pagination.end, '%total%': pagination.totalItems}) }}</span>
+                        {% if departmentPath %}
+                            <span class="department-path-label"><i class="fa-solid fa-location-dot" style="margin-right: 4px;"></i>{{ departmentPath }}</span>
+                        {% endif %}
                     </div>
                     <div class="pagination-controls">
                         <span style="font-size: 13px; color: #64748b;">{{ 'pagination.per_page'|trans }}</span>
@@ -1014,7 +1197,7 @@
             {% endfor %}
         </div>
         <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
-            <button onclick="closeColumnModal()" class="btn outline medium" style="border: 1px solid #e2e8f0; color: #64748b; padding: 0 16px; border-radius: 8px; font-weight: 500; height: 36px; display: inline-flex; align-items: center; justify-content: center;">{{ 'action.cancel'|trans({}, 'messages')|default('Cancel') }}</button>
+            <button onclick="closeColumnModal()" class="btn outline medium" style="border: 1px solid #e2e8f0; color: #64748b; padding: 0 16px; border-radius: 8px; font-weight: 500; height: 36px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#3b82f6'; this.style.color='#ffffff'; this.style.borderColor='#3b82f6';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#64748b'; this.style.borderColor='#e2e8f0';">{{ 'action.cancel'|trans({}, 'messages')|default('Cancel') }}</button>
             <button onclick="saveColumns()" class="btn primary medium" style="background: #3b82f6; color: #fff; border: none; padding: 0 24px; border-radius: 8px; font-weight: 600; cursor: pointer; height: 36px; display: inline-flex; align-items: center; justify-content: center;">{{ 'action.save'|trans({}, 'messages')|default('Save') }}</button>
         </div>
     </div>
@@ -1052,6 +1235,7 @@
             <i class="fa-solid fa-circle-check" style="font-size: 18px; color: #22c55e;"></i>
             <span>导入完成！共成功导入 <span id="successCount">0</span> 条数据。</span>
         </div>
+        <div id="importWarnings" style="display: none; margin-top: 10px; padding: 10px; border-radius: 6px; background: #fefce8; border: 1px solid #fde047; color: #854d0e;"></div>
     </div>
     
     <div id="importError" style="display: none; margin-top: 20px; padding: 15px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca;">
@@ -1072,6 +1256,87 @@
 }) }}
 
 <script>
+    // DEV: Hidden delete button for system admin (press DEL 3 times)
+    {% if 'ROLE_SYS_ADMIN' in app.user.roles|default([]) %}
+    let delKeyPressCount = 0;
+    let delKeyTimeout = null;
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Delete' || e.key === 'Del') {
+            delKeyPressCount++;
+            
+            if (delKeyTimeout) {
+                clearTimeout(delKeyTimeout);
+            }
+            
+            delKeyTimeout = setTimeout(function() {
+                delKeyPressCount = 0;
+            }, 2000);
+            
+            if (delKeyPressCount >= 3) {
+                const deleteBtn = document.getElementById('devDeleteBtn');
+                if (deleteBtn) {
+                    deleteBtn.style.display = 'inline-flex';
+                    delKeyPressCount = 0;
+                    if (delKeyTimeout) {
+                        clearTimeout(delKeyTimeout);
+                    }
+                }
+            }
+        }
+    });
+    
+    window.deleteSelectedEmployees = function() {
+        const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+        if (checkboxes.length === 0) {
+            alert('请先选择要删除的员工');
+            return;
+        }
+        
+        if (!confirm('确定要删除选中的 ' + checkboxes.length + ' 名员工吗？此操作不可恢复！')) {
+            return;
+        }
+        
+        const employeeIds = [];
+        checkboxes.forEach(cb => {
+            const row = cb.closest('tr');
+            if (row) {
+                const syncVal = row.querySelector('.sync-val-name');
+                if (syncVal) {
+                    employeeIds.push(row.dataset.efSync?.replace('employee:', ''));
+                }
+            }
+        });
+        
+        if (employeeIds.length === 0) {
+            alert('无法获取员工ID');
+            return;
+        }
+        
+        fetch('/api/employee/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ ids: employeeIds })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('成功删除 ' + data.deleted + ' 名员工');
+                sessionStorage.removeItem(STORAGE_KEY);
+                window.location.reload();
+            } else {
+                alert('删除失败: ' + (data.error || '未知错误'));
+            }
+        })
+        .catch(err => {
+            alert('删除请求失败: ' + err.message);
+        });
+    }
+    {% endif %}
+
     window.exportEmployees = function() {
         const url = new URL('{{ path('employee_export') }}', window.location.origin);
         
@@ -1232,6 +1497,12 @@
                 modalBody.querySelector('#uploadProgress').style.display = 'none';
                 modalBody.querySelector('#importResult').style.display = 'block';
                 modalBody.querySelector('#successCount').innerText = data.processed || 0;
+                if (data.warnings && data.warnings.length > 0) {
+                    const warningsDiv = modalBody.querySelector('#importWarnings');
+                    warningsDiv.style.display = 'block';
+                    warningsDiv.innerHTML = '<div style="font-weight: 500; margin-bottom: 5px;"><i class="fa-solid fa-triangle-exclamation"></i> 部分数据格式问题（已忽略）:</div><ul style="margin: 0; padding-left: 20px;">' + 
+                        data.warnings.map(w => '<li>' + w + '</li>').join('') + '</ul>';
+                }
             }
         };
 
@@ -1371,6 +1642,8 @@
     }
 
     // View Switcher
+    const VIEW_STORAGE_KEY = 'employee_list_view';
+    
     function switchView(view) {
         const listView = document.getElementById('listView');
         const cardView = document.getElementById('cardView');
@@ -1381,12 +1654,19 @@
             if(cardView) cardView.style.display = 'none';
             if(btns.length > 0) btns[0].classList.add('active');
             if(btns.length > 1) btns[1].classList.remove('active');
+            sessionStorage.setItem(VIEW_STORAGE_KEY, 'list');
         } else {
             if(listView) listView.style.display = 'none';
             if(cardView) cardView.style.display = 'block';
             if(btns.length > 0) btns[0].classList.remove('active');
             if(btns.length > 1) btns[1].classList.add('active');
+            sessionStorage.setItem(VIEW_STORAGE_KEY, 'card');
         }
+    }
+    
+    function restoreView() {
+        const savedView = sessionStorage.getItem(VIEW_STORAGE_KEY) || 'list';
+        switchView(savedView);
     }
 
     // Selection Logic
@@ -1482,6 +1762,266 @@
             loadContent(url.toString());
             sortDebounceTimer = null;
         }, 300);
+    }
+
+    // Stats Container Toggle
+    const STATS_COLLAPSED_KEY = 'employee_stats_collapsed';
+    let statsExpanded = sessionStorage.getItem(STATS_COLLAPSED_KEY) !== 'false';
+    
+    function updateStatsUI() {
+        const statsContainer = document.getElementById('statsContainer');
+        const toggleIcon = document.getElementById('statsToggleIcon');
+        if (!statsContainer) return;
+        
+        if (statsExpanded) {
+            statsContainer.classList.remove('collapsed');
+            toggleIcon.classList.remove('fa-chevron-down');
+            toggleIcon.classList.add('fa-chevron-up');
+        } else {
+            statsContainer.classList.add('collapsed');
+            toggleIcon.classList.remove('fa-chevron-up');
+            toggleIcon.classList.add('fa-chevron-down');
+        }
+    }
+    
+    function toggleStats() {
+        statsExpanded = !statsExpanded;
+        sessionStorage.setItem(STATS_COLLAPSED_KEY, statsExpanded ? 'true' : 'false');
+        // Update URL without reloading (inverted: statsCollapsed = !statsExpanded)
+        const urlObj = new URL(window.location.href, window.location.origin);
+        urlObj.searchParams.set('stats_collapsed', (!statsExpanded).toString());
+        window.history.replaceState({}, '', urlObj.toString());
+        updateStatsUI();
+    }
+    
+    // Initialize stats UI on page load
+    updateStatsUI();
+
+    // Filter Panel Toggle
+    let filterPanelExpanded = false;
+    function toggleFilterPanel() {
+        const filterPanel = document.getElementById('filterPanel');
+        const filterBtn = document.getElementById('filterToggleBtn');
+        if (!filterPanel) return;
+        
+        filterPanelExpanded = !filterPanelExpanded;
+        if (filterPanelExpanded) {
+            filterPanel.style.display = 'block';
+            filterBtn.classList.add('active');
+            syncFiltersFromUrl();
+        } else {
+            filterPanel.style.display = 'none';
+            filterBtn.classList.remove('active');
+        }
+    }
+
+    // Apply Filter Changes
+    // Update filter badge visibility
+    const FILTER_PANEL_STORAGE_KEY = 'employee_filter_panel_values';
+
+    function saveFilterPanelValues() {
+        const filters = {
+            'filterName': 'name',
+            'filterEmployeeNo': 'employeeNo',
+            'filterUsername': 'username',
+            'filterEmail': 'email',
+            'filterMobile': 'mobile',
+            'filterDepartment': 'filter_department_id',
+            'filterPosition': 'filter_position_id',
+            'filterEmploymentStatus': 'employment_status',
+            'filterWorkStatus': 'workStatus',
+            'filterGender': 'gender',
+            'filterEnglishName': 'englishName',
+            'filterIdCard': 'idCard',
+            'filterEducation': 'education'
+        };
+        
+        const values = {};
+        Object.entries(filters).forEach(([inputId, paramKey]) => {
+            let input = document.getElementById(inputId);
+            if (!input) return;
+            
+            // For select elements, get value from the visible select dropdown
+            if (input.type === 'hidden') {
+                const wrapper = input.closest('.ef-select-view-single');
+                if (wrapper) {
+                    const visibleSelect = wrapper.querySelector('select');
+                    if (visibleSelect) {
+                        input = visibleSelect;
+                    }
+                }
+            }
+            
+            if (input.value && input.value.trim() !== '') {
+                values[paramKey] = input.value;
+            }
+        });
+        
+        sessionStorage.setItem(FILTER_PANEL_STORAGE_KEY, JSON.stringify(values));
+        return Object.keys(values).length > 0;
+    }
+
+    function hasFilterPanelValues() {
+        const stored = sessionStorage.getItem(FILTER_PANEL_STORAGE_KEY);
+        if (!stored) return false;
+        const values = JSON.parse(stored);
+        return Object.keys(values).length > 0;
+    }
+
+    function clearFilterPanelValues() {
+        sessionStorage.removeItem(FILTER_PANEL_STORAGE_KEY);
+    }
+
+    function updateFilterBadge() {
+        const badge = document.getElementById('filterActiveBadge');
+        if (!badge) return;
+        
+        badge.style.display = hasFilterPanelValues() ? 'block' : 'none';
+    }
+
+    // Sync URL params to filter inputs
+    function syncFiltersFromUrl() {
+        const filterMappings = {
+            'filter_department_id': 'filterDepartment',
+            'filter_position_id': 'filterPosition',
+            'employment_status': 'filterEmploymentStatus',
+            'workStatus': 'filterWorkStatus',
+            'gender': 'filterGender',
+            'education': 'filterEducation'
+        };
+        
+        // Use standardized helper for filter selects
+        initFilterSelectsFromUrl(filterMappings);
+        
+        // For text inputs, handle separately
+        const textMappings = {
+            'name': 'filterName',
+            'employeeNo': 'filterEmployeeNo',
+            'username': 'filterUsername',
+            'email': 'filterEmail',
+            'mobile': 'filterMobile',
+            'englishName': 'filterEnglishName',
+            'idCard': 'filterIdCard'
+        };
+        
+        const url = new URL(window.location.href);
+        Object.entries(textMappings).forEach(([paramKey, inputId]) => {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const value = url.searchParams.get(paramKey) || '';
+            input.value = value;
+        });
+    }
+
+    // Check badge on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateFilterBadge();
+        syncFiltersFromUrl();
+        restoreView();
+    });
+
+    // Sync filter tabs with employment status from URL
+    function syncFilterTabs() {
+        const url = new URL(window.location.href);
+        const status = url.searchParams.get('employment_status');
+        
+        const tabs = document.querySelectorAll('.filter-tab');
+        tabs.forEach(tab => {
+            tab.classList.remove('active');
+            const onclick = tab.getAttribute('onclick');
+            if (onclick) {
+                const match = onclick.match(/filterEmploymentStatus\('([^']+)'\)/);
+                if (match) {
+                    const tabStatus = match[1];
+                    if (tabStatus === status) {
+                        tab.classList.add('active');
+                    } else if (status === null && tabStatus === 'all') {
+                        tab.classList.add('active');
+                    } else if ((status === 'active' || status === 'probation') && tabStatus === 'active') {
+                        tab.classList.add('active');
+                    }
+                }
+            }
+        });
+    }
+
+    function searchFilters() {
+        const url = new URL(window.location.href);
+        url.searchParams.set('page', 1);
+        
+        const filters = {
+            'filterName': 'name',
+            'filterEmployeeNo': 'employeeNo',
+            'filterUsername': 'username',
+            'filterEmail': 'email',
+            'filterMobile': 'mobile',
+            'filterDepartment': 'filter_department_id',
+            'filterPosition': 'filter_position_id',
+            'filterEmploymentStatus': 'employment_status',
+            'filterWorkStatus': 'workStatus',
+            'filterGender': 'gender',
+            'filterEnglishName': 'englishName',
+            'filterIdCard': 'idCard',
+            'filterEducation': 'education'
+        };
+        
+        Object.entries(filters).forEach(([inputId, paramKey]) => {
+            let input = document.getElementById(inputId);
+            // For select elements, get value from the visible select dropdown (not hidden input)
+            if (input && input.tagName === 'INPUT' && input.type === 'hidden') {
+                const wrapper = input.closest('.ef-select-view-single');
+                if (wrapper) {
+                    const visibleSelect = wrapper.querySelector('select');
+                    if (visibleSelect) {
+                        input = visibleSelect;
+                    }
+                }
+            }
+            if (input && input.value) {
+                url.searchParams.set(paramKey, input.value);
+            } else {
+                url.searchParams.delete(paramKey);
+            }
+        });
+        
+        saveFilterPanelValues();
+        loadContent(url.toString());
+    }
+
+    // Clear All Filters
+    function clearFilters() {
+        const filters = [
+            'filterName', 'filterEmployeeNo', 'filterUsername', 'filterEmail', 'filterMobile',
+            'filterDepartment', 'filterPosition', 'filterEmploymentStatus',
+            'filterWorkStatus', 'filterGender', 'filterEnglishName',
+            'filterIdCard', 'filterEducation'
+        ];
+        filters.forEach(id => {
+            const input = document.getElementById(id);
+            if (!input) return;
+            
+            // For hidden inputs wrapped in ef-select, also reset the visible select
+            if (input.type === 'hidden') {
+                const wrapper = input.closest('.ef-select-view-single');
+                if (wrapper) {
+                    const visibleSelect = wrapper.querySelector('select');
+                    if (visibleSelect) {
+                        visibleSelect.value = '';
+                    }
+                }
+            }
+            input.value = '';
+        });
+        
+        clearFilterPanelValues();
+        
+        // Reload without any filters
+        const url = new URL(window.location.href);
+        url.searchParams.set('page', 1);
+        // Remove all filter params
+        const filterParams = ['name', 'employeeNo', 'email', 'mobile', 'filter_department_id', 'filter_position_id', 'employment_status', 'workStatus', 'gender', 'englishName', 'idCard', 'education'];
+        filterParams.forEach(p => url.searchParams.delete(p));
+        loadContent(url.toString());
     }
 
     // Column Resize Functionality
@@ -1584,6 +2124,14 @@
 
     // PJAX Loading Function
     async function loadContent(url, updateHistory = true) {
+        // Add stats_collapsed param from sessionStorage (inverted: true in session = shown, but URL true = hidden)
+        const statsValue = sessionStorage.getItem(STATS_COLLAPSED_KEY);
+        if (statsValue !== null) {
+            const urlObj = new URL(url, window.location.origin);
+            urlObj.searchParams.set('stats_collapsed', statsValue === 'true' ? 'false' : 'true');
+            url = urlObj.toString();
+        }
+        
         const rightContent = document.querySelector('.right-content');
         if (rightContent) {
             rightContent.style.opacity = '0.6';
@@ -1602,6 +2150,14 @@
             const newContent = doc.querySelector('.right-content');
             if (newContent && rightContent) {
                 rightContent.innerHTML = newContent.innerHTML;
+                // Sync statsExpanded from actual DOM state (server-rendered is authoritative)
+                const newStatsContainer = document.getElementById('statsContainer');
+                if (newStatsContainer) {
+                    statsExpanded = !newStatsContainer.classList.contains('collapsed');
+                }
+                updateStatsUI();
+                // Reset filter panel state since DOM was replaced
+                filterPanelExpanded = false;
             }
 
             // Update URL
@@ -1610,15 +2166,16 @@
             }
 
             // Restore View
-             const isCardView = $('.view-toggle-btn[onclick="switchView(\'card\')"]').hasClass('active');
-             if (isCardView) {
-                 switchView('card');
-             } else {
-                 switchView('list');
-             }
+            restoreView();
              
              // Re-initialize UI
              updateSelectionUI();
+             
+             // Update filter badge
+             updateFilterBadge();
+             
+             // Sync filter tabs
+             syncFilterTabs();
              
              // Re-highlight active node based on new URL params
              highlightActiveNode();

@@ -81,6 +81,8 @@ class SecurityConfigController extends AbstractController
         $policy->setHistoryLimit((int) $request->request->get('history_limit', 3));
         $policy->setMaxRetry((int) $request->request->get('max_retry', 5));
         $policy->setLockMinutes((int) $request->request->get('lock_minutes', 30));
+        $policy->setDefaultPassword((string) $request->request->get('default_password', 'Welcome@2024'));
+        $policy->setForceResetPasswordOnFirstLogin($request->request->has('force_reset_password_on_first_login'));
 
         $em->flush();
 

@@ -92,6 +92,16 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     private $password;
 
     /**
+     * 强制重置密码标记（首次登录时）
+     * @Ef(
+     *     group="employee_account_info",
+     *     isBF=false
+     * )
+     */
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $forcePasswordReset = true;
+
+    /**
      * 邮箱
      * @Ef(
      *     group="employee_contact_info",
@@ -494,6 +504,18 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): self
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    public function isForcePasswordReset(): bool
+    {
+        return $this->forcePasswordReset;
+    }
+
+    public function setForcePasswordReset(bool $forcePasswordReset): self
+    {
+        $this->forcePasswordReset = $forcePasswordReset;
 
         return $this;
     }

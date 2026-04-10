@@ -1,4 +1,5 @@
 {% extends 'admin/layout.html.twig' %}
+{% import 'ui/template/ui.html.twig' as ui %}
 
 {% block title %}{{ 'employee.onboarding.title'|trans }}{% endblock %}
 
@@ -95,16 +96,8 @@
             font-size: 13px;
             color: #666;
         }
-        .form-control {
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-        .form-control:focus {
-            border-color: #1890ff;
-            outline: none;
+        .form-label .required {
+            color: red;
         }
         .form-actions {
             margin-top: 30px;
@@ -140,21 +133,26 @@
 {% block app_content_container %}
 <div style="background: #f0f2f5; height: 100%; overflow-y: auto; padding-top: 1px;">
     <div class="onboarding-container">
+        {% set step1Active = 'active' %}
+        {% set step2Active = '' %}
+        {% set step3Active = '' %}
+        {% set step4Active = '' %}
+
         <!-- Steps Navigation -->
         <div class="steps">
-            <div class="step-item active" data-step="1">
+            <div class="step-item {{ step1Active }}" data-step="1">
                 <div class="step-number">1</div>
                 <div class="step-title">{{ 'employee.onboarding.steps.basic_info'|trans }}</div>
             </div>
-            <div class="step-item" data-step="2">
+            <div class="step-item {{ step2Active }}" data-step="2">
                 <div class="step-number">2</div>
                 <div class="step-title">{{ 'employee.onboarding.steps.job_info'|trans }}</div>
             </div>
-            <div class="step-item" data-step="3">
+            <div class="step-item {{ step3Active }}" data-step="3">
                 <div class="step-number">3</div>
                 <div class="step-title">{{ 'employee.onboarding.steps.account_info'|trans }}</div>
             </div>
-            <div class="step-item" data-step="4">
+            <div class="step-item {{ step4Active }}" data-step="4">
                 <div class="step-number">4</div>
                 <div class="step-title">{{ 'employee.onboarding.steps.complete'|trans }}</div>
             </div>
@@ -166,54 +164,54 @@
                 <h3>{{ 'employee.onboarding.basic_info.title'|trans }}</h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{{ 'employee.field.name'|trans }} <span style="color:red">*</span></label>
-                        <input type="text" class="form-control" name="name" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.field.name'|trans}) }}">
+                        <label class="form-label">{{ 'employee.field.name'|trans }} <span class="required">*</span></label>
+                        {{ ui.input('name', 'text', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.field.name'|trans}), '', 'ef-input-rounded') }}
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.basic_info.english_name'|trans }}</label>
-                        <input type="text" class="form-control" name="englishName" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.basic_info.english_name'|trans}) }}">
+                        {{ ui.input('englishName', 'text', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.basic_info.english_name'|trans}), '', 'ef-input-rounded') }}
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{{ 'employee.detail.info.personal.gender'|trans }} <span style="color:red">*</span></label>
-                        <select class="form-control" name="gender">
-                            <option value="male">{{ 'employee.gender.male'|trans }}</option>
-                            <option value="female">{{ 'employee.gender.female'|trans }}</option>
-                        </select>
+                        <label class="form-label">{{ 'employee.detail.info.personal.gender'|trans }} <span class="required">*</span></label>
+                        {{ ui.select([
+                            { label: 'employee.gender.male'|trans, value: 'male' },
+                            { label: 'employee.gender.female'|trans, value: 'female' }
+                        ], 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.detail.info.personal.gender'|trans}), '100%', 'ef-input-rounded', 'gender', 'gender', '') }}
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.detail.info.personal.dob'|trans }}</label>
-                        <input type="date" class="form-control" name="birthDate">
+                        {{ ui.input('birthDate', 'text', '', '', 'ef-input-rounded ef-input-h32', '', 'date-picker') }}
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.basic_info.id_type'|trans }}</label>
-                        <select class="form-control" name="idType">
-                            <option value="id_card">身份证</option>
-                            <option value="passport">护照</option>
-                        </select>
+                        {{ ui.select([
+                            { label: '身份证', value: 'id_card' },
+                            { label: '护照', value: 'passport' }
+                        ], 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.basic_info.id_type'|trans}), '100%', 'ef-input-rounded', 'idType', 'idType', 'id_card') }}
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.basic_info.id_number'|trans }}</label>
-                        <input type="text" class="form-control" name="idCard" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.basic_info.id_number'|trans}) }}">
+                        {{ ui.input('idCard', 'text', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.basic_info.id_number'|trans}), '', 'ef-input-rounded') }}
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{{ 'employee.detail.profile.phone'|trans }} <span style="color:red">*</span></label>
-                        <input type="text" class="form-control" name="mobile" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.profile.phone'|trans}) }}">
+                        <label class="form-label">{{ 'employee.detail.profile.phone'|trans }} <span class="required">*</span></label>
+                        {{ ui.input('mobile', 'text', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.profile.phone'|trans}), '', 'ef-input-rounded') }}
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.field.email'|trans }}</label>
-                        <input type="email" class="form-control" name="email" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.field.email'|trans}) }}">
+                        {{ ui.input('email', 'email', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.field.email'|trans}), '', 'ef-input-rounded') }}
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.detail.info.personal.address'|trans }}</label>
-                        <input type="text" class="form-control" name="address" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.info.personal.address'|trans}) }}">
+                        {{ ui.input('address', 'text', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.info.personal.address'|trans}), '', 'ef-input-rounded') }}
                     </div>
                 </div>
             </div>
@@ -223,26 +221,31 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.detail.info.education.school'|trans }}</label>
-                        <input type="text" class="form-control" name="school" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.info.education.school'|trans}) }}">
+                        {{ ui.input('school', 'text', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.info.education.school'|trans}), '', 'ef-input-rounded') }}
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.detail.info.education.major'|trans }}</label>
-                        <input type="text" class="form-control" name="major" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.info.education.major'|trans}) }}">
+                        {{ ui.input('major', 'text', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.info.education.major'|trans}), '', 'ef-input-rounded') }}
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.detail.info.education.degree'|trans }}</label>
-                        <select class="form-control" name="education">
-                            <option value="">{{ 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.detail.info.education.degree'|trans}) }}</option>
-                            <option value="bachelor">{{ 'employee.education.bachelor'|trans }}</option>
-                            <option value="master">{{ 'employee.education.master'|trans }}</option>
-                            <option value="phd">{{ 'employee.education.phd'|trans }}</option>
-                        </select>
+                        {{ ui.select([
+                            { label: 'employee.education.junior_high'|trans, value: 'junior_high' },
+                            { label: 'employee.education.senior_high'|trans, value: 'senior_high' },
+                            { label: 'employee.education.secondary'|trans, value: 'secondary' },
+                            { label: 'employee.education.associate'|trans, value: 'associate' },
+                            { label: 'employee.education.bachelor'|trans, value: 'bachelor' },
+                            { label: 'employee.education.master'|trans, value: 'master' },
+                            { label: 'employee.education.phd'|trans, value: 'phd' },
+                            { label: 'employee.education.mba'|trans, value: 'mba' },
+                            { label: 'employee.education.emba'|trans, value: 'emba' }
+                        ], 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.detail.info.education.degree'|trans}), '100%', 'ef-input-rounded', 'education', 'education', '') }}
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.detail.info.education.graduation'|trans }}</label>
-                        <input type="date" class="form-control" name="graduationDate">
+                        {{ ui.input('graduationDate', 'text', '', '', 'ef-input-rounded ef-input-h32', '', 'date-picker') }}
                     </div>
                 </div>
             </div>
@@ -252,18 +255,18 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.detail.info.emergency.contact_name'|trans }}</label>
-                        <input type="text" class="form-control" name="emergencyContact" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.info.emergency.contact_name'|trans}) }}">
+                        {{ ui.input('emergencyContact', 'text', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.info.emergency.contact_name'|trans}), '', 'ef-input-rounded') }}
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.detail.info.emergency.phone'|trans }}</label>
-                        <input type="text" class="form-control" name="emergencyPhone" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.info.emergency.phone'|trans}) }}">
+                        {{ ui.input('emergencyPhone', 'text', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.detail.info.emergency.phone'|trans}), '', 'ef-input-rounded') }}
                     </div>
                 </div>
             </div>
 
             <div class="form-actions">
-                <button class="btn outline medium round">{{ 'employee.onboarding.action.cancel'|trans }}</button>
-                <button class="btn primary medium round" onclick="nextStep(2)">{{ 'employee.onboarding.action.next'|trans }}</button>
+                <a href="{{ path('employee_list') }}" class="btn outline medium round" onclick="window.clearOnboardingFormCache && window.clearOnboardingFormCache();">{{ 'employee.onboarding.action.back_to_list'|trans }}</a>
+                <button class="btn primary medium round" type="button" onclick="nextStep(1)">{{ 'employee.onboarding.action.next'|trans }}</button>
             </div>
         </div>
 
@@ -273,67 +276,84 @@
                 <h3>{{ 'employee.onboarding.job_info.title'|trans }}</h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{{ 'employee.onboarding.job_info.employee_no'|trans }} <span style="color:red">*</span></label>
-                        <input type="text" class="form-control" name="employeeNo" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.job_info.employee_no'|trans}) }}">
+                        <label class="form-label">{{ 'employee.onboarding.job_info.employee_no'|trans }} <span class="required">*</span></label>
+                        {{ ui.input('employeeNo', 'text', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.job_info.employee_no'|trans}), '', 'ef-input-rounded') }}
                     </div>
                     <div class="form-group">
-                        <label class="form-label">{{ 'employee.onboarding.job_info.status'|trans }} <span style="color:red">*</span></label>
-                        <select class="form-control" name="status">
-                            <option value="active">{{ 'employee.status.active'|trans }}</option>
-                            <option value="inactive">{{ 'employee.status.inactive'|trans }}</option>
-                        </select>
+                        <label class="form-label">{{ 'employee.onboarding.job_info.status'|trans }} <span class="required">*</span></label>
+                        {{ ui.select([
+                            { label: 'employee.status.active'|trans, value: 'active' },
+                            { label: 'employee.status.inactive'|trans, value: 'inactive' },
+                            { label: 'employee.status.probation'|trans, value: 'probation' }
+                        ], 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.status'|trans}), '100%', 'ef-input-rounded', 'status', 'status', 'active') }}
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.job_info.hire_date'|trans }}</label>
-                        <input type="date" class="form-control" name="hireDate">
+                        {{ ui.input('hireDate', 'text', '', '', 'ef-input-rounded ef-input-h32', '', 'date-picker') }}
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.job_info.company'|trans }}</label>
-                        <select class="form-control" name="company">
-                            <option value="">{{ 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.company'|trans}) }}</option>
-                            <!-- Mock Data -->
-                            <option value="1">Company A</option>
-                            <option value="2">Company B</option>
-                        </select>
+                        {{ ui.select(companies|map(c => {label: c.name, value: c.id}), 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.company'|trans}), '100%', 'ef-input-rounded', 'company', 'company', '') }}
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.job_info.department'|trans }}</label>
-                        <select class="form-control" name="department">
-                            <option value="">{{ 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.department'|trans}) }}</option>
-                            <!-- Mock Data -->
-                            <option value="1">Tech Dept</option>
-                            <option value="2">HR Dept</option>
-                        </select>
+                        <div class="ef-deparment-element">
+                            <span class="ef-department-view-single ef-department ef-department-view ef-department-view-size-medium ef-department-view-search ef-input-rounded" style="width: 100%;" chosen="false" id="departmentInput" contentid="departmentContent">
+                                <div class="ef-department-selection-container">
+                                    <div class="ef-department-selection">
+                                        <span class="ef-department-selection-span">
+                                            <ul>
+                                            </ul>
+                                        </span>
+                                    </div>
+                                    <input class="ef-department-view-input" placeholder="{{ 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.department'|trans}) }}" mode="single" chose="false">
+                                </div>
+                                <span class="ef-department-view-value ef-department-view-value-hidden"></span>
+                                <span class="ef-department-view-suffix show-department-modal">
+                                    <span class="ef-department-view-icon">
+                                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-search" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                                            <path d="M33.072 33.071c6.248-6.248 6.248-16.379 0-22.627-6.249-6.249-16.38-6.249-22.628 0-6.248 6.248-6.248 16.379 0 22.627 6.248 6.248 16.38 6.248 22.628 0Zm0 0 8.485 8.485"></path>
+                                        </svg>
+                                    </span>
+                                </span>
+                            </span>
+                            <input type="hidden" component="select" name="department" id="department" value="">
+                        </div>
+                        <div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; min-width: 260px; width: fit-content; display: none;" id="departmentContent" parentid="departmentInput">
+                            <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
+                                <div class="ef-trigger-content">
+                                    <div class="ef-department-dropdown">
+                                        <div class="ef-scrollbar ef-scrollbar-type-embed">
+                                            <div class="ef-scrollbar-container ef-department-dropdown-list-wrapper">
+                                                <ul class="ef-department-dropdown-list">
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.job_info.position'|trans }}</label>
-                        <select class="form-control" name="position">
-                            <option value="">{{ 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.position'|trans}) }}</option>
-                            <!-- Mock Data -->
-                            <option value="1">Developer</option>
-                            <option value="2">Manager</option>
-                        </select>
+                        {{ ui.select(positions|map(p => {label: p.name, value: p.id}), 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.position'|trans}), '100%', 'ef-input-rounded', 'position', 'position', '') }}
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.job_info.manager'|trans }}</label>
-                        <select class="form-control" name="manager">
-                            <option value="">{{ 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.manager'|trans}) }}</option>
-                            <!-- Mock Data -->
-                            <option value="1">John Doe</option>
-                        </select>
+                        {{ ui.select(managers|map(m => {label: m.name, value: m.id}), 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.manager'|trans}), '100%', 'ef-input-rounded', 'manager', 'manager', '') }}
                     </div>
                 </div>
             </div>
 
             <div class="form-actions">
-                <button class="btn outline medium round" onclick="prevStep(1)">{{ 'employee.onboarding.action.prev'|trans }}</button>
-                <button class="btn primary medium round" onclick="nextStep(3)">{{ 'employee.onboarding.action.next'|trans }}</button>
+                <button class="btn outline medium round" type="button" onclick="prevStep(1)">{{ 'employee.onboarding.action.prev'|trans }}</button>
+                <button class="btn primary medium round" type="button" onclick="nextStep(2)">{{ 'employee.onboarding.action.next'|trans }}</button>
             </div>
         </div>
 
@@ -343,34 +363,27 @@
                 <h3>{{ 'employee.onboarding.account_info.title'|trans }}</h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{{ 'employee.onboarding.account_info.username'|trans }} <span style="color:red">*</span></label>
-                        <input type="text" class="form-control" name="username" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.account_info.username'|trans}) }}">
+                        <label class="form-label">{{ 'employee.onboarding.account_info.username'|trans }} <span class="required">*</span></label>
+                        {{ ui.input('username', 'text', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.account_info.username'|trans}), '', 'ef-input-rounded') }}
                     </div>
                     <div class="form-group">
-                        <label class="form-label">{{ 'employee.onboarding.account_info.password'|trans }} <span style="color:red">*</span></label>
-                        <input type="password" class="form-control" name="password" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.account_info.password'|trans}) }}">
+                        <label class="form-label">{{ 'employee.onboarding.account_info.password'|trans }} <span class="required">*</span></label>
+                        {{ ui.input('password', 'password', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.account_info.password'|trans}), defaultPassword, 'ef-input-rounded') }}
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">{{ 'employee.onboarding.account_info.roles'|trans }}</label>
-                        <select class="form-control" name="roles" multiple>
-                            <option value="ROLE_USER" selected>User</option>
-                            <option value="ROLE_ADMIN">Admin</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.account_info.is_active'|trans }}</label>
                         <div style="padding-top: 8px;">
-                            <label><input type="checkbox" name="isActive" checked> {{ 'employee.status_value.active'|trans }}</label>
+                            {{ ui.checkbox('isActive', 'employee.status_value.active'|trans, 'true', true, '', 'isActive') }}
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="form-actions">
-                <button class="btn outline medium round" onclick="prevStep(2)">{{ 'employee.onboarding.action.prev'|trans }}</button>
-                <button class="btn primary medium round" onclick="nextStep(4)">{{ 'employee.onboarding.action.submit'|trans }}</button>
+                <button class="btn outline medium round" type="button" onclick="prevStep(2)">{{ 'employee.onboarding.action.prev'|trans }}</button>
+                <button class="btn primary medium round" type="button" onclick="submitOnboardingForm()">{{ 'employee.onboarding.action.submit'|trans }}</button>
             </div>
         </div>
 
@@ -384,8 +397,8 @@
                 <p style="color: #666; margin-top: 10px;">{{ 'employee.onboarding.complete_step.success'|trans }}</p>
                 
                 <div style="margin-top: 30px;">
-                    <a href="#" class="btn primary medium round">{{ 'employee.onboarding.complete_step.view_profile'|trans }}</a>
-                    <a href="#" class="btn outline medium round" onclick="location.reload()">{{ 'employee.onboarding.complete_step.onboard_another'|trans }}</a>
+                    <a href="{{ path('employee_list') }}" class="btn outline medium round" onclick="window.clearOnboardingFormCache && window.clearOnboardingFormCache();">{{ 'employee.onboarding.action.back_to_list'|trans }}</a>
+                    <a href="#" class="btn primary medium round" onclick="window.clearOnboardingFormCache && window.clearOnboardingFormCache(); location.reload(); return false;">{{ 'employee.onboarding.action.continue_add'|trans }}</a>
                 </div>
             </div>
         </div>
@@ -393,54 +406,249 @@
 </div>
 
 <script>
-    function nextStep(step) {
-        showStep(step);
-    }
-
-    function prevStep(step) {
-        showStep(step);
-    }
-
-    function showStep(step) {
-        // Update step indicators
-        const stepItems = document.querySelectorAll('.step-item');
-        stepItems.forEach(item => {
-            const itemStep = parseInt(item.dataset.step);
-            item.classList.remove('active');
-            item.classList.remove('completed');
-            
-            if (itemStep === step) {
-                item.classList.add('active');
-            } else if (itemStep < step) {
-                item.classList.add('completed');
-            }
-        });
-
-        // Show/Hide content
-        const stepContents = document.querySelectorAll('.step-content');
-        stepContents.forEach(content => {
-            content.classList.remove('active');
-        });
+    (function() {
+        // Form caching functionality
+        const FORM_CACHE_KEY = 'employee_onboarding_form';
+        const FORM_STEP_KEY = 'employee_onboarding_step';
         
-        const targetContent = document.getElementById('step-' + step + '-content');
-        if (targetContent) {
-            targetContent.classList.add('active');
+        // Flag to track IME composition state (like in input.js)
+        let isImeComposition = false;
+        
+        function saveFormData() {
+            const formData = {};
+            const inputs = document.querySelectorAll('#step-1-content input:not([type="hidden"]), #step-1-content select, #step-2-content input:not([type="hidden"]), #step-2-content select, #step-3-content input:not([type="hidden"]), #step-3-content select');
+            inputs.forEach(input => {
+                if (input.id && input.value) {
+                    formData[input.id] = input.value;
+                }
+            });
+            // Also save hidden inputs for select components
+            const hiddenInputs = document.querySelectorAll('#step-1-content input[type="hidden"][component="select"], #step-2-content input[type="hidden"][component="select"], #step-3-content input[type="hidden"][component="select"]');
+            hiddenInputs.forEach(input => {
+                if (input.id && input.value) {
+                    formData[input.id] = input.value;
+                }
+            });
+            console.log('Saving form data:', formData);
+            sessionStorage.setItem(FORM_CACHE_KEY, JSON.stringify(formData));
         }
         
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    
-    // Add click event to step items
-    document.addEventListener('DOMContentLoaded', function() {
-        const stepItems = document.querySelectorAll('.step-item');
-        stepItems.forEach(item => {
-            item.addEventListener('click', function() {
-                // Ideally prevent jumping ahead if validation isn't done, but for now allow navigation
-                const step = parseInt(this.dataset.step);
-                showStep(step);
+        function restoreFormData() {
+            const cached = sessionStorage.getItem(FORM_CACHE_KEY);
+            if (cached) {
+                try {
+                    const formData = JSON.parse(cached);
+                    Object.keys(formData).forEach(id => {
+                        const input = document.getElementById(id);
+                        if (input) {
+                            // Check if this is a select component (has component="select" attribute)
+                            if (input.getAttribute('component') === 'select') {
+                                const value = formData[id];
+                                const selectInput = $(input).next('.ef-select-view-single');
+                                const contentId = selectInput.attr('contentid');
+                                const dropdown = $('#' + contentId);
+                                
+                                // Find the option with matching value
+                                const option = dropdown.find('.ef-select-option[value="' + value + '"]');
+                                if (option.length) {
+                                    const label = option.find('.ef-select-option-content').html();
+                                    
+                                    // Update hidden input
+                                    input.value = value;
+                                    
+                                    // Update visible display
+                                    selectInput.children('.ef-select-view-value').html(label).removeClass('ef-select-view-value-hidden');
+                                    selectInput.children('.ef-select-view-input').addClass('ef-select-view-input-hidden');
+                                    selectInput.attr('chosen', 'true');
+                                    
+                                    // Update clear button
+                                    selectInput.find('.ef-select-view-icon').html('<i class="fa-regular fa-circle-xmark ef-select-clear-btn"></i>');
+                                    
+                                    console.log('Restored select:', id, '=', value, '(label: ' + label + ')');
+                                }
+                            } else {
+                                input.value = formData[id];
+                                console.log('Restored input:', id, '=', formData[id]);
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.warn('Failed to restore form data:', e);
+                }
+            }
+        }
+        
+        function saveCurrentStep(step) {
+            sessionStorage.setItem(FORM_STEP_KEY, step.toString());
+        }
+        
+        function restoreCurrentStep() {
+            const cachedStep = sessionStorage.getItem(FORM_STEP_KEY);
+            if (cachedStep) {
+                goToStep(parseInt(cachedStep));
+            }
+        }
+        
+        window.clearOnboardingFormCache = function() {
+            sessionStorage.removeItem(FORM_CACHE_KEY);
+            sessionStorage.removeItem(FORM_STEP_KEY);
+        };
+        
+        function goToStep(step) {
+            const stepItems = document.querySelectorAll('.step-item');
+            stepItems.forEach(item => {
+                const itemStep = parseInt(item.dataset.step);
+                item.classList.remove('active');
+                item.classList.remove('completed');
+                
+                if (itemStep === step) {
+                    item.classList.add('active');
+                } else if (itemStep < step) {
+                    item.classList.add('completed');
+                }
+            });
+
+            const stepContents = document.querySelectorAll('.step-content');
+            stepContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            const targetContent = document.getElementById('step-' + step + '-content');
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        window.nextStep = function(step) {
+            saveFormData();
+            saveCurrentStep(step + 1);
+            goToStep(step + 1);
+        };
+        
+        window.prevStep = function(step) {
+            saveFormData();
+            saveCurrentStep(step - 1);
+            goToStep(step - 1);
+        };
+        
+        window.submitOnboardingForm = async function() {
+            saveFormData();
+            const cached = sessionStorage.getItem(FORM_CACHE_KEY);
+            if (!cached) {
+                alert('No form data to submit');
+                return;
+            }
+            
+            try {
+                const formData = JSON.parse(cached);
+                
+                // Collect all hidden input values for select components
+                const hiddenInputs = document.querySelectorAll('#step-1-content input[type="hidden"][component="select"], #step-2-content input[type="hidden"][component="select"], #step-3-content input[type="hidden"][component="select"]');
+                hiddenInputs.forEach(input => {
+                    if (input.id && input.value) {
+                        formData[input.id] = input.value;
+                    }
+                });
+                
+                const response = await fetch('/api/employee/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Clear cache and go to complete step
+                    clearOnboardingFormCache();
+                    goToStep(4);
+                } else {
+                    alert('Failed to create employee: ' + (result.error || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error('Submit error:', e);
+                alert('Failed to submit form: ' + e.message);
+            }
+        };
+        
+        function clearOnboardingFormCache() {
+            sessionStorage.removeItem(FORM_CACHE_KEY);
+            sessionStorage.removeItem(FORM_STEP_KEY);
+        }
+        
+        // Initial step setup
+        goToStep(1);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Step navigation click handlers
+            const stepItems = document.querySelectorAll('.step-item');
+            stepItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const step = parseInt(this.dataset.step);
+                    saveFormData();
+                    saveCurrentStep(step);
+                    goToStep(step);
+                });
+            });
+            
+            // Date picker initialization
+            $('.date-picker').daterangepicker({
+                ...EFDate.getDefaultOptions('YYYY-MM-DD'),
+                singleDatePicker: true,
+                showDropdowns: true,
+                autoUpdateInput: false
+            }).on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD'));
+                saveFormData();
+            }).on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                saveFormData();
+            });
+            
+            // Attach form listeners to all inputs (with IME composition support)
+            const inputs = document.querySelectorAll('#step-1-content input:not([type="hidden"]), #step-1-content select, #step-2-content input:not([type="hidden"]), #step-2-content select, #step-3-content input:not([type="hidden"]), #step-3-content select');
+            inputs.forEach(input => {
+                // IME composition support (same as input.js)
+                input.addEventListener('compositionstart', function() {
+                    isImeComposition = true;
+                });
+                input.addEventListener('compositionend', function() {
+                    isImeComposition = false;
+                    saveFormData();
+                });
+                // Save on change for all inputs
+                input.addEventListener('change', saveFormData);
+                // Save on input only when NOT in IME composition mode
+                input.addEventListener('input', function() {
+                    if (!isImeComposition) {
+                        saveFormData();
+                    }
+                });
+            });
+            
+            // Also listen to hidden inputs for select components (use jQuery since they trigger via $.trigger)
+            $('#step-1-content input[type="hidden"], #step-2-content input[type="hidden"], #step-3-content input[type="hidden"]').on('change', function(e) {
+                console.log('Hidden input changed:', this.id, '=', this.value);
+                saveFormData();
+            });
+            
+            // Restore cached data and step
+            restoreFormData();
+            restoreCurrentStep();
+            
+            // Warn before leaving if form has data
+            window.addEventListener('beforeunload', function(e) {
+                const cached = sessionStorage.getItem(FORM_CACHE_KEY);
+                if (cached && Object.keys(JSON.parse(cached)).length > 0) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
             });
         });
-    });
+    })();
 </script>
 {% endblock %}

@@ -59,7 +59,11 @@
 
 ```html
 <span class="ef-input-wrapper">
-    <input type="text" class="ef-input ef-input-size-medium text" placeholder="请输入内容" />
+  <input
+    type="text"
+    class="ef-input ef-input-size-medium text"
+    placeholder="请输入内容"
+  />
 </span>
 ```
 
@@ -103,7 +107,12 @@
 
 ```html
 <div class="ef-textarea-wrapper">
-    <textarea class="ef-textarea resizeable" min-rows="3" max-rows="10" placeholder="请输入"></textarea>
+  <textarea
+    class="ef-textarea resizeable"
+    min-rows="3"
+    max-rows="10"
+    placeholder="请输入"
+  ></textarea>
 </div>
 ```
 
@@ -155,7 +164,7 @@
 <div class="ef-divider ef-divider-horizontal"></div>
 <div class="ef-divider ef-divider-vertical"></div>
 <div class="ef-divider ef-divider-horizontal ef-divider-with-text-center">
-    <span class="ef-divider-inner-text">居中文本</span>
+  <span class="ef-divider-inner-text">居中文本</span>
 </div>
 ```
 
@@ -286,47 +295,183 @@
 **Twig Macro:**
 
 ```twig
-{# ui.select(options, placeholder, width, classes) #}
+{# ui.select(options, placeholder, width, classes, name, id, value) #}
 {{ ui.select([
     { label: '选项1', value: '1' },
     { label: '选项2', value: '2' },
     { label: '禁用选项', value: '3', disabled: true }
-], '请选择') }}
+], '请选择', '320px', 'ef-input-rounded', 'my_select', 'mySelect') }}
+```
+
+**带值的示例（用于编辑表单回显）：**
+
+```twig
+{{ ui.select([
+    { label: '选项1', value: '1' },
+    { label: '选项2', value: '2' }
+], '请选择', '160px', 'ef-input-rounded', 'department_id', 'departmentSelect', '2') }}
 ```
 
 **HTML 示例:**
 
 ```html
-<span class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium ef-select-view-search" style="width: 320px;" chosen="false" id="select1" contentId="content1">
-  <input class="ef-select-view-input" placeholder="请选择 ...">
+<span
+  class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium ef-select-view-search"
+  style="width: 320px;"
+  chosen="false"
+  id="select1"
+  contentId="content1"
+>
+  <input class="ef-select-view-input" placeholder="请选择 ..." />
   <span class="ef-select-view-value ef-select-view-value-hidden"></span>
   <span class="ef-select-view-suffix">
     <span class="ef-select-view-icon">
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-expand" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter" style="transform: rotate(-45deg);">
-        <path d="M7 26v14c0 .552.444 1 .996 1H22m19-19V8c0-.552-.444-1-.996-1H26"></path>
+      <svg
+        viewBox="0 0 48 48"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        stroke="currentColor"
+        class="ef-icon ef-icon-expand"
+        stroke-width="4"
+        stroke-linecap="butt"
+        stroke-linejoin="miter"
+        style="transform: rotate(-45deg);"
+      >
+        <path
+          d="M7 26v14c0 .552.444 1 .996 1H22m19-19V8c0-.552-.444-1-.996-1H26"
+        ></path>
       </svg>
     </span>
   </span>
 </span>
-<div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; width: 320px; display: none;" id="content1" parentId="select1">
- <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
-  <div class="ef-trigger-content">
-   <div class="ef-select-dropdown">
-                <div class="ef-scrollbar ef-scrollbar-type-embed" style="">
-                    <div class="ef-scrollbar-container ef-select-dropdown-list-wrapper">
-                        <ul class="ef-select-dropdown-list">
-                            <li id="opt1" class="ef-select-option" data-value="1"><span class="ef-select-option-content">选项1</span></li>
-                            <li id="opt2" class="ef-select-option" data-value="2"><span class="ef-select-option-content">选项2</span></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+<div
+  class="ef-trigger-popup ef-trigger-position-bl"
+  trigger-placement="bl"
+  style="z-index: 1001; pointer-events: auto; width: 320px; display: none;"
+  id="content1"
+  parentId="select1"
+>
+  <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
+    <div class="ef-trigger-content">
+      <div class="ef-select-dropdown">
+        <div class="ef-scrollbar ef-scrollbar-type-embed" style="">
+          <div class="ef-scrollbar-container ef-select-dropdown-list-wrapper">
+            <ul class="ef-select-dropdown-list">
+              <li id="opt1" class="ef-select-option" data-value="1">
+                <span class="ef-select-option-content">选项1</span>
+              </li>
+              <li id="opt2" class="ef-select-option" data-value="2">
+                <span class="ef-select-option-content">选项2</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### 2.5 筛选器下拉选择框 (Filter Select)
+
+专用于筛选场景的下拉选择框组件，支持选中状态显示、清空按钮和 URL 参数同步。
+
+**依赖资源:**
+
+- CSS: `/public/sunui/components/select.css`
+- JS: `/public/sunui/components/select.js`
+- JS: `/public/sunui/components/filter-select.js`
+
+**Twig Macro:**
+
+```twig
+{# ui.filterSelect(options, placeholder, width, classes, name, id, value) #}
+{{ ui.filterSelect([
+    { label: '部门1', value: 'dept-1' },
+    { label: '部门2', value: 'dept-2' },
+    { label: '部门3', value: 'dept-3' }
+], '', '160px', 'ef-input-rounded', 'department_id', 'filterDepartment') }}
+```
+
+**参数说明:**
+
+| 参数        | 类型   | 说明                                                   |
+| ----------- | ------ | ------------------------------------------------------ |
+| options     | array  | 选项列表，每项包含 `label`（显示文本）和 `value`（值） |
+| placeholder | string | 占位提示文本（为空时不显示）                           |
+| width       | string | 宽度，如 '160px'                                       |
+| classes     | string | 额外 CSS 类                                            |
+| name        | string | 表单字段名（对应 URL 参数键）                          |
+| id          | string | 元素 ID                                                |
+| value       | string | 当前选中值（用于回显）                                 |
+
+**选中状态显示：**
+
+选中后，组件会：
+
+1. 在输入框左侧显示选中项的标签
+2. 图标变为关闭按钮 (×)
+3. 点击关闭按钮可清空选择
+
+**JavaScript 辅助函数：**
+
+从 URL 参数初始化筛选器下拉组件：
+
+```javascript
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function () {
+  initFilterSelectsFromUrl({
+    department_id: 'filterDepartment',
+    position_id: 'filterPosition',
+    employment_status: 'filterEmploymentStatus',
+  });
+});
+
+// 手动初始化单个组件
+initFilterSelectFromUrl('filterDepartment', 'department_id');
+
+// 获取组件值
+var value = getFilterSelectValue('filterDepartment');
+
+// 设置组件值
+setFilterSelectValue('filterDepartment', 'dept-123');
+```
+
+**应用示例（花名册筛选面板）：**
+
+```twig
+<div class="filter-panel">
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+        <div>
+            <label>{{ 'employee.field.name'|trans }}</label>
+            <span class="ef-input-wrapper ef-input-rounded">
+                <input type="text" id="filterName" class="ef-input ef-input-size-medium" />
+            </span>
+        </div>
+        <div>
+            <label>{{ 'employee.field.department'|trans }}</label>
+            {{ ui.filterSelect(
+                departments|map(d => { 'label': d.name, 'value': d.id }),
+                '',
+                '160px',
+                'ef-input-rounded',
+                'filter_department_id',
+                'filterDepartment'
+            ) }}
+        </div>
+        <div>
+            <label>{{ 'employee.field.employment_status'|trans }}</label>
+            {{ ui.filterSelect([
+                { label: 'employee.employment_status.active'|trans, value: 'active' },
+                { label: 'employee.employment_status.inactive'|trans, value: 'inactive' },
+                { label: 'employee.employment_status.probation'|trans, value: 'probation' }
+            ], '', '140px', 'ef-input-rounded', 'filter_employment_status', 'filterEmploymentStatus') }}
         </div>
     </div>
 </div>
 ```
 
-### 2.5 表单验证初始化 (Form Valid)
+### 2.6 表单验证初始化 (Form Valid)
 
 用于快速初始化页面中表单的验证逻辑。
 
@@ -422,15 +567,19 @@ $('.ef-drawer').showDrawer('myDrawerId');
 // 方式二：手动控制
 const drawer = document.getElementById('myDrawerId');
 if (drawer) {
-    drawer.style.display = 'block';
-    setTimeout(() => { drawer.style.opacity = '1'; }, 10);
+  drawer.style.display = 'block';
+  setTimeout(() => {
+    drawer.style.opacity = '1';
+  }, 10);
 }
 
 // 隐藏
 const drawer = document.getElementById('myDrawerId');
 if (drawer) {
-    drawer.style.opacity = '0';
-    setTimeout(() => { drawer.style.display = 'none'; }, 200);
+  drawer.style.opacity = '0';
+  setTimeout(() => {
+    drawer.style.display = 'none';
+  }, 200);
 }
 ```
 
@@ -449,8 +598,8 @@ if (drawer) {
 ```javascript
 // 依赖于特定的容器
 let alert = new Alert($('#myModalId .modal-body')); // 或者 document.body
-alert.error('发生错误', { percent: '90%', title: "错误", closable: true });
-alert.success('操作成功', { percent: '90%', title: "成功", closable: true });
+alert.error('发生错误', { percent: '90%', title: '错误', closable: true });
+alert.success('操作成功', { percent: '90%', title: '成功', closable: true });
 ```
 
 ### 3.4 网格与布局 (Grid & Layout)
@@ -468,8 +617,8 @@ alert.success('操作成功', { percent: '90%', title: "成功", closable: true 
 
 ```html
 <div class="ef-row ef-row-align-start ef-row-justify-start">
-    <div class="ef-col ef-col-12">一半宽度</div>
-    <div class="ef-col ef-col-12">一半宽度</div>
+  <div class="ef-col ef-col-12">一半宽度</div>
+  <div class="ef-col ef-col-12">一半宽度</div>
 </div>
 ```
 
@@ -523,20 +672,24 @@ alert.success('操作成功', { percent: '90%', title: "成功", closable: true 
 
 ```html
 <div id="myTabs" class="ef-tabs tabs-container">
-    <div class="tabs-header">
-        <ul class="tabs">
-            <li class="tabs-selected" id="tab1"><span class="tabs-title">Tab 1</span></li>
-            <li id="tab2"><span class="tabs-title">Tab 2</span></li>
-        </ul>
+  <div class="tabs-header">
+    <ul class="tabs">
+      <li class="tabs-selected" id="tab1">
+        <span class="tabs-title">Tab 1</span>
+      </li>
+      <li id="tab2"><span class="tabs-title">Tab 2</span></li>
+    </ul>
+  </div>
+  <div class="tabs-panels">
+    <div class="panel" liid="tab1"><div class="panel-body">内容 1</div></div>
+    <div class="panel" liid="tab2" style="display:none;">
+      <div class="panel-body">内容 2</div>
     </div>
-    <div class="tabs-panels">
-        <div class="panel" liid="tab1"><div class="panel-body">内容 1</div></div>
-        <div class="panel" liid="tab2" style="display:none;"><div class="panel-body">内容 2</div></div>
-    </div>
+  </div>
 </div>
 ```
 
-*(配合 `EfTabs` JS 类进行动态操作)*
+_(配合 `EfTabs` JS 类进行动态操作)_
 
 ```javascript
 let myTabs = new EfTabs('myTabs');
@@ -559,14 +712,14 @@ myTabs.addTab('tab3', 'Tab 3', '<div>内容 3</div>');
 
 ```javascript
 var myGrid = new DataGrid('gridContainer', {
-    url: '/api/data',
-    method: 'GET',
-    columns: [
-        { field: 'id', title: 'ID', width: '80px', sortable: true },
-        { field: 'name', title: '名称', width: '200px' }
-    ],
-    pagination: true,
-    pageSize: 20
+  url: '/api/data',
+  method: 'GET',
+  columns: [
+    { field: 'id', title: 'ID', width: '80px', sortable: true },
+    { field: 'name', title: '名称', width: '200px' },
+  ],
+  pagination: true,
+  pageSize: 20,
 });
 myGrid.load();
 ```

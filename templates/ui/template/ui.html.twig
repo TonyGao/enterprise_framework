@@ -204,10 +204,13 @@ $(document).ready(function () {
 {# 单行文本输入框组件 (Input) #}
 {# 使用方法：
    {{ ui.input('myInput', 'text', 'Please enter', '', 'ef-input-rounded') }}
+   添加额外类名：{{ ui.input('myInput', 'text', 'Please enter', '', 'ef-input-rounded', '', 'date-picker') }}
+   日期选择器：{{ ui.input('myDate', 'text', '', '', 'ef-input-rounded', '', 'date-picker') }}
 #}
-{% macro input(id, type = "text", placeholder = "", value = "", wrapperClass = "", inputClass = "ef-input-size-medium", attributes = {}) %}
+{% macro input(id, type = "text", placeholder = "", value = "", wrapperClass = "", inputClass = "ef-input-size-medium", extraClasses = "") %}
+    {% set isPicker = 'picker' in extraClasses %}
     <span class="ef-input-wrapper {{ wrapperClass }}">
-        <input class="ef-input text {{ inputClass }}" type="{{ type }}" id="{{ id }}" value="{{ value }}" placeholder="{{ placeholder }}" {% for attr, val in attributes %}{{ attr }}="{{ val }}" {% endfor %}>
+        <input class="ef-input text {{ inputClass }} {{ extraClasses }}" type="{{ type }}" id="{{ id }}" value="{{ value }}" placeholder="{{ placeholder }}"{% if isPicker %} autocomplete="off"{% endif %}>
     </span>
 {% endmacro %}
 
@@ -295,26 +298,94 @@ $(document).ready(function () {
 {# 下拉选择组件 (Select) #}
 {# 使用方法：
    {{ ui.select(options, 'Please select ...', '320px', 'ef-input-rounded') }}
+   
+   带值使用（用于回显）：
+   {{ ui.select(options, 'Please select ...', '320px', 'ef-input-rounded', 'name', 'id', 'selected_value') }}
+   
+   筛选器专用（带清空按钮）：
+   {{ ui.filterSelect(options, 'Please select ...', '160px', 'ef-input-rounded', 'name', 'id', 'selected_value') }}
 #}
 {% macro select(options, placeholder='Please select ...', width='320px', classes='', name='', id='', value='') %}
 {% set selectInputId = id|default(random()) ~ '_select' %}
 {% set selectContentId = random() %}
 {% set real_id = id|default(random()) %}
 {% set chosen_label = '' %}
+{% set has_value = value is not empty %}
 {% for option in options %}
     {% if option.value|default(option.label) == value %}
         {% set chosen_label = option.label %}
     {% endif %}
 {% endfor %}
-<input type="hidden" name="{{ name }}" id="{{ real_id }}" value="{{ value }}">
-<span class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium ef-select-view-search {{ classes }}" style="width: {{ width }};" chosen="{{ value ? 'true' : 'false' }}" id="{{ selectInputId }}" contentId="{{ selectContentId }}">
-  <input class="ef-select-view-input {% if value %}ef-select-view-input-hidden{% endif %}" placeholder="{{ placeholder }}">
-  <span class="ef-select-view-value {% if not value %}ef-select-view-value-hidden{% endif %}">{{ chosen_label }}</span>
+<input type="hidden" component="select" name="{{ name }}" id="{{ real_id }}" value="{{ value }}">
+<span class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium ef-select-view-search {{ classes }}" style="width: {{ width }};" chosen="{{ has_value ? 'true' : 'false' }}" id="{{ selectInputId }}" contentId="{{ selectContentId }}">
+  <input class="ef-select-view-input {% if has_value %}ef-select-view-input-hidden{% endif %}" placeholder="{{ placeholder }}">
+  <span class="ef-select-view-value {% if not has_value %}ef-select-view-value-hidden{% endif %}">{{ chosen_label }}</span>
   <span class="ef-select-view-suffix">
     <span class="ef-select-view-icon">
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-expand" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter" style="transform: rotate(-45deg);">
-        <path d="M7 26v14c0 .552.444 1 .996 1H22m19-19V8c0-.552-.444-1-.996-1H26"></path>
-      </svg>
+      {% if has_value %}
+        <i class="fa-regular fa-circle-xmark ef-select-clear-btn"></i>
+      {% else %}
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-expand" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter" style="transform: rotate(-45deg);">
+          <path d="M7 26v14c0 .552.444 1 .996 1H22m19-19V8c0-.552-.444-1-.996-1H26"></path>
+        </svg>
+      {% endif %}
+    </span>
+  </span>
+</span>
+<div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; width: {{ width }}; display: none;" id="{{ selectContentId }}" parentId="{{ selectInputId }}">
+	<div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
+		<div class="ef-trigger-content">
+			<div class="ef-select-dropdown">
+					<div class="ef-scrollbar ef-scrollbar-type-embed" style="">
+            <div class="ef-scrollbar-container ef-select-dropdown-list-wrapper">
+              <ul class="ef-select-dropdown-list">
+                {% for option in options %}
+                <li id="{{ random() }}" class="ef-select-option {% if option.disabled|default(false) %}ef-select-option-disabled{% endif %} {% if option.value|default(option.label) == value %}ef-select-option-active{% endif %}" value="{{ option.value|default(option.label) }}"><span class="ef-select-option-content">{{ option.label }}</span></li>
+                {% endfor %}
+              </ul>
+            </div>
+					</div>
+				</div>
+      </div>
+		</div>
+  </div>
+{% endmacro %}
+
+{# 筛选器下拉选择组件 (Filter Select) #}
+{# 与 select 类似，但专用于筛选场景，支持从 URL 参数初始化显示值 #}
+{# 使用方法：
+   {{ ui.filterSelect(options, placeholder, width, classes, name, id, value) }}
+   
+   示例：
+   {{ ui.filterSelect([
+       { label: '选项1', value: '1' },
+       { label: '选项2', value: '2' }
+   ], '', '160px', 'ef-input-rounded', 'filter_department_id', 'filterDepartment') }}
+#}
+{% macro filterSelect(options, placeholder='', width='160px', classes='ef-input-rounded', name='', id='', value='') %}
+{% set selectInputId = id|default(random()) ~ '_select' %}
+{% set selectContentId = random() %}
+{% set real_id = id|default(random()) %}
+{% set chosen_label = '' %}
+{% set has_value = value is not empty %}
+{% for option in options %}
+    {% if option.value|default(option.label) == value %}
+        {% set chosen_label = option.label %}
+    {% endif %}
+{% endfor %}
+<input type="hidden" component="select" name="{{ name }}" id="{{ real_id }}" value="{{ value }}">
+<span class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium ef-select-view-search {{ classes }}" style="width: {{ width }};" chosen="{{ has_value ? 'true' : 'false' }}" id="{{ selectInputId }}" contentId="{{ selectContentId }}">
+  <input class="ef-select-view-input {% if has_value %}ef-select-view-input-hidden{% endif %}" placeholder="{{ placeholder }}">
+  <span class="ef-select-view-value {% if not has_value %}ef-select-view-value-hidden{% endif %}">{{ chosen_label }}</span>
+  <span class="ef-select-view-suffix">
+    <span class="ef-select-view-icon">
+      {% if has_value %}
+        <i class="fa-regular fa-circle-xmark ef-select-clear-btn"></i>
+      {% else %}
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-expand" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter" style="transform: rotate(-45deg);">
+          <path d="M7 26v14c0 .552.444 1 .996 1H22m19-19V8c0-.552-.444-1-.996-1H26"></path>
+        </svg>
+      {% endif %}
     </span>
   </span>
 </span>

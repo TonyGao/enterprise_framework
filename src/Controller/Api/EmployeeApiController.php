@@ -1,0 +1,217 @@
+<?php
+
+namespace App\Controller\Api;
+
+use App\Entity\Organization\Employee;
+use App\Repository\Organization\CompanyRepository;
+use App\Repository\Organization\DepartmentRepository;
+use App\Repository\Organization\PositionRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+#[Route('/api/employee')]
+#[IsGranted('ROLE_SYS_ADMIN')]
+class EmployeeApiController extends AbstractController
+{
+    #[Route('/create', name: 'api_employee_create', methods: ['POST'])]
+    public function create(
+        \Symfony\Component\HttpFoundation\Request $request,
+        EntityManagerInterface $em,
+        CompanyRepository $companyRepo,
+        DepartmentRepository $departmentRepo,
+        PositionRepository $positionRepo
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        if (empty($data['name'])) {
+            return $this->json(['success' => false, 'error' => 'Name is required'], 400);
+        }
+
+        $employee = new Employee();
+        $employee->setName($data['name']);
+        
+        // Auto-generate employee number if not provided
+        $employeeNo = $data['employeeNo'] ?? null;
+        if (empty($employeeNo)) {
+            $employeeNo = 'EMP' . date('YmdHis');
+        }
+        $employee->setEmployeeNo($employeeNo);
+        
+        // Always set default role from backend, ignore frontend roles
+        $employee->setRoles(['ROLE_USER']);
+        
+        if (!empty($data['englishName'])) {
+            $employee->setEnglishName($data['englishName']);
+        }
+        
+        if (!empty($data['gender'])) {
+            $employee->setGender($data['gender']);
+        }
+        
+        if (!empty($data['birthDate'])) {
+            try {
+                $employee->setBirthDate(new \DateTime($data['birthDate']));
+            } catch (\Exception $e) {}
+        }
+        
+        if (!empty($data['mobile'])) {
+            $employee->setMobile($data['mobile']);
+        }
+        
+        if (!empty($data['email'])) {
+            $employee->setEmail($data['email']);
+        }
+        
+        if (!empty($data['idCard'])) {
+            $employee->setIdCard($data['idCard']);
+        }
+        
+        if (!empty($data['address'])) {
+            $employee->setAddress($data['address']);
+        }
+        
+        if (!empty($data['school'])) {
+            $employee->setSchool($data['school']);
+        }
+        
+        if (!empty($data['major'])) {
+            $employee->setMajor($data['major']);
+        }
+        
+        if (!empty($data['education'])) {
+            $employee->setEducation($data['education']);
+        }
+        
+        if (!empty($data['graduationDate'])) {
+            try {
+                $employee->setGraduationDate(new \DateTime($data['graduationDate']));
+            } catch (\Exception $e) {}
+        }
+        
+        if (!empty($data['emergencyContact'])) {
+            $employee->setEmergencyContact($data['emergencyContact']);
+        }
+        
+        if (!empty($data['emergencyPhone'])) {
+            $employee->setEmergencyPhone($data['emergencyPhone']);
+        }
+        
+        if (!empty($data['employeeNo'])) {
+            $employee->setEmployeeNo($data['employeeNo']);
+        }
+        
+        if (!empty($data['status'])) {
+            $employee->setStatus($data['status']);
+        }
+        
+        if (!empty($data['hireDate'])) {
+            try {
+                $employee->setHireDate(new \DateTime($data['hireDate']));
+            } catch (\Exception $e) {}
+        }
+        
+        if (!empty($data['company'])) {
+            $company = $companyRepo->find($data['company']);
+            if ($company) {
+                $employee->setCompany($company);
+            }
+        }
+        
+        if (!empty($data['department'])) {
+            $department = $departmentRepo->find($data['department']);
+            if ($department) {
+                $employee->setDepartment($department);
+            }
+        }
+        
+        if (!empty($data['position'])) {
+            $position = $positionRepo->find($data['position']);
+            if ($position) {
+                $employee->setPosition($position);
+            }
+        }
+        
+        if (!empty($data['manager'])) {
+            $manager = $em->getRepository(Employee::class)->find($data['manager']);
+            if ($manager) {
+                $employee->setManager($manager);
+            }
+        }
+        
+        if (!empty($data['username'])) {
+            $employee->setUsername($data['username']);
+        }
+        
+        if (!empty($data['password'])) {
+            $employee->setPassword($data['password']);
+        }
+        
+        if (isset($data['isActive'])) {
+            $employee->setIsActive($data['isActive']);
+        }
+
+        try {
+            $em->persist($employee);
+            $em->flush();
+            
+            return $this->json([
+                'success' => true,
+                'employee' => [
+                    'id' => $employee->getId(),
+                    'name' => $employee->getName(),
+                    'employeeNo' => $employee->getEmployeeNo()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/delete', name: 'api_employee_delete', methods: ['POST'])]
+    public function delete(
+        \Symfony\Component\HttpFoundation\Request $request,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+        $ids = $data['ids'] ?? [];
+
+        if (empty($ids)) {
+            return $this->json(['success' => false, 'error' => 'No IDs provided'], 400);
+        }
+
+        $deleted = 0;
+        $errors = [];
+
+        foreach ($ids as $id) {
+            $employee = $em->getRepository(Employee::class)->find($id);
+            
+            if (!$employee) {
+                $errors[] = "Employee not found: $id";
+                continue;
+            }
+
+            if ($employee->getIsSystem()) {
+                $errors[] = "Cannot delete system user: {$employee->getUsername()}";
+                continue;
+            }
+
+            $em->remove($employee);
+            $deleted++;
+        }
+
+        try {
+            $em->flush();
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage(), 'deleted' => $deleted], 500);
+        }
+
+        return $this->json([
+            'success' => true,
+            'deleted' => $deleted,
+            'errors' => $errors
+        ]);
+    }
+}

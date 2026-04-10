@@ -6,7 +6,12 @@ action:
   edit_success: 更新成功
   reselect: 重新选择
   import: 导入员工
+  clear: 清空
+  search: 搜索
 employee:
+  gender_value:
+    male: 男
+    female: 女
   list:
     customize_columns: 自定义列
     title: 员工花名册
@@ -14,6 +19,7 @@ employee:
     header: 员工列表
     search_placeholder: 搜索...
     selected: 已选择
+    filter_conditions: 筛选条件
   stats:
     total_employees: 员工总数
     active_employees: 在职员工
@@ -59,6 +65,8 @@ employee:
       prev: 上一步
       next: 下一步
       submit: 提交
+      back_to_list: 返回花名册
+      continue_add: 继续添加
     placeholder:
       input: 请输入 %label%
       select: 请选择 %label%
@@ -68,12 +76,15 @@ employee:
     inactive: 离职
     pending: 待验证
     include_sub: 包含子部门
+    toggle: 筛选
   action:
     cancel: 取消
     confirm: 确认
     filter: 筛选
     export: 导出
     import: 导入
+    clear: 清空
+    delete: 删除
   view:
     list: 列表视图
     card: 卡片视图
@@ -96,6 +107,8 @@ employee:
     birth_date: 出生日期
     id_card: 身份证号
     english_name: 英文名
+    username: 登录名
+    education: 学历
     company: 公司
     manager: 直接上级
     no_position: 暂无职位
@@ -140,9 +153,16 @@ employee:
     male: 男
     female: 女
   education:
+    unknown: 未知
+    junior_high: 初中
+    senior_high: 高中
+    secondary: 中专
+    associate: 大专
     bachelor: 本科
     master: 硕士
     phd: 博士
+    mba: MBA
+    emba: EMBA
   detail:
     title: 员工详情
     breadcrumb:
@@ -157,7 +177,7 @@ employee:
       calendar: 日程
       whatsapp: WhatsApp
     profile:
-      id: 员工ID
+      id: 工号
       date_joined: 入职日期
       email: 邮箱地址
       phone: 联系电话
@@ -287,7 +307,7 @@ admin_security:
   tabs:
     email_password: '邮箱与密码'
     2fa_settings: '二次验证设置'
-    password_policy: '密码强度配置'
+    password_policy: '密码配置'
   alert:
     title: '添加强大的备用方法以增加更多保护'
     content: '拥有一个强大的方法很好，但拥有两个方法可以更好地保护您的帐户。如果您失去了对主要方法的访问权限，您可以使用另一个方法作为备用。'
@@ -558,3 +578,38 @@ function_binding:
   save_binding: '保存绑定'
   system_default: '系统默认'
   select_template: '请选择模板'
+
+test:
+  date:
+    title: '日期时间选择器'
+    desc: 'Symfony Date、DateTime、Time、Timezone、Week 约束对应的 UI 组件。基于 <span class="code-tag">daterangepicker.js</span>。'
+    section:
+      date:
+        title: '日期选择'
+        desc: '对应 Symfony Date Type，支持 <span class="code-tag">YYYY-MM-DD</span> 格式。'
+      datetime:
+        title: '日期时间选择'
+        desc: '对应 Symfony DateTime Type，支持 <span class="code-tag">YYYY-MM-DD HH:mm</span> 格式。'
+      time:
+        title: '时间选择'
+        desc: '对应 Symfony Time Type，通过隐藏 daterangepicker 的日历面板实现。'
+      timezone:
+        title: '时区选择'
+        desc: '对应 Symfony Timezone Type，使用标准 Select 组件。'
+      week:
+        title: '周选择'
+        desc: '对应 Symfony Week Type，推荐使用原生 HTML5 <span class="code-tag">&lt;input type="week"&gt;</span>。'
+      datetimerange:
+        title: '日期时间范围选择'
+        desc: '为自定义 DateTimeRangeType 做准备，支持开始和结束时间。'
+    label:
+      rounded: '圆角样式（默认）'
+      square: '直角样式'
+      native: 'HTML5 原生组件'
+      daterange: '日期时间范围选择'
+      timezone: '时区选择'
+    placeholder:
+      date: '选择日期'
+      datetime: '选择日期和时间'
+      time: '选择时间'
+      datetimerange: '开始时间 - 结束时间'

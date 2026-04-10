@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Organization\Department;
 use App\Entity\Organization\Employee;
+use App\Entity\Organization\Position;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,6 +14,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Psr\Log\LoggerInterface;
 
 use App\Entity\Platform\UserPreference;
 use App\Entity\Traits\OrganizationTrait;
@@ -28,6 +30,8 @@ use App\Message\ExportEmployeeMessage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use App\Repository\Security\PasswordPolicyRepository;
 
 #[IsGranted('ROLE_USER')]
 class EmployeeController extends AbstractController
@@ -155,12 +159,12 @@ class EmployeeController extends AbstractController
     }
 
     #[Route('/employee/import/template', name: 'employee_import_template')]
-    public function importTemplate(): Response
+    public function importTemplate(EntityManagerInterface $em): Response
     {
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        $headers = ['工号', '姓名', '英文名', '部门', '职位', '性别', '邮箱', '手机号', '在职状态', '工作状态', '入职日期', '出生日期', '身份证号'];
+        $headers = ['公司', '部门', '职位', '工号', '姓名', '用户名', '英文名', '直接上级', '性别', '出生日期', '身份证号', '邮箱', '手机号', '联系地址', '入职日期', '在职状态', '工作状态', '学历', '毕业院校', '专业', '毕业时间', '联系人姓名', '联系电话'];
         $column = 'A';
         foreach ($headers as $header) {
             $sheet->setCellValue($column . '1', $header);
@@ -170,6 +174,39 @@ class EmployeeController extends AbstractController
         // Enable autofilter
         $lastColumn = chr(ord('A') + count($headers) - 1);
         $sheet->setAutoFilter('A1:' . $lastColumn . '1');
+
+        // Freeze panes: first row and columns A-F (up to and including 姓名)
+        $sheet->freezePane('G2');
+
+        // Set column widths
+        $columnWidths = [
+            'A' => 14,  // 公司
+            'B' => 14,  // 部门
+            'C' => 12,  // 职位
+            'D' => 10,  // 工号
+            'E' => 10,  // 姓名
+            'F' => 14,  // 用户名
+            'G' => 14,  // 英文名
+            'H' => 10,  // 直接上级
+            'I' => 6,   // 性别
+            'J' => 12,  // 出生日期
+            'K' => 20,  // 身份证号
+            'L' => 22,  // 邮箱
+            'M' => 14,  // 手机号
+            'N' => 26,  // 联系地址
+            'O' => 12,  // 入职日期
+            'P' => 10,  // 在职状态
+            'Q' => 10,  // 工作状态
+            'R' => 8,   // 学历
+            'S' => 16,  // 毕业院校
+            'T' => 14,  // 专业
+            'U' => 12,  // 毕业时间
+            'V' => 12,  // 联系人姓名
+            'W' => 14,  // 联系电话
+        ];
+        foreach ($columnWidths as $col => $width) {
+            $sheet->getColumnDimension($col)->setWidth($width);
+        }
 
         // Feishu/Lark-style Header Styling
         $headerStyle = [
@@ -197,11 +234,78 @@ class EmployeeController extends AbstractController
         $sheet->getStyle('A1:' . $lastColumn . '1')->applyFromArray($headerStyle);
         $sheet->getRowDimension(1)->setRowHeight(36);
 
-        // Add sample data rows with styling
-        $sampleData = [
-            ['EMP001', '张三', 'Zhang San', '技术部', '工程师', '男', 'zhangsan@company.com', '13800138000', '在职', '工作', '2024-01-15', '1990-05-20', '110101199005201234'],
-            ['EMP002', '李四', 'Li Si', '市场部', '经理', '女', 'lisi@company.com', '13800138001', '在职', '休假', '2023-06-01', '1992-08-15', '110101199208151234'],
-        ];
+        // Dynamically fetch sample data from database
+        $department = $em->getRepository(Department::class)->findOneBy([]);
+        $position = $em->getRepository(Position::class)->findOneBy([]);
+        // Find a subsidiary company (not the root group)
+        $company = $em->getRepository(\App\Entity\Organization\Company::class)->createQueryBuilder('c')
+            ->where('c.name != :groupName')
+            ->setParameter('groupName', '华夏集团')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+        $manager = $em->getRepository(Employee::class)->findOneBy(['isSystem' => false]);
+
+        $sampleData = [];
+        if ($department || $position) {
+            $sampleData[] = [
+                $company?->getName() ?? '华夏集团',
+                $department?->getName() ?? '',
+                $position?->getName() ?? '',
+                'EMP001',
+                '张三',
+                'zhangsan',
+                'Zhang San',
+                $manager?->getName() ?? '',
+                '男',
+                '1990-01-01',
+                '110101199001010000',
+                'zhangsan@company.com',
+                '13800138000',
+                '北京市朝阳区某某路1号',
+                date('Y-m-d'),
+                '在职',
+                '工作',
+                '本科',
+                '清华大学',
+                '计算机科学与技术',
+                '2015-06-30',
+                '张三父亲',
+                '13800138001'
+            ];
+            $sampleData[] = [
+                $company?->getName() ?? '华夏集团',
+                $department?->getName() ?? '',
+                $position?->getName() ?? '',
+                'EMP002',
+                '李四',
+                'lisi',
+                'Li Si',
+                $manager?->getName() ?? '',
+                '女',
+                '1992-01-01',
+                '110101199201010000',
+                'lisi@company.com',
+                '13800138001',
+                '上海市浦东新区某某大道2号',
+                date('Y-m-d'),
+                '在职',
+                '休假',
+                '硕士',
+                '北京大学',
+                '工商管理',
+                '2018-06-30',
+                '李四母亲',
+                '13800138002'
+            ];
+        } else {
+            $sampleData[] = [
+                '华夏集团', '技术部', '后端工程师', 'EMP001', '张三', 'zhangsan', 'Zhang San', '', '男', '1990-01-01', '110101199001010000', 'zhangsan@company.com', '13800138000', '北京市朝阳区某某路1号', date('Y-m-d'), '在职', '工作', '本科', '清华大学', '计算机科学与技术', '2015-06-30', '张三父亲', '13800138001'
+            ];
+            $sampleData[] = [
+                '华夏集团', '市场部', '产品经理', 'EMP002', '李四', 'lisi', 'Li Si', '', '女', '1992-01-01', '110101199201010000', 'lisi@company.com', '13800138001', '上海市浦东新区某某大道2号', date('Y-m-d'), '在职', '休假', '硕士', '北京大学', '工商管理', '2018-06-30', '李四母亲', '13800138002'
+            ];
+        }
         $row = 2;
         foreach ($sampleData as $data) {
             $col = 'A';
@@ -210,6 +314,32 @@ class EmployeeController extends AbstractController
                 $col++;
             }
             $row++;
+        }
+
+        // Add data validation dropdowns for fixed-option fields
+        $dropdownData = [
+            'I' => ['男', '女'],  // 性别
+            'P' => ['在职', '离职', '试用期'],  // 在职状态
+            'Q' => ['工作', '休假', '出差', '外出', '会议中'],  // 工作状态
+            'R' => ['初中', '高中', '中专', '大专', '本科', '硕士', '博士', 'MBA', 'EMBA'],  // 学历
+        ];
+
+        // Get all companies for company dropdown
+        $companies = $em->getRepository(\App\Entity\Organization\Company::class)->findAll();
+        $companyNames = array_column($companies, 'name');
+        $dropdownData['A'] = $companyNames;
+
+        // Apply dropdown validations for rows 2-1000
+        foreach ($dropdownData as $col => $options) {
+            $range = $col . '2:' . $col . '1000';
+            $validation = new \PhpOffice\PhpSpreadsheet\Cell\DataValidation();
+            $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION);
+            $validation->setAllowBlank(true);
+            $validation->setShowDropDown(true);
+            $validation->setFormula1('"' . implode(',', $options) . '"');
+            $validation->setSqref($range);
+            $sheet->setDataValidation($range, $validation);
         }
 
         // Apply data styling
@@ -290,7 +420,7 @@ class EmployeeController extends AbstractController
     }
 
     #[Route('/employee/import/process', name: 'employee_import_process')]
-    public function importProcess(Request $request, EntityManagerInterface $em): Response
+    public function importProcess(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, PasswordPolicyRepository $policyRepo, LoggerInterface $logger): Response
     {
         $taskId = $request->query->get('taskId');
         if (!$taskId) {
@@ -309,7 +439,14 @@ class EmployeeController extends AbstractController
             $request->getSession()->save();
         }
 
-        $response = new \Symfony\Component\HttpFoundation\StreamedResponse(function () use ($filePath, $em) {
+        $policy = $policyRepo->findOneBy([]);
+        $defaultPassword = $policy?->getDefaultPassword() ?? 'Welcome@2024';
+        $forceResetPassword = $policy?->isForceResetPasswordOnFirstLogin() ?? true;
+
+        $deptRepo = $em->getRepository(Department::class);
+        $positionRepo = $em->getRepository(Position::class);
+
+        $response = new \Symfony\Component\HttpFoundation\StreamedResponse(function () use ($filePath, $em, $passwordHasher, $defaultPassword, $forceResetPassword, $deptRepo, $positionRepo, $logger) {
             set_time_limit(0);
             
             if (!file_exists($filePath)) {
@@ -329,25 +466,195 @@ class EmployeeController extends AbstractController
                     return;
                 }
 
+                // Build column index map from header row
+                $headerMap = [];
+                $highestColumn = $sheet->getHighestColumn();
+                $maxColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+                
+                for ($col = 1; $col <= $maxColumnIndex; $col++) {
+                    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+                    $headerValue = $sheet->getCell($colLetter . '1')->getValue();
+                    if ($headerValue) {
+                        $headerMap[trim($headerValue)] = $col;
+                    }
+                }
+
+                // Validate required headers
+                $requiredHeaders = ['工号', '姓名', '邮箱'];
+                $missingHeaders = [];
+                foreach ($requiredHeaders as $required) {
+                    if (!isset($headerMap[$required])) {
+                        $missingHeaders[] = $required;
+                    }
+                }
+                if (!empty($missingHeaders)) {
+                    echo "data: " . json_encode(['error' => '缺少必需列: ' . implode(', ', $missingHeaders)]) . "\n\n";
+                    if (ob_get_level() > 0) ob_flush(); flush();
+                    return;
+                }
+
                 $total = $highestRow - 1;
                 $processed = 0;
+                $importErrors = [];
 
                 for ($row = 2; $row <= $highestRow; $row++) {
-                    $employeeNo = $sheet->getCell('A' . $row)->getValue();
-                    $name = $sheet->getCell('B' . $row)->getValue();
+                    $getCellValue = function(string $header) use ($sheet, $row, $headerMap): ?string {
+                        if (!isset($headerMap[$header])) {
+                            return null;
+                        }
+                        $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($headerMap[$header]);
+                        $value = $sheet->getCell($colLetter . $row)->getValue();
+                        return $value !== null && $value !== '' ? (string)$value : null;
+                    };
+
+                    $employeeNo = $getCellValue('工号');
+                    $name = $getCellValue('姓名');
                     
                     if (!$name) continue;
+                    
+                    if ($employeeNo) {
+                        $existingEmp = $em->getRepository(Employee::class)->findOneBy(['employeeNo' => $employeeNo]);
+                        if ($existingEmp) {
+                            $importErrors[] = "第{$row}行: 工号 '{$employeeNo}' 已存在，跳过";
+                            continue;
+                        }
+                    }
 
                     $employee = new Employee();
-                    $employee->setName((string)$name);
-                    $employee->setEmployeeNo((string)$employeeNo);
-                    $employee->setEnglishName((string)$sheet->getCell('C' . $row)->getValue());
-                    $employee->setEmail((string)$sheet->getCell('D' . $row)->getValue());
-                    $employee->setMobile((string)$sheet->getCell('E' . $row)->getValue());
+                    $employee->setName($name);
+                    $employee->setEmployeeNo($employeeNo ?: 'EMP_' . uniqid());
                     
-                    $gender = $sheet->getCell('F' . $row)->getValue();
+                    $email = $getCellValue('邮箱');
+                    $importedUsername = $getCellValue('用户名');
+                    if ($importedUsername) {
+                        $username = $importedUsername . '_' . $row;
+                    } elseif ($email) {
+                        $username = strstr($email, '@', true) ?: strtolower(preg_replace('/\s+/', '', $name));
+                        $username = $username . '_' . $row;
+                    } else {
+                        $username = strtolower(preg_replace('/\s+/', '', $name));
+                        $username = $username . '_' . $row;
+                    }
+                    $employee->setUsername($username);
+                    
+                    $hashedPassword = $passwordHasher->hashPassword($employee, $defaultPassword);
+                    $employee->setPassword($hashedPassword);
+                    $employee->setForcePasswordReset($forceResetPassword);
+                    
+                    $employee->setEnglishName($getCellValue('英文名'));
+                    $employee->setEmail($email);
+                    $employee->setMobile($getCellValue('手机号'));
+                    
+                    $gender = $getCellValue('性别');
                     if ($gender == '男') $employee->setGender('male');
                     elseif ($gender == '女') $employee->setGender('female');
+                    
+                    $deptName = $getCellValue('部门');
+                    if ($deptName) {
+                        $department = $deptRepo->findOneBy(['name' => $deptName]);
+                        if ($department) {
+                            $employee->setDepartment($department);
+                        }
+                    }
+                    
+                    $positionName = $getCellValue('职位');
+                    if ($positionName) {
+                        $position = $positionRepo->findOneBy(['name' => $positionName]);
+                        if ($position) {
+                            $employee->setPosition($position);
+                        }
+                    }
+                    
+                    $employmentStatus = $getCellValue('在职状态');
+                    if ($employmentStatus) {
+                        $statusMap = ['在职' => 'active', '离职' => 'inactive', '试用期' => 'probation'];
+                        $employee->setEmploymentStatus($statusMap[$employmentStatus] ?? 'active');
+                    }
+                    
+                    $workStatus = $getCellValue('工作状态');
+                    if ($workStatus) {
+                        $workStatusMap = ['工作' => 'working', '休假' => 'vacation', '出差' => 'business_trip', '外出' => 'out_of_office', '会议中' => 'in_meeting'];
+                        $employee->setWorkStatus($workStatusMap[$workStatus] ?? 'working');
+                    }
+                    
+                    $hireDate = $getCellValue('入职日期');
+                    if ($hireDate) {
+                        try {
+                            $employee->setHireDate(new \DateTime($hireDate));
+                        } catch (\Exception $e) {
+                            $importErrors[] = "第{$row}行: 入职日期格式错误 '{$hireDate}'";
+                        }
+                    }
+                    
+                    $birthDate = $getCellValue('出生日期');
+                    if ($birthDate) {
+                        try {
+                            $employee->setBirthDate(new \DateTime($birthDate));
+                        } catch (\Exception $e) {
+                            $importErrors[] = "第{$row}行: 出生日期格式错误 '{$birthDate}'";
+                        }
+                    }
+                    
+                    $idCard = $getCellValue('身份证号');
+                    if ($idCard) {
+                        $employee->setIdCard($idCard);
+                    }
+                    
+                    $companyName = $getCellValue('公司');
+                    if ($companyName) {
+                        $companyEntity = $em->getRepository(\App\Entity\Organization\Company::class)->findOneBy(['name' => $companyName]);
+                        if ($companyEntity) {
+                            $employee->setCompany($companyEntity);
+                        }
+                    }
+                    
+                    $managerName = $getCellValue('直接上级');
+                    if ($managerName) {
+                        $manager = $em->getRepository(Employee::class)->findOneBy(['name' => $managerName]);
+                        if ($manager) {
+                            $employee->setManager($manager);
+                        }
+                    }
+                    
+                    $education = $getCellValue('学历');
+                    if ($education) {
+                        $eduMap = ['初中' => 'junior_high', '高中' => 'senior_high', '中专' => 'secondary', '大专' => 'associate', '本科' => 'bachelor', '硕士' => 'master', '博士' => 'phd', 'MBA' => 'mba', 'EMBA' => 'emba'];
+                        $employee->setEducation($eduMap[$education] ?? $education);
+                    }
+                    
+                    $address = $getCellValue('联系地址');
+                    if ($address) {
+                        $employee->setAddress($address);
+                    }
+                    
+                    $school = $getCellValue('毕业院校');
+                    if ($school) {
+                        $employee->setSchool($school);
+                    }
+                    
+                    $major = $getCellValue('专业');
+                    if ($major) {
+                        $employee->setMajor($major);
+                    }
+                    
+                    $graduationDate = $getCellValue('毕业时间');
+                    if ($graduationDate) {
+                        try {
+                            $employee->setGraduationDate(new \DateTime($graduationDate));
+                        } catch (\Exception $e) {
+                            $importErrors[] = "第{$row}行: 毕业时间格式错误 '{$graduationDate}'";
+                        }
+                    }
+                    
+                    $emergencyContact = $getCellValue('联系人姓名');
+                    if ($emergencyContact) {
+                        $employee->setEmergencyContact($emergencyContact);
+                    }
+                    
+                    $emergencyPhone = $getCellValue('联系电话');
+                    if ($emergencyPhone) {
+                        $employee->setEmergencyPhone($emergencyPhone);
+                    }
                     
                     $em->persist($employee);
                     $processed++;
@@ -364,13 +671,28 @@ class EmployeeController extends AbstractController
                 
                 $em->flush();
                 
-                echo "data: " . json_encode(['progress' => 100, 'processed' => $processed, 'total' => $total, 'complete' => true]) . "\n\n";
+                $result = ['progress' => 100, 'processed' => $processed, 'total' => $total, 'complete' => true];
+                if (!empty($importErrors)) {
+                    $result['warnings'] = $importErrors;
+                }
+                echo "data: " . json_encode($result) . "\n\n";
                 if (ob_get_level() > 0) ob_flush(); flush();
                 
                 @unlink($filePath);
                 
             } catch (\Exception $e) {
-                echo "data: " . json_encode(['error' => $e->getMessage()]) . "\n\n";
+                $errorId = sprintf('import_%s_%s', date('Ymd_His'), substr(md5(uniqid()), 0, 6));
+                $logger->error('Import failed', [
+                    'error_id' => $errorId,
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                
+                echo "data: " . json_encode([
+                    'error' => '导入过程中发生错误，请联系管理员并提供错误ID: ' . $errorId
+                ]) . "\n\n";
                 if (ob_get_level() > 0) ob_flush(); flush();
             }
         });
@@ -468,6 +790,20 @@ class EmployeeController extends AbstractController
         });
 
         $deptRepo = $em->getRepository(Department::class);
+        $positionRepo = $em->getRepository(Position::class);
+
+        // 获取所有部门和岗位用于筛选下拉
+        $departments = $deptRepo->createQueryBuilder('d')
+            ->where('d.type = :type')
+            ->setParameter('type', 'department')
+            ->orderBy('d.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+        
+        $positions = $positionRepo->createQueryBuilder('p')
+            ->orderBy('p.name', 'ASC')
+            ->getQuery()
+            ->getResult();
 
         // 2. 分页获取员工列表
         $page = $request->query->getInt('page', 1);
@@ -490,6 +826,7 @@ class EmployeeController extends AbstractController
         $allColumns = [
             'name' => ['label' => 'employee.field.name', 'sortable' => true],
             'employeeNo' => ['label' => 'employee.field.employee_no', 'sortable' => true],
+            'username' => ['label' => 'employee.field.username', 'sortable' => true],
             'department' => ['label' => 'employee.field.department', 'sortable' => true],
             'position' => ['label' => 'employee.field.position', 'sortable' => true],
             'employmentStatus' => ['label' => 'employee.field.employment_status', 'sortable' => true],
@@ -596,15 +933,65 @@ class EmployeeController extends AbstractController
                ->setParameter('employmentStatus', $employmentStatus);
         }
 
+        // 高级筛选字段
+        if ($name = $request->query->get('name')) {
+            $qb->andWhere('e.name LIKE :name')->setParameter('name', '%' . $name . '%');
+        }
+        if ($employeeNo = $request->query->get('employeeNo')) {
+            $qb->andWhere('e.employeeNo LIKE :employeeNo')->setParameter('employeeNo', '%' . $employeeNo . '%');
+        }
+        if ($username = $request->query->get('username')) {
+            $qb->andWhere('e.username LIKE :username')->setParameter('username', '%' . $username . '%');
+        }
+        if ($email = $request->query->get('email')) {
+            $qb->andWhere('e.email LIKE :email')->setParameter('email', '%' . $email . '%');
+        }
+        if ($mobile = $request->query->get('mobile')) {
+            $qb->andWhere('e.mobile LIKE :mobile')->setParameter('mobile', '%' . $mobile . '%');
+        }
+        if ($englishName = $request->query->get('englishName')) {
+            $qb->andWhere('e.englishName LIKE :englishName')->setParameter('englishName', '%' . $englishName . '%');
+        }
+        if ($idCard = $request->query->get('idCard')) {
+            $qb->andWhere('e.idCard LIKE :idCard')->setParameter('idCard', '%' . $idCard . '%');
+        }
+        if ($gender = $request->query->get('gender')) {
+            $qb->andWhere('e.gender = :gender')->setParameter('gender', $gender);
+        }
+        if ($education = $request->query->get('education')) {
+            $qb->andWhere('e.education = :education')->setParameter('education', $education);
+        }
+        if ($workStatus = $request->query->get('workStatus')) {
+            $qb->andWhere('e.workStatus = :workStatus')->setParameter('workStatus', $workStatus);
+        }
+
+        // 筛选面板：部门和岗位筛选
+        if ($filterDeptId = $request->query->get('filter_department_id')) {
+            $qb->andWhere('e.department = :filterDeptId')->setParameter('filterDeptId', $filterDeptId);
+        }
+        if ($filterPosId = $request->query->get('filter_position_id')) {
+            $qb->andWhere('e.position = :filterPosId')->setParameter('filterPosId', $filterPosId);
+        }
+
         // 树状结构筛选
         $departmentId = $request->query->get('department_id');
         $companyId = $request->query->get('company_id');
         $includeSub = $request->query->getBoolean('include_sub', true); // 默认为 true
+        $departmentPath = null;
 
         if ($departmentId) {
-            if ($includeSub) {
-                $dept = $deptRepo->find($departmentId);
-                if ($dept) {
+            $dept = $deptRepo->find($departmentId);
+            if ($dept) {
+                // Build department path from ancestors
+                $pathParts = [];
+                $current = $dept;
+                while ($current) {
+                    array_unshift($pathParts, $current->getName());
+                    $current = $current->getParent();
+                }
+                $departmentPath = implode(' - ', $pathParts);
+                
+                if ($includeSub) {
                     $qb->andWhere('d.lft >= :lft')
                        ->andWhere('d.rgt <= :rgt')
                        ->andWhere('d.root = :root')
@@ -612,11 +999,11 @@ class EmployeeController extends AbstractController
                        ->setParameter('rgt', $dept->getRgt())
                        ->setParameter('root', $dept->getRoot());
                 } else {
-                    // Fallback if department not found (shouldn't happen usually)
                     $qb->andWhere('e.department = :departmentId')
                        ->setParameter('departmentId', $departmentId);
                 }
             } else {
+                // Fallback if department not found (shouldn't happen usually)
                 $qb->andWhere('e.department = :departmentId')
                    ->setParameter('departmentId', $departmentId);
             }
@@ -624,6 +1011,10 @@ class EmployeeController extends AbstractController
             // $companyId 可能是 Department 表中 company 类型的节点 ID
             // 先尝试从 Department 表中查找
             $companyDept = $deptRepo->find($companyId);
+            
+            if ($companyDept) {
+                $departmentPath = $companyDept->getName();
+            }
             
             if ($companyDept && $companyDept->getCompany()) {
                 // 如果找到了 Department 且它关联了 Company 实体，则使用 Company 实体的 ID
@@ -637,7 +1028,7 @@ class EmployeeController extends AbstractController
         }
 
         // 决定是否显示统计数据：只有在首页（无搜索、无筛选、第一页）时显示
-        $showStats = !($search || $departmentId || $companyId || $page > 1);
+        $showStats = !($search || $departmentId || $companyId);
 
         // 计算总数
         $countQb = clone $qb;
@@ -707,11 +1098,15 @@ class EmployeeController extends AbstractController
         // If no user widths saved, use auto layout
         $hasUserWidths = !empty($columnWidths);
 
+// Get stats collapsed from URL parameter (passed from sessionStorage)
+        $statsCollapsed = $request->query->get('stats_collapsed') === 'true';
+
         return $this->render('employee/list.html.twig', [
             'tree' => $tree,
             'entities' => $employees,
             'stats' => $stats,
             'show_stats' => $showStats,
+            'statsCollapsed' => $statsCollapsed,
             'columns' => $columns,
             'allColumns' => $allColumns,
             'columnWidths' => $columnWidths,
@@ -726,7 +1121,10 @@ class EmployeeController extends AbstractController
                 'limit' => $limit,
                 'start' => $offset + 1,
                 'end' => min($offset + $limit, $totalItems)
-            ]
+            ],
+            'filterDepartments' => $departments,
+            'filterPositions' => $positions,
+            'departmentPath' => $departmentPath
         ]);
     }
 

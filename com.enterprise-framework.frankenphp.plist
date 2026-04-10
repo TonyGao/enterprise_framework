@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.enterprise-framework.frankenphp</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/tony/projects/enterprise_framework/serve</string>
+        <string>dev</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/tony/projects/enterprise_framework</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>StandardOutPath</key>
+    <string>/Users/tony/projects/enterprise_framework/var/log/launchd-frankenphp.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/tony/projects/enterprise_framework/var/log/launchd-frankenphp-error.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>
