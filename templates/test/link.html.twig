@@ -1,27 +1,420 @@
 {% extends "base.html.twig" %}
 
+{% block title %}Link 链接 - EF UI 组件库{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('link.css', 'ui') }}">
+    <style>
+        body {
+            background: #f5f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .docs-nav {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .docs-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .docs-nav-logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-nav-logo:hover {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-breadcrumb {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .docs-nav-breadcrumb span {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .docs-nav-link:hover {
+            color: #fff;
+        }
+        
+        .docs-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+        
+        .docs-header {
+            margin-bottom: 40px;
+        }
+        
+        .docs-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .docs-title-tag {
+            font-size: 14px;
+            font-weight: 500;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 12px;
+            border-radius: 16px;
+        }
+        
+        .docs-description {
+            font-size: 18px;
+            color: #6b7280;
+            line-height: 1.7;
+            margin: 0;
+        }
+        
+        .docs-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .docs-section-header {
+            background: #f9fafb;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-section-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+        
+        .docs-section-desc {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .docs-section-content {
+            padding: 32px 24px;
+        }
+        
+        .docs-grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .docs-grid-2 {
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        }
+        
+        .docs-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .docs-item-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .docs-item-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .docs-demo-box {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .docs-code {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+        
+        .docs-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+        
+        .docs-back-link:hover {
+            color: #3b82f6;
+        }
+        
+        .docs-tip {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .docs-tip-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+        
+        .docs-tip-content {
+            font-size: 14px;
+            color: #1e40af;
+            line-height: 1.6;
+        }
+        
+        .docs-params-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .docs-params-table th,
+        .docs-params-table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-params-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            font-size: 13px;
+        }
+        
+        .docs-params-table td {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .docs-params-table code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #dc2626;
+            font-family: monospace;
+        }
+        
+        .docs-color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 16px;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-<a href="link" class="ef-link">Normal Link</a>
-<a class="ef-link disabled">Normal Link</a>
+<nav class="docs-nav">
+    <div class="docs-nav-left">
+        <a href="/" class="docs-nav-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="#3b82f6"/>
+                <path d="M7 8L12 13L17 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 12L12 17L17 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            EF UI 组件库
+        </a>
+        <span class="docs-nav-breadcrumb">/ 组件文档 / <span>Link 链接</span></span>
+    </div>
+    <div class="docs-nav-right">
+        <a href="/" class="docs-nav-link">返回首页</a>
+    </div>
+</nav>
 
-<br>
-
-<a href="link" class="ef-link success">Success Link</a>
-<a href="link" class="ef-link success disabled">Success Link</a>
-
-<br>
-
-<a href="link" class="ef-link warning">Warning Link</a>
-<a href="link" class="ef-link warning disabled">Warning Link</a>
-
-<br>
-
-<a href="link" class="ef-link danger">Danger Link</a>
-<a href="link" class="ef-link danger disabled">Danger Link</a>
-
-<br>
-
-<a href="link" class="ef-link icon"><i class="fa-solid fa-link"></i>Link</a>
-<a href="link" class="ef-link disabled icon"><i class="fa-solid fa-link"></i>Link</a>
-
+<div class="docs-container">
+    <a href="/" class="docs-back-link">
+        <i class="fa-solid fa-arrow-left"></i>
+        返回组件库
+    </a>
+    
+    <header class="docs-header">
+        <h1 class="docs-title">
+            Link 链接
+            <span class="docs-title-tag">基础组件</span>
+        </h1>
+        <p class="docs-description">
+            链接用于在页面间跳转或锚点到当前页特定位置。支持多种颜色类型和状态。
+        </p>
+    </header>
+    
+    <!-- 链接类型 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">链接类型</h2>
+            <p class="docs-section-desc">通过 <code>ef-link</code> 基础类和颜色类来创建不同类型的链接。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-grid docs-grid-2">
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">普通链接 Default</div>
+                    <div class="docs-item-content">
+                        <a href="#" class="ef-link">普通链接</a>
+                        <a class="ef-link disabled">禁用链接</a>
+                    </div>
+                    <div class="docs-code">&lt;a href="#" class="ef-link"&gt;普通链接&lt;/a&gt;</div>
+                </div>
+                
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">成功链接 Success</div>
+                    <div class="docs-item-content">
+                        <a href="#" class="ef-link success">成功链接</a>
+                        <a href="#" class="ef-link success disabled">成功禁用</a>
+                    </div>
+                    <div class="docs-code">&lt;a href="#" class="ef-link success"&gt;成功链接&lt;/a&gt;</div>
+                </div>
+                
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">警告链接 Warning</div>
+                    <div class="docs-item-content">
+                        <a href="#" class="ef-link warning">警告链接</a>
+                        <a href="#" class="ef-link warning disabled">警告禁用</a>
+                    </div>
+                    <div class="docs-code">&lt;a href="#" class="ef-link warning"&gt;警告链接&lt;/a&gt;</div>
+                </div>
+                
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">危险链接 Danger</div>
+                    <div class="docs-item-content">
+                        <a href="#" class="ef-link danger">危险链接</a>
+                        <a href="#" class="ef-link danger disabled">危险禁用</a>
+                    </div>
+                    <div class="docs-code">&lt;a href="#" class="ef-link danger"&gt;危险链接&lt;/a&gt;</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 图标链接 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">带图标的链接</h2>
+            <p class="docs-section-desc">添加 <code>icon</code> 类可以在链接前显示图标。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-demo-box">
+                <div class="docs-item-label">图标链接</div>
+                <div class="docs-item-content">
+                    <a href="#" class="ef-link icon"><i class="fa-solid fa-link"></i>链接</a>
+                    <a href="#" class="ef-link success icon"><i class="fa-solid fa-check"></i>成功</a>
+                    <a href="#" class="ef-link warning icon"><i class="fa-solid fa-exclamation-triangle"></i>警告</a>
+                    <a href="#" class="ef-link danger icon"><i class="fa-solid fa-trash-can"></i>删除</a>
+                </div>
+                <div class="docs-code">&lt;a href="#" class="ef-link icon"&gt;&lt;i class="fa-solid fa-link"&gt;&lt;/i&gt;链接&lt;/a&gt;</div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 参数说明 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">参数说明</h2>
+            <p class="docs-section-desc">链接的 class 组合规则。</p>
+        </div>
+        <div class="docs-section-content">
+            <table class="docs-params-table">
+                <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>可选值</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>基础类</code></td>
+                        <td><code>ef-link</code></td>
+                        <td>链接的基础样式类</td>
+                    </tr>
+                    <tr>
+                        <td><code>颜色</code></td>
+                        <td><code>success</code>, <code>warning</code>, <code>danger</code></td>
+                        <td>链接的颜色类型</td>
+                    </tr>
+                    <tr>
+                        <td><code>状态</code></td>
+                        <td><code>disabled</code></td>
+                        <td>禁用状态（不可点击）</td>
+                    </tr>
+                    <tr>
+                        <td><code>图标</code></td>
+                        <td><code>icon</code></td>
+                        <td>显示图标</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
 {% endblock %}

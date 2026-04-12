@@ -84,15 +84,43 @@ class OrgApiController extends AbstractController
   ): ApiResponse {
     $payload = $request->toArray();
     $repo = $em->getRepository(Department::class);
-    $data = $repo->createQueryBuilder('d')
-      ->where('d.alias LIKE :key')
-      ->orWhere('d.name LIKE :key')
+    $qb = $repo->createQueryBuilder('d');
+    $qb
+      ->andWhere($qb->expr()->orX('d.alias LIKE :key', 'd.name LIKE :key'))
       ->andWhere('d.state = true')
       ->andWhere('d.type = :type')
       ->setParameter('key', '%' . $payload['key'] . '%')
-      ->setParameter('type', 'department')
-      ->getQuery()
-      ->getResult();
+      ->setParameter('type', 'department');
+    
+    // Filter by selected company subtree if provided.
+    if (!empty($payload['companyId'])) {
+      $rootDepartment = $repo->findOneBy([
+        'company' => $payload['companyId'],
+        'type' => 'company'
+      ]);
+
+      if (!$rootDepartment) {
+        $rootDepartment = $repo->findOneBy([
+          'id' => $payload['companyId'],
+          'type' => 'company'
+        ]);
+      }
+
+      if (!$rootDepartment) {
+        $data = [];
+        $content = $serializer->serialize($data, 'json');
+        return ApiResponse::success($content, '200', 'success');
+      }
+
+      $qb->andWhere('d.root = :treeRoot')
+         ->andWhere('d.lft > :rootLft')
+         ->andWhere('d.rgt < :rootRgt')
+         ->setParameter('treeRoot', $rootDepartment->getRoot() ?: $rootDepartment)
+         ->setParameter('rootLft', $rootDepartment->getLft())
+         ->setParameter('rootRgt', $rootDepartment->getRgt());
+    }
+    
+    $data = $qb->getQuery()->getResult();
 
     foreach ($data as $item) {
       $name = '';
@@ -114,6 +142,61 @@ class OrgApiController extends AbstractController
     }
 
     $content = $serializer->serialize($data, 'json', ['groups' => ['api']]);
+    return ApiResponse::success($content, '200', 'success');
+  }
+
+  #[Route(
+    '/api/admin/org/department/getByCompany',
+    name: 'api_org_department_getByCompany',
+    methods: ['GET']
+  )]
+  public function getDepartmentsByCompany(
+    Request $request,
+    EntityManagerInterface $em,
+    SerializerInterface $serializer
+  ): ApiResponse {
+    $companyId = $request->query->get('companyId');
+    $repo = $em->getRepository(Department::class);
+    
+    $qb = $repo->createQueryBuilder('d')
+      ->where('d.state = true')
+      ->andWhere('d.type = :type')
+      ->setParameter('type', 'department')
+      ->orderBy('d.name', 'ASC');
+    
+    if ($companyId) {
+      $qb->andWhere('d.company = :companyId')
+         ->setParameter('companyId', $companyId);
+    }
+    
+    $data = $qb->getQuery()->getResult();
+
+    // Build tree structure
+    $tree = [];
+    foreach ($data as $item) {
+      $path = $repo->getPath($item);
+      $pathNames = [];
+      foreach ($path as $pathItem) {
+        $itemType = $pathItem->getType();
+        if ($itemType == 'corperations' || $itemType == 'company') {
+          $pathNames[] = $pathItem->getAlias() ?: $pathItem->getName();
+        } else {
+          $pathNames[] = $pathItem->getName();
+        }
+      }
+      
+      $tree[] = [
+        'id' => $item->getId(),
+        'name' => $item->getName(),
+        'alias' => $item->getAlias(),
+        'companyId' => $item->getCompany()?->getId(),
+        'companyName' => $item->getCompany()?->getName(),
+        'path' => implode('/', $pathNames),
+        'parentId' => $item->getParent()?->getId(),
+      ];
+    }
+
+    $content = $serializer->serialize($tree, 'json');
     return ApiResponse::success($content, '200', 'success');
   }
 

@@ -1,44 +1,421 @@
 {% extends "base.html.twig" %}
 
-{% set radioid = random() %}
+{% block title %}Radio 单选框 - EF UI 组件库{% endblock %}
 
-{% block javascripts %}
-	{{ parent() }}
-
-	<script></script>
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('radio.css', 'ui') }}">
+    <style>
+        body {
+            background: #f5f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .docs-nav {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .docs-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .docs-nav-logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-nav-logo:hover {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-breadcrumb {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .docs-nav-breadcrumb span {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .docs-nav-link:hover {
+            color: #fff;
+        }
+        
+        .docs-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+        
+        .docs-header {
+            margin-bottom: 40px;
+        }
+        
+        .docs-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .docs-title-tag {
+            font-size: 14px;
+            font-weight: 500;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 12px;
+            border-radius: 16px;
+        }
+        
+        .docs-description {
+            font-size: 18px;
+            color: #6b7280;
+            line-height: 1.7;
+            margin: 0;
+        }
+        
+        .docs-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .docs-section-header {
+            background: #f9fafb;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-section-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+        
+        .docs-section-desc {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .docs-section-content {
+            padding: 32px 24px;
+        }
+        
+        .docs-grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .docs-grid-2 {
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        }
+        
+        .docs-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .docs-item-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .docs-item-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .docs-demo-box {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .docs-code {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+        
+        .docs-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+        
+        .docs-back-link:hover {
+            color: #3b82f6;
+        }
+        
+        .docs-tip {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .docs-tip-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+        
+        .docs-tip-content {
+            font-size: 14px;
+            color: #1e40af;
+            line-height: 1.6;
+        }
+        
+        .docs-params-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .docs-params-table th,
+        .docs-params-table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-params-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            font-size: 13px;
+        }
+        
+        .docs-params-table td {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .docs-params-table code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #dc2626;
+            font-family: monospace;
+        }
+        
+        .ef-space-vertical {
+            flex-direction: column;
+        }
+        
+        .ef-space {
+            display: inline-flex;
+        }
+        
+        .ef-space-item {
+            margin-bottom: 16px;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-	<div class="ef-space-item" style="margin-bottom: 24px;">
-		<span class="ef-radio-group ef-radio-group-size-undefined ef-radio-group-direction-horizontal">
-			<label class="ef-radio" radioId="{{ radioid }}">
-        <input type="radio" class="ef-radio-target" value="A">
-        <span class="ef-icon-hover ef-radio-icon-hover">
-					<span class="ef-radio-icon"></span>
-				</span>
-				<span class="ef-radio-label">A</span>
-			</label>
-			<label class="ef-radio" radioId="{{ radioid }}">
-        <input type="radio" class="ef-radio-target" value="B">
-        <span class="ef-icon-hover ef-radio-icon-hover">
-					<span class="ef-radio-icon"></span>
-				</span>
-				<span class="ef-radio-label">B</span>
-			</label>
-			<label class="ef-radio" radioId="{{ radioid }}">
-        <input type="radio" class="ef-radio-target" value="C">
-        <span class="ef-icon-hover ef-radio-icon-hover">
-					<span class="ef-radio-icon"></span>
-				</span>
-				<span class="ef-radio-label">C</span>
-			</label>
-			<label class="ef-radio" radioId="{{ radioid }}">
-        <input type="radio" class="ef-radio-target" value="D">
-        <span class="ef-icon-hover ef-radio-icon-hover">
-					<span class="ef-radio-icon"></span>
-				</span>
-				<span class="ef-radio-label">D</span>
-			</label>
-		</span>
-	</div>
+<nav class="docs-nav">
+    <div class="docs-nav-left">
+        <a href="/" class="docs-nav-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="#3b82f6"/>
+                <path d="M7 8L12 13L17 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 12L12 17L17 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            EF UI 组件库
+        </a>
+        <span class="docs-nav-breadcrumb">/ 组件文档 / <span>Radio 单选框</span></span>
+    </div>
+    <div class="docs-nav-right">
+        <a href="/" class="docs-nav-link">返回首页</a>
+    </div>
+</nav>
+
+<div class="docs-container">
+    <a href="/" class="docs-back-link">
+        <i class="fa-solid fa-arrow-left"></i>
+        返回组件库
+    </a>
+    
+    <header class="docs-header">
+        <h1 class="docs-title">
+            Radio 单选框
+            <span class="docs-title-tag">表单组件</span>
+        </h1>
+        <p class="docs-description">
+            单选框用于在一组选项中选择唯一一个选项。同一组选项共享相同的 name 属性。
+        </p>
+    </header>
+    
+    <!-- 基本用法 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">基本用法</h2>
+            <p class="docs-section-desc">使用 <code>ef-radio</code> 类创建单选框，配合 <code>ef-radio-group</code> 创建选项组。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-demo-box">
+                <div class="docs-item-label">水平排列</div>
+                <div class="ef-space">
+                    <label class="ef-radio" radioId="option1">
+                        <input type="radio" class="ef-radio-target" name="demo1" value="A">
+                        <span class="ef-icon-hover ef-radio-icon-hover">
+                            <span class="ef-radio-icon"></span>
+                        </span>
+                        <span class="ef-radio-label">选项 A</span>
+                    </label>
+                    <label class="ef-radio" radioId="option1">
+                        <input type="radio" class="ef-radio-target" name="demo1" value="B">
+                        <span class="ef-icon-hover ef-radio-icon-hover">
+                            <span class="ef-radio-icon"></span>
+                        </span>
+                        <span class="ef-radio-label">选项 B</span>
+                    </label>
+                    <label class="ef-radio" radioId="option1">
+                        <input type="radio" class="ef-radio-target" name="demo1" value="C">
+                        <span class="ef-icon-hover ef-radio-icon-hover">
+                            <span class="ef-radio-icon"></span>
+                        </span>
+                        <span class="ef-radio-label">选项 C</span>
+                    </label>
+                    <label class="ef-radio" radioId="option1">
+                        <input type="radio" class="ef-radio-target" name="demo1" value="D">
+                        <span class="ef-icon-hover ef-radio-icon-hover">
+                            <span class="ef-radio-icon"></span>
+                        </span>
+                        <span class="ef-radio-label">选项 D</span>
+                    </label>
+                </div>
+                <div class="docs-code">
+&lt;label class="ef-radio" radioId="group1"&gt;
+    &lt;input type="radio" class="ef-radio-target" name="demo" value="A"&gt;
+    &lt;span class="ef-icon-hover ef-radio-icon-hover"&gt;
+        &lt;span class="ef-radio-icon"&gt;&lt;/span&gt;
+    &lt;/span&gt;
+    &lt;span class="ef-radio-label"&gt;选项 A&lt;/span&gt;
+&lt;/label&gt;
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 参数说明 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">参数说明</h2>
+            <p class="docs-section-desc">单选框的 class 组合规则。</p>
+        </div>
+        <div class="docs-section-content">
+            <table class="docs-params-table">
+                <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>ef-radio</code></td>
+                        <td>单选框的基础类</td>
+                    </tr>
+                    <tr>
+                        <td><code>ef-radio-group</code></td>
+                        <td>单选框组容器</td>
+                    </tr>
+                    <tr>
+                        <td><code>ef-radio-group-direction-horizontal</code></td>
+                        <td>水平排列</td>
+                    </tr>
+                    <tr>
+                        <td><code>ef-radio-group-direction-vertical</code></td>
+                        <td>垂直排列</td>
+                    </tr>
+                    <tr>
+                        <td><code>radioId</code></td>
+                        <td>属性，用于关联标签和输入框</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    
+    <div class="docs-tip">
+        <div class="docs-tip-title">与 Checkbox 的区别</div>
+        <div class="docs-tip-content">
+            <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                <li><strong>Checkbox（复选框）</strong>：可以选择多个选项或不选，用于"多选"场景</li>
+                <li><strong>Radio（单选框）</strong>：必须选择其中一个选项，用于"单选"场景</li>
+                <li>同一组的 Radio 共享相同的 <code>name</code> 属性，确保只能选择一个</li>
+            </ul>
+        </div>
+    </div>
+</div>
 {% endblock %}

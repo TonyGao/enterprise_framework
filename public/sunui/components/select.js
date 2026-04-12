@@ -1,4 +1,17 @@
 $(document).ready(function () {
+  function syncSelectPopupSize(selectInput, contentId) {
+    const panel = $('#' + contentId);
+    if (panel.length === 0) {
+      return;
+    }
+
+    const elementWidth = selectInput.outerWidth();
+    panel.css({
+      width: elementWidth,
+      minWidth: elementWidth,
+    });
+  }
+
   let elements = document.getElementsByClassName('ef-select');
   let config = {
     prevent_repeat: true,
@@ -107,14 +120,10 @@ $(document).ready(function () {
 
     let documentWidth = $('#app').width(); // 获取文档的宽度
     let rightDistance = documentWidth - (elementOffset.left + elementWidth);
-    const isToolbar = $(this).closest('#toolbar-container').length > 0;
     const panel = $('#' + contentId);
-    const listEl = panel.children().find('.ef-select-dropdown-list')[0];
-    const listWidth = listEl ? listEl.scrollWidth : 0;
-    const minWidth = isToolbar ? 420 : 300;
-    const maxWidth = Math.floor(documentWidth * 0.7);
-    let desiredWidth = Math.max(elementWidth, minWidth, listWidth + 32);
-    desiredWidth = Math.min(desiredWidth, maxWidth);
+    const desiredWidth = elementWidth;
+
+    syncSelectPopupSize($(this), contentId);
 
     if (rightDistance < desiredWidth - elementWidth) {
       // If it overflows the right edge of the document

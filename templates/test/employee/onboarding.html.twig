@@ -302,7 +302,7 @@
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.job_info.department'|trans }}</label>
                         <div class="ef-deparment-element">
-                            <span class="ef-department-view-single ef-department ef-department-view ef-department-view-size-medium ef-department-view-search ef-input-rounded" style="width: 100%;" chosen="false" id="departmentInput" contentid="departmentContent">
+                            <span class="ef-department-view-single ef-department ef-department-view ef-department-view-size-medium ef-department-view-search ef-input-rounded" style="width: 100%;" chosen="false" id="departmentInput" contentid="departmentContent" data-company-id="">
                                 <div class="ef-department-selection-container">
                                     <div class="ef-department-selection">
                                         <span class="ef-department-selection-span">
@@ -321,7 +321,7 @@
                                     </span>
                                 </span>
                             </span>
-                            <input type="hidden" component="select" name="department" id="department" value="">
+                            <input type="hidden" component="select" name="department" id="department" value="" company-id="">
                         </div>
                         <div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; min-width: 260px; width: fit-content; display: none;" id="departmentContent" parentid="departmentInput">
                             <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
@@ -633,6 +633,36 @@
             // Also listen to hidden inputs for select components (use jQuery since they trigger via $.trigger)
             $('#step-1-content input[type="hidden"], #step-2-content input[type="hidden"], #step-3-content input[type="hidden"]').on('change', function(e) {
                 console.log('Hidden input changed:', this.id, '=', this.value);
+                saveFormData();
+            });
+            
+            // Company dropdown change - update department selector's companyId and clear department selection
+            $('#company').on('change', function(e) {
+                const companyId = $(this).val();
+                const departmentInput = $('#departmentInput');
+                const departmentHidden = $('#department');
+                
+                // Update data-company-id attribute
+                departmentInput.attr('data-company-id', companyId || '');
+                departmentHidden.attr('company-id', companyId || '');
+                
+                // Clear department selection if company changed
+                if (companyId) {
+                    // Clear the department selection UI
+                    const selectionUl = departmentInput.find('.ef-department-selection-span ul');
+                    selectionUl.html('');
+                    
+                    const input = departmentInput.find('.ef-department-selection-container input.ef-department-view-input');
+                    input.attr('chose', 'false');
+                    input.show();
+                    input.val('');
+                    
+                    departmentInput.attr('chosen', 'false');
+                    departmentHidden.val('');
+                    
+                    console.log('Company changed to:', companyId, '- Department selection cleared');
+                }
+                
                 saveFormData();
             });
             

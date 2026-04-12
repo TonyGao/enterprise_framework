@@ -1,4 +1,89 @@
 $(document).ready(function () {
+  function getDepartmentInfoFromNode(node) {
+    const text = (node.text() || '').trim();
+    const path = node.attr('path') || '';
+    const pathParts = path ? path.split('/') : [];
+
+    let company = node.attr('data-company-name') || '';
+    if (!company && pathParts.length >= 2) {
+      company = pathParts[1];
+    }
+
+    let parent = node.attr('data-parent-name') || '';
+    if (!parent && pathParts.length >= 2) {
+      parent = pathParts[pathParts.length - 2];
+    }
+
+    return {
+      name: text,
+      alias: node.attr('data-alias') || text,
+      company: company,
+      owner: node.attr('data-owner-name') || '',
+      parent: parent === text ? '' : parent,
+    };
+  }
+
+  function renderDepartmentInfo(modal, info) {
+    modal.find('[data-department-placeholder]').hide();
+    modal.find('[data-department-detail]').show();
+    modal.find('[data-department-field="name"]').text(info.name || '');
+    modal.find('[data-department-field="alias"]').text(info.alias || '');
+    // Prefer the company name stored when opening modal (matches user's selection)
+    const companyScope = (modal.attr('data-company-scope') || '').trim();
+    modal.find('[data-department-field="company"]').text(companyScope || info.company || '');
+    modal.find('[data-department-field="owner"]').text(info.owner || '');
+    modal.find('[data-department-field="parent"]').text(info.parent || '');
+  }
+
+  function renderDepartmentPlaceholder(modal) {
+    modal.find('[data-department-detail]').hide();
+    modal.find('[data-department-placeholder]').show();
+  }
+
+  function hydrateRightPanel(modal, departmentInput) {
+    const selectedId = departmentInput
+      .find('.ef-department-selection-span ul a.ef-link')
+      .first()
+      .attr('id');
+
+    if (!selectedId) {
+      renderDepartmentPlaceholder(modal);
+      return;
+    }
+
+    const selectedNode = modal
+      .find('.department-tree-wrapper .org-text-content.department[type="department"][id="' + selectedId + '"]')
+      .first();
+
+    if (!selectedNode.length) {
+      renderDepartmentPlaceholder(modal);
+      return;
+    }
+
+    renderDepartmentInfo(modal, getDepartmentInfoFromNode(selectedNode));
+  }
+
+  function updateDetailBySelection(line) {
+    const modal = line.closest('.ef-modal-container');
+    const content = line.find('.org-text-content.department[type="department"]').first();
+    if (!content.length) {
+      return;
+    }
+    renderDepartmentInfo(modal, getDepartmentInfoFromNode(content));
+  }
+
+  function syncDepartmentPopupSize(departmentInput, contentId) {
+    const popup = $('#' + contentId);
+    if (popup.length === 0) {
+      return;
+    }
+
+    popup.css({
+      width: departmentInput.outerWidth(),
+      minWidth: departmentInput.outerWidth(),
+    });
+  }
+
   $('body').on('click', '.ef-department-view-search', function () {
     $(this).find('input:first').focus();
   });
@@ -33,14 +118,21 @@ $(document).ready(function () {
             '.ef-department-view-single.ef-department'
           );
           contentId = departmentInput.attr('contentid');
+          let companyId = departmentInput.attr('data-company-id');
+          // Support custom API URL from data attribute, fallback to default
+          let searchUrl = departmentInput.attr('data-search-url') || '/api/admin/org/department/searchByKey';
 
           window[departmentVar] = v;
           let payload = {
             key: $(this).val(),
           };
 
+          if (companyId) {
+            payload.companyId = companyId;
+          }
+
           $.ajax({
-            url: '/api/admin/org/department/searchByKey',
+            url: searchUrl,
             method: 'POST',
             dataType: 'json',
             data: JSON.stringify(payload),
@@ -53,6 +145,7 @@ $(document).ready(function () {
                 let selectionUl = departmentInput
                   .children()
                   .find('.ef-department-selection-span ul');
+                syncDepartmentPopupSize(departmentInput, contentId);
                 $('#' + contentId).css({
                   left: left,
                   top: top,
@@ -246,8 +339,24 @@ $(document).ready(function () {
       .find('.confirmDepartment[type="button"]');
     button.attr('choseId', id);
     button.attr('path', path);
+    updateDetailBySelection(line);
     event.stopPropagation();
   });
+
+  $('body').on(
+    'click',
+    '.department-tree-wrapper .org-text-content.department[type="department"]',
+    function (event) {
+      event.stopPropagation();
+      const line = $(this).closest('.department-select-line');
+      const radio = line.find('.ef-radio').first();
+      if (radio.length) {
+        radio.trigger('click');
+      } else {
+        updateDetailBySelection(line);
+      }
+    }
+  );
 
   // 退出部门弹窗
   $('body').on('click', '.cancelDepartment', function () {
@@ -258,16 +367,85 @@ $(document).ready(function () {
   // 显示部门弹窗
   $('body').on('click', '.show-department-modal', async function () {
     let inputid = $(this).parent().attr('id');
+    let departmentInput = $(this).parent();
+    let companyId = departmentInput.attr('data-company-id');
     let mode = $(this)
       .parent()
       .children()
       .find('.ef-department-view-input')
       .attr('mode');
 
+    let companyName = departmentInput.attr('data-company-name') || '';
+
+    // 若 department 组件标记了需要公司联动（data-company-id 属性存在但为空），则提示用户先选公司
+    const requiresCompany = departmentInput.is('[data-company-id]');
+    if (requiresCompany && !companyId) {
+      const companySelectId = departmentInput.attr('data-company-select-id');
+      if (companySelectId) {
+        // 使用 jquery.validate 相同的 ef-select-error 样式提示关联的公司选择框
+        const $companySelect = $('#' + companySelectId);
+        $companySelect.next('.ef-select').addClass('ef-select-error');
+        $companySelect[0] && $companySelect[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // 用户选好公司后自动清除错误
+        $companySelect.one('change', function () {
+          $(this).next('.ef-select').removeClass('ef-select-error');
+        });
+      } else {
+        // 降级：在 department 组件本身显示错误（无关联公司选择框时）
+        departmentInput.addClass('ef-department-error');
+        setTimeout(function () { departmentInput.removeClass('ef-department-error'); }, 2000);
+      }
+      return;
+    }
+
     // 检查是否已经存在该 inputid 的模态弹窗容器
     let modal = $(".ef-modal-container[inputid='" + inputid + "']");
     if (modal.length > 0) {
+      const prevCompanyId = modal.attr('data-company-id-scope') || '';
+      const companyChanged = prevCompanyId !== (companyId || '');
+
+      modal.attr('data-company-scope', companyName);
+      modal.attr('data-company-id-scope', companyId || '');
+      // 更新标题中的公司徽章
+      const badge = modal.find('.dept-modal-company-badge');
+      if (companyName) {
+        if (badge.length) {
+          badge.text(companyName);
+        } else {
+          modal.find('.ef-modal-title').append(' &middot; <span class="dept-modal-company-badge">' + companyName + '</span>');
+        }
+      } else {
+        badge.prev().remove(); // 移除 " · "
+        badge.remove();
+      }
+
       modal.show();
+      renderDepartmentPlaceholder(modal);
+
+      // 公司变了则重新加载树
+      if (companyChanged) {
+        let requestUrl = departmentInput.attr('data-modal-url') || '/admin/org/department/singleSelect';
+        let requestData = companyId ? { companyId: companyId } : {};
+        let cacheKey = companyId
+          ? 'org.singleDepartment.v4.' + companyId
+          : 'org.singleDepartment.v4';
+        modal.find('.department-tree-wrapper').html('');
+        const cached = await Common.getCache(cacheKey);
+        if (cached !== null) {
+          modal.find('.department-tree-wrapper').html(cached);
+        } else {
+          $.ajax({
+            url: requestUrl,
+            method: 'GET',
+            data: requestData,
+            dataType: 'html',
+            success: async function (data) {
+              await Common.setCache(cacheKey, data);
+              modal.find('.department-tree-wrapper').html(data);
+            },
+          });
+        }
+      }
     } else {
       let modalWindow = `
     <div class="ef-modal-container" style="z-index: 1001;" inputid="${inputid}">
@@ -276,7 +454,7 @@ $(document).ready(function () {
       <div class="ef-modal" style="width: 784px">
         <div class="ef-modal-header">
           <div class="ef-modal-title ef-modal-title-align-left">
-            ${mode == 'single' ? '单部门选择' : '多部门选择'}
+            ${mode == 'single' ? '单部门选择' : '多部门选择'}${companyName ? ' &middot; <span class="dept-modal-company-badge">' + companyName + '</span>' : ''}
           </div>
           <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" inputid="${inputid}">
             <span class="ef-icon-hover">
@@ -302,14 +480,20 @@ $(document).ready(function () {
               </div>
             </div>
             <div class="right-department-wrapper">
-              <div id="department">
+              <div class="department-placeholder" data-department-placeholder>
+                <div class="department-placeholder-icon">
+                  <i class="fa-regular fa-folder-open"></i>
+                </div>
+                <div class="department-placeholder-text">请选择左侧部门以查看详情</div>
+              </div>
+              <div id="department" data-department-detail style="display: none;">
                 <div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
                   <div class="ef-col ef-col-6 ef-form-item-label-col">
                     <label class="ef-form-item-label" for="department_name">部门全称</label>
                   </div>
                   <div class="ef-col ef-col-18 ef-form-item-wrapper-col">
                     <div class="ef-form-item-content-wrapper">
-                      <div class="ef-form-item-content ef-form-item-content-flex">行业解决方案部三</div>
+                      <div class="ef-form-item-content ef-form-item-content-flex" data-department-field="name"></div>
                     </div>
                   </div>
                 </div>
@@ -319,7 +503,7 @@ $(document).ready(function () {
                   </div>
                   <div class="ef-col ef-col-18 ef-form-item-wrapper-col">
                     <div class="ef-form-item-content-wrapper">
-                      <div class="ef-form-item-content ef-form-item-content-flex">行业解决方案部三</div>
+                      <div class="ef-form-item-content ef-form-item-content-flex" data-department-field="alias"></div>
                     </div>
                   </div>
                 </div>
@@ -329,7 +513,7 @@ $(document).ready(function () {
                   </div>
                   <div class="ef-col ef-col-18 ef-form-item-wrapper-col">
                     <div class="ef-form-item-content-wrapper">
-                      <div class="ef-form-item-content ef-form-item-content-flex">天津港公司2</div>
+                      <div class="ef-form-item-content ef-form-item-content-flex" data-department-field="company"></div>
                     </div>
                   </div>
                 </div>
@@ -339,7 +523,7 @@ $(document).ready(function () {
                   </div>
                   <div class="ef-col ef-col-18 ef-form-item-wrapper-col">
                     <div class="ef-form-item-content-wrapper">
-                      <div class="ef-form-item-content ef-form-item-content-flex">高强</div>
+                      <div class="ef-form-item-content ef-form-item-content-flex" data-department-field="owner"></div>
                     </div>
                   </div>
                 </div>
@@ -349,7 +533,7 @@ $(document).ready(function () {
                   </div>
                   <div class="ef-col ef-col-18 ef-form-item-wrapper-col">
                     <div class="ef-form-item-content-wrapper">
-                      <div class="ef-form-item-content ef-form-item-content-flex"></div>
+                      <div class="ef-form-item-content ef-form-item-content-flex" data-department-field="parent"></div>
                     </div>
                   </div>
                 </div>
@@ -369,21 +553,36 @@ $(document).ready(function () {
       $('body').append(modalWindow);
 
       let modal = $(".ef-modal-container[inputid='" + inputid + "']");
+      modal.attr('data-company-scope', companyName);
+      modal.attr('data-company-id-scope', companyId || '');
       modal.show();
+      renderDepartmentPlaceholder(modal);
+
+      // 构建缓存key和请求URL，考虑companyId
+      let cacheKey = companyId
+        ? 'org.singleDepartment.v4.' + companyId
+        : 'org.singleDepartment.v4';
+      // Support custom modal URL from data attribute, fallback to default
+      let requestUrl = departmentInput.attr('data-modal-url') || '/admin/org/department/singleSelect';
+      let requestData = companyId ? { companyId: companyId } : {};
+
       // 调用部门接口，如果已经调用过就不再调用了，而是直接使用缓存
-      let singleDepCache = await Common.getCache('org.singleDepartment');
+      let singleDepCache = await Common.getCache(cacheKey);
       if (singleDepCache === null) {
         $.ajax({
-          url: '/admin/org/departemnt/singleSelect',
+          url: requestUrl,
           method: 'GET',
+          data: requestData,
           dataType: 'html',
           success: async function (data) {
-            await Common.setCache('org.singleDepartment', data);
+            await Common.setCache(cacheKey, data);
             modal.find('.department-tree-wrapper').html(data);
+            hydrateRightPanel(modal, departmentInput);
           },
         });
       } else {
         modal.children().find('.department-tree-wrapper').html(singleDepCache);
+        hydrateRightPanel(modal, departmentInput);
       }
     }
   });

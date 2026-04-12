@@ -1,109 +1,332 @@
 {% extends "base.html.twig" %}
 
-{% set id1 = random() %}
-{% set id2 = random() %}
-{% set id3 = random() %}
+{% block title %}Tabs 标签页 - EF UI 组件库{% endblock %}
 
-{% block javascripts %}
-	{{ parent() }}
-
-	<script>
-    $(document).ready(function() {
-      $("#add").on("click", function() {
-				let random = Math.random();
-        EfTabs.addTab('tt', random, random, 'hello', "hi world "+random);
-      })
-    })
-
-  </script>
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('tabs.css', 'ui') }}">
+    <style>
+        body {
+            background: #f5f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .docs-nav {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .docs-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .docs-nav-logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-nav-breadcrumb {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .docs-nav-breadcrumb span {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .docs-nav-link:hover {
+            color: #fff;
+        }
+        
+        .docs-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .docs-header {
+            margin-bottom: 32px;
+        }
+        
+        .docs-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .docs-title-tag {
+            font-size: 14px;
+            font-weight: 500;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 12px;
+            border-radius: 16px;
+        }
+        
+        .docs-description {
+            font-size: 16px;
+            color: #6b7280;
+            line-height: 1.7;
+            margin: 0;
+        }
+        
+        .docs-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .docs-section-header {
+            background: #f9fafb;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+        }
+        
+        .docs-section-content {
+            padding: 24px 20px;
+        }
+        
+        .docs-code {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+        
+        .docs-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-section {
+            margin-bottom: 24px;
+        }
+        
+        .demo-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-
-		<div id="tt" class="ef-tabs tabs-container" style="width: 500px;">
-			<div class="tabs-header tabs-header-plain" style="">
-				<div class="tabs-scroller-left" style="display: none;"><i class="fa-solid fa-angles-left"></i></div>
-				<div class="tabs-scroller-right" style="display: none;"><i class="fa-solid fa-angles-right"></i></div>
-				<div class="tabs-wrap" style="">
-					<ul class="tabs">
-						<li class="tabs-first tabs-selected" id="{{ id1 }}">
-							<span class="tabs-inner">
-                <span class="tabs-title tabs-closable">
-								  <span class="tabs-title">About</span>
-                </span>
-                <span class="ef-tabs-close"><i class="fa-solid fa-xmark"></i></span>
-							</span>
-						</li>
-						<li class="" id="{{ id2 }}">
-							<span class="tabs-inner">
-								<span class="tabs-title">My Documents</span>
-							</span>
-						</li>
-						<li class="tabs-last" id="{{ id3 }}">
-							<span class="tabs-inner">
-								<span class="tabs-title tabs-closable">
-                  <span class="ef-tabs-icon"><i class="fa-solid fa-circle-question"></i></span>Help
-                </span>
-                <span class="ef-tabs-close"><i class="fa-solid fa-xmark"></i></span>
-							</span>
-						</li>
-					</ul>
-				</div>
-			</div>
-			<div class="tabs-panels" style="">
-				<div class="panel panel-htop" style="" liid="{{ id1 }}">
-					<div title="" style="padding: 10px;" class="panel-body panel-body-noheader panel-body-noborder" id="">
-            <div title="" style="padding: 10px;" class="panel-body panel-body-noheader panel-body-noborder" id="">
-              <p style="font-size:14px">jQuery EasyUI framework helps you build your web pages easily.</p>
-              <ul>
-                <li>easyui is a collection of user-interface plugin based on jQuery.</li>
-                <li>easyui provides essential functionality for building modem, interactive, javascript applications.</li>
-                <li>using easyui you don't need to write many javascript code, you usually defines user-interface by writing some HTML markup.</li>
-                <li>complete framework for HTML5 web page.</li>
-                <li>easyui save your time and scales while developing your products.</li>
-                <li>easyui is very easy but powerful.</li>
-              </ul>
-            </div>
-					</div>
-				</div>
-				<div class="panel panel-htop" style="display: none;" liid="{{ id2 }}">
-					<div title="" style="padding: 10px;" class="panel-body panel-body-noheader panel-body-noborder" id="">
-						<div title="" data-options="href:'_content.html',closable:true" style="padding: 10px; width: 698px; height: 214px;" class="panel-body panel-body-noheader panel-body-noborder" id="">
-              <p style="font-size:14px">Here is the content loaded via AJAX.</p>
-              <ul>
-                <li>easyui is a collection of user-interface plugin based on jQuery.</li>
-                <li>easyui provides essential functionality for building modem, interactive, javascript applications.</li>
-                <li>using easyui you don't need to write many javascript code, you usually defines user-interface by writing some HTML markup.</li>
-                <li>complete framework for HTML5 web page.</li>
-                <li>easyui save your time and scales while developing your products.</li>
-                <li>easyui is very easy but powerful.</li>
-              </ul>
-            </div>
-					</div>
-				</div>
-				<div class="panel panel-htop" style="display: none;" liid="{{ id3 }}">
-					<div title="" data-options="iconCls:'icon-help',closable:true" style="padding: 10px;" class="panel-body panel-body-noheader panel-body-noborder" id="">
-						three
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div style="margin-top: 10px;">
-      <button class="btn primary medium icon circle" id="add"><i class="fa-solid fa-plus"></i></button>
+<nav class="docs-nav">
+    <div class="docs-nav-left">
+        <a href="/" class="docs-nav-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#3b82f6"/><path d="M7 8L12 13L17 8M7 12L12 17L17 12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+            EF UI 组件库
+        </a>
+        <span class="docs-nav-breadcrumb">/ <span>Tabs 标签页</span></span>
     </div>
+    <a href="/" class="docs-nav-link">返回首页</a>
+</nav>
 
-		<div id="tt2" class="ef-tabs tabs-container" style="width: 500px;">
-			<div class="tabs-header tabs-header-plain" style="">
-				<div class="tabs-scroller-left" style="display: none;"><i class="fa-solid fa-angles-left"></i></div>
-				<div class="tabs-scroller-right" style="display: none;"><i class="fa-solid fa-angles-right"></i></div>
-				<div class="tabs-wrap" style="">
-					<ul class="tabs">
-
-					</ul>
-				</div>
-			</div>
-			<div class="tabs-panels" style="">
-			</div>
-		</div>
+<div class="docs-container">
+    <a href="/" class="docs-back-link">
+        <i class="fa-solid fa-arrow-left"></i> 返回组件库
+    </a>
+    
+    <header class="docs-header">
+        <h1 class="docs-title">
+            Tabs 标签页
+            <span class="docs-title-tag">布局组件</span>
+        </h1>
+        <p class="docs-description">
+            标签页用于在同一个区域切换不同的内容视图，适合内容分类清晰的场景。
+        </p>
+    </header>
+    
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">基本用法</h2>
+        </div>
+        <div class="docs-section-content">
+            <div class="demo-section">
+                <div class="demo-label">基础标签页</div>
+                <div id="demoTabs" class="ef-tabs tabs-container" style="width: 600px;">
+                    <div class="tabs-header tabs-header-plain">
+                        <div class="tabs-wrap">
+                            <ul class="tabs">
+                                <li class="tabs-first tabs-selected" id="tab1">
+                                    <span class="tabs-inner">
+                                        <span class="tabs-title">用户管理</span>
+                                    </span>
+                                </li>
+                                <li class="" id="tab2">
+                                    <span class="tabs-inner">
+                                        <span class="tabs-title">权限配置</span>
+                                    </span>
+                                </li>
+                                <li class="tabs-last" id="tab3">
+                                    <span class="tabs-inner">
+                                        <span class="tabs-title tabs-closable">
+                                            <span class="ef-tabs-icon"><i class="fa-solid fa-gear"></i></span>系统设置
+                                        </span>
+                                        <span class="ef-tabs-close"><i class="fa-solid fa-xmark"></i></span>
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tabs-panels">
+                        <div class="panel panel-htop" liid="tab1">
+                            <div style="padding: 20px;">
+                                <p>这是用户管理面板的内容。</p>
+                                <ul>
+                                    <li>用户列表展示</li>
+                                    <li>用户新增/编辑/删除</li>
+                                    <li>用户搜索与筛选</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-htop" style="display: none;" liid="tab2">
+                            <div style="padding: 20px;">
+                                <p>这是权限配置面板的内容。</p>
+                                <ul>
+                                    <li>角色管理</li>
+                                    <li>权限分配</li>
+                                    <li>数据权限控制</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel panel-htop" style="display: none;" liid="tab3">
+                            <div style="padding: 20px;">
+                                <p>这是系统设置面板的内容。</p>
+                                <ul>
+                                    <li>基本设置</li>
+                                    <li>安全设置</li>
+                                    <li>通知设置</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="docs-code">
+&lt;div class="ef-tabs tabs-container"&gt;
+    &lt;div class="tabs-header tabs-header-plain"&gt;
+        &lt;div class="tabs-wrap"&gt;
+            &lt;ul class="tabs"&gt;
+                &lt;li class="tabs-first tabs-selected" id="tab1"&gt;
+                    &lt;span class="tabs-inner"&gt;
+                        &lt;span class="tabs-title"&gt;标签1&lt;/span&gt;
+                    &lt;/span&gt;
+                &lt;/li&gt;
+                &lt;li id="tab2"&gt;
+                    &lt;span class="tabs-inner"&gt;
+                        &lt;span class="tabs-title"&gt;标签2&lt;/span&gt;
+                    &lt;/span&gt;
+                &lt;/li&gt;
+                &lt;li class="tabs-last" id="tab3"&gt;
+                    &lt;span class="tabs-inner"&gt;
+                        &lt;span class="tabs-title tabs-closable"&gt;标签3（可关闭）&lt;/span&gt;
+                        &lt;span class="ef-tabs-close"&gt;&lt;i class="fa-solid fa-xmark"&gt;&lt;/i&gt;&lt;/span&gt;
+                    &lt;/span&gt;
+                &lt;/li&gt;
+            &lt;/ul&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="tabs-panels"&gt;
+        &lt;div class="panel panel-htop" liid="tab1"&gt;内容1&lt;/div&gt;
+        &lt;div class="panel panel-htop" style="display: none;" liid="tab2"&gt;内容2&lt;/div&gt;
+        &lt;div class="panel panel-htop" style="display: none;" liid="tab3"&gt;内容3&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+            </div>
+        </div>
+    </section>
+    
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">主要 CSS 类说明</h2>
+        </div>
+        <div class="docs-section-content">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                    <tr style="background: #f9fafb; text-align: left;">
+                        <th style="padding: 12px; border-bottom: 1px solid #e5e7eb;">类名</th>
+                        <th style="padding: 12px; border-bottom: 1px solid #e5e7eb;">说明</th>
+                    </tr>
+                </thead>
+                <tbody style="color: #6b7280;">
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><code>ef-tabs</code></td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">标签页容器</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><code>tabs-header</code></td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">标签头容器</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><code>tabs</code></td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">标签列表</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><code>tabs-selected</code></td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">选中状态</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><code>tabs-closable</code></td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">可关闭标签</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px;"><code>tabs-panels</code></td>
+                        <td style="padding: 12px;">内容面板容器</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
 {% endblock %}

@@ -1,45 +1,411 @@
 {% extends "base.html.twig" %}
 
+{% block title %}Label 标签 - EF UI 组件库{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('label.css', 'ui') }}">
+    <style>
+        body {
+            background: #f5f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .docs-nav {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .docs-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .docs-nav-logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-nav-logo:hover {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-breadcrumb {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .docs-nav-breadcrumb span {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .docs-nav-link:hover {
+            color: #fff;
+        }
+        
+        .docs-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+        
+        .docs-header {
+            margin-bottom: 40px;
+        }
+        
+        .docs-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .docs-title-tag {
+            font-size: 14px;
+            font-weight: 500;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 12px;
+            border-radius: 16px;
+        }
+        
+        .docs-description {
+            font-size: 18px;
+            color: #6b7280;
+            line-height: 1.7;
+            margin: 0;
+        }
+        
+        .docs-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .docs-section-header {
+            background: #f9fafb;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-section-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+        
+        .docs-section-desc {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .docs-section-content {
+            padding: 32px 24px;
+        }
+        
+        .docs-grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .docs-grid-2 {
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        }
+        
+        .docs-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .docs-item-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .docs-item-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .docs-demo-box {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .docs-color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 16px;
+        }
+        
+        .docs-color-item {
+            text-align: center;
+        }
+        
+        .docs-color-swatch {
+            width: 100%;
+            height: 48px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .docs-color-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .docs-code {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+        
+        .docs-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+        
+        .docs-back-link:hover {
+            color: #3b82f6;
+        }
+        
+        .docs-params-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .docs-params-table th,
+        .docs-params-table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-params-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            font-size: 13px;
+        }
+        
+        .docs-params-table td {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .docs-params-table code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #dc2626;
+            font-family: monospace;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-<div>
-	<label class="ef-label red">Red</label>
-	<label class="ef-label orange">Orange</label>
-	<label class="ef-label yellow">Yellow</label>
-	<label class="ef-label olive">Olive</label>
-	<label class="ef-label green">Green</label>
-	<label class="ef-label teal">Teal</label>
-	<label class="ef-label blue">Blue</label>
-	<label class="ef-label violet">Violet</label>
-	<label class="ef-label purple">Purple</label>
-	<label class="ef-label pink">Pink</label>
-	<label class="ef-label brown">Brown</label>
-	<label class="ef-label grey">Grey</label>
-	<label class="ef-label black">Black</label>
-</div>
-<div style="margin-top: 50px;">
-	<div class="ef-label mini">
-		Mini
-	</div>
-	<div class="ef-label tiny">
-		Tiny
-	</div>
-	<div class="ef-label small">
-		Small
-	</div>
-	<div class="ef-label">
-		Medium
-	</div>
-	<div class="ef-label large">
-		Large
-	</div>
-	<div class="ef-label big">
-		Big
-	</div>
-	<div class="ef-label huge">
-		Huge
-	</div>
-	<div class="ef-label massive">
-		Massive
-	</div>
+<nav class="docs-nav">
+    <div class="docs-nav-left">
+        <a href="/" class="docs-nav-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="#3b82f6"/>
+                <path d="M7 8L12 13L17 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 12L12 17L17 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            EF UI 组件库
+        </a>
+        <span class="docs-nav-breadcrumb">/ 组件文档 / <span>Label 标签</span></span>
+    </div>
+    <div class="docs-nav-right">
+        <a href="/" class="docs-nav-link">返回首页</a>
+    </div>
+</nav>
+
+<div class="docs-container">
+    <a href="/" class="docs-back-link">
+        <i class="fa-solid fa-arrow-left"></i>
+        返回组件库
+    </a>
+    
+    <header class="docs-header">
+        <h1 class="docs-title">
+            Label 标签
+            <span class="docs-title-tag">基础组件</span>
+        </h1>
+        <p class="docs-description">
+            标签用于标识、分类或强调信息。支持多种颜色和尺寸。
+        </p>
+    </header>
+    
+    <!-- 颜色变体 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">颜色变体</h2>
+            <p class="docs-section-desc">使用 <code>ef-label</code> 基础类和颜色类来创建不同颜色的标签。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-demo-box">
+                <div class="docs-item-content" style="flex-wrap: wrap;">
+                    <label class="ef-label red">Red</label>
+                    <label class="ef-label orange">Orange</label>
+                    <label class="ef-label yellow">Yellow</label>
+                    <label class="ef-label olive">Olive</label>
+                    <label class="ef-label green">Green</label>
+                    <label class="ef-label teal">Teal</label>
+                    <label class="ef-label blue">Blue</label>
+                    <label class="ef-label violet">Violet</label>
+                    <label class="ef-label purple">Purple</label>
+                    <label class="ef-label pink">Pink</label>
+                    <label class="ef-label brown">Brown</label>
+                    <label class="ef-label grey">Grey</label>
+                    <label class="ef-label black">Black</label>
+                </div>
+                <div class="docs-code">
+&lt;label class="ef-label red"&gt;Red&lt;/label&gt;
+&lt;label class="ef-label orange"&gt;Orange&lt;/label&gt;
+&lt;label class="ef-label green"&gt;Green&lt;/label&gt;
+&lt;label class="ef-label blue"&gt;Blue&lt;/label&gt;
+...
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 尺寸变体 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">尺寸变体</h2>
+            <p class="docs-section-desc">通过不同的尺寸类来调整标签的大小。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-demo-box">
+                <div class="docs-item-content" style="align-items: center;">
+                    <label class="ef-label mini">Mini</label>
+                    <label class="ef-label tiny">Tiny</label>
+                    <label class="ef-label small">Small</label>
+                    <label class="ef-label">Medium</label>
+                    <label class="ef-label large">Large</label>
+                    <label class="ef-label big">Big</label>
+                    <label class="ef-label huge">Huge</label>
+                    <label class="ef-label massive">Massive</label>
+                </div>
+                <div class="docs-code">
+&lt;label class="ef-label mini"&gt;Mini&lt;/label&gt;
+&lt;label class="ef-label tiny"&gt;Tiny&lt;/label&gt;
+&lt;label class="ef-label small"&gt;Small&lt;/label&gt;
+&lt;label class="ef-label"&gt;Medium&lt;/label&gt;
+&lt;label class="ef-label large"&gt;Large&lt;/label&gt;
+&lt;label class="ef-label big"&gt;Big&lt;/label&gt;
+&lt;label class="ef-label huge"&gt;Huge&lt;/label&gt;
+&lt;label class="ef-label massive"&gt;Massive&lt;/label&gt;
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 参数说明 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">参数说明</h2>
+            <p class="docs-section-desc">标签的 class 组合规则。</p>
+        </div>
+        <div class="docs-section-content">
+            <table class="docs-params-table">
+                <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>可选值</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>基础类</code></td>
+                        <td><code>ef-label</code></td>
+                        <td>标签的基础样式类</td>
+                    </tr>
+                    <tr>
+                        <td><code>颜色</code></td>
+                        <td><code>red</code>, <code>orange</code>, <code>yellow</code>, <code>olive</code>, <code>green</code>, <code>teal</code>, <code>blue</code>, <code>violet</code>, <code>purple</code>, <code>pink</code>, <code>brown</code>, <code>grey</code>, <code>black</code></td>
+                        <td>标签的颜色</td>
+                    </tr>
+                    <tr>
+                        <td><code>尺寸</code></td>
+                        <td><code>mini</code>, <code>tiny</code>, <code>small</code>, <code>large</code>, <code>big</code>, <code>huge</code>, <code>massive</code></td>
+                        <td>标签的尺寸（不填为 medium）</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
 {% endblock %}

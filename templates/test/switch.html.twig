@@ -1,19 +1,436 @@
 {% extends "base.html.twig" %}
 
-{% block javascripts %}
-  {{ parent() }}
+{% block title %}Switch 切换按钮 - EF UI 组件库{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('switch.css', 'ui') }}">
+    <style>
+        body {
+            background: #f5f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .docs-nav {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .docs-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .docs-nav-logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-nav-logo:hover {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-breadcrumb {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .docs-nav-breadcrumb span {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .docs-nav-link:hover {
+            color: #fff;
+        }
+        
+        .docs-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+        
+        .docs-header {
+            margin-bottom: 40px;
+        }
+        
+        .docs-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .docs-title-tag {
+            font-size: 14px;
+            font-weight: 500;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 12px;
+            border-radius: 16px;
+        }
+        
+        .docs-description {
+            font-size: 18px;
+            color: #6b7280;
+            line-height: 1.7;
+            margin: 0;
+        }
+        
+        .docs-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .docs-section-header {
+            background: #f9fafb;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-section-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+        
+        .docs-section-desc {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .docs-section-content {
+            padding: 32px 24px;
+        }
+        
+        .docs-grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .docs-grid-2 {
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        }
+        
+        .docs-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .docs-item-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .docs-item-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .docs-demo-box {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .docs-code {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+        
+        .docs-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+        
+        .docs-back-link:hover {
+            color: #3b82f6;
+        }
+        
+        .docs-tip {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .docs-tip-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+        
+        .docs-tip-content {
+            font-size: 14px;
+            color: #1e40af;
+            line-height: 1.6;
+        }
+        
+        .docs-params-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .docs-params-table th,
+        .docs-params-table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-params-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            font-size: 13px;
+        }
+        
+        .docs-params-table td {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .docs-params-table code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #dc2626;
+            font-family: monospace;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-<button type="button" role="switch" aria-checked="false" class="ef-switch ef-switch-type-circle">
-  <span class="ef-switch-handle">
-    <span class="ef-switch-handle-icon"></span>
-  </span>
-</button>
-<br>
-<button type="button" role="switch" aria-checked="false" class="ef-switch ef-switch-type-circle ef-switch-small">
-  <span class="ef-switch-handle">
-    <span class="ef-switch-handle-icon"></span>
-  </span>
-</button>
+<nav class="docs-nav">
+    <div class="docs-nav-left">
+        <a href="/" class="docs-nav-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="#3b82f6"/>
+                <path d="M7 8L12 13L17 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 12L12 17L17 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            EF UI 组件库
+        </a>
+        <span class="docs-nav-breadcrumb">/ 组件文档 / <span>Switch 切换按钮</span></span>
+    </div>
+    <div class="docs-nav-right">
+        <a href="/" class="docs-nav-link">返回首页</a>
+    </div>
+</nav>
+
+<div class="docs-container">
+    <a href="/" class="docs-back-link">
+        <i class="fa-solid fa-arrow-left"></i>
+        返回组件库
+    </a>
+    
+    <header class="docs-header">
+        <h1 class="docs-title">
+            Switch 切换按钮
+            <span class="docs-title-tag">基础组件</span>
+        </h1>
+        <p class="docs-description">
+            开关按钮用于在两个状态之间切换，通常用于启用/禁用某种功能。
+        </p>
+    </header>
+    
+    <!-- 基本用法 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">基本用法</h2>
+            <p class="docs-section-desc">使用 <code>ef-switch</code> 和 <code>ef-switch-type-circle</code> 创建开关按钮。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-grid docs-grid-2">
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">默认状态（关闭）</div>
+                    <button type="button" role="switch" aria-checked="false" class="ef-switch ef-switch-type-circle">
+                        <span class="ef-switch-handle">
+                            <span class="ef-switch-handle-icon"></span>
+                        </span>
+                    </button>
+                    <div class="docs-code">
+&lt;button type="button" role="switch" aria-checked="false" class="ef-switch ef-switch-type-circle"&gt;
+    &lt;span class="ef-switch-handle"&gt;
+        &lt;span class="ef-switch-handle-icon"&gt;&lt;/span&gt;
+    &lt;/span&gt;
+&lt;/button&gt;
+                    </div>
+                </div>
+                
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">选中状态（开启）</div>
+                    <button type="button" role="switch" aria-checked="true" class="ef-switch ef-switch-type-circle ef-switch-on">
+                        <span class="ef-switch-handle">
+                            <span class="ef-switch-handle-icon"></span>
+                        </span>
+                    </button>
+                    <div class="docs-code">
+&lt;button type="button" role="switch" aria-checked="true" class="ef-switch ef-switch-type-circle ef-switch-on"&gt;
+    &lt;span class="ef-switch-handle"&gt;
+        &lt;span class="ef-switch-handle-icon"&gt;&lt;/span&gt;
+    &lt;/span&gt;
+&lt;/button&gt;
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 尺寸变体 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">尺寸变体</h2>
+            <p class="docs-section-desc">添加 <code>ef-switch-small</code> 类创建小型开关。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-demo-box">
+                <div class="docs-item-label">尺寸对比</div>
+                <div class="docs-item-content">
+                    <button type="button" role="switch" aria-checked="true" class="ef-switch ef-switch-type-circle">
+                        <span class="ef-switch-handle">
+                            <span class="ef-switch-handle-icon"></span>
+                        </span>
+                    </button>
+                    <button type="button" role="switch" aria-checked="true" class="ef-switch ef-switch-type-circle ef-switch-small">
+                        <span class="ef-switch-handle">
+                            <span class="ef-switch-handle-icon"></span>
+                        </span>
+                    </button>
+                </div>
+                <div class="docs-code">
+&lt;!-- 标准尺寸 --&gt;
+&lt;button class="ef-switch ef-switch-type-circle"&gt;...&lt;/button&gt;
+
+&lt;!-- 小型尺寸 --&gt;
+&lt;button class="ef-switch ef-switch-type-circle ef-switch-small"&gt;...&lt;/button&gt;
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 参数说明 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">参数说明</h2>
+            <p class="docs-section-desc">开关按钮的 class 组合规则。</p>
+        </div>
+        <div class="docs-section-content">
+            <table class="docs-params-table">
+                <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>ef-switch</code></td>
+                        <td>开关按钮的基础类</td>
+                    </tr>
+                    <tr>
+                        <td><code>ef-switch-type-circle</code></td>
+                        <td>圆形开关样式</td>
+                    </tr>
+                    <tr>
+                        <td><code>ef-switch-small</code></td>
+                        <td>小型尺寸</td>
+                    </tr>
+                    <tr>
+                        <td><code>ef-switch-on</code></td>
+                        <td>开启状态</td>
+                    </tr>
+                    <tr>
+                        <td><code>role="switch"</code></td>
+                        <td>ARIA 角色，表示这是一个开关组件</td>
+                    </tr>
+                    <tr>
+                        <td><code>aria-checked</code></td>
+                        <td>ARIA 属性，表示当前是否开启</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    
+    <div class="docs-tip">
+        <div class="docs-tip-title">使用建议</div>
+        <div class="docs-tip-content">
+            <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                <li>开关通常用于需要用户确认的设置项，如"启用/禁用"</li>
+                <li>状态改变应该是即时的，不需要点击"确定"按钮</li>
+                <li>配合 JavaScript 可以实现状态切换时的回调处理</li>
+            </ul>
+        </div>
+    </div>
+</div>
 {% endblock %}

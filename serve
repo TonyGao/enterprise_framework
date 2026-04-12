@@ -32,6 +32,7 @@ show_help() {
 PID_FILE="$PROJECT_ROOT/var/frankenphp.pid"
 WORKER_PID_FILE="$PROJECT_ROOT/var/messenger_worker.pid"
 WATCHER_PID_FILE="$PROJECT_ROOT/var/watcher.pid"
+WATCHER_LOCK_DIR="$PROJECT_ROOT/var/watcher.lock"
 STATE_FILE="$PROJECT_ROOT/var/frankenphp.state"
 LOG_FILE="$PROJECT_ROOT/var/log/server.log"
 WORKER_LOG_FILE="$PROJECT_ROOT/var/log/messenger_worker.log"
@@ -44,11 +45,29 @@ log() {
 }
 
 is_running() {
-    # Simple check: is frankenphp process running?
+    # Prefer PID file check, fallback to process name check.
+    if [ -f "$PID_FILE" ]; then
+        local pid
+        pid=$(cat "$PID_FILE")
+        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            return 0
+        fi
+    fi
+
     if pgrep -f "[f]rankenphp.*Caddyfile" > /dev/null 2>&1; then
         return 0
     fi
     return 1
+}
+
+get_http_code() {
+    local code
+    code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 3 http://localhost:8000/ 2>/dev/null || true)
+    if [ -z "$code" ]; then
+        echo "000"
+    else
+        echo "$code"
+    fi
 }
 
 is_watcher_running() {
@@ -59,6 +78,21 @@ is_watcher_running() {
         fi
     fi
     return 1
+}
+
+kill_stale_watchers() {
+    # Kill watcher processes from previous sessions, but never kill current shell.
+    local pids
+    pids=$(pgrep -f "/bin/bash ./serve watch" 2>/dev/null || true)
+    if [ -n "$pids" ]; then
+        for pid in $pids; do
+            if [ "$pid" != "$$" ]; then
+                kill -TERM "$pid" 2>/dev/null || true
+                sleep 1
+                kill -9 "$pid" 2>/dev/null || true
+            fi
+        done
+    fi
 }
 
 stop_server() {
@@ -74,6 +108,9 @@ stop_server() {
         fi
         rm -f "$WATCHER_PID_FILE"
     fi
+
+    kill_stale_watchers
+    rm -rf "$WATCHER_LOCK_DIR" 2>/dev/null || true
     
     # Stop Messenger Worker via PID file
     if [ -f "$WORKER_PID_FILE" ]; then
@@ -94,14 +131,14 @@ stop_server() {
         PID=$(cat "$PID_FILE")
         if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
             echo "Stopping FrankenPHP PID $PID..."
-            kill -TERM "$PID" 2>/dev/null || true
-            sleep 1
             kill -9 "$PID" 2>/dev/null || true
         fi
         rm -f "$PID_FILE"
     fi
     
-    pkill -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
+    # Force kill any remaining FrankenPHP processes
+    pkill -9 -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
+    sleep 1
     ./frankenphp stop 2>/dev/null || true
     
     rm -f "$STATE_FILE"
@@ -151,7 +188,9 @@ wait_for_server() {
 }
 
 start_dev() {
-    if is_running; then
+    local skip_running_check="${1:-false}"
+
+    if [ "$skip_running_check" != "true" ] && is_running; then
         echo "Server is already running. Use './serve stop' first."
         return 1
     fi
@@ -220,7 +259,13 @@ watch_mode() {
     # Start watcher loop in background - ignore signals so Ctrl+C/terminal close doesn't kill it
     (
         trap '' HUP INT TERM
-        log "Watcher started with PID $$"
+
+        # Prevent duplicate watchers from running concurrently.
+        if ! mkdir "$WATCHER_LOCK_DIR" 2>/dev/null; then
+            log "Another watcher instance is active, exiting current watcher"
+            exit 0
+        fi
+        trap 'rm -rf "$WATCHER_LOCK_DIR"' EXIT
         
         restart_count=0
         max_restarts=100
@@ -240,9 +285,11 @@ watch_mode() {
             # Clean up any stale processes before starting
             pkill -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
             rm -f "$PID_FILE" 2>/dev/null || true
+            # Wait for process to fully exit
+            sleep 1
             
             # Start server
-            start_dev
+            start_dev "true"
             server_started=$?
             
             if [ $server_started -ne 0 ]; then
@@ -265,12 +312,12 @@ watch_mode() {
                 fi
                 
                 # Check if server is responding to HTTP
-                http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 http://localhost:8000/ 2>/dev/null || echo "000")
+                http_code=$(get_http_code)
                 if ! echo "$http_code" | grep -qE "^[23]"; then
                     log "Server not responding (HTTP $http_code), will restart if persists"
                     # Wait a bit more to confirm
                     sleep 5
-                    http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 http://localhost:8000/ 2>/dev/null || echo "000")
+                    http_code=$(get_http_code)
                     if ! echo "$http_code" | grep -qE "^[23]"; then
                         log "Server confirmed unresponsive, killing and restarting"
                         pkill -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
@@ -294,11 +341,10 @@ watch_mode() {
             restart_count=$((restart_count + 1))
             log "Restarting server (attempt $restart_count/$max_restarts)"
             
-            # Clean up
-            pkill -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
+            # Clean up - force kill to ensure process is gone
+            pkill -9 -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
             rm -f "$PID_FILE" 2>/dev/null || true
-            
-            sleep $restart_delay
+            sleep 2
         done
         
         log "ERROR: Max restarts reached, watcher giving up"

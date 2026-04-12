@@ -255,73 +255,93 @@ class OrgController extends BaseController
   /**
    * 组织架构-部门选择器（单部门选择）
    */
-  #[Route('/admin/org/departemnt/singleSelect', name: 'org_deparment_single_select')]
+  #[Route('/admin/org/department/singleSelect', name: 'org_department_single_select', methods: ['GET'])]
+  #[Route('/admin/org/departemnt/singleSelect', name: 'org_deparment_single_select', methods: ['GET'])]
   public function singleSelectDepartment(Request $request, EntityManagerInterface $em): Response
   {
     $repo = $em->getRepository(Department::class);
+    $companyId = $request->query->get('companyId');
     $departmentInputId = Uuid::v1();
-    $departmentSingleTree = $repo->childrenHierarchy(null, false, [
-      'decorate' => true,
-      'rootOpen' => static function (array $tree): ?string {
-        if ([] !== $tree && 0 == $tree[0]['lvl']) {
-          return '<ol class="ol-left-tree">';
-        }
 
-        if ($tree[0]['type'] === 'department') {
-          return '<span class="tree-indent" style="display: none;"></span><ol class="sub-tree-content" style="display: none;">';
-        }
+    $rootDepartment = null;
+    if ($companyId) {
+      $rootDepartment = $repo->findOneBy([
+        'company' => $companyId,
+        'type' => 'company'
+      ]);
 
-        return '<span class="tree-indent"></span><ol class="sub-tree-content">';
-      },
-      'rootClose' => static function (array $child): ?string {
-        // if ([] !== $child && 0 == $child[0]['lvl']) {
-        //   return '</ol>';
-        // }
+      // Some data sets store company root by node id only.
+      if (!$rootDepartment) {
+        $rootDepartment = $repo->findOneBy([
+          'id' => $companyId,
+          'type' => 'company'
+        ]);
+      }
+    }
 
-        return '</ol>';
-      },
-      'childOpen' => '<li>',
-      'childClose' => '</li>',
-      'nodeDecorator' => static function (array $node) use (&$controller, $departmentInputId) {
-        if ($node['type'] === 'corperations') {
-          return '
+    $departmentSingleTree = '';
+    if (!$companyId || $rootDepartment) {
+      $departmentSingleTree = $repo->childrenHierarchy($rootDepartment, false, [
+        'decorate' => true,
+        'rootOpen' => static function (array $tree): ?string {
+          static $openCount = 0;
+          $openCount++;
+
+          if ($openCount === 1) {
+            return '<ol class="ol-left-tree">';
+          }
+
+          if ($tree[0]['type'] === 'department') {
+            return '<span class="tree-indent" style="display: none;"></span><ol class="sub-tree-content" style="display: none;">';
+          }
+
+          return '<span class="tree-indent"></span><ol class="sub-tree-content">';
+        },
+        'rootClose' => static function (array $child): ?string {
+          return '</ol>';
+        },
+        'childOpen' => '<li>',
+        'childClose' => '</li>',
+        'nodeDecorator' => static function (array $node) use ($departmentInputId) {
+          if ($node['type'] === 'corperations') {
+            return '
           <div class="item-content scroll-item">
             <div class="arrow-icon">
               <i class="fa-solid fa-caret-down"></i>
             </div>
-						<div class="org-icon">
+            <div class="org-icon">
               <i class="fa-solid fa-building"></i>
-						</div>
-						<div class="org-name">
-							<div class="org-text-content">' .
-            $node['name']
-            . '</div>
-						</div>
-					</div>
+            </div>
+            <div class="org-name">
+              <div class="org-text-content">' .
+              $node['name']
+              . '</div>
+            </div>
+          </div>
           ';
-        }
+          }
 
-        if ($node['type'] === 'company') {
-          $arrayIcon = !empty($node['__children']) ? '<i class="fa-solid fa-caret-right"></i>' : '';
+          if ($node['type'] === 'company') {
+            $arrayIcon = !empty($node['__children']) ? '<i class="fa-solid fa-caret-right"></i>' : '';
 
-          return '
+            return '
           <div class="item-content scroll-item">
             <div class="arrow-icon">' . $arrayIcon . '</div>
-						<div class="org-icon">
+            <div class="org-icon">
               <i class="fa-solid fa-building-user"></i>
-						</div>
-						<div class="org-name">
-							<div class="org-text-content company" type="company">' .
-            $node['name']
-            . '</div>
-						</div>
-					</div>
+            </div>
+            <div class="org-name">
+              <div class="org-text-content company" type="company">' .
+              $node['name']
+              . '</div>
+            </div>
+          </div>
           ';
-        }
+          }
 
-        if ($node['type'] === 'department') {
-          $arrayIcon = !empty($node['__children']) ? '<i class="fa-solid fa-caret-right"></i>' : '';
-          return '
+          if ($node['type'] === 'department') {
+            $arrayIcon = !empty($node['__children']) ? '<i class="fa-solid fa-caret-right"></i>' : '';
+            return '
           <div class="item-content scroll-item">
             <div class="arrow-icon">' . $arrayIcon . '</div>
             <span class="department-select-line">
@@ -336,15 +356,18 @@ class OrgController extends BaseController
               </div>
               <div class="org-name">
                 <div class="org-text-content department" type="department" path="' . $node['path'] . '" id="' . $node['id'] . '">' .
-            $node['name']
-            . '</div>
+              $node['name']
+              . '</div>
               </div>
             </span>
-					</div>
+          </div>
           ';
+          }
+
+          return '';
         }
-      }
-    ]);
+      ]);
+    }
 
     return $this->render('admin/org/department/singleSelect.html.twig', [
       'departmentSingleTree' => $departmentSingleTree

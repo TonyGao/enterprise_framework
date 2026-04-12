@@ -1,156 +1,353 @@
 {% extends "base.html.twig" %}
 
+{% block title %}Grid 网格布局 - EF UI 组件库{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('grid.css', 'ui') }}">
+    <style>
+        body {
+            background: #f5f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .docs-nav {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .docs-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .docs-nav-logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-nav-breadcrumb {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .docs-nav-breadcrumb span {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .docs-nav-link:hover {
+            color: #fff;
+        }
+        
+        .docs-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .docs-header {
+            margin-bottom: 32px;
+        }
+        
+        .docs-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 12px 0;
+        }
+        
+        .docs-description {
+            font-size: 16px;
+            color: #6b7280;
+            line-height: 1.7;
+            margin: 0;
+        }
+        
+        .docs-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .docs-section-header {
+            background: #f9fafb;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+        }
+        
+        .docs-section-content {
+            padding: 24px 20px;
+        }
+        
+        .docs-code {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+        
+        .docs-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-grid-row {
+            margin-bottom: 16px;
+        }
+        
+        .demo-col {
+            background-color: rgb(106,161,255);
+            height: 48px;
+            line-height: 48px;
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .demo-col-alt {
+            background-color: rgba(22,93,255,.9);
+        }
+        
+        .demo-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        td {
+            color: #6b7280;
+        }
+        
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #dc2626;
+            font-family: monospace;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-	<div class="ef-row ef-row-align-start ef-row-justify-start">
-		<div class="ef-col-24" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>24 - 100%</div>
-		</div>
-	</div>
+<nav class="docs-nav">
+    <div class="docs-nav-left">
+        <a href="/" class="docs-nav-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#3b82f6"/><path d="M7 8L12 13L17 8M7 12L12 17L17 12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+            EF UI 组件库
+        </a>
+        <span class="docs-nav-breadcrumb">/ <span>Grid 网格布局</span></span>
+    </div>
+    <a href="/" class="docs-nav-link">返回首页</a>
+</nav>
 
-	<br>
+<div class="docs-container">
+    <a href="/" class="docs-back-link">
+        <i class="fa-solid fa-arrow-left"></i> 返回组件库
+    </a>
+    
+    <header class="docs-header">
+        <h1 class="docs-title">Grid 网格布局</h1>
+        <p class="docs-description">
+            网格系统提供 24 列布局，支持固定宽度和自动宽度两种模式，方便构建响应式布局。
+        </p>
+    </header>
+    
+    <!-- 基础网格 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">基础网格</h2>
+        </div>
+        <div class="docs-section-content">
+            <div class="demo-label">24 列（100% 宽度）</div>
+            <div class="ef-row ef-row-align-start ef-row-justify-start demo-grid-row">
+                <div class="ef-col-24 demo-col">24</div>
+            </div>
+            
+            <div class="demo-label">12 列（50% 宽度）</div>
+            <div class="ef-row ef-row-align-start ef-row-justify-start demo-grid-row">
+                <div class="ef-col-12 demo-col">12</div>
+                <div class="ef-col-12 demo-col demo-col-alt">12</div>
+            </div>
+            
+            <div class="demo-label">8 列（33.33% 宽度）</div>
+            <div class="ef-row ef-row-align-start ef-row-justify-start demo-grid-row">
+                <div class="ef-col-8 demo-col">8</div>
+                <div class="ef-col-8 demo-col demo-col-alt">8</div>
+                <div class="ef-col-8 demo-col">8</div>
+            </div>
+            
+            <div class="demo-label">6 列（25% 宽度）</div>
+            <div class="ef-row ef-row-align-start ef-row-justify-start demo-grid-row">
+                <div class="ef-col-6 demo-col">6</div>
+                <div class="ef-col-6 demo-col demo-col-alt">6</div>
+                <div class="ef-col-6 demo-col">6</div>
+                <div class="ef-col-6 demo-col demo-col-alt">6</div>
+            </div>
+            
+            <div class="docs-code">
+&lt;!-- 100% 宽度 --&gt;
+&lt;div class="ef-row"&gt;
+    &lt;div class="ef-col-24"&gt;24&lt;/div&gt;
+&lt;/div&gt;
 
-	<div class="ef-row ef-row-align-start ef-row-justify-start">
-		<div class="ef-col-12" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>12 - 50%</div>
-		</div>
-		<div class="ef-col-12" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>12 - 50%</div>
-		</div>
-	</div>
-
-	<br>
-
-	<div class="ef-row ef-row-align-start ef-row-justify-start">
-		<div class="ef-col-8" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>8 - 33.33%</div>
-		</div>
-		<div class="ef-col-8" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>8 - 33.33%</div>
-		</div>
-		<div class="ef-col-8" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>8 - 33.33%</div>
-		</div>
-	</div>
-
-	<br>
-
-	<div class="ef-row ef-row-align-start ef-row-justify-start">
-		<div class="ef-col-6" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>6 - 25%</div>
-		</div>
-		<div class="ef-col-6" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>6 - 25%</div>
-		</div>
-		<div class="ef-col-6" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>6 - 25%</div>
-		</div>
-		<div class="ef-col-6" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>6 - 25%</div>
-		</div>
-	</div>
-
-  <br>
-
-	<div class="ef-row ef-row-align-start ef-row-justify-start" style="--columns: 5;">
-		<div class="ef-col ef-col-auto" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">auto1 - 20%</div>
-		<div class="ef-col ef-col-auto" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">auto2 - 20%</div>
-		<div class="ef-col ef-col-auto" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">auto3 - 20%</div>
-		<div class="ef-col ef-col-auto" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">auto4 - 20%</div>
-		<div class="ef-col ef-col-auto" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">auto5 - 20%</div>
-	</div>
-
-	<br>
-
-	<div class="ef-row ef-row-align-start ef-row-justify-start">
-		<div class="ef-col-4" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>4 - 16.66%</div>
-		</div>
-		<div class="ef-col-4" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>4 - 16.66%</div>
-		</div>
-		<div class="ef-col-4" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>4 - 16.66%</div>
-		</div>
-		<div class="ef-col-4" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>4 - 16.66%</div>
-		</div>
-		<div class="ef-col-4" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>4 - 16.66%</div>
-		</div>
-		<div class="ef-col-4" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>4 - 16.66%</div>
-		</div>
-	</div>
-
-  <br>
-
-	<div class="ef-row ef-row-align-start ef-row-justify-start" style="--columns: 7;">
-		<div class="ef-col ef-col-auto" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">auto1 - 1/7</div>
-		<div class="ef-col ef-col-auto" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">auto2 - 1/7</div>
-		<div class="ef-col ef-col-auto" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">auto3 - 1/7</div>
-		<div class="ef-col ef-col-auto" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">auto4 - 1/7</div>
-		<div class="ef-col ef-col-auto" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">auto5 - 1/7</div>
-		<div class="ef-col ef-col-auto" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">auto6 - 1/7</div>
-		<div class="ef-col ef-col-auto" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">auto7 - 1/7</div>
-	</div>
-
-	<br>
-
-	<div class="ef-row ef-row-align-start ef-row-justify-start">
-		<div class="ef-col-3" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>3 - 12.5%</div>
-		</div>
-		<div class="ef-col-3" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>3 - 12.5%</div>
-		</div>
-		<div class="ef-col-3" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>3 - 12.5%</div>
-		</div>
-		<div class="ef-col-3" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>3 - 12.5%</div>
-		</div>
-		<div class="ef-col-3" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>3 - 12.5%</div>
-		</div>
-		<div class="ef-col-3" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>3 - 12.5%</div>
-		</div>
-		<div class="ef-col-3" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>3 - 12.5%</div>
-		</div>
-		<div class="ef-col-3" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>3 - 12.5%</div>
-		</div>
-	</div>
-
-  <br>
-
-	<div class="ef-row ef-row-align-start ef-row-justify-start" style="background-color: rgb(242,243,245);">
-		<div class="ef-col-8" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>col - 8</div>
-		</div>
-		<div class="ef-col-8 ef-col-offset-8" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>col - 8 | offset - 8</div>
-		</div>
-	</div>
-
-  <br>
-
-  <div class="ef-row ef-row-align-start ef-row-justify-start" style="background-color: rgb(242,243,245);">
-		<div class="ef-col-6 ef-col-offset-8" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>col - 6 | offset - 8</div>
-		</div>
-		<div class="ef-col-6 ef-col-offset-4" style="background-color: rgba(22,93,255,.9); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>col - 6 | offset - 4</div>
-		</div>
-	</div>
-
-  <br>
-
-  <div class="ef-row ef-row-align-start ef-row-justify-start">
-		<div class="ef-col-12 ef-col-offset-8" style="background-color: rgb(106,161,255); height: 48px; line-height: 48px; color: white; text-align: center;">
-			<div>col - 12 | offset - 8</div>
-		</div>
-	</div>
-
+&lt;!-- 50% 宽度 --&gt;
+&lt;div class="ef-row"&gt;
+    &lt;div class="ef-col-12"&gt;12&lt;/div&gt;
+    &lt;div class="ef-col-12"&gt;12&lt;/div&gt;
+&lt;/div&gt;
+            </div>
+        </div>
+    </section>
+    
+    <!-- 自动宽度网格 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">自动宽度网格</h2>
+        </div>
+        <div class="docs-section-content">
+            <div class="demo-label">5 列自动布局（每列 20%）</div>
+            <div class="ef-row ef-row-align-start ef-row-justify-start demo-grid-row" style="--columns: 5;">
+                <div class="ef-col ef-col-auto demo-col">auto</div>
+                <div class="ef-col ef-col-auto demo-col demo-col-alt">auto</div>
+                <div class="ef-col ef-col-auto demo-col">auto</div>
+                <div class="ef-col ef-col-auto demo-col demo-col-alt">auto</div>
+                <div class="ef-col ef-col-auto demo-col">auto</div>
+            </div>
+            
+            <div class="docs-code">
+&lt;div class="ef-row" style="--columns: 5;"&gt;
+    &lt;div class="ef-col ef-col-auto"&gt;auto1&lt;/div&gt;
+    &lt;div class="ef-col ef-col-auto"&gt;auto2&lt;/div&gt;
+    &lt;div class="ef-col ef-col-auto"&gt;auto3&lt;/div&gt;
+    &lt;div class="ef-col ef-col-auto"&gt;auto4&lt;/div&gt;
+    &lt;div class="ef-col ef-col-auto"&gt;auto5&lt;/div&gt;
+&lt;/div&gt;
+            </div>
+        </div>
+    </section>
+    
+    <!-- 列数说明 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">列数说明</h2>
+        </div>
+        <div class="docs-section-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>列数</th>
+                        <th>宽度</th>
+                        <th>Class 类名</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>4.16%</td>
+                        <td><code>ef-col-1</code></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>8.33%</td>
+                        <td><code>ef-col-2</code></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>12.5%</td>
+                        <td><code>ef-col-3</code></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>16.66%</td>
+                        <td><code>ef-col-4</code></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>25%</td>
+                        <td><code>ef-col-6</code></td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>33.33%</td>
+                        <td><code>ef-col-8</code></td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>50%</td>
+                        <td><code>ef-col-12</code></td>
+                    </tr>
+                    <tr>
+                        <td>24</td>
+                        <td>100%</td>
+                        <td><code>ef-col-24</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
 {% endblock %}

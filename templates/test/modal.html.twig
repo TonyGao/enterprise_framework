@@ -1,41 +1,467 @@
 {% extends "base.html.twig" %}
 
-{% block javascripts %}
-	{{ parent() }}
+{% block title %}Modal 模态窗口 - EF UI 组件库{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('modal.css', 'ui') }}">
+    <style>
+        body {
+            background: #f5f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .docs-nav {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .docs-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .docs-nav-logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-nav-logo:hover {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-breadcrumb {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .docs-nav-breadcrumb span {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .docs-nav-link:hover {
+            color: #fff;
+        }
+        
+        .docs-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+        
+        .docs-header {
+            margin-bottom: 40px;
+        }
+        
+        .docs-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .docs-title-tag {
+            font-size: 14px;
+            font-weight: 500;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 12px;
+            border-radius: 16px;
+        }
+        
+        .docs-description {
+            font-size: 18px;
+            color: #6b7280;
+            line-height: 1.7;
+            margin: 0;
+        }
+        
+        .docs-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .docs-section-header {
+            background: #f9fafb;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-section-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+        
+        .docs-section-desc {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .docs-section-content {
+            padding: 32px 24px;
+        }
+        
+        .docs-grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .docs-grid-2 {
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        }
+        
+        .docs-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .docs-item-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .docs-item-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .docs-demo-box {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .docs-code {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+        
+        .docs-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+        
+        .docs-back-link:hover {
+            color: #3b82f6;
+        }
+        
+        .docs-tip {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .docs-tip-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+        
+        .docs-tip-content {
+            font-size: 14px;
+            color: #1e40af;
+            line-height: 1.6;
+        }
+        
+        .docs-params-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .docs-params-table th,
+        .docs-params-table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-params-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            font-size: 13px;
+        }
+        
+        .docs-params-table td {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .docs-params-table code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #dc2626;
+            font-family: monospace;
+        }
+        
+        .demo-modal-btn {
+            padding: 40px;
+            text-align: center;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-	<div style="height: 100vh; width: 100%; padding: 20px;">
-		<!-- 控制按钮 -->
-		<div style="margin-bottom: 20px;">
-			<button class="btn primary" type="button" onclick="openModal('testModal')">打开模态窗口</button>
-		</div>
-		<div class="ef-modal-container" id="testModal" style="z-index: 1001;">
-			<div class="ef-modal-mask"></div>
-			<div class="ef-modal-wrapper ef-modal-wrapper-align-center">
-				<div class="ef-modal">
-					<div class="ef-modal-header">
-						<div class="ef-modal-title ef-modal-title-align-left">
-							Title
-						</div>
-						<div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="closeModal('testModal')">
-							<span class="ef-icon-hover">
-								<svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
-									<path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path>
-								</svg>
-							</span>
-						</div>
-					</div>
-					<div class="ef-modal-body">
-						<div>You can customize modal body text by the current situation. This modal will be closed immediately once you press the OK button.
-						</div>
-					</div>
-					<div class="ef-modal-footer">
-						<button class="btn secondary small" type="button" onclick="closeModal('testModal')">取消</button>
-						<button class="btn primary small" type="button">确定</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+<nav class="docs-nav">
+    <div class="docs-nav-left">
+        <a href="/" class="docs-nav-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="#3b82f6"/>
+                <path d="M7 8L12 13L17 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 12L12 17L17 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            EF UI 组件库
+        </a>
+        <span class="docs-nav-breadcrumb">/ 组件文档 / <span>Modal 模态窗口</span></span>
+    </div>
+    <div class="docs-nav-right">
+        <a href="/" class="docs-nav-link">返回首页</a>
+    </div>
+</nav>
+
+<div class="docs-container">
+    <a href="/" class="docs-back-link">
+        <i class="fa-solid fa-arrow-left"></i>
+        返回组件库
+    </a>
+    
+    <header class="docs-header">
+        <h1 class="docs-title">
+            Modal 模态窗口
+            <span class="docs-title-tag">反馈组件</span>
+        </h1>
+        <p class="docs-description">
+            模态窗口是一种覆盖在页面内容之上的弹出框，用于需要用户立即处理或确认的场景。
+        </p>
+    </header>
+    
+    <!-- 基本用法 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">基本用法</h2>
+            <p class="docs-section-desc">点击按钮打开模态窗口，点击遮罩层或关闭按钮关闭窗口。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-demo-box">
+                <div class="demo-modal-btn">
+                    <button class="btn primary medium" type="button" onclick="openModal('basicModal')">打开模态窗口</button>
+                </div>
+                <div class="docs-code">
+&lt;div class="ef-modal-container" id="basicModal"&gt;
+    &lt;div class="ef-modal-mask"&gt;&lt;/div&gt;
+    &lt;div class="ef-modal-wrapper ef-modal-wrapper-align-center"&gt;
+        &lt;div class="ef-modal"&gt;
+            &lt;div class="ef-modal-header"&gt;
+                &lt;div class="ef-modal-title ef-modal-title-align-left"&gt;标题&lt;/div&gt;
+                &lt;div class="ef-modal-close-btn"&gt;...&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class="ef-modal-body"&gt;内容&lt;/div&gt;
+            &lt;div class="ef-modal-footer"&gt;
+                &lt;button class="btn secondary small"&gt;取消&lt;/button&gt;
+                &lt;button class="btn primary small"&gt;确定&lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 模态窗口结构 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">模态窗口结构</h2>
+            <p class="docs-section-desc">模态窗口由容器、遮罩层、包装器、弹窗本体（包括头部、主体、底部）组成。</p>
+        </div>
+        <div class="docs-section-content">
+            <table class="docs-params-table">
+                <thead>
+                    <tr>
+                        <th>组成部分</th>
+                        <th>Class 类名</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>容器</td>
+                        <td><code>ef-modal-container</code></td>
+                        <td>最外层容器，控制显示隐藏</td>
+                    </tr>
+                    <tr>
+                        <td>遮罩层</td>
+                        <td><code>ef-modal-mask</code></td>
+                        <td>半透明黑色背景，点击可关闭</td>
+                    </tr>
+                    <tr>
+                        <td>包装器</td>
+                        <td><code>ef-modal-wrapper</code></td>
+                        <td>定位弹窗位置</td>
+                    </tr>
+                    <tr>
+                        <td>弹窗本体</td>
+                        <td><code>ef-modal</code></td>
+                        <td>弹窗的视觉容器</td>
+                    </tr>
+                    <tr>
+                        <td>头部</td>
+                        <td><code>ef-modal-header</code></td>
+                        <td>包含标题和关闭按钮</td>
+                    </tr>
+                    <tr>
+                        <td>主体</td>
+                        <td><code>ef-modal-body</code></td>
+                        <td>弹窗的主要内容区域</td>
+                    </tr>
+                    <tr>
+                        <td>底部</td>
+                        <td><code>ef-modal-footer</code></td>
+                        <td>通常放置操作按钮</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    
+    <!-- 参数说明 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">JavaScript 控制</h2>
+            <p class="docs-section-desc">通过 JavaScript 函数来打开和关闭模态窗口。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-code">
+// 打开模态窗口
+function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+// 关闭模态窗口
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+// 点击遮罩层关闭
+document.querySelectorAll('.ef-modal-mask').forEach(mask => {
+    mask.addEventListener('click', function() {
+        this.parentElement.style.display = 'none';
+    });
+});
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- 演示用模态窗口 -->
+<div class="ef-modal-container" id="basicModal" style="display: none; z-index: 1001;">
+    <div class="ef-modal-mask" onclick="closeModal('basicModal')"></div>
+    <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
+        <div class="ef-modal">
+            <div class="ef-modal-header">
+                <div class="ef-modal-title ef-modal-title-align-left">
+                    模态窗口标题
+                </div>
+                <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="closeModal('basicModal')">
+                    <span class="ef-icon-hover">
+                        <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                            <path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="ef-modal-body">
+                <p>这是一段模态窗口的内容。您可以在这里放置表单、提示信息或任何其他内容。</p>
+                <p>点击下方按钮或点击遮罩层来关闭此窗口。</p>
+            </div>
+            <div class="ef-modal-footer">
+                <button class="btn secondary small" type="button" onclick="closeModal('basicModal')">取消</button>
+                <button class="btn primary small" type="button">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+    }
+    
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+</script>
 {% endblock %}

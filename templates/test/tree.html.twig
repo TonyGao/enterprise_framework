@@ -1,181 +1,363 @@
 {% extends 'base.html.twig' %}
 {% import 'components/tree.html.twig' as treeComponent %}
 
-{% block title %}Tree Component Test{% endblock %}
+{% block title %}Tree 树形组件 - EF UI 组件库{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" type="text/css" href="{{ asset('platform/treeLayout.css', 'admin') }}"/>
     <style>
-        .test-tree-container {
-            width: 400px;
-            height: 600px;
-            border: 1px solid #ddd;
-            margin: 20px;
+        body {
+            background: #f5f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
             padding: 20px;
+        }
+        
+        .docs-nav {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .docs-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .docs-nav-logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-nav-breadcrumb {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .docs-nav-breadcrumb span {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .docs-nav-link:hover {
+            color: #fff;
+        }
+        
+        .docs-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .docs-header {
+            margin-bottom: 32px;
+        }
+        
+        .docs-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 12px 0;
+        }
+        
+        .docs-description {
+            font-size: 16px;
+            color: #6b7280;
+            line-height: 1.7;
+            margin: 0;
+        }
+        
+        .docs-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .docs-section-header {
+            background: #f9fafb;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+        }
+        
+        .docs-section-content {
+            padding: 24px 20px;
+        }
+        
+        .docs-code {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+        
+        .docs-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+        
+        .demo-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .demo-card-header {
+            background: #f9fafb;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .demo-card-body {
+            padding: 16px;
+            background: #fff;
+        }
+        
+        .test-tree-container {
+            height: 300px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
             overflow: auto;
             background: #fff;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        td {
+            color: #6b7280;
+        }
+        
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #dc2626;
+            font-family: monospace;
         }
     </style>
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1>Tree Component Test</h1>
-            <p>This is a test of the reusable tree component extracted from the codebase.</p>
-        </div>
+<nav class="docs-nav">
+    <div class="docs-nav-left">
+        <a href="/" class="docs-nav-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#3b82f6"/><path d="M7 8L12 13L17 8M7 12L12 17L17 12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+            EF UI 组件库
+        </a>
+        <span class="docs-nav-breadcrumb">/ <span>Tree 树形组件</span></span>
     </div>
-    
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    Department Tree Example
-                </div>
-                <div class="card-body">
-                    <div class="test-tree-container common-tree-wrapper org-structure-container left-tree">
-                        {{ treeComponent.render_tree(tree, {
-                            'isRoot': true, 
-                            'icon_map': {
-                                'corperations': 'fa-solid fa-building',
-                                'company': 'fa-solid fa-building-user',
-                                'department': 'fa-solid fa-user-group',
-                                'root': 'fa-solid fa-database',
-                                'namespace': 'fa-regular fa-folder',
-                                'entity': 'fa-solid fa-table',
-                                'group': 'fa-solid fa-layer-group',
-                                'property': 'fa-solid fa-font'
-                            }
-                        }) }}
-                    </div>
-                </div>
-            </div>
-        </div>
+    <a href="/" class="docs-nav-link">返回首页</a>
+</nav>
 
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    Entity/Model Tree Example (Mock Data)
-                </div>
-                <div class="card-body">
-                    <div class="test-tree-container common-tree-wrapper org-structure-container left-tree">
-                        {{ treeComponent.render_tree(mockTree, {
-                            'isRoot': true, 
-                            'icon_map': {
-                                'root': 'fa-solid fa-database',
-                                'namespace': 'fa-regular fa-folder',
-                                'entity': 'fa-solid fa-table',
-                                'group': 'fa-solid fa-layer-group',
-                                'property': 'fa-solid fa-font'
-                            }
-                        }) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    Menu Tree Example (Draggable + Checkbox)
-                </div>
-                <div class="card-body">
-                    <div class="test-tree-container common-tree-wrapper org-structure-container left-tree menu-tree-example">
-                        {{ treeComponent.render_tree(mockMenuTree, {
-                            'isRoot': true, 
-                            'checkbox': true,
-                            'draggable': true,
-                            'icon_map': {
-                                'root': 'fa-solid fa-bars',
-                                'menu': 'fa-solid fa-file-lines'
-                            }
-                        }) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="docs-container">
+    <a href="/" class="docs-back-link">
+        <i class="fa-solid fa-arrow-left"></i> 返回组件库
+    </a>
     
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                     Instructions
+    <header class="docs-header">
+        <h1 class="docs-title">Tree 树形组件</h1>
+        <p class="docs-description">
+            树形组件用于展示层级结构数据，如组织架构、分类目录、文件目录等。支持图标、复选框和拖拽功能。
+        </p>
+    </header>
+    
+    <!-- 部门树示例 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">部门组织树</h2>
+        </div>
+        <div class="docs-section-content">
+            <div class="demo-row">
+                <div class="demo-card">
+                    <div class="demo-card-header">组织架构树</div>
+                    <div class="demo-card-body">
+                        <div class="test-tree-container common-tree-wrapper org-structure-container left-tree">
+                            {{ treeComponent.render_tree(tree, {
+                                'isRoot': true, 
+                                'icon_map': {
+                                    'corperations': 'fa-solid fa-building',
+                                    'company': 'fa-solid fa-building-user',
+                                    'department': 'fa-solid fa-user-group',
+                                    'root': 'fa-solid fa-database'
+                                }
+                            }) }}
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p>To use this component:</p>
-                    <pre>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 带复选框的树 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">带复选框的树</h2>
+        </div>
+        <div class="docs-section-content">
+            <div class="demo-row">
+                <div class="demo-card">
+                    <div class="demo-card-header">菜单树（可勾选）</div>
+                    <div class="demo-card-body">
+                        <div class="test-tree-container common-tree-wrapper org-structure-container left-tree">
+                            {{ treeComponent.render_tree(mockMenuTree, {
+                                'isRoot': true, 
+                                'checkbox': true,
+                                'draggable': true,
+                                'icon_map': {
+                                    'root': 'fa-solid fa-bars',
+                                    'menu': 'fa-solid fa-file-lines'
+                                }
+                            }) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 使用方法 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">使用方法</h2>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-code">
 {% verbatim %}
 {% import 'components/tree.html.twig' as treeComponent %}
 
-&lt;div class="common-tree-wrapper org-structure-container left-tree"&gt;
-    {{ treeComponent.render_tree(tree, {
+&lt;div class="common-tree-wrapper"&gt;
+    {{ treeComponent.render_tree(treeData, {
         'isRoot': true,
         'icon_map': {
             'department': 'fa-solid fa-user-group',
-            'entity': 'fa-solid fa-table'
+            'company': 'fa-solid fa-building'
         },
-        'checkbox': true,  // Optional: Enable checkboxes
-        'draggable': true  // Optional: Enable drag handle
+        'checkbox': true,   {# 可选：显示复选框 #}
+        'draggable': true   {# 可选：启用拖拽 #}
     }) }}
 &lt;/div&gt;
 {% endverbatim %}
-                    </pre>
-                    <p>Options:</p>
-                    <ul>
-                        <li><code>isRoot</code>: Set to true for the top-level call.</li>
-                        <li><code>collapsed</code>: Set to true to start collapsed (internal recursion).</li>
-                        <li><code>icon</code>: Default icon class (e.g., 'fa-solid fa-folder').</li>
-                        <li><code>icon_map</code>: Mapping of node types to icon classes.</li>
-                        <li><code>checkbox</code>: Set to true to show checkboxes (requires EF checkbox CSS/JS).</li>
-                        <li><code>draggable</code>: Set to true to show drag handles (requires jQuery UI Sortable).</li>
-                    </ul>
-                </div>
             </div>
         </div>
-    </div>
+    </section>
+    
+    <!-- 参数说明 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">参数说明</h2>
+        </div>
+        <div class="docs-section-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>isRoot</code></td>
+                        <td>设置为 <code>true</code> 表示是顶层调用</td>
+                    </tr>
+                    <tr>
+                        <td><code>icon_map</code></td>
+                        <td>节点类型到图标的映射，如 <code>{'department': 'fa-solid fa-user-group'}</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>checkbox</code></td>
+                        <td>设为 <code>true</code> 显示复选框</td>
+                    </tr>
+                    <tr>
+                        <td><code>draggable</code></td>
+                        <td>设为 <code>true</code> 启用拖拽排序（需 jQuery UI Sortable）</td>
+                    </tr>
+                    <tr>
+                        <td><code>collapsed</code></td>
+                        <td>设为 <code>true</code> 默认折叠</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
-{% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script>
         $(document).ready(function() {
-            // Initialize Sortable for the menu tree
             $(".menu-tree-example .sub-tree-content").sortable({
                 connectWith: ".sub-tree-content",
                 handle: ".ef-group-filed-handler-wrapper",
                 placeholder: "sortable-placeholder",
                 tolerance: "pointer",
-                items: "> li",
-                start: function (event, ui) {
-                    var parentWidth = ui.item.closest('.sub-tree-content').width();
-                    ui.placeholder.css({
-                        'min-width': parentWidth,
-                        'min-height': '20px'
-                    });
-                    ui.item.css('min-width', parentWidth);
-                    ui.item.addClass("dragging");
-                    $(".sortable-placeholder").css({
-                        "height": ui.helper.outerHeight()
-                    });
-                },
-                stop: function (event, ui) {
-                    ui.item.removeClass("dragging");
-                }
+                items: "> li"
             }).disableSelection();
-
-            // Checkbox change listener
-            $(document).on("change", ".menu-tree-example .ef-checkbox-target", function () {
-                const $checkbox = $(this);
-                const $nodeName = $checkbox.closest(".item-original").find(".tree-text-content");
-                const menuId = $nodeName.attr('id');
-                const menuName = $nodeName.text();
-                
-                console.log("Checkbox changed:", menuId, menuName, $checkbox.is(':checked'));
-            });
         });
     </script>
+{% endblock %}
 {% endblock %}

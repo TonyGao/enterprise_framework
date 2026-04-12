@@ -1,99 +1,673 @@
 {% extends "base.html.twig" %}
 
+{% block title %}Button 按钮 - EF UI 组件库{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('button.css', 'ui') }}">
+    <style>
+        body {
+            background: #f5f6f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .docs-nav {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .docs-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .docs-nav-logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-nav-logo:hover {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-breadcrumb {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .docs-nav-breadcrumb span {
+            color: #60a5fa;
+        }
+        
+        .docs-nav-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .docs-nav-link:hover {
+            color: #fff;
+        }
+        
+        .docs-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+        
+        .docs-header {
+            margin-bottom: 40px;
+        }
+        
+        .docs-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .docs-title-tag {
+            font-size: 14px;
+            font-weight: 500;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 12px;
+            border-radius: 16px;
+        }
+        
+        .docs-description {
+            font-size: 18px;
+            color: #6b7280;
+            line-height: 1.7;
+            margin: 0;
+        }
+        
+        .docs-description strong {
+            color: #374151;
+        }
+        
+        .docs-section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .docs-section-header {
+            background: #f9fafb;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-section-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+        
+        .docs-section-desc {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .docs-section-content {
+            padding: 32px 24px;
+        }
+        
+        .docs-grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .docs-grid-2 {
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        }
+        
+        .docs-grid-3 {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+        
+        .docs-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .docs-item-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .docs-item-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .docs-demo-box {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .docs-demo-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .docs-code {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+        
+        .docs-tip {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .docs-tip-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .docs-tip-content {
+            font-size: 14px;
+            color: #1e40af;
+            line-height: 1.6;
+        }
+        
+        .docs-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+        
+        .docs-back-link:hover {
+            color: #3b82f6;
+        }
+        
+        .docs-params-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .docs-params-table th,
+        .docs-params-table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .docs-params-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            font-size: 13px;
+        }
+        
+        .docs-params-table td {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .docs-params-table code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #dc2626;
+            font-family: monospace;
+        }
+        
+        .docs-color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 16px;
+        }
+        
+        .docs-color-item {
+            text-align: center;
+        }
+        
+        .docs-color-swatch {
+            width: 100%;
+            height: 48px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .docs-color-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #374151;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-<button class="btn primary medium">审批通过</button>
-<button class="btn secondary medium">驳回</button>
-<button class="btn outline medium">同意</button>
-<button class="btn primary medium icon"><i class="fa-solid fa-trash-can"></i>删除</button>
-<button class="btn primary medium only-icon"><i class="fa-solid fa-trash-can"></i></button>
-<button class="btn primary medium round">大圆角按钮</button>
-<button class="btn primary medium icon circle"><i class="fa-solid fa-plus"></i></button>
-<button class="btn secondary medium icon circle"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+<nav class="docs-nav">
+    <div class="docs-nav-left">
+        <a href="/" class="docs-nav-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="#3b82f6"/>
+                <path d="M7 8L12 13L17 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 12L12 17L17 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            EF UI 组件库
+        </a>
+        <span class="docs-nav-breadcrumb">/ 组件文档 / <span>Button 按钮</span></span>
+    </div>
+    <div class="docs-nav-right">
+        <a href="/" class="docs-nav-link">返回首页</a>
+    </div>
+</nav>
 
-<button class="btn primary mini">审批通过</button>
-<button class="btn primary small">审批通过</button>
-<button class="btn primary medium">审批通过</button>
-<button class="btn primary large">审批通过</button>
-
-<button class="btn green medium">成功</button>
-<button class="btn orange medium">警告</button>
-<button class="btn red medium">危险</button>
-
-<br>
-
-<button class="btn primary medium disabled">审批通过</button>
-<button class="btn secondary medium disabled">驳回</button>
-<button class="btn outline medium disabled">同意</button>
-<button class="btn primary medium disabled icon"><i class="fa-solid fa-circle-notch icon-loading"></i>Loading</button>
-<button class="btn secondary medium disabled icon"><i class="fa-solid fa-circle-notch icon-loading"></i>Loading</button>
-
-<br>
-
-<button class="btn primary medium long">审批通过</button>
-
-<br>
-
-<div class="ef buttons">
-  <button class="btn secondary medium">Cancel</button>
-  <div class="or"></div>
-  <button class="btn green medium">Save</button>
-</div>
-
-<div class="ef buttons">
-  <button class="btn secondary medium">Cancel</button>
-  <div class="or"></div>
-  <button class="btn primary medium">Save</button>
-</div>
-
-<div class="ef labeled btn">
-  <div class="ef btn red medium">
-    <i class="fa-solid fa-heart"></i>
-    Like
-  </div>
-  <a class="ef basic red left pointing label">1,048</a>
-</div>
-
-<br>
-
-<button class="btn style1 medium">审批通过</button>
-<button class="btn style2 medium">审批通过</button>
-<button class="btn style3 medium">审批通过</button>
-<button class="btn style4 medium">审批通过</button>
-
-<br>
-
-<div class="ef buttons">
-  <button class="btn primary medium icon"><i class="fa-solid fa-angle-left"></i>Prev</button>
-  <button class="btn primary medium icon">Next<i class="fa-solid fa-angle-right"></i></button>
-</div>
-
-<div class="ef buttons">
-  <button class="btn primary medium icon rightline"><i class="fa-solid fa-angle-left"></i>Prev</button>
-  <button class="btn primary medium icon">Next<i class="fa-solid fa-angle-right"></i></button>
-</div>
-
-<div class="ef buttons">
-  <button class="btn primary medium icon">One</button>
-  <button class="btn green medium icon">Two</button>
-  <button class="btn red medium icon">Three</button>
-</div>
-
-<div class="ef buttons">
-  <button class="btn secondary medium icon rightline">One</button>
-  <button class="btn secondary medium icon rightline">Two</button>
-  <button class="btn secondary medium icon">Three</button>
-</div>
-
-<div class="ef buttons">
-  <button class="btn secondary medium only-icon"><i class="fa-solid fa-align-left"></i></button>
-  <button class="btn secondary medium only-icon"><i class="fa-solid fa-align-center"></i></button>
-  <button class="btn secondary medium only-icon"><i class="fa-solid fa-align-right"></i></button>
-</div>
-
-<div class="ef buttons">
-  <button class="btn secondary medium only-icon rightline"><i class="fa-solid fa-file"></i></button>
-  <button class="btn secondary medium only-icon rightline"><i class="fa-solid fa-floppy-disk"></i></button>
-  <button class="btn secondary medium only-icon rightline"><i class="fa-solid fa-upload"></i></button>
-  <button class="btn secondary medium only-icon"><i class="fa-solid fa-download"></i></button>
+<div class="docs-container">
+    <a href="/" class="docs-back-link">
+        <i class="fa-solid fa-arrow-left"></i>
+        返回组件库
+    </a>
+    
+    <header class="docs-header">
+        <h1 class="docs-title">
+            Button 按钮
+            <span class="docs-title-tag">基础组件</span>
+        </h1>
+        <p class="docs-description">
+            按钮用于触发一个操作或事件。我们提供了多种按钮类型、尺寸和状态，满足各种业务场景需求。
+        </p>
+    </header>
+    
+    <!-- 按钮类型 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">按钮类型</h2>
+            <p class="docs-section-desc">通过不同的 class 组合来创建不同类型的按钮：primary（主要）、secondary（次要）、outline（轮廓）等。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-grid docs-grid-2">
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">主要按钮 Primary</div>
+                    <div class="docs-demo-row">
+                        <button class="btn primary medium">主要按钮</button>
+                        <button class="btn primary medium icon"><i class="fa-solid fa-plus"></i>带图标</button>
+                    </div>
+                    <div class="docs-code">&lt;button class="btn primary medium"&gt;主要按钮&lt;/button&gt;</div>
+                </div>
+                
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">次要按钮 Secondary</div>
+                    <div class="docs-demo-row">
+                        <button class="btn secondary medium">次要按钮</button>
+                        <button class="btn secondary medium icon"><i class="fa-solid fa-ellipsis"></i>更多</button>
+                    </div>
+                    <div class="docs-code">&lt;button class="btn secondary medium"&gt;次要按钮&lt;/button&gt;</div>
+                </div>
+                
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">轮廓按钮 Outline</div>
+                    <div class="docs-demo-row">
+                        <button class="btn outline medium">轮廓按钮</button>
+                        <button class="btn outline primary medium">主要轮廓</button>
+                    </div>
+                    <div class="docs-code">&lt;button class="btn outline medium"&gt;轮廓按钮&lt;/button&gt;</div>
+                </div>
+                
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">图标按钮 Icon Button</div>
+                    <div class="docs-demo-row">
+                        <button class="btn primary medium icon circle"><i class="fa-solid fa-plus"></i></button>
+                        <button class="btn secondary medium icon circle"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                        <button class="btn outline medium icon"><i class="fa-solid fa-trash-can"></i>删除</button>
+                    </div>
+                    <div class="docs-code">&lt;button class="btn primary medium icon circle"&gt;&lt;i class="fa-solid fa-plus"&gt;&lt;/i&gt;&lt;/button&gt;</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 按钮尺寸 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">按钮尺寸</h2>
+            <p class="docs-section-desc">提供 4 种标准尺寸：mini、small、medium（默认）、large，满足不同布局需求。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-demo-box">
+                <div class="docs-item-label">尺寸对比</div>
+                <div class="docs-demo-row">
+                    <button class="btn primary mini">Mini</button>
+                    <button class="btn primary small">Small</button>
+                    <button class="btn primary medium">Medium</button>
+                    <button class="btn primary large">Large</button>
+                </div>
+                <div class="docs-code">
+&lt;button class="btn primary mini"&gt;Mini&lt;/button&gt;
+&lt;button class="btn primary small"&gt;Small&lt;/button&gt;
+&lt;button class="btn primary medium"&gt;Medium&lt;/button&gt;
+&lt;button class="btn primary large"&gt;Large&lt;/button&gt;
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 颜色变体 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">颜色变体</h2>
+            <p class="docs-section-desc">预设的颜色主题，包括成功（green）、警告（orange）、危险（red）等语义化颜色。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-demo-box">
+                <div class="docs-item-label">颜色主题</div>
+                <div class="docs-demo-row">
+                    <button class="btn green medium">成功</button>
+                    <button class="btn orange medium">警告</button>
+                    <button class="btn red medium">危险</button>
+                    <button class="btn primary medium">主要</button>
+                    <button class="btn secondary medium">次要</button>
+                </div>
+                <div class="docs-code">
+&lt;button class="btn green medium"&gt;成功&lt;/button&gt;
+&lt;button class="btn orange medium"&gt;警告&lt;/button&gt;
+&lt;button class="btn red medium"&gt;危险&lt;/button&gt;
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 按钮状态 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">按钮状态</h2>
+            <p class="docs-section-desc">支持禁用状态（disabled）和加载状态（loading）。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-grid docs-grid-2">
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">禁用状态 Disabled</div>
+                    <div class="docs-demo-row">
+                        <button class="btn primary medium disabled">主要禁用</button>
+                        <button class="btn secondary medium disabled">次要禁用</button>
+                        <button class="btn outline medium disabled">轮廓禁用</button>
+                    </div>
+                    <div class="docs-code">&lt;button class="btn primary medium disabled"&gt;主要禁用&lt;/button&gt;</div>
+                </div>
+                
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">加载状态 Loading</div>
+                    <div class="docs-demo-row">
+                        <button class="btn primary medium disabled icon"><i class="fa-solid fa-circle-notch icon-loading"></i>加载中</button>
+                        <button class="btn secondary medium disabled icon"><i class="fa-solid fa-circle-notch icon-loading"></i>处理中</button>
+                    </div>
+                    <div class="docs-code">&lt;button class="btn primary medium disabled icon"&gt;&lt;i class="fa-solid fa-circle-notch icon-loading"&gt;&lt;/i&gt;加载中&lt;/button&gt;</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 按钮形状 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">按钮形状</h2>
+            <p class="docs-section-desc">圆角按钮（round）和圆形图标按钮（circle）。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-demo-box">
+                <div class="docs-item-label">圆角与圆形</div>
+                <div class="docs-demo-row">
+                    <button class="btn primary medium round">大圆角按钮</button>
+                    <button class="btn primary medium icon circle"><i class="fa-solid fa-plus"></i></button>
+                    <button class="btn secondary medium icon circle"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                </div>
+                <div class="docs-code">
+&lt;button class="btn primary medium round"&gt;大圆角按钮&lt;/button&gt;
+&lt;button class="btn primary medium icon circle"&gt;&lt;i class="fa-solid fa-plus"&gt;&lt;/i&gt;&lt;/button&gt;
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 按钮组合 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">按钮组合</h2>
+            <p class="docs-section-desc">使用 <code>.ef.buttons</code> 容器可以将多个按钮组合在一起，中间显示分隔符。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-grid docs-grid-2">
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">按钮组</div>
+                    <div class="ef buttons">
+                        <button class="btn secondary medium">取消</button>
+                        <div class="or"></div>
+                        <button class="btn green medium">保存</button>
+                    </div>
+                    <div class="docs-code">
+&lt;div class="ef buttons"&gt;
+    &lt;button class="btn secondary medium"&gt;取消&lt;/button&gt;
+    &lt;div class="or"&gt;&lt;/div&gt;
+    &lt;button class="btn green medium"&gt;保存&lt;/button&gt;
+&lt;/div&gt;
+                    </div>
+                </div>
+                
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">图标按钮组</div>
+                    <div class="ef buttons">
+                        <button class="btn primary medium icon"><i class="fa-solid fa-angle-left"></i>上一页</button>
+                        <button class="btn primary medium icon">下一页<i class="fa-solid fa-angle-right"></i></button>
+                    </div>
+                    <div class="docs-code">
+&lt;div class="ef buttons"&gt;
+    &lt;button class="btn primary medium icon"&gt;&lt;i class="fa-solid fa-angle-left"&gt;&lt;/i&gt;上一页&lt;/button&gt;
+    &lt;button class="btn primary medium icon"&gt;下一页&lt;i class="fa-solid fa-angle-right"&gt;&lt;/i&gt;&lt;/button&gt;
+&lt;/div&gt;
+                    </div>
+                </div>
+                
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">工具栏按钮组</div>
+                    <div class="ef buttons">
+                        <button class="btn secondary medium only-icon"><i class="fa-solid fa-align-left"></i></button>
+                        <button class="btn secondary medium only-icon"><i class="fa-solid fa-align-center"></i></button>
+                        <button class="btn secondary medium only-icon"><i class="fa-solid fa-align-right"></i></button>
+                        <button class="btn secondary medium only-icon"><i class="fa-solid fa-align-justify"></i></button>
+                    </div>
+                    <div class="docs-code">
+&lt;div class="ef buttons"&gt;
+    &lt;button class="btn secondary medium only-icon"&gt;&lt;i class="fa-solid fa-align-left"&gt;&lt;/i&gt;&lt;/button&gt;
+    ...
+&lt;/div&gt;
+                    </div>
+                </div>
+                
+                <div class="docs-demo-box">
+                    <div class="docs-item-label">分割线按钮组</div>
+                    <div class="ef buttons">
+                        <button class="btn secondary medium icon rightline"><i class="fa-solid fa-file"></i></button>
+                        <button class="btn secondary medium icon rightline"><i class="fa-solid fa-floppy-disk"></i></button>
+                        <button class="btn secondary medium icon rightline"><i class="fa-solid fa-upload"></i></button>
+                        <button class="btn secondary medium icon"><i class="fa-solid fa-download"></i></button>
+                    </div>
+                    <div class="docs-code">
+&lt;div class="ef buttons"&gt;
+    &lt;button class="btn secondary medium icon rightline"&gt;...&lt;/button&gt;
+    ...
+&lt;/div&gt;
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 样式变体 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">其他样式变体</h2>
+            <p class="docs-section-desc">一些额外的样式变体，提供更多选择。</p>
+        </div>
+        <div class="docs-section-content">
+            <div class="docs-demo-box">
+                <div class="docs-item-label">Style 变体</div>
+                <div class="docs-demo-row">
+                    <button class="btn style1 medium">Style 1</button>
+                    <button class="btn style2 medium">Style 2</button>
+                    <button class="btn style3 medium">Style 3</button>
+                    <button class="btn style4 medium">Style 4</button>
+                </div>
+                <div class="docs-code">
+&lt;button class="btn style1 medium"&gt;Style 1&lt;/button&gt;
+&lt;button class="btn style2 medium"&gt;Style 2&lt;/button&gt;
+&lt;button class="btn style3 medium"&gt;Style 3&lt;/button&gt;
+&lt;button class="btn style4 medium"&gt;Style 4&lt;/button&gt;
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 参数说明 -->
+    <section class="docs-section">
+        <div class="docs-section-header">
+            <h2 class="docs-section-title">参数说明</h2>
+            <p class="docs-section-desc">按钮的 class 组合规则。</p>
+        </div>
+        <div class="docs-section-content">
+            <table class="docs-params-table">
+                <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>可选值</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>type</code></td>
+                        <td><code>primary</code>, <code>secondary</code>, <code>outline</code>, <code>green</code>, <code>orange</code>, <code>red</code>, <code>style1-4</code></td>
+                        <td>按钮的类型/颜色</td>
+                    </tr>
+                    <tr>
+                        <td><code>size</code></td>
+                        <td><code>mini</code>, <code>small</code>, <code>medium</code>, <code>large</code></td>
+                        <td>按钮的尺寸</td>
+                    </tr>
+                    <tr>
+                        <td><code>icon</code></td>
+                        <td>添加此类名</td>
+                        <td>是否为图标按钮</td>
+                    </tr>
+                    <tr>
+                        <td><code>circle</code></td>
+                        <td>添加此类名</td>
+                        <td>圆形按钮（适用于图标按钮）</td>
+                    </tr>
+                    <tr>
+                        <td><code>round</code></td>
+                        <td>添加此类名</td>
+                        <td>大圆角按钮</td>
+                    </tr>
+                    <tr>
+                        <td><code>disabled</code></td>
+                        <td>添加此类名</td>
+                        <td>禁用状态</td>
+                    </tr>
+                    <tr>
+                        <td><code>only-icon</code></td>
+                        <td>添加此类名</td>
+                        <td>纯图标按钮（无文字）</td>
+                    </tr>
+                    <tr>
+                        <td><code>rightline</code></td>
+                        <td>添加此类名</td>
+                        <td>按钮右边显示分隔线</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    
+    <div class="docs-tip">
+        <div class="docs-tip-title">
+            <i class="fa-solid fa-lightbulb"></i>
+            使用建议
+        </div>
+        <div class="docs-tip-content">
+            <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                <li>主要操作使用 <code>primary</code> 类型，每个页面区域最好只有一个主要按钮</li>
+                <li>次要操作使用 <code>secondary</code> 或 <code>outline</code> 类型</li>
+                <li>危险操作（如删除）使用 <code>red</code> 类型进行警示</li>
+                <li>按钮组中的 <code>.or</code> 分隔符用于表示"或"的关系</li>
+                <li>工具栏按钮组使用 <code>only-icon</code> 和 <code>rightline</code> 组合</li>
+            </ul>
+        </div>
+    </div>
 </div>
 {% endblock %}

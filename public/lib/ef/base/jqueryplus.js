@@ -129,6 +129,10 @@
         if ($(element).is("[component='textarea']")) {
           $(element).closest(".ef-textarea-wrapper").addClass("ef-textarea-error");
         }
+
+        if ($(element).is("[component='department']")) {
+          $(element).closest('.ef-deparment-element').find('.ef-department-view-single').addClass("ef-department-error");
+        }
       },
       unhighlight: function (element) {
         if ($(element).is("[component='input']")) {
@@ -149,6 +153,10 @@
           $(element)
           .closest(".ef-textarea-wrapper")
           .removeClass("ef-textarea-error")
+        }
+
+        if ($(element).is("[component='department']")) {
+          $(element).closest('.ef-deparment-element').find('.ef-department-view-single').removeClass("ef-department-error");
         }
       },
       invalidHandler: function (event, validator) {

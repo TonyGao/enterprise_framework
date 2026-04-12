@@ -1,5 +1,7 @@
 {% extends 'base.html.twig' %}
 
+{% import 'ui/template/ui.html.twig' as ui %}
+
 {% set departmentInputId = random() %}
 {% set departmentInputId2 = random() %}
 {% set departmentContentId = random() %}
@@ -9,6 +11,46 @@
 
 {% block javascripts %}
 	{{ parent() }}
+	<script>
+		$(document).ready(function() {
+			// 公司-部门联动示例
+			const $companySelect = $('#demo-company-select');
+			const $departmentInput = $('#demo-company-department');
+			const $departmentHidden = $('#demo-company-department-hidden');
+			
+			// 公司下拉框变化时，更新部门选择器的 data-company-id 并清空部门
+			$companySelect.on('change', function() {
+				const companyId = $(this).val();
+				const companyName = $(this).next().find('.ef-select-view-value').text().trim();
+				
+				// 更新部门选择器的 data-company-id / name 属性
+				$departmentInput.attr('data-company-id', companyId || '');
+				$departmentInput.attr('data-company-name', companyName || '');
+				$departmentHidden.attr('company-id', companyId || '');
+				
+				// 清空已选部门
+				if (companyId) {
+					const selectionUl = $departmentInput.find('.ef-department-selection-span ul');
+					selectionUl.html('');
+					
+					const input = $departmentInput.find('.ef-department-view-input');
+					input.attr('chose', 'false');
+					input.show();
+					input.val('');
+					
+					$departmentInput.attr('chosen', 'false');
+					$departmentHidden.val('');
+					
+					console.log('Company changed to:', companyId, '- Department selection cleared');
+				}
+			});
+			
+			// 监听部门选择变化
+			$departmentHidden.on('change', function() {
+				console.log('Department selected:', $(this).val());
+			});
+		});
+	</script>
 {% endblock %}
 
 {% block stylesheets %}
@@ -93,6 +135,76 @@
   <div class="demo-header">
     <h1 class="demo-title">Department 部门选择器</h1>
     <p class="demo-desc">用于选择部门数据。支持 <strong>标准直角样式</strong> 和 <strong>专用圆角样式</strong>。</p>
+  </div>
+
+  <!-- 公司-部门联动示例 -->
+  <div class="demo-section">
+    <div class="demo-section-header">
+      <h2 class="demo-section-title">公司-部门联动选择</h2>
+      <p class="demo-section-desc">选择公司后，部门选择器会过滤只显示该公司的部门。</p>
+    </div>
+    <div class="demo-grid" style="grid-template-columns: 1fr 1fr;">
+      <div class="demo-item">
+        <span class="demo-label">选择公司</span>
+        {{ ui.select(
+          companyOptions,
+          '请选择公司',
+          '100%',
+          'ef-input-rounded',
+          'company',
+          'demo-company-select',
+          ''
+        ) }}
+      </div>
+      <div class="demo-item">
+        <span class="demo-label">选择部门（会按公司过滤）</span>
+        <input type="hidden" id="demo-company-department-hidden" name="department" value="" company-id="">
+        <div class="ef-deparment-element">
+          <span class="ef-department-view-single ef-department ef-department-view ef-department-view-size-medium ef-department-view-search ef-input-rounded" style="width: 100%;" chosen="false" id="demo-company-department" contentid="demo-company-department-content" data-company-id="" data-company-select-id="demo-company-select" data-search-url="/test/api/department/search" data-modal-url="/test/api/department/singleSelect">
+            <div class="ef-department-selection-container">
+              <div class="ef-department-selection">
+                <span class="ef-department-selection-span">
+                  <ul></ul>
+                </span>
+              </div>
+              <input class="ef-department-view-input" placeholder="请先选择公司，然后输入部门名称搜索 ..." mode="single" chose="false">
+            </div>
+            <span class="ef-department-view-value ef-department-view-value-hidden"></span>
+            <span class="ef-department-view-suffix show-department-modal">
+              <span class="ef-department-view-icon">
+                <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-search" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                  <path d="M33.072 33.071c6.248-6.248 6.248-16.379 0-22.627-6.249-6.249-16.38-6.249-22.628 0-6.248 6.248-6.248 16.379 0 22.627 6.248 6.248 16.38 6.248 22.628 0Zm0 0 8.485 8.485"></path>
+                </svg>
+              </span>
+            </span>
+          </span>
+        </div>
+        <div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; min-width: 300px; width: 100%;" id="demo-company-department-content" parentid="demo-company-department">
+          <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
+            <div class="ef-trigger-content">
+              <div class="ef-department-dropdown">
+                <div class="ef-scrollbar ef-scrollbar-type-embed">
+                  <div class="ef-scrollbar-container ef-department-dropdown-list-wrapper">
+                    <ul class="ef-department-dropdown-list"></ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding: 24px; border-top: 1px solid #e5e7eb; background: #f9fafb;">
+      <p style="margin: 0 0 12px 0; font-size: 13px; color: #6b7280;">
+        <strong>实现说明：</strong>
+      </p>
+      <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #6b7280; line-height: 1.8;">
+        <li>部门选择器设置了 <code>data-company-id</code> 属性</li>
+        <li>选择公司后，会自动更新该属性值，并清空已选部门</li>
+        <li>搜索部门时，会将 <code>companyId</code> 传递给 <code>/api/admin/org/department/searchByKey</code> API</li>
+        <li>点击放大镜打开弹窗时，会将 <code>companyId</code> 传递给 <code>/admin/org/departemnt/singleSelect?companyId=X</code> API</li>
+      </ul>
+    </div>
   </div>
 
   <div class="demo-section">

@@ -1,10 +1,14 @@
 $(document).ready(function () {
   $("body").on("click", ".common-tree-wrapper .arrow-icon", function (event) {
-    // 阻止事件冒泡
     event.stopPropagation();
-    // 找到最近的 item-content 容器，然后找到里面的 .tree-indent 和 .sub-tree-content
-    const parentItem = $(this).closest('.item-content');
-    parentItem.nextAll(".tree-indent, .sub-tree-content").toggle(0);
+    const parentLi = $(this).closest('li');
+    const childTree = parentLi.children('ol').first();
+    const childIndent = parentLi.children('.tree-indent');
+
+    if (childTree.length) {
+      childIndent.toggle(0);
+      childTree.toggle(0);
+    }
 
     let icon = $(this).find('i');
     if (icon.hasClass("fa-caret-down")) {
