@@ -46,4 +46,14 @@ $(document).ready(async function () {
     $(".app-side-menu-scroll-btn").hide();
     document.cookie = "sideMenuState=expanded" + "; path=/";
   })
+
+  // 当前菜单项激活（JS 兜底：兼容尾部斜杠差异）
+  const currentPath = window.location.pathname.replace(/\/+$/, '');
+  $('.item-menu-content.link').each(function () {
+    const href = ($(this).attr('href') || '').replace(/\/+$/, '');
+    if (href && href !== '#' && href === currentPath) {
+      $(this).addClass('current');
+    }
+  });
 })
+

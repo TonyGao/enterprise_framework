@@ -1,0 +1,3014 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}定时任务管理{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* ============================
+           定时任务管理页面样式
+        ============================ */
+        .task-page {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            inset: 0;
+            background: var(--bg-base, #f5f7fb);
+            padding: 24px;
+            gap: 20px;
+            overflow: auto;
+            /* 页面局部主题色，覆盖框架默认主色 */
+            --primary: rgb(22, 93, 255);
+            --primary-dark: rgb(18, 79, 216);
+        }
+
+        /* ---- 页头 ---- */
+        .task-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .task-page-header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary, #1a1d2e);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .task-page-header h1 i {
+            color: var(--primary, #5b7cf6);
+            font-size: 18px;
+        }
+
+        .task-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* ---- 统计卡片 ---- */
+        .task-stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            border: 1px solid rgba(0,0,0,.05);
+            transition: box-shadow .2s;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,.10);
+        }
+
+        .stat-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .stat-card-icon.blue   { background: #eef2ff; color: #5b7cf6; }
+        .stat-card-icon.green  { background: #edfbf3; color: #2dbe78; }
+        .stat-card-icon.orange { background: #fff7ed; color: #f97316; }
+        .stat-card-icon.red    { background: #fef2f2; color: #ef4444; }
+
+        .stat-card-body {
+            min-width: 0;
+        }
+
+        .stat-card-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-primary, #1a1d2e);
+            line-height: 1.2;
+        }
+
+        .stat-card-label {
+            font-size: 13px;
+            color: var(--text-secondary, #8a8fa8);
+            margin-top: 2px;
+        }
+
+        /* ---- 视图切换 Tab ---- */
+        .view-tabs {
+            display: flex;
+            gap: 0;
+            background: #fff;
+            border-radius: 10px;
+            padding: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            border: 1px solid rgba(0,0,0,.05);
+            width: fit-content;
+        }
+
+        .view-tab-btn {
+            padding: 7px 18px;
+            border-radius: 7px;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            color: var(--text-secondary, #8a8fa8);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all .15s;
+            font-weight: 500;
+        }
+
+        .view-tab-btn.active,
+        .view-tab-btn:hover {
+            background: var(--primary, #5b7cf6);
+            color: #fff;
+        }
+
+        /* ---- 主内容区 ---- */
+        .task-main-card {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            border: 1px solid rgba(0,0,0,.05);
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .task-main-card-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border, #f0f0f5);
+            flex-shrink: 0;
+        }
+
+        .task-search-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .task-search-input {
+            height: 36px;
+            border: 1px solid var(--border, #e5e7ef);
+            border-radius: 8px;
+            padding: 0 12px;
+            font-size: 13px;
+            color: var(--text-primary, #1a1d2e);
+            outline: none;
+            width: 220px;
+            transition: border-color .15s;
+        }
+
+        .task-search-input:focus {
+            border-color: var(--primary, #5b7cf6);
+        }
+
+        .task-filter-select {
+            height: 36px;
+            border: 1px solid var(--border, #e5e7ef);
+            border-radius: 8px;
+            padding: 0 10px;
+            font-size: 13px;
+            color: var(--text-primary, #1a1d2e);
+            background: #fff;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* ---- 任务列表 ---- */
+        #task-list-view {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .task-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .task-table thead tr {
+            background: var(--bg-base, #f8f9fc);
+        }
+
+        .task-table th,
+        .task-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border, #f0f0f5);
+            white-space: nowrap;
+        }
+
+        .task-table th {
+            font-weight: 600;
+            color: var(--text-secondary, #8a8fa8);
+            font-size: 13px;
+        }
+
+        .task-table tbody tr:hover {
+            background: var(--bg-hover, #f8f9fc);
+        }
+
+        .task-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .task-name-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .task-name-cell .task-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary, #1a1d2e);
+        }
+
+        .task-name-cell .task-handler {
+            font-size: 11px;
+            color: var(--text-tertiary, #b0b5cc);
+            font-family: 'Courier New', monospace;
+        }
+
+        .task-cron-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #f0f3ff;
+            color: #5b7cf6;
+            border-radius: 6px;
+            padding: 3px 9px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .task-category-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-badge.success { background: #edfbf3; color: #2dbe78; }
+        .status-badge.success::before { background: #2dbe78; }
+        .status-badge.error   { background: #fef2f2; color: #ef4444; }
+        .status-badge.error::before   { background: #ef4444; }
+        .status-badge.running { background: #fffbeb; color: #f59e0b; animation: pulse-dot 1.5s ease-in-out infinite; }
+        .status-badge.running::before { background: #f59e0b; }
+        .status-badge.none    { background: #f3f4f6; color: #9ca3af; }
+        .status-badge.none::before    { background: #d1d5db; }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .4; }
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .task-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            border: 1px solid var(--border, #e5e7ef);
+            background: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--text-secondary, #8a8fa8);
+            transition: all .15s;
+            position: relative;
+        }
+
+        .task-action-btn:hover { border-color: var(--primary, #5b7cf6); color: var(--primary, #5b7cf6); background: #f0f3ff; }
+        .task-action-btn.run:hover  { border-color: #2dbe78; color: #2dbe78; background: #edfbf3; }
+        .task-action-btn.logs:hover { border-color: #f59e0b; color: #f59e0b; background: #fffbeb; }
+        .task-action-btn.del:hover  { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
+
+
+
+        /* ---- 可视化 Cron 构建器 ---- */
+        .cron-builder { display: flex; flex-direction: column; gap: 12px; }
+        .cron-period-row { display: flex; flex-wrap: wrap; gap: 6px; }
+        .cron-period-btn {
+            padding: 5px 13px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border, #e5e7ef);
+            background: #fff;
+            font-size: 12px;
+            color: var(--text-secondary, #8a8fa8);
+            cursor: pointer;
+            transition: all .15s;
+            font-weight: 500;
+        }
+        .cron-period-btn.active {
+            border-color: var(--primary, #5b7cf6);
+            background: #f0f3ff;
+            color: var(--primary, #5b7cf6);
+        }
+        .cron-sub-panel { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; color: var(--text-primary, #1a1d2e); }
+        .cron-sub-panel input[type="number"],
+        .cron-sub-panel input[type="time"] {
+            width: 60px;
+            min-width: 60px;
+            height: 34px;
+            border: 1.5px solid var(--border, #e5e7ef);
+            border-radius: 7px;
+            padding: 0 10px;
+            font-size: 13px;
+            text-align: center;
+            outline: none;
+            color: var(--text-primary, #1a1d2e);
+            transition: border-color .15s;
+        }
+        #cron-day-time,
+        #cron-week-time,
+        #cron-month-time,
+        #cron-quarter-time {
+            width: 100px;
+            min-width: 100px;
+        }
+        .cron-sub-panel input:focus { border-color: var(--primary, #5b7cf6); }
+        .cron-week-days { display: flex; gap: 5px; flex-wrap: wrap; }
+        .cron-week-day-btn {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border, #e5e7ef);
+            background: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-secondary, #8a8fa8);
+            transition: all .15s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .cron-week-day-btn.selected {
+            background: var(--primary, #5b7cf6);
+            border-color: var(--primary, #5b7cf6);
+            color: #fff;
+        }
+        .cron-once-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #fff7ed; color: #f59e0b;
+            border: 1.5px solid #fed7aa; border-radius: 6px;
+            padding: 3px 10px; font-size: 12px; font-weight: 600;
+        }
+        .cron-human-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #f0f3ff; color: #5b7cf6;
+            border-radius: 6px; padding: 3px 9px;
+            font-size: 12px; font-weight: 500;
+            max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .ai-result-card {
+            background: #f0fdf4; border: 1.5px solid #bbf7d0;
+            border-radius: 8px; padding: 12px 14px;
+        }
+        .cron-sub-panel select {
+            height: 34px; border: 1.5px solid var(--border, #e5e7ef); border-radius: 7px;
+            padding: 0 8px; font-size: 13px; color: var(--text-primary, #1a1d2e);
+            background: #fff; outline: none; cursor: pointer; transition: border-color .15s;
+        }
+        .cron-sub-panel select:focus { border-color: var(--primary, #5b7cf6); }
+
+        /* ---- 空状态 ---- */
+        .task-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            color: var(--text-tertiary, #b0b5cc);
+        }
+
+        .task-empty i { font-size: 40px; margin-bottom: 12px; }
+        .task-empty p { font-size: 14px; }
+
+        /* ============================
+           日历视图样式
+        ============================ */
+        #task-calendar-view {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #task-calendar-view.active {
+            display: flex;
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border, #f0f0f5);
+            flex-shrink: 0;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .calendar-nav-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border, #e5e7ef);
+            background: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: var(--text-secondary, #8a8fa8);
+            transition: all .15s;
+        }
+
+        .calendar-nav-btn:hover { border-color: var(--primary, #5b7cf6); color: var(--primary, #5b7cf6); }
+
+        .calendar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary, #1a1d2e);
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .calendar-legend {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary, #8a8fa8);
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.success { background: #2dbe78; }
+        .legend-dot.error   { background: #ef4444; }
+        .legend-dot.pending { background: #5b7cf6; }
+
+        .calendar-body {
+            flex: 1;
+            overflow: auto;
+            padding: 16px 20px 20px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary, #8a8fa8);
+            text-transform: uppercase;
+            padding: 8px 0;
+            letter-spacing: .5px;
+        }
+
+        .calendar-weekday.weekend { color: #ef4444; }
+
+        .calendar-day {
+            min-height: 110px;
+            border-radius: 10px;
+            background: var(--bg-base, #f8f9fc);
+            padding: 8px;
+            border: 1.5px solid transparent;
+            transition: border-color .15s, background .15s;
+            cursor: default;
+        }
+
+        .calendar-day.other-month {
+            background: transparent;
+            opacity: .4;
+        }
+
+        .calendar-day.today {
+            border-color: var(--primary, #5b7cf6);
+            background: #f0f3ff;
+        }
+
+        .calendar-day-num {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary, #8a8fa8);
+            margin-bottom: 6px;
+        }
+
+        .calendar-day.today .calendar-day-num {
+            color: var(--primary, #5b7cf6);
+        }
+
+        .calendar-day-events {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .cal-event-item {
+            border-radius: 5px;
+            padding: 2px 7px;
+            font-size: 11px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: opacity .15s;
+        }
+
+        .cal-event-item:hover { opacity: .8; }
+
+        .cal-event-item.cat-default  { background: #eef2ff; color: #5b7cf6; }
+        .cal-event-item.cat-system   { background: #f0fdf4; color: #16a34a; }
+        .cal-event-item.cat-report   { background: #fff7ed; color: #c2410c; }
+        .cal-event-item.cat-data     { background: #faf5ff; color: #7c3aed; }
+        .cal-event-item.cat-notify   { background: #fffbeb; color: #b45309; }
+
+        .cal-event-item .event-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+            flex-shrink: 0;
+        }
+
+        .cal-event-more {
+            font-size: 11px;
+            color: var(--text-tertiary, #b0b5cc);
+            padding: 1px 7px;
+        }
+
+        /* ---- 天视图/周视图特有 (FullCalendar风格 TimeGrid) ---- */
+        .fc-timegrid {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid var(--border, #f0f0f5);
+            border-radius: 8px;
+        }
+        .fc-head {
+            display: flex;
+            border-bottom: 1px solid var(--border, #f0f0f5);
+            background: var(--bg-base, #f8f9fc);
+        }
+        .fc-time-col-head {
+            width: 60px;
+            border-right: 1px solid var(--border, #e5e7ef);
+            flex-shrink: 0;
+        }
+        .fc-day-cols {
+            display: flex;
+            flex: 1;
+        }
+        .fc-day-col-head {
+            flex: 1;
+            border-right: 1px solid var(--border, #e5e7ef);
+            text-align: center;
+            padding: 8px 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary, #8a8fa8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .fc-day-col-head:last-child { border-right: none; }
+        .fc-day-col-head.fc-today {
+            background: #fffaeb; /* yellow-ish */
+            color: #b45309;
+        }
+        .fc-all-day-row {
+            display: flex;
+            border-bottom: 1px solid var(--border, #e5e7ef);
+            background: #fdfdfd;
+        }
+        .fc-all-day-label {
+            width: 60px;
+            border-right: 1px solid var(--border, #e5e7ef);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: var(--text-secondary, #8a8fa8);
+        }
+        .fc-all-day-content {
+            display: flex;
+            flex: 1;
+        }
+        .fc-all-day-cell {
+            flex: 1;
+            border-right: 1px solid var(--border, #e5e7ef);
+            min-height: 28px;
+            padding: 2px 4px;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 2px;
+        }
+        .fc-all-day-cell:last-child { border-right: none; }
+        .fc-all-day-cell.fc-today { background: #fffaeb; }
+        .fc-body {
+            display: flex;
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+        .fc-time-col {
+            width: 60px;
+            flex-shrink: 0;
+            border-right: 1px solid var(--border, #e5e7ef);
+            background: #f8f9fc; /* gray column */
+            box-sizing: border-box;
+        }
+        .fc-time-slot {
+            height: 60px; /* 每小时高度 */
+            border-bottom: 1px solid var(--border, #e5e7ef);
+            font-size: 11px;
+            color: var(--text-secondary, #8a8fa8);
+            text-align: right;
+            padding: 4px 6px 0 0;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .fc-time-slot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            border-top: 1px dashed #e5e7ef;
+        }
+        .fc-day-cols-body {
+            display: flex;
+            flex: 1;
+            position: relative;
+            background: #fff;
+        }
+        .fc-day-col {
+            flex: 1;
+            border-right: 1px solid var(--border, #e5e7ef);
+            position: relative;
+            box-sizing: border-box;
+        }
+        .fc-day-col:last-child { border-right: none; }
+        .fc-day-col.fc-today { background: #fffdf2; }
+        
+        /* 网格背景线放在 col 里 */
+        .fc-day-grid-bg {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+        }
+        .fc-bg-slot {
+            height: 60px;
+            border-bottom: 1px solid var(--border, #e5e7ef);
+            box-sizing: border-box;
+            position: relative;
+        }
+        .fc-bg-slot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            border-top: 1px dashed #e5e7ef;
+        }
+        .fc-events-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        .fc-event {
+            position: absolute;
+            left: 4px;
+            right: 4px;
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 11px;
+            overflow: hidden;
+            box-sizing: border-box;
+            pointer-events: auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            background: #fff;
+            color: #1a1d2e;
+            border: 1px solid var(--border, #e5e7ef);
+            border-left-width: 3px;
+        }
+        .fc-event:hover {
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            z-index: 10 !important;
+        }
+        .fc-event.cat-system { border-left-color: #16a34a; background: #f0fdf4; }
+        .fc-event.cat-report { border-left-color: #c2410c; background: #fff7ed; }
+        .fc-event.cat-data   { border-left-color: #7c3aed; background: #faf5ff; }
+        .fc-event.cat-notify { border-left-color: #b45309; background: #fffbeb; }
+        .fc-event.cat-default{ border-left-color: #5b7cf6; background: #eef2ff; }
+        .fc-event-time {
+            font-weight: 600;
+            font-size: 10px;
+            color: var(--text-secondary, #8a8fa8);
+        }
+        .fc-event-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+
+
+
+        /* ============================
+           抽屉 / 模态框样式
+        ============================ */
+        .task-drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.35);
+            z-index: 900;
+            opacity: 0;
+            transition: opacity .25s;
+            pointer-events: none;
+        }
+
+        .task-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .task-drawer {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 520px;
+            background: #fff;
+            box-shadow: -4px 0 32px rgba(0,0,0,.12);
+            z-index: 901;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform .3s cubic-bezier(.4,0,.2,1);
+            --primary: rgb(22, 93, 255);
+            --primary-dark: rgb(18, 79, 216);
+        }
+
+        .task-drawer.open { transform: translateX(0); }
+
+        .task-drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border, #f0f0f5);
+            flex-shrink: 0;
+        }
+
+        .task-drawer-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary, #1a1d2e);
+        }
+
+        .task-drawer-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: var(--bg-base, #f5f7fb);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--text-secondary, #8a8fa8);
+            transition: all .15s;
+        }
+
+        .task-drawer-close:hover { background: #fee2e2; color: #ef4444; }
+
+        .task-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .task-drawer-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border, #f0f0f5);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        /* ---- 表单控件 ---- */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary, #5a5f7d);
+            margin-bottom: 6px;
+        }
+
+        .form-label span.required { color: #ef4444; margin-left: 2px; }
+
+        .form-control {
+            width: 100%;
+            height: 38px;
+            border: 1px solid var(--border, #e5e7ef);
+            border-radius: 8px;
+            padding: 0 12px;
+            font-size: 13px;
+            color: var(--text-primary, #1a1d2e);
+            background: #fff;
+            outline: none;
+            transition: border-color .15s;
+            box-sizing: border-box;
+        }
+
+        textarea.form-control {
+            height: 80px;
+            padding: 10px 12px;
+            resize: vertical;
+        }
+
+        .form-control:focus { border-color: var(--primary, #5b7cf6); box-shadow: 0 0 0 3px rgba(91,124,246,.1); }
+        .form-control.error { border-color: #ef4444; }
+
+        .form-error { font-size: 12px; color: #ef4444; margin-top: 4px; }
+
+        .form-hint { font-size: 12px; color: var(--text-tertiary, #b0b5cc); margin-top: 4px; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .cron-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .cron-preset-btn {
+            padding: 3px 9px;
+            border-radius: 6px;
+            border: 1px solid var(--border, #e5e7ef);
+            background: #fff;
+            font-size: 11px;
+            color: var(--text-secondary, #8a8fa8);
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+        .cron-preset-btn:hover { border-color: var(--primary, #5b7cf6); color: var(--primary, #5b7cf6); background: #f0f3ff; }
+
+        /* 任务类型切换 */
+        .task-type-tabs {
+            display: flex;
+            gap: 0;
+            border: 1px solid var(--border, #e5e7ef);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+
+        .task-type-tab {
+            flex: 1;
+            padding: 7px 0;
+            text-align: center;
+            font-size: 13px;
+            cursor: pointer;
+            background: #fff;
+            color: var(--text-secondary, #8a8fa8);
+            border: none;
+            transition: all .15s;
+        }
+
+        .task-type-tab.active {
+            background: var(--primary, #5b7cf6);
+            color: #fff;
+        }
+
+        /* ---- 日志模态框 ---- */
+        .log-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.5);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .log-modal-overlay.open { display: flex; }
+
+        .log-modal {
+            background: #fff;
+            border-radius: 16px;
+            width: 760px;
+            max-width: 95vw;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,.2);
+        }
+
+        .log-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border, #f0f0f5);
+        }
+
+        .log-modal-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary, #1a1d2e);
+        }
+
+        .log-modal-body {
+            flex: 1;
+            overflow: auto;
+            padding: 0;
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .log-table th,
+        .log-table td {
+            padding: 10px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border, #f0f0f5);
+        }
+
+        .log-table th {
+            background: var(--bg-base, #f8f9fc);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary, #8a8fa8);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .log-output-pre {
+            background: #1e2030;
+            color: #c0caf5;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            max-height: 80px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* ---- 按钮 ---- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 16px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all .15s;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary, #5b7cf6);
+            color: #fff;
+            border-color: var(--primary, #5b7cf6);
+        }
+
+        .btn-primary:hover { background: var(--primary-dark, #4a6ae3); border-color: var(--primary-dark, #4a6ae3); color: #fff; }
+
+        .btn-default {
+            background: #fff;
+            color: var(--text-secondary, #5a5f7d);
+            border-color: var(--border, #e5e7ef);
+        }
+
+        .btn-default:hover { border-color: var(--primary, #5b7cf6); color: var(--primary, #5b7cf6); }
+
+        .btn-danger {
+            background: #fef2f2;
+            color: #ef4444;
+            border-color: #fecaca;
+        }
+
+        .btn-danger:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+
+        /* 分页 */
+        .task-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-top: 1px solid var(--border, #f0f0f5);
+            flex-shrink: 0;
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: var(--text-secondary, #8a8fa8);
+        }
+
+        .pagination-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .page-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            border: 1px solid var(--border, #e5e7ef);
+            background: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary, #8a8fa8);
+            transition: all .15s;
+        }
+
+        .page-btn:hover, .page-btn.active {
+            background: var(--primary, #5b7cf6);
+            color: #fff;
+            border-color: var(--primary, #5b7cf6);
+        }
+
+        .page-btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        .log-modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            border-top: 1px solid var(--border, #f0f0f5);
+            flex-shrink: 0;
+        }
+        .task-toast {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast-item {
+            background: #1a1d2e;
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: toast-in .3s ease;
+            pointer-events: auto;
+        }
+
+        .toast-item.success i { color: #2dbe78; }
+        .toast-item.error   i { color: #ef4444; }
+        .toast-item.info    i { color: #5b7cf6; }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 1200px) {
+            .task-stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .task-drawer { width: 100vw; }
+            .task-stats-row { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+{% endblock %}
+
+{% block app_content_container %}
+<div class="task-page" id="task-page">
+
+    {# ---- 页头 ---- #}
+    <div class="task-page-header">
+        <h1>
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            {{ 'admin.task.title'|trans({}, 'messages')|default('定时任务') }}
+        </h1>
+        <div class="task-header-actions">
+            <div class="view-tabs">
+                <button class="view-tab-btn active" id="tab-list" onclick="switchView('list')">
+                    <i class="fa-solid fa-list"></i> {{ 'admin.task.list_view'|trans({}, 'messages')|default('列表') }}
+                </button>
+                <button class="view-tab-btn" id="tab-calendar" onclick="switchView('calendar')">
+                    <i class="fa-solid fa-calendar-days"></i> {{ 'admin.task.month_view'|trans({}, 'messages')|default('月') }}
+                </button>
+                <button class="view-tab-btn" id="tab-week" onclick="switchView('week')">
+                    <i class="fa-solid fa-calendar-week"></i> {{ 'admin.task.week_view'|trans({}, 'messages')|default('周') }}
+                </button>
+                <button class="view-tab-btn" id="tab-day" onclick="switchView('day')">
+                    <i class="fa-solid fa-calendar-day"></i> {{ 'admin.task.day_view'|trans({}, 'messages')|default('日') }}
+                </button>
+            </div>
+            <button class="btn btn-primary" onclick="openCreateDrawer()">
+                <i class="fa-solid fa-plus"></i> {{ 'admin.task.create_task'|trans({}, 'messages')|default('新建任务') }}
+            </button>
+        </div>
+    </div>
+
+    {# ---- 统计卡片 ---- #}
+    <div class="task-stats-row" id="stats-row">
+        <div class="stat-card">
+            <div class="stat-card-icon blue"><i class="fa-solid fa-list-check"></i></div>
+            <div class="stat-card-body">
+                <div class="stat-card-value" id="stat-total">-</div>
+                <div class="stat-card-label">{{ 'admin.task.total_tasks'|trans({}, 'messages')|default('任务总数') }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon green"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="stat-card-body">
+                <div class="stat-card-value" id="stat-enabled">-</div>
+                <div class="stat-card-label">{{ 'admin.task.enabled_tasks'|trans({}, 'messages')|default('已启用') }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon orange"><i class="fa-solid fa-hourglass-half"></i></div>
+            <div class="stat-card-body">
+                <div class="stat-card-value" id="stat-today">-</div>
+                <div class="stat-card-label">{{ 'admin.task.today_exec'|trans({}, 'messages')|default('今日执行') }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-card-body">
+                <div class="stat-card-value" id="stat-errors">-</div>
+                <div class="stat-card-label">{{ 'admin.task.exec_errors'|trans({}, 'messages')|default('执行失败') }}</div>
+            </div>
+        </div>
+    </div>
+
+    {# ---- 主内容卡片 ---- #}
+    <div class="task-main-card">
+
+        {# 工具栏 #}
+        <div class="task-main-card-toolbar">
+            <div class="task-search-row">
+                <input type="text" class="task-search-input" id="search-keyword" placeholder="{{ 'admin.task.search_placeholder'|trans({}, 'messages')|default('搜索任务名称、Cron或类名...') }}" oninput="debounceSearch()">
+                <select class="task-filter-select" id="filter-enabled" onchange="loadTasks()">
+                    <option value="">全部状态</option>
+                    <option value="1">已启用</option>
+                    <option value="0">已禁用</option>
+                </select>
+                <select class="task-filter-select" id="filter-category" onchange="loadTasks()">
+                    <option value="">{{ 'admin.task.all_categories'|trans({}, 'messages')|default('全部分类') }}</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn btn-default" onclick="loadTasks()">
+                    <i class="fa-solid fa-rotate-right"></i> 刷新
+                </button>
+            </div>
+        </div>
+
+        {# 列表视图 #}
+        <div id="task-list-view">
+            <table class="task-table">
+                <thead>
+                    <tr>
+                        <th style="width: 32px;"></th>
+                        <th>{{ 'admin.task.table.name'|trans({}, 'messages')|default('任务名称') }}</th>
+                        <th>{{ 'admin.task.table.cron'|trans({}, 'messages')|default('执行时机') }}</th>
+                        <th>{{ 'admin.task.table.category'|trans({}, 'messages')|default('分类') }}</th>
+                        <th>{{ 'admin.task.table.last_run'|trans({}, 'messages')|default('上次执行') }}</th>
+                        <th>{{ 'admin.task.table.next_run'|trans({}, 'messages')|default('下次执行') }}</th>
+                        <th>{{ 'admin.task.table.status'|trans({}, 'messages')|default('最近状态') }}</th>
+                        <th>{{ 'admin.task.table.enabled'|trans({}, 'messages')|default('启用') }}</th>
+                        <th>{{ 'admin.task.table.actions'|trans({}, 'messages')|default('操作') }}</th>
+                    </tr>
+                </thead>
+                <tbody id="task-table-body">
+                    <tr>
+                        <td colspan="9">
+                            <div class="task-empty">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                <p>加载中...</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        {# 日历视图 #}
+        <div id="task-calendar-view" style="display: none;">
+            <div class="calendar-header">
+                <div class="calendar-nav">
+                    <button class="calendar-nav-btn" onclick="calNav(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div class="calendar-title" id="cal-title"></div>
+                    <button class="calendar-nav-btn" onclick="calNav(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button class="btn btn-default" style="height:32px;padding:0 12px;font-size:12px;" onclick="calGoToday()">{{ 'admin.task.cal_today'|trans({}, 'messages')|default('今天') }}</button>
+                </div>
+                <div class="calendar-legend">
+                    <div class="legend-item"><div class="legend-dot pending"></div> {{ 'admin.task.legend_pending'|trans({}, 'messages')|default('计划执行') }}</div>
+                    <div class="legend-item"><div class="legend-dot success"></div> {{ 'admin.task.legend_success'|trans({}, 'messages')|default('成功') }}</div>
+                    <div class="legend-item"><div class="legend-dot error"></div> {{ 'admin.task.legend_error'|trans({}, 'messages')|default('失败') }}</div>
+                </div>
+            </div>
+            <div class="calendar-body">
+                <div class="calendar-grid" id="calendar-grid">
+                    {# 星期表头 #}
+                    <div class="calendar-weekday">一</div>
+                    <div class="calendar-weekday">二</div>
+                    <div class="calendar-weekday">三</div>
+                    <div class="calendar-weekday">四</div>
+                    <div class="calendar-weekday weekend">五</div>
+                    <div class="calendar-weekday weekend">六</div>
+                    <div class="calendar-weekday weekend">日</div>
+                </div>
+            </div>
+        </div>
+
+        {# 周视图 #}
+        <div id="task-week-view" style="display: none;">
+            <div class="calendar-header">
+                <div class="calendar-nav">
+                    <button class="calendar-nav-btn" onclick="weekNav(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div class="calendar-title" id="week-title"></div>
+                    <button class="calendar-nav-btn" onclick="weekNav(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button class="btn btn-default" style="height:32px;padding:0 12px;font-size:12px;" onclick="weekGoToday()">{{ 'admin.task.cal_this_week'|trans({}, 'messages')|default('本周') }}</button>
+                </div>
+            </div>
+            <div class="calendar-body" style="padding: 10px; display: flex; flex: 1;">
+                <div class="fc-timegrid" id="week-grid">
+                    {# 周视图在此渲染 #}
+                </div>
+            </div>
+        </div>
+
+        {# 天视图 #}
+        <div id="task-day-view" style="display: none;">
+            <div class="calendar-header">
+                <div class="calendar-nav">
+                    <button class="calendar-nav-btn" onclick="dayNav(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div class="calendar-title" id="day-title"></div>
+                    <button class="calendar-nav-btn" onclick="dayNav(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button class="btn btn-default" style="height:32px;padding:0 12px;font-size:12px;" onclick="dayGoToday()">{{ 'admin.task.cal_today'|trans({}, 'messages')|default('今天') }}</button>
+                </div>
+            </div>
+            <div class="calendar-body" style="padding: 10px; display: flex; flex: 1;">
+                <div class="fc-timegrid" id="day-timeline">
+                    {# 天视图在此渲染 #}
+                </div>
+            </div>
+        </div>
+
+        {# 分页 #}
+        <div class="task-pagination" id="task-pagination">
+            <div class="pagination-info" id="pagination-info">{{ 'admin.task.empty'|trans({}, 'messages')|default('暂无任务') }}</div>
+            <div class="pagination-btns" id="pagination-btns"></div>
+        </div>
+    </div>
+</div>
+
+{# ============================
+   新建/编辑 抽屉
+============================ #}
+<div class="task-drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="task-drawer" id="task-drawer">
+    <div class="task-drawer-header">
+        <div class="task-drawer-title" id="drawer-title">新建定时任务</div>
+        <button class="task-drawer-close" onclick="closeDrawer()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="task-drawer-body">
+        <form id="task-form" onsubmit="return false;">
+            <input type="hidden" id="task-id">
+
+            <div class="form-group">
+                <label class="form-label">任务名称 <span class="required">*</span></label>
+                <input type="text" class="form-control" id="f-name" placeholder="例：每日数据汇总报告">
+                <div class="form-error" id="e-name"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">描述</label>
+                <textarea class="form-control" id="f-description" placeholder="可选，简述任务用途..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">执行方式 <span class="required">*</span></label>
+                <div class="task-type-tabs" id="task-type-tabs">
+                    <button class="task-type-tab active" type="button" data-type="recurring" onclick="switchTaskType('recurring')">
+                        <i class="fa-solid fa-rotate"></i> 循环执行
+                    </button>
+                    <button class="task-type-tab" type="button" data-type="once" onclick="switchTaskType('once')">
+                        <i class="fa-solid fa-clock"></i> 单次执行
+                    </button>
+                    <button class="task-type-tab" type="button" data-type="ai" onclick="switchTaskType('ai')">
+                        <i class="fa-solid fa-magic-wand-sparkles"></i> AI 表达
+                    </button>
+                </div>
+            </div>
+
+            {# 循环执行：可视化 Cron 构建器 #}
+            <div class="form-group" id="cron-group">
+                <label class="form-label">执行规则 <span class="required">*</span></label>
+                <input type="hidden" id="f-cron">
+                <div class="cron-builder">
+                    <div class="cron-period-row" id="cron-period-row">
+                        <button class="cron-period-btn active" type="button" data-period="second" onclick="switchCronPeriod('second')">每隔N秒</button>
+                        <button class="cron-period-btn" type="button" data-period="interval" onclick="switchCronPeriod('interval')">每隔N分钟</button>
+                        <button class="cron-period-btn" type="button" data-period="hour" onclick="switchCronPeriod('hour')">每隔N小时</button>
+                        <button class="cron-period-btn" type="button" data-period="day" onclick="switchCronPeriod('day')">每隔N天</button>
+                        <button class="cron-period-btn" type="button" data-period="week" onclick="switchCronPeriod('week')">每隔N周</button>
+                        <button class="cron-period-btn" type="button" data-period="month" onclick="switchCronPeriod('month')">每隔N月</button>
+                        <button class="cron-period-btn" type="button" data-period="quarter" onclick="switchCronPeriod('quarter')">每隔N季度</button>
+                    </div>
+
+                    {# 每隔N秒 #}
+                    <div class="cron-sub-panel" id="cron-sub-second">
+                        每隔
+                        <input type="number" id="cron-second" min="1" max="3600" value="30" oninput="buildCronFromUI()">
+                        秒执行一次
+                        <span style="color:#b0b5cc;font-size:11px;">（需运行时支持秒级调度）</span>
+                    </div>
+
+                    {# 每隔N分钟 #}
+                    <div class="cron-sub-panel" id="cron-sub-interval" style="display:none;">
+                        每隔
+                        <input type="number" id="cron-interval" min="1" max="59" value="5" oninput="buildCronFromUI()">
+                        分钟执行一次
+                    </div>
+
+                    {# 每隔N小时 #}
+                    <div class="cron-sub-panel" id="cron-sub-hour" style="display:none;">
+                        每隔
+                        <input type="number" id="cron-hour-n" min="1" max="23" value="1" oninput="buildCronFromUI()">
+                        小时，第
+                        <input type="number" id="cron-hour-min" min="0" max="59" value="0" oninput="buildCronFromUI()">
+                        分钟执行
+                    </div>
+
+                    {# 每隔N天 #}
+                    <div class="cron-sub-panel" id="cron-sub-day" style="display:none;">
+                        每隔
+                        <input type="number" id="cron-day-n" min="1" max="365" value="1" oninput="buildCronFromUI()">
+                        天的
+                        <input type="time" id="cron-day-time" value="00:00" onchange="buildCronFromUI()">
+                        执行
+                    </div>
+
+                    {# 每隔N周 #}
+                    <div class="cron-sub-panel" id="cron-sub-week" style="display:none; flex-direction: column; align-items:flex-start;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            每隔
+                            <input type="number" id="cron-week-n" min="1" max="52" value="1" oninput="buildCronFromUI()">
+                            周，选择周几：
+                            <div class="cron-week-days" id="cron-week-days">
+                                <button class="cron-week-day-btn" type="button" data-day="1" onclick="toggleWeekDay(this)">一</button>
+                                <button class="cron-week-day-btn" type="button" data-day="2" onclick="toggleWeekDay(this)">二</button>
+                                <button class="cron-week-day-btn" type="button" data-day="3" onclick="toggleWeekDay(this)">三</button>
+                                <button class="cron-week-day-btn" type="button" data-day="4" onclick="toggleWeekDay(this)">四</button>
+                                <button class="cron-week-day-btn" type="button" data-day="5" onclick="toggleWeekDay(this)">五</button>
+                                <button class="cron-week-day-btn" type="button" data-day="6" onclick="toggleWeekDay(this)">六</button>
+                                <button class="cron-week-day-btn" type="button" data-day="0" onclick="toggleWeekDay(this)">日</button>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                            执行时间
+                            <input type="time" id="cron-week-time" value="00:00" onchange="buildCronFromUI()">
+                        </div>
+                    </div>
+
+                    {# 每隔N月 #}
+                    <div class="cron-sub-panel" id="cron-sub-month" style="display:none; flex-direction:column; align-items:flex-start;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            每隔
+                            <input type="number" id="cron-month-n" min="1" max="12" value="1" oninput="buildCronFromUI()">
+                            个月，执行日：
+                            <select id="cron-month-day-type" onchange="toggleMonthDayInput(); buildCronFromUI()">
+                                <option value="first">月初（1日）</option>
+                                <option value="specific" selected>指定日</option>
+                                <option value="last">月末</option>
+                            </select>
+                            <span id="cron-month-specific-wrap">
+                                第 <input type="number" id="cron-month-day" min="1" max="31" value="15" oninput="buildCronFromUI()"> 天
+                            </span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                            执行时间
+                            <input type="time" id="cron-month-time" value="00:00" onchange="buildCronFromUI()">
+                        </div>
+                    </div>
+
+                    {# 每隔N季度 #}
+                    <div class="cron-sub-panel" id="cron-sub-quarter" style="display:none; flex-direction:column; align-items:flex-start; gap:8px;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            每隔
+                            <input type="number" id="cron-quarter-n" min="1" max="4" value="1" oninput="buildCronFromUI()">
+                            个季度，第
+                            <input type="number" id="cron-quarter-month" min="1" max="3" value="1" oninput="buildCronFromUI()">
+                            月第
+                            <input type="number" id="cron-quarter-day" min="1" max="31" value="1" oninput="buildCronFromUI()">
+                            天执行
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            执行时间
+                            <input type="time" id="cron-quarter-time" value="09:00" onchange="buildCronFromUI()">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-hint" id="cron-desc" style="margin-top:8px;">-</div>
+                <div class="form-error" id="e-cron"></div>
+            </div>
+
+            {# 单次执行：具体日期时间选择器 #}
+            <div class="form-group" id="once-group" style="display:none;">
+                <label class="form-label">执行时间 <span class="required">*</span></label>
+                <input type="text" class="form-control" id="f-once-datetime" placeholder="选择执行日期和时间" style="cursor:pointer;" readonly>
+                <div class="form-hint">任务将在指定时间执行一次，之后自动禁用</div>
+                <div class="form-error" id="e-once"></div>
+            </div>
+
+            {# AI 表达：自然语言描述 #}
+            <div class="form-group" id="ai-group" style="display:none;">
+                <label class="form-label">用自然语言描述执行规则 <span class="required">*</span></label>
+                <textarea class="form-control" id="f-ai-text" placeholder="例：每天早上9点执行 / 每周一下午3点 / 每隔5分钟 / 每月最后一天凌晨..." style="height:80px;resize:vertical;"></textarea>
+                <button class="btn btn-primary" type="button" onclick="parseAiSchedule()" id="btn-ai-parse" style="margin-top:8px;">
+                    <i class="fa-solid fa-magic-wand-sparkles"></i> 智能解析
+                </button>
+                <div id="ai-parse-result" style="margin-top:10px;display:none;">
+                    <div class="ai-result-card">
+                        <div style="font-size:12px;color:#16a34a;margin-bottom:6px;"><i class="fa-solid fa-circle-check"></i> 解析成功</div>
+                        <div id="ai-result-human" style="font-size:14px;font-weight:600;color:#1a1d2e;"></div>
+                        <div id="ai-result-cron" style="font-size:11px;color:#b0b5cc;font-family:monospace;margin-top:3px;"></div>
+                        <button class="btn btn-default" type="button" onclick="applyAiResult()" style="margin-top:8px;height:30px;font-size:12px;">
+                            <i class="fa-solid fa-check"></i> 应用此配置
+                        </button>
+                    </div>
+                </div>
+                <div class="form-error" id="e-ai"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Handler 类名 <span class="required">*</span></label>
+                <input type="text" class="form-control" id="f-handler" placeholder="例：App\Task\SendEmailTask">
+                <div class="form-hint">实现 TaskHandlerInterface 并通过 app.task_handler tag 注册的服务</div>
+                <div class="form-error" id="e-handler"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Payload 参数（JSON）</label>
+                <textarea class="form-control" id="f-payload" placeholder='{"key":"value"}' style="height:100px;font-family:monospace;font-size:12px;"></textarea>
+                <div class="form-error" id="e-payload"></div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">分类标签</label>
+                    <input type="text" class="form-control" id="f-category" placeholder="例：report / data / notify">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">排序权重</label>
+                    <input type="number" class="form-control" id="f-sort" value="0" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">最大重试次数</label>
+                    <input type="number" class="form-control" id="f-retries" value="3" min="0" max="10">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">超时时间（秒，0=不限）</label>
+                    <input type="number" class="form-control" id="f-timeout" value="0" min="0">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">启用状态</label>
+                <div style="margin-top:4px;">
+                    <button type="button" id="f-enabled" role="switch" aria-checked="true"
+                        class="ef-switch ef-switch-type-circle ef-switch-checked"
+                        onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked') === 'true' ? 'false' : 'true'); this.classList.toggle('ef-switch-checked');">
+                        <span class="ef-switch-handle"><span class="ef-switch-handle-icon"></span></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="task-drawer-footer">
+        <button class="btn btn-default" onclick="closeDrawer()">取消</button>
+        <button class="btn btn-primary" onclick="submitTask()">
+            <i class="fa-solid fa-floppy-disk"></i> 保存
+        </button>
+    </div>
+</div>
+
+{# ============================
+   日志模态框
+============================ #}
+<div class="log-modal-overlay" id="log-modal-overlay" onclick="closeLogModal()">
+    <div class="log-modal" onclick="event.stopPropagation()">
+        <div class="log-modal-header">
+            <div class="log-modal-title" id="log-modal-title">执行日志</div>
+            <button class="task-drawer-close" onclick="closeLogModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="log-modal-body">
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th>状态</th>
+                        <th>开始时间</th>
+                        <th>耗时</th>
+                        <th>内存</th>
+                        <th>节点</th>
+                        <th>输出</th>
+                    </tr>
+                </thead>
+                <tbody id="log-table-body"></tbody>
+            </table>
+        </div>
+        <div class="log-modal-footer">
+            <div class="pagination-info" id="log-pagination-info"></div>
+            <div class="pagination-btns" id="log-pagination-btns"></div>
+        </div>
+    </div>
+</div>
+
+{# Toast 容器 #}
+<div class="task-toast" id="task-toast-container"></div>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+/* ==============================================================
+   定时任务管理页面 JS
+   依赖：jQuery（框架已全局引入）
+============================================================== */
+
+const TaskMgr = (function($) {
+    'use strict';
+
+    // ---- 状态 ----
+    let state = {
+        view: 'list',          // list | calendar | week | day
+        tasks: [],
+        total: 0,
+        page: 1,
+        pageSize: 20,
+        calYear:  new Date().getFullYear(),
+        calMonth: new Date().getMonth() + 1,
+        calDate:  new Date(), // 用于周视图、天视图的基准日期
+        searchTimer: null,
+        editingId: null,
+        taskType: 'recurring', // recurring | once
+        cronPeriod: 'minute',  // minute | interval | hour | day | week | month
+        logTaskId: null,
+        logPage: 1,
+        logPageSize: 20,
+        logTotal: 0,
+    };
+
+    // ---- API 基础路径 ----
+    const BASE = '/admin/task/api';
+
+    // ================================================================
+    //  公共工具
+    // ================================================================
+    function toast(msg, type = 'info') {
+        const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+        const el = $(`<div class="toast-item ${type}"><i class="fa-solid ${icons[type]}"></i><span>${msg}</span></div>`);
+        $('#task-toast-container').append(el);
+        setTimeout(() => el.fadeOut(300, () => el.remove()), 3000);
+    }
+
+    function request(method, url, data) {
+        return $.ajax({
+            method,
+            url,
+            contentType: 'application/json',
+            data: data ? JSON.stringify(data) : undefined,
+        }).then(res => {
+            // 兼容 ApiResponse 标准格式 {code, message, data}
+            if (res && typeof res === 'object' && 'data' in res) {
+                return res.data;
+            }
+            return res;
+        }).fail((xhr) => {
+            const body = xhr.responseJSON;
+            const err = body?.message || body?.error || '请求失败，请稍后重试';
+            toast(err, 'error');
+        });
+    }
+
+    // ================================================================
+    //  类别颜色映射
+    // ================================================================
+    const CATEGORY_COLORS = {
+        'system':  'cat-system',
+        'report':  'cat-report',
+        'data':    'cat-data',
+        'notify':  'cat-notify',
+    };
+
+    function catClass(cat) {
+        if (!cat) return 'cat-default';
+        return CATEGORY_COLORS[cat.toLowerCase()] || 'cat-default';
+    }
+
+    const CATEGORY_LABELS = {
+        'system':  '系统',
+        'report':  '报表',
+        'data':    '数据',
+        'notify':  '通知',
+    };
+
+    function catLabel(cat) {
+        return cat ? (CATEGORY_LABELS[cat.toLowerCase()] || cat) : '-';
+    }
+
+    // ================================================================
+    //  统计卡片
+    // ================================================================
+    function loadStats() {
+        request('GET', `${BASE}/list?pageSize=1000`).then(res => {
+            const all = res.items;
+            const enabled = all.filter(t => t.enabled).length;
+            let errors = 0;
+            all.forEach(t => { if (t.latestStatus === 'error') errors++; });
+
+            $('#stat-total').text(res.total);
+            $('#stat-enabled').text(enabled);
+            $('#stat-today').text('-'); // 需要专门统计接口
+            $('#stat-errors').text(errors);
+        });
+    }
+
+    // ================================================================
+    //  加载统计 + 分类（合并为单一请求 /api/stats）
+    // ================================================================
+    function loadStats() {
+        request('GET', `${BASE}/stats`).then(res => {
+            $('#stat-total').text(res.total ?? '-');
+            $('#stat-enabled').text(res.enabled ?? '-');
+            $('#stat-today').text(res.todayCount ?? '-');
+            $('#stat-errors').text(res.errors ?? '-');
+
+            // 同步更新分类下拉
+            const cats = res.categories || [];
+            const sel = $('#filter-category');
+            const cur = sel.val();
+            sel.find('option:not(:first)').remove();
+            cats.forEach(c => sel.append(`<option value="${c}">${catLabel(c)} (${c})</option>`));
+            if (cur) sel.val(cur);
+        });
+    }
+
+    // ================================================================
+    //  任务列表
+    // ================================================================
+    function loadTasks() {
+        const keyword  = encodeURIComponent($('#search-keyword').val().trim());
+        const enabled  = $('#filter-enabled').val();
+        const category = encodeURIComponent($('#filter-category').val());
+        const { page, pageSize } = state;
+
+        let url = `${BASE}/list?page=${page}&pageSize=${pageSize}`;
+        if (keyword)  url += `&keyword=${keyword}`;
+        if (enabled !== '') url += `&enabled=${enabled}`;
+        if (category) url += `&category=${category}`;
+
+        request('GET', url).then(res => {
+            state.tasks = res.items;
+            state.total = res.total;
+            renderTaskTable(res.items);
+            renderPagination();
+        });
+    }
+
+    function renderTaskTable(tasks) {
+        const $tbody = $('#task-table-body');
+        if (!tasks.length) {
+            $tbody.html(`<tr><td colspan="9"><div class="task-empty"><i class="fa-solid fa-clock-rotate-left"></i><p>{{ 'admin.task.empty'|trans({}, 'messages')|default('暂无任务') }}</p></div></td></tr>`);
+            return;
+        }
+
+        const rows = tasks.map((t, idx) => {
+            const statusHtml = t.latestStatus
+                ? `<span class="status-badge ${t.latestStatus}">${statusLabel(t.latestStatus)}</span>`
+                : `<span class="status-badge none">未执行</span>`;
+
+            const catHtml = t.category
+                ? `<span class="task-category-badge ${catClass(t.category)}" style="background:inherit;font-size:13px;">${catLabel(t.category)}</span>`
+                : '<span style="color:#b0b5cc;">-</span>';
+
+            // 单次执行任务：cron badge 显示日期时间而非表达式
+            const cronHtml = isOnceCron(t.cronExpression)
+                ? `<span class="cron-once-badge"><i class="fa-solid fa-clock" style="font-size:10px;"></i>${formatOnceExpr(t.cronExpression, t.nextRunAt)}</span>`
+                : `<span class="cron-human-badge" title="${escHtml(t.cronExpression)}"><i class="fa-solid fa-rotate" style="font-size:10px;"></i>${escHtml(cronToHuman(t.cronExpression))}</span>`;
+
+            return `<tr data-id="${t.id}">
+                <td style="color:#b0b5cc;font-size:12px;text-align:center;">${(state.page-1)*state.pageSize + idx + 1}</td>
+                <td>
+                    <div class="task-name-cell">
+                        <span class="task-name">${escHtml(t.name)}</span>
+                        <span class="task-handler">${escHtml(shortHandler(t.handler))}</span>
+                    </div>
+                </td>
+                <td>${cronHtml}</td>
+                <td>${catHtml}</td>
+                <td style="font-size:13px;color:#8a8fa8;">${t.lastRunAt || '-'}</td>
+                <td style="font-size:13px;color:#8a8fa8;">${t.nextRunAt ? formatDatetime(t.nextRunAt) : '-'}</td>
+                <td>${statusHtml}</td>
+                <td>
+                    <button type="button" role="switch"
+                        aria-checked="${t.enabled ? 'true' : 'false'}"
+                        class="ef-switch ef-switch-type-circle${t.enabled ? ' ef-switch-checked' : ''}"
+                        onclick="toggleTask('${t.id}', this)">
+                        <span class="ef-switch-handle"><span class="ef-switch-handle-icon"></span></span>
+                    </button>
+                </td>
+                <td>
+                    <div class="task-actions">
+                        <button class="task-action-btn run" data-tip="立即执行" onclick="runNow('${t.id}', '${escHtml(t.name)}')">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                        <button class="task-action-btn" data-tip="编辑任务" onclick="openEditDrawer('${t.id}')">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button class="task-action-btn logs" data-tip="执行日志" onclick="openLogs('${t.id}', '${escHtml(t.name)}')">
+                            <i class="fa-solid fa-scroll"></i>
+                        </button>
+                        <button class="task-action-btn del" data-tip="删除任务" onclick="deleteTask('${t.id}', '${escHtml(t.name)}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
+        });
+
+        $tbody.html(rows.join(''));
+    }
+
+    function renderPagination() {
+        const totalPages = Math.max(1, Math.ceil(state.total / state.pageSize));
+        $('#pagination-info').text(state.total > 0 ? "{{ 'admin.task.total_tasks'|trans({}, 'messages')|default('任务总数') }}: " + state.total : "{{ 'admin.task.empty'|trans({}, 'messages')|default('暂无任务') }}");
+
+        const $btns = $('#pagination-btns').empty();
+        const addBtn = (label, page, disabled = false, active = false) => {
+            const cls = `page-btn${active ? ' active' : ''}`;
+            const btn = $(`<button class="${cls}" ${disabled ? 'disabled' : ''}>${label}</button>`);
+            if (!disabled) btn.on('click', () => { state.page = page; loadTasks(); });
+            $btns.append(btn);
+        };
+
+        addBtn('<i class="fa-solid fa-angles-left"></i>', 1, state.page === 1);
+        addBtn('<i class="fa-solid fa-chevron-left"></i>', state.page - 1, state.page === 1);
+
+        const startPage = Math.max(1, state.page - 2);
+        const endPage   = Math.min(totalPages, state.page + 2);
+        for (let p = startPage; p <= endPage; p++) {
+            addBtn(p, p, false, p === state.page);
+        }
+
+        addBtn('<i class="fa-solid fa-chevron-right"></i>', state.page + 1, state.page >= totalPages);
+        addBtn('<i class="fa-solid fa-angles-right"></i>', totalPages, state.page >= totalPages);
+    }
+
+    // ================================================================
+    //  启用/禁用（列表行 ef-switch）
+    // ================================================================
+    function toggleTask(id, btn) {
+        request('POST', `${BASE}/${id}/toggle`).then(res => {
+            // 同步按钮状态
+            const enabled = res.enabled;
+            btn.setAttribute('aria-checked', enabled ? 'true' : 'false');
+            enabled ? btn.classList.add('ef-switch-checked') : btn.classList.remove('ef-switch-checked');
+            toast(enabled ? '任务已启用' : '任务已禁用', 'info');
+        }).fail(() => {
+            // 回滚
+            const cur = btn.getAttribute('aria-checked') === 'true';
+            btn.setAttribute('aria-checked', cur ? 'true' : 'false');
+        });
+    }
+
+    // ================================================================
+    //  立即执行
+    // ================================================================
+    function runNow(id, name) {
+        if (!confirm(`确定立即执行任务「${name}」？`)) return;
+        request('POST', `${BASE}/${id}/run-now`).then(res => {
+            toast(res.message, 'success');
+        });
+    }
+
+    // ================================================================
+    //  删除任务
+    // ================================================================
+    function deleteTask(id, name) {
+        if (!confirm(`确定删除任务「${name}」？此操作不可撤销，关联日志也将被删除。`)) return;
+        request('DELETE', `${BASE}/${id}/delete`).then(() => {
+            toast(`任务「${name}」已删除`, 'success');
+            loadTasks();
+            loadStats();
+        });
+    }
+
+    // ================================================================
+    //  抽屉：新建 / 编辑
+    // ================================================================
+    function openCreateDrawer() {
+        state.editingId = null;
+        $('#drawer-title').text('新建定时任务');
+        resetForm();
+        openDrawer();
+    }
+
+    function openEditDrawer(id) {
+        const task = state.tasks.find(t => t.id === id);
+        if (!task) { toast('任务数据不存在，请刷新', 'error'); return; }
+
+        state.editingId = id;
+        $('#drawer-title').text('编辑定时任务');
+        resetForm();
+        fillForm(task);
+        openDrawer();
+    }
+
+    function openDrawer() {
+        $('#drawer-overlay').addClass('open');
+        $('#task-drawer').addClass('open');
+        $('body').css('overflow', 'hidden');
+    }
+
+    function closeDrawer() {
+        $('#drawer-overlay').removeClass('open');
+        $('#task-drawer').removeClass('open');
+        $('body').css('overflow', '');
+    }
+
+    function resetForm() {
+        $('#task-id').val('');
+        $('#f-name').val('');
+        $('#f-description').val('');
+        $('#f-cron').val('');
+        $('#f-handler').val('');
+        $('#f-payload').val('{}');
+        $('#f-category').val('');
+        $('#f-sort').val('0');
+        $('#f-retries').val('3');
+        $('#f-timeout').val('0');
+        $('#f-enabled').attr('aria-checked', 'true').addClass('ef-switch-checked');
+        $('#f-once-datetime').val('');
+        $('#cron-desc').text('-');
+        switchTaskType('recurring');
+        switchCronPeriod('second');
+        clearErrors();
+    }
+
+    function fillForm(task) {
+        $('#task-id').val(task.id);
+        $('#f-name').val(task.name);
+        $('#f-description').val(task.description || '');
+        $('#f-cron').val(task.cronExpression);
+        $('#f-handler').val(task.handler);
+        $('#f-payload').val(JSON.stringify(task.payload, null, 2));
+        $('#f-category').val(task.category || '');
+        $('#f-sort').val(task.sortOrder);
+        $('#f-retries').val(task.maxRetries);
+        $('#f-timeout').val(task.timeout);
+        const enabled = !!task.enabled;
+        $('#f-enabled').attr('aria-checked', enabled ? 'true' : 'false');
+        enabled ? $('#f-enabled').addClass('ef-switch-checked') : $('#f-enabled').removeClass('ef-switch-checked');
+        updateCronDesc(task.cronExpression);
+
+        // 判断是否为单次执行任务（Cron 中 日 和 月 均为具体数字而非通配符）
+        if (isOnceCron(task.cronExpression)) {
+            switchTaskType('once');
+            const dt = onceCronToDatetime(task.cronExpression, task.nextRunAt);
+            $('#f-once-datetime').val(dt);
+        } else {
+            switchTaskType('recurring');
+            parseCronToUI(task.cronExpression);
+        }
+    }
+
+    /** 判断 cron 表达式是否为"单次执行"模式（日和月都是具体数字） */
+    function isOnceCron(expr) {
+        if (!expr) return false;
+        const parts = expr.trim().split(/\s+/);
+        if (parts.length < 5) return false;
+        const day   = parts[2];
+        const month = parts[3];
+        return /^\d+$/.test(day) && /^\d+$/.test(month);
+    }
+
+    /** 将单次执行 Cron 转换回可显示的 datetime 字符串，优先使用 nextRunAt */
+    function onceCronToDatetime(expr, nextRunAt) {
+        if (nextRunAt) return nextRunAt.substring(0, 16); // "YYYY-MM-DD HH:mm"
+        if (!expr) return '';
+        const parts = expr.trim().split(/\s+/);
+        if (parts.length < 5) return '';
+        const now = new Date();
+        const year = now.getFullYear();
+        const m = parts[3].padStart(2, '0');
+        const d = parts[2].padStart(2, '0');
+        const h = parts[1].padStart(2, '0');
+        const min = parts[0].padStart(2, '0');
+        return `${year}-${m}-${d} ${h}:${min}`;
+    }
+
+    /** 格式化 datetime 字符串用于表格显示 "YYYY-MM-DD HH:mm" → "M月D日 HH:mm" */
+    function formatDatetime(dt) {
+        if (!dt) return '-';
+        const s = dt.replace('T', ' ').substring(0, 16);
+        const [datePart, timePart] = s.split(' ');
+        if (!datePart) return s;
+        const [y, mo, dd] = datePart.split('-');
+        return `${parseInt(mo)}月${parseInt(dd)}日 ${timePart || ''}`;
+    }
+
+    /** 将单次执行 Cron 转成可读的日期时间用于徽章显示 */
+    function formatOnceExpr(expr, nextRunAt) {
+        const dt = onceCronToDatetime(expr, nextRunAt);
+        if (!dt) return '单次执行';
+        const [datePart, timePart] = dt.replace('T', ' ').split(' ');
+        if (!datePart) return dt;
+        const [y, mo, dd] = datePart.split('-');
+        return `${parseInt(mo)}月${parseInt(dd)}日 ${timePart || ''}`;
+    }
+
+    /** 切换任务类型：recurring（循环）| once（单次）| ai（AI 表达） */
+    function switchTaskType(type) {
+        const tabs = document.querySelectorAll('#task-type-tabs .task-type-tab');
+        tabs.forEach(t => t.classList.toggle('active', t.dataset.type === type));
+        $('#cron-group, #once-group, #ai-group').hide();
+        if (type === 'once') {
+            $('#once-group').show();
+        } else if (type === 'ai') {
+            $('#ai-group').show();
+        } else {
+            $('#cron-group').show();
+        }
+        state.taskType = type;
+    }
+
+    // ================================================================
+    //  可视化 Cron 构建器
+    // ================================================================
+    const CRON_PERIODS = ['second', 'interval', 'hour', 'day', 'week', 'month', 'quarter'];
+
+    function switchCronPeriod(period) {
+        document.querySelectorAll('#cron-period-row .cron-period-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.period === period);
+        });
+        CRON_PERIODS.forEach(p => $(`#cron-sub-${p}`).hide());
+        $(`#cron-sub-${period}`).show();
+        state.cronPeriod = period;
+        buildCronFromUI();
+    }
+
+    function toggleMonthDayInput() {
+        const type = $('#cron-month-day-type').val();
+        $('#cron-month-specific-wrap').toggle(type === 'specific');
+    }
+
+    function toggleWeekDay(btn) {
+        $(btn).toggleClass('selected');
+        buildCronFromUI();
+    }
+
+    function buildCronFromUI() {
+        const period = state.cronPeriod || 'second';
+        let cron = '@seconds:30';
+        switch (period) {
+            case 'second': {
+                const n = Math.max(1, parseInt($('#cron-second').val()) || 30);
+                cron = `@seconds:${n}`;
+                break;
+            }
+            case 'interval': {
+                const n = Math.max(1, Math.min(59, parseInt($('#cron-interval').val()) || 5));
+                cron = `*/${n} * * * *`;
+                break;
+            }
+            case 'hour': {
+                const n = Math.max(1, Math.min(23, parseInt($('#cron-hour-n').val()) || 1));
+                const m = Math.max(0, Math.min(59, parseInt($('#cron-hour-min').val()) || 0));
+                cron = n === 1 ? `${m} * * * *` : `${m} */${n} * * *`;
+                break;
+            }
+            case 'day': {
+                const n = Math.max(1, parseInt($('#cron-day-n').val()) || 1);
+                const [h, m] = ($('#cron-day-time').val() || '00:00').split(':');
+                const hh = parseInt(h)||0, mm = parseInt(m)||0;
+                cron = n === 1 ? `${mm} ${hh} * * *` : `${mm} ${hh} */${n} * *`;
+                break;
+            }
+            case 'week': {
+                const n = Math.max(1, parseInt($('#cron-week-n').val()) || 1);
+                const days = [...document.querySelectorAll('#cron-week-days .cron-week-day-btn.selected')]
+                    .map(el => el.dataset.day);
+                const dayStr = days.length ? days.join(',') : '1';
+                const [h, m] = ($('#cron-week-time').val() || '00:00').split(':');
+                const hh = parseInt(h)||0, mm = parseInt(m)||0;
+                cron = n === 1 ? `${mm} ${hh} * * ${dayStr}` : `@weekly:${n}:${dayStr}:${hh}:${mm}`;
+                break;
+            }
+            case 'month': {
+                const n = Math.max(1, Math.min(12, parseInt($('#cron-month-n').val()) || 1));
+                const dayType = $('#cron-month-day-type').val() || 'specific';
+                const [h, m] = ($('#cron-month-time').val() || '00:00').split(':');
+                const hh = parseInt(h)||0, mm = parseInt(m)||0;
+                if (dayType === 'last') {
+                    cron = `@monthly-last:${n}:${hh}:${mm}`;
+                } else {
+                    const day = dayType === 'first' ? 1 : Math.max(1, Math.min(31, parseInt($('#cron-month-day').val()) || 1));
+                    cron = n === 1 ? `${mm} ${hh} ${day} * *` : `${mm} ${hh} ${day} */${n} *`;
+                }
+                break;
+            }
+            case 'quarter': {
+                const n = Math.max(1, Math.min(4, parseInt($('#cron-quarter-n').val()) || 1));
+                const mon = Math.max(1, Math.min(3, parseInt($('#cron-quarter-month').val()) || 1));
+                const day = Math.max(1, Math.min(31, parseInt($('#cron-quarter-day').val()) || 1));
+                const [h, m] = ($('#cron-quarter-time').val() || '09:00').split(':');
+                cron = `@quarterly:${n}:${mon}:${day}:${parseInt(h)||9}:${parseInt(m)||0}`;
+                break;
+            }
+        }
+        $('#f-cron').val(cron);
+        updateCronDesc(cron);
+        return cron;
+    }
+
+    /** 反向解析 Cron 表达式并填充到 UI */
+    function parseCronToUI(expr) {
+        if (!expr) { switchCronPeriod('second'); return; }
+
+        if (expr.startsWith('@seconds:')) {
+            switchCronPeriod('second');
+            $('#cron-second').val(expr.substring(9));
+            return;
+        }
+        if (expr.startsWith('@weekly:')) {
+            const parts = expr.split(':'); // @weekly:N:DOWS:H:M
+            switchCronPeriod('week');
+            $('#cron-week-n').val(parts[1]);
+            const dows = (parts[2]||'1').split(',');
+            document.querySelectorAll('#cron-week-days .cron-week-day-btn').forEach(btn => {
+                btn.classList.toggle('selected', dows.includes(btn.dataset.day));
+            });
+            $('#cron-week-time').val(`${String(parseInt(parts[3])||0).padStart(2,'0')}:${String(parseInt(parts[4])||0).padStart(2,'0')}`);
+            return;
+        }
+        if (expr.startsWith('@monthly-last:')) {
+            const parts = expr.split(':'); // @monthly-last:N:H:M
+            switchCronPeriod('month');
+            $('#cron-month-n').val(parts[1]);
+            $('#cron-month-day-type').val('last');
+            toggleMonthDayInput();
+            $('#cron-month-time').val(`${String(parseInt(parts[2])||0).padStart(2,'0')}:${String(parseInt(parts[3])||0).padStart(2,'0')}`);
+            return;
+        }
+        if (expr.startsWith('@quarterly:')) {
+            const parts = expr.substring(11).split(':'); // N:MON:DAY:H:M
+            switchCronPeriod('quarter');
+            $('#cron-quarter-n').val(parts[0]);
+            $('#cron-quarter-month').val(parts[1]);
+            $('#cron-quarter-day').val(parts[2]);
+            $('#cron-quarter-time').val(`${String(parseInt(parts[3])||0).padStart(2,'0')}:${String(parseInt(parts[4])||0).padStart(2,'0')}`);
+            return;
+        }
+
+        const parts = expr.trim().split(/\s+/);
+        if (parts.length < 5) { switchCronPeriod('second'); return; }
+        const [min, hour, day, month, dow] = parts;
+
+        if (/^\*\/\d+$/.test(min) && hour==='*' && day==='*' && month==='*' && dow==='*') {
+            switchCronPeriod('interval');
+            $('#cron-interval').val(min.substring(2));
+        } else if (/^\d+$/.test(min) && /^\*\/\d+$/.test(hour) && day==='*' && month==='*' && dow==='*') {
+            switchCronPeriod('hour');
+            $('#cron-hour-n').val(hour.substring(2));
+            $('#cron-hour-min').val(min);
+        } else if (/^\d+$/.test(min) && /^\d+$/.test(hour) && /^\*\/\d+$/.test(day) && month==='*' && dow==='*') {
+            switchCronPeriod('day');
+            $('#cron-day-n').val(day.substring(2));
+            $('#cron-day-time').val(`${String(parseInt(hour)).padStart(2,'0')}:${String(parseInt(min)).padStart(2,'0')}`);
+        } else if (/^\d+$/.test(min) && /^\d+$/.test(hour) && day==='*' && month==='*' && dow==='*') {
+            switchCronPeriod('day');
+            $('#cron-day-n').val(1);
+            $('#cron-day-time').val(`${String(parseInt(hour)).padStart(2,'0')}:${String(parseInt(min)).padStart(2,'0')}`);
+        } else if (/^\d+$/.test(min) && /^\d+$/.test(hour) && day==='*' && month==='*' && /^[\d,]+$/.test(dow)) {
+            switchCronPeriod('week');
+            $('#cron-week-n').val(1);
+            $('#cron-week-time').val(`${String(parseInt(hour)).padStart(2,'0')}:${String(parseInt(min)).padStart(2,'0')}`);
+            const selectedDays = dow.split(',');
+            document.querySelectorAll('#cron-week-days .cron-week-day-btn').forEach(btn => {
+                btn.classList.toggle('selected', selectedDays.includes(btn.dataset.day));
+            });
+        } else if (/^\d+$/.test(min) && /^\d+$/.test(hour) && /^\d+$/.test(day) && /^\*\/\d+$/.test(month) && dow==='*') {
+            switchCronPeriod('month');
+            $('#cron-month-n').val(month.substring(2));
+            const d = parseInt(day);
+            $('#cron-month-day-type').val(d === 1 ? 'first' : 'specific');
+            if (d !== 1) $('#cron-month-day').val(d);
+            toggleMonthDayInput();
+            $('#cron-month-time').val(`${String(parseInt(hour)).padStart(2,'0')}:${String(parseInt(min)).padStart(2,'0')}`);
+        } else if (/^\d+$/.test(min) && /^\d+$/.test(hour) && /^\d+$/.test(day) && month==='*' && dow==='*') {
+            switchCronPeriod('month');
+            $('#cron-month-n').val(1);
+            const d = parseInt(day);
+            $('#cron-month-day-type').val(d === 1 ? 'first' : 'specific');
+            if (d !== 1) $('#cron-month-day').val(d);
+            toggleMonthDayInput();
+            $('#cron-month-time').val(`${String(parseInt(hour)).padStart(2,'0')}:${String(parseInt(min)).padStart(2,'0')}`);
+        } else {
+            switchCronPeriod('day');
+        }
+    }
+
+    function clearErrors() {
+        ['name','cron','handler','payload','once','ai'].forEach(f => $(`#e-${f}`).text(''));
+    }
+
+    function submitTask() {
+        clearErrors();
+        let valid = true;
+
+        const name     = $('#f-name').val().trim();
+        const handler  = $('#f-handler').val().trim();
+        const taskType = state.taskType;
+        let   cron     = '';
+        let   nextRunAt = null;
+        let   payload  = {};
+
+        if (!name)    { $('#e-name').text('任务名称不能为空');        valid = false; }
+        if (!handler) { $('#e-handler').text('Handler 类名不能为空'); valid = false; }
+
+        if (taskType === 'once') {
+            const dt = $('#f-once-datetime').val().trim();
+            if (!dt) { $('#e-once').text('请选择执行时间'); valid = false; }
+            else {
+                const d = new Date(dt.replace(' ', 'T'));
+                cron = `${d.getMinutes()} ${d.getHours()} ${d.getDate()} ${d.getMonth() + 1} *`;
+                nextRunAt = dt + ':00';
+            }
+        } else if (taskType === 'ai') {
+            cron = state.aiResultCron || '';
+            if (!cron) { $('#e-ai').text('请先点击“智能解析”并应用解析结果'); valid = false; }
+        } else {
+            cron = $('#f-cron').val().trim();
+            if (!cron) { $('#e-cron').text('Cron 表达式不能为空'); valid = false; }
+        }
+
+        try {
+            payload = JSON.parse($('#f-payload').val() || '{}');
+        } catch(e) {
+            $('#e-payload').text('Payload 必须是合法的 JSON 格式');
+            valid = false;
+        }
+
+        if (!valid) return;
+
+        const data = {
+            name,
+            description:    $('#f-description').val().trim() || null,
+            cronExpression: cron,
+            handler,
+            payload,
+            category:    $('#f-category').val().trim() || null,
+            sortOrder:   parseInt($('#f-sort').val()) || 0,
+            maxRetries:  parseInt($('#f-retries').val()) || 3,
+            timeout:     parseInt($('#f-timeout').val()) || 0,
+            enabled:     $('#f-enabled').attr('aria-checked') === 'true',
+        };
+
+        if (nextRunAt) data.nextRunAt = nextRunAt;
+
+        const isEdit = !!state.editingId;
+        const method = isEdit ? 'PUT' : 'POST';
+        const url    = isEdit ? `${BASE}/${state.editingId}/update` : `${BASE}/create`;
+
+        request(method, url, data).then(() => {
+            toast(isEdit ? '任务已更新' : '任务已创建', 'success');
+            closeDrawer();
+            loadTasks();
+            loadStats();
+        });
+    }
+
+    // ================================================================
+    //  Cron 人工可读化
+    // ================================================================
+    function cronToHuman(expr) {
+        if (!expr) return '未配置';
+        const p2 = n => String(parseInt(n)||0).padStart(2,'0');
+        const WDAYS = {'0':'日','1':'一','2':'二','3':'三','4':'四','5':'五','6':'六'};
+
+        if (expr.startsWith('@seconds:'))
+            return `每隔 ${expr.substring(9)} 秒`;
+
+        if (expr.startsWith('@weekly:')) {
+            const [, n, dows, h, m] = expr.split(':');
+            const dayStr = (dows||'1').split(',').map(d => `周${WDAYS[d]||d}`).join('、');
+            return `每隔 ${n} 周，${dayStr}，${p2(h)}:${p2(m)}`;
+        }
+        if (expr.startsWith('@monthly-last:')) {
+            const [, n, h, m] = expr.split(':');
+            return `每隔 ${n} 个月，月末，${p2(h)}:${p2(m)}`;
+        }
+        if (expr.startsWith('@quarterly:')) {
+            const [n, mon, day, h, m] = expr.substring(11).split(':');
+            return `每隔 ${n} 季度，第 ${mon} 月第 ${day} 天，${p2(h)}:${p2(m)}`;
+        }
+
+        const parts = expr.trim().split(/\s+/);
+        if (parts.length < 5) return expr;
+        const [min, hour, day, month, dow] = parts;
+
+        if (/^\*\/\d+$/.test(min) && hour==='*' && day==='*' && month==='*' && dow==='*')
+            return `每隔 ${min.substring(2)} 分钟`;
+        if (/^\d+$/.test(min) && /^\*\/\d+$/.test(hour) && day==='*' && month==='*' && dow==='*')
+            return `每隔 ${hour.substring(2)} 小时，:${p2(min)}`;
+        if (/^\d+$/.test(min) && /^\d+$/.test(hour) && /^\*\/\d+$/.test(day) && month==='*' && dow==='*')
+            return `每隔 ${day.substring(2)} 天，${p2(hour)}:${p2(min)}`;
+        if (/^\d+$/.test(min) && /^\d+$/.test(hour) && day==='*' && month==='*' && dow==='*')
+            return `每天 ${p2(hour)}:${p2(min)}`;
+        if (/^\d+$/.test(min) && /^\d+$/.test(hour) && day==='*' && month==='*' && /^[\d,]+$/.test(dow)) {
+            const dayStr = dow.split(',').map(d => `周${WDAYS[d]||d}`).join('、');
+            return `每周 ${dayStr}，${p2(hour)}:${p2(min)}`;
+        }
+        if (/^\d+$/.test(min) && /^\d+$/.test(hour) && /^\d+$/.test(day) && /^\*\/\d+$/.test(month) && dow==='*')
+            return `每隔 ${month.substring(2)} 个月，第 ${day} 天，${p2(hour)}:${p2(min)}`;
+        if (/^\d+$/.test(min) && /^\d+$/.test(hour) && /^\d+$/.test(day) && month==='*' && dow==='*')
+            return `每月第 ${day} 天，${p2(hour)}:${p2(min)}`;
+
+        return expr;
+    }
+
+    function updateCronDesc(expr) {
+        if (!expr) { $('#cron-desc').text('-'); return; }
+        const e = expr.trim().split(/\s+/);
+        if (e.length < 5) { $('#cron-desc').text('格式不正确（需5段：分 时 日 月 周）'); return; }
+
+        const map = [
+            [e[0], '分'], [e[1], '时'], [e[2], '日'], [e[3], '月'], [e[4], '周'],
+        ];
+        const readable = {
+            '* * * * *':    '每分钟执行一次',
+            '*/5 * * * *':  '每5分钟执行一次',
+            '0 * * * *':    '每小时整点执行',
+            '0 0 * * *':    '每天凌晨0点执行',
+            '0 2 * * *':    '每天凌晨2点执行',
+            '0 0 * * 1':    '每周一凌晨0点执行',
+            '0 0 1 * *':    '每月1日凌晨0点执行',
+        };
+        $('#cron-desc').text(readable[expr.trim()] || `分:${e[0]} 时:${e[1]} 日:${e[2]} 月:${e[3]} 周:${e[4]}`);
+    }
+
+    // ================================================================
+    //  AI 表达解析
+    // ================================================================
+    function parseAiSchedule() {
+        const text = $('#f-ai-text').val().trim();
+        if (!text) { $('#e-ai').text('请输入调度规则描述'); return; }
+        $('#e-ai').text('');
+        const $btn = $('#btn-ai-parse');
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 解析中...');
+        $('#ai-parse-result').hide();
+
+        $.ajax({
+            method: 'POST',
+            url: '/admin/task/api/parse-schedule',
+            contentType: 'application/json',
+            data: JSON.stringify({ text }),
+        }).then(res => {
+            if (res.code === 200 && res.data) {
+                const d = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                $('#ai-result-human').text(d.human || cronToHuman(d.cronExpression) || '');
+                $('#ai-result-cron').text(d.cronExpression || '');
+                state.aiResultCron = d.cronExpression || '';
+                $('#ai-parse-result').show();
+            } else {
+                $('#e-ai').text('解析失败，请尝试重新描述');
+            }
+        }).fail(xhr => {
+            $('#e-ai').text(xhr.responseJSON?.message || '解析服务异常，请稍后重试');
+        }).always(() => {
+            $btn.prop('disabled', false).html('<i class="fa-solid fa-magic-wand-sparkles"></i> 智能解析');
+        });
+    }
+
+    function applyAiResult() {
+        if (!state.aiResultCron) return;
+        switchTaskType('recurring');
+        parseCronToUI(state.aiResultCron);
+        toast('配置已应用', 'success');
+    }
+
+    // ================================================================
+    //  执行日志模态框（含分页）
+    // ================================================================
+    function openLogs(taskId, taskName) {
+        state.logTaskId   = taskId;
+        state.logPage     = 1;
+        state.logTotal    = 0;
+        $('#log-modal-title').text(`执行日志 — ${taskName}`);
+        $('#log-modal-overlay').addClass('open');
+        loadLogPage(1);
+    }
+
+    function loadLogPage(page) {
+        state.logPage = page;
+        $('#log-table-body').html('<tr><td colspan="6" style="text-align:center;padding:24px;color:#b0b5cc;">加载中...</td></tr>');
+        $('#log-pagination-btns').empty();
+        $('#log-pagination-info').text('');
+
+        request('GET', `${BASE}/${state.logTaskId}/logs?page=${page}&pageSize=${state.logPageSize}`).then(res => {            state.logTotal = res.total;
+            const totalPages = Math.max(1, Math.ceil(res.total / state.logPageSize));
+
+            // 分页信息
+            const start = res.total ? (page - 1) * state.logPageSize + 1 : 0;
+            const end   = Math.min(page * state.logPageSize, res.total);
+            $('#log-pagination-info').text(res.total > 0 ? `第 ${start}–${end} 条，共 ${res.total} 条` : '暂无日志');
+
+            // 分页按钮
+            const $btns = $('#log-pagination-btns').empty();
+            const addBtn = (label, p, disabled = false, active = false) => {
+                const cls = `page-btn${active ? ' active' : ''}`;
+                const btn = $(`<button class="${cls}" ${disabled ? 'disabled' : ''}>${label}</button>`);
+                if (!disabled) btn.on('click', () => loadLogPage(p));
+                $btns.append(btn);
+            };
+            addBtn('<i class="fa-solid fa-chevron-left"></i>', page - 1, page === 1);
+            const startP = Math.max(1, page - 2);
+            const endP   = Math.min(totalPages, page + 2);
+            for (let p = startP; p <= endP; p++) addBtn(p, p, false, p === page);
+            addBtn('<i class="fa-solid fa-chevron-right"></i>', page + 1, page >= totalPages);
+
+            // 日志行
+            if (!res.items.length) {
+                $('#log-table-body').html('<tr><td colspan="6" style="text-align:center;padding:24px;color:#b0b5cc;">暂无日志</td></tr>');
+                return;
+            }
+            const rows = res.items.map(l => `
+                <tr>
+                    <td><span class="status-badge ${l.status}">${statusLabel(l.status)}</span></td>
+                    <td style="font-size:12px;">${l.startedAt}</td>
+                    <td style="font-size:12px;">${l.executionMs != null ? l.executionMs + ' ms' : '-'}</td>
+                    <td style="font-size:12px;">${l.memoryPeak || '-'}</td>
+                    <td style="font-size:12px;">${escHtml(l.hostName || '-')}</td>
+                    <td>${l.output ? `<pre class="log-output-pre">${escHtml(l.output)}</pre>` : '<span style="color:#b0b5cc;">-</span>'}</td>
+                </tr>
+            `);
+            $('#log-table-body').html(rows.join(''));
+        }).fail((xhr) => {
+            const msg = xhr.responseJSON?.message || '加载失败，请稍后重试';
+            $('#log-table-body').html(`<tr><td colspan="6" style="text-align:center;padding:24px;color:#ef4444;"><i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i>${escHtml(msg)}</td></tr>`);
+            $('#log-pagination-info').text('');
+            $('#log-pagination-btns').empty();
+        });
+    }
+
+    function closeLogModal() {
+        $('#log-modal-overlay').removeClass('open');
+    }
+
+    // ================================================================
+    //  视图切换
+    // ================================================================
+    function switchView(view) {
+        state.view = view;
+        $('#tab-list, #tab-calendar, #tab-week, #tab-day').removeClass('active');
+        $('#task-list-view, #task-calendar-view, #task-week-view, #task-day-view').removeClass('active').hide();
+        
+        $(`#tab-${view}`).addClass('active');
+
+        if (view === 'list') {
+            $('#task-list-view').show();
+            $('#task-pagination').show();
+            loadTasks();
+        } else if (view === 'calendar') {
+            $('#task-calendar-view').addClass('active').show();
+            $('#task-pagination').hide();
+            renderCalendar();
+        } else if (view === 'week') {
+            $('#task-week-view').addClass('active').show();
+            $('#task-pagination').hide();
+            renderWeek();
+        } else if (view === 'day') {
+            $('#task-day-view').addClass('active').show();
+            $('#task-pagination').hide();
+            renderDay();
+        }
+    }
+
+    // ================================================================
+    //  日历视图
+    // ================================================================
+    function renderCalendar() {
+        const { calYear: y, calMonth: m } = state;
+        const formatStr = "{{ 'admin.task.month_format'|trans({}, 'messages')|default('%year%年%month%月') }}";
+        $('#cal-title').text(formatStr.replace('%year%', y).replace('%month%', m));
+
+        request('GET', `${BASE}/calendar?year=${y}&month=${m}`).then(res => {
+            buildCalendarGrid(y, m, res.tasks, res.stats);
+        });
+    }
+
+    function buildCalendarGrid(year, month, tasks, statMap) {
+        // 生成日期格子
+        const firstDay = new Date(year, month - 1, 1);
+        const lastDay  = new Date(year, month, 0);
+        const totalDays = lastDay.getDate();
+
+        // 周一为第一天 (0=周日 → 6, 1=周一 → 0, ...)
+        let startDow = firstDay.getDay(); // 0=Sun
+        startDow = startDow === 0 ? 6 : startDow - 1; // 转为周一=0
+
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+        const $grid = $('#calendar-grid');
+        // 保留星期表头（前7个子元素），移除日期格子
+        $grid.children('.calendar-day').remove();
+
+        // 前置空白格
+        for (let i = 0; i < startDow; i++) {
+            $grid.append('<div class="calendar-day other-month"></div>');
+        }
+
+        for (let d = 1; d <= totalDays; d++) {
+            const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isToday = dateStr === todayStr;
+            const $day = $(`<div class="calendar-day${isToday ? ' today' : ''}"></div>`);
+            $day.append(`<div class="calendar-day-num">${d}</div>`);
+
+            const $events = $('<div class="calendar-day-events"></div>');
+            let count = 0;
+            const MAX_VISIBLE = 3;
+
+            tasks.forEach(task => {
+                let statusClass = '';
+                const key = task.id + '_' + dateStr;
+                if (statMap[key]) {
+                    statusClass = statMap[key].error ? 'error' : 'success';
+                } else {
+                    // 检查该任务是否在此日期有计划执行（通过 nextRunAt 日期比较）
+                    if (task.nextRunAt && task.nextRunAt.startsWith(dateStr)) {
+                        statusClass = 'pending';
+                    } else {
+                        return; // 此任务在此日期没有事件
+                    }
+                }
+
+                if (count >= MAX_VISIBLE) { return; }
+                count++;
+
+                const cc = catClass(task.category);
+                const dot = statusClass === 'error' ? 'error-dot' : (statusClass === 'success' ? 'success-dot' : '');
+                $events.append(`<div class="cal-event-item ${cc}" title="${escHtml(task.name)} [${statusLabel(statusClass)}]">
+                    <span class="event-dot"></span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;">${escHtml(task.name)}</span>
+                </div>`);
+            });
+
+            if (count === 0) {
+                // 检查日期是否有任何日志
+                const hasAnyLog = Object.keys(statMap).some(k => k.endsWith('_' + dateStr));
+                if (hasAnyLog) {
+                    const logEntry = Object.entries(statMap).find(([k]) => k.endsWith('_' + dateStr));
+                    if (logEntry) {
+                        const taskId = logEntry[0].split('_')[0];
+                        const t = tasks.find(t => t.id === taskId);
+                        if (t) {
+                            const statusClass = logEntry[1].error ? 'error' : 'success';
+                            $events.append(`<div class="cal-event-item ${catClass(t.category)}" title="${escHtml(t.name)}">
+                                <span class="event-dot"></span>
+                                <span>${escHtml(t.name)}</span>
+                            </div>`);
+                            count++;
+                        }
+                    }
+                }
+            }
+
+            $day.append($events);
+            $grid.append($day);
+        }
+
+        // 补足末尾空白格（使总数为7的倍数）
+        const totalCells = startDow + totalDays;
+        const remainder  = totalCells % 7;
+        if (remainder > 0) {
+            for (let i = 0; i < 7 - remainder; i++) {
+                $grid.append('<div class="calendar-day other-month"></div>');
+            }
+        }
+    }
+
+    function calNav(delta) {
+        state.calMonth += delta;
+        if (state.calMonth > 12) { state.calMonth = 1;  state.calYear++; }
+        if (state.calMonth < 1)  { state.calMonth = 12; state.calYear--; }
+        renderCalendar();
+    }
+
+    function calGoToday() {
+        state.calYear  = new Date().getFullYear();
+        state.calMonth = new Date().getMonth() + 1;
+        renderCalendar();
+    }
+
+    // ================================================================
+    //  通用构建 TimeGrid
+    // ================================================================
+    function buildTimeGrid($container, dates, tasks, statMap) {
+        $container.empty();
+
+        // 1. 头栏: 左侧空列 + 右侧日期列
+        const $head = $('<div class="fc-head"></div>');
+        $head.append('<div class="fc-time-col-head"></div>');
+        const $dayColsHead = $('<div class="fc-day-cols"></div>');
+        
+        const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+        const todayStrLocal = new Date().toDateString();
+
+        dates.forEach(d => {
+            const isToday = d.toDateString() === todayStrLocal;
+            const $dayCol = $(`<div class="fc-day-col-head${isToday ? ' fc-today' : ''}">
+                <a style="font-size:11px;font-weight:500;">周${weekDays[d.getDay()]}</a>
+                <a style="font-size:18px;line-height:1.2;">${d.getDate()}</a>
+            </div>`);
+            $dayColsHead.append($dayCol);
+        });
+        $head.append($dayColsHead);
+        $container.append($head);
+
+        // 2. All Day 行
+        const $allDayRow = $('<div class="fc-all-day-row"></div>');
+        $allDayRow.append('<div class="fc-all-day-label">全天</div>');
+        const $allDayContent = $('<div class="fc-all-day-content"></div>');
+        dates.forEach((d, i) => {
+            const isToday = d.toDateString() === todayStrLocal;
+            $allDayContent.append(`<div class="fc-all-day-cell${isToday ? ' fc-today' : ''}" id="fc-all-day-col-${i}"></div>`);
+        });
+        $allDayRow.append($allDayContent);
+        $container.append($allDayRow);
+
+        // 3. Body: 时间列 + 日期列
+        const $body = $('<div class="fc-body"></div>');
+        const $timeCol = $('<div class="fc-time-col"></div>');
+        for (let hour = 0; hour < 24; hour++) {
+            const ampm = hour < 12 ? 'am' : 'pm';
+            let labelHour = hour % 12;
+            if (labelHour === 0) labelHour = 12;
+            const label = labelHour + ampm;
+            $timeCol.append(`<div class="fc-time-slot">${label}</div>`);
+        }
+        $body.append($timeCol);
+
+        const $dayColsBody = $('<div class="fc-day-cols-body"></div>');
+        dates.forEach((d, i) => {
+            const isToday = d.toDateString() === todayStrLocal;
+            const $dayCol = $(`<div class="fc-day-col${isToday ? ' fc-today' : ''}"></div>`);
+            
+            // 背景格子线
+            const $bgGrid = $('<div class="fc-day-grid-bg"></div>');
+            for (let hour = 0; hour < 24; hour++) {
+                $bgGrid.append('<div class="fc-bg-slot"></div>');
+            }
+            $dayCol.append($bgGrid);
+            
+            // 放置事件的容器
+            // id: fc-col-<index>
+            const $eventsContainer = $(`<div class="fc-events-container" id="fc-col-${i}"></div>`);
+            $dayCol.append($eventsContainer);
+            
+            $dayColsBody.append($dayCol);
+        });
+        $body.append($dayColsBody);
+        $container.append($body);
+
+        // 4. 填充数据
+        dates.forEach((date, i) => {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const dStr = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${y}-${m}-${dStr}`;
+
+            tasks.forEach(task => {
+                let statusClass = '';
+                const key = task.id + '_' + dateStr;
+                let targetHour = null;
+                let targetMinute = 0;
+
+                if (statMap[key]) {
+                    statusClass = statMap[key].error ? 'error' : 'success';
+                    if (task.lastRunAt && task.lastRunAt.startsWith(dateStr)) {
+                        const timePart = task.lastRunAt.split(' ')[1];
+                        if (timePart) {
+                            targetHour = parseInt(timePart.split(':')[0], 10);
+                            targetMinute = parseInt(timePart.split(':')[1], 10);
+                        }
+                    }
+                } else if (task.nextRunAt && task.nextRunAt.startsWith(dateStr)) {
+                    statusClass = 'pending';
+                    const timePart = task.nextRunAt.split(' ')[1];
+                    if (timePart) {
+                        targetHour = parseInt(timePart.split(':')[0], 10);
+                        targetMinute = parseInt(timePart.split(':')[1], 10);
+                    }
+                } else {
+                    return; 
+                }
+
+                // 如果没解析出时间，或者不需要放到时间点，放全天区（目前尽量放时间点）
+                if (targetHour === null) {
+                    const statusDot = statusClass === 'error' ? '🔴' : (statusClass === 'success' ? '🟢' : '🔵');
+                    $(`#fc-all-day-col-${i}`).append(`
+                        <div class="cal-event-item ${catClass(task.category)}" title="${escHtml(task.name)}" style="padding:2px 4px; border-radius:4px; font-size:10px;">
+                            ${statusDot} ${escHtml(task.name)}
+                        </div>
+                    `);
+                    return;
+                }
+
+                // 渲染到 Absolute 坐标 
+                const SLOT_HEIGHT = 60; // css .fc-time-slot height
+                const top = targetHour * SLOT_HEIGHT + (targetMinute / 60) * SLOT_HEIGHT;
+                const topPercent = (top / (24 * SLOT_HEIGHT)) * 100;
+                
+                // 暂定每次执行占用 40px 高度（不够长可能字被截断，足够即可）
+                const eventHeight = 40;
+
+                const cc = catClass(task.category);
+                const titleStr = escHtml(task.name);
+                const timeLabel = `${String(targetHour).padStart(2,'0')}:${String(targetMinute).padStart(2,'0')}`;
+                
+                const eventEl = $(`
+                    <div class="fc-event ${cc}" style="top: ${topPercent}%; height: ${eventHeight}px;" title="${titleStr} [${statusLabel(statusClass)}]">
+                        <div class="fc-event-time">${timeLabel}</div>
+                        <div class="fc-event-title">${titleStr}</div>
+                    </div>
+                `);
+
+                $(`#fc-col-${i}`).append(eventEl);
+            });
+            
+            // 如果有独立于 tasks.nextRunAt/lastRunAt 的日志，也能尝试填充
+            Object.keys(statMap).forEach(k => {
+                if (k.endsWith('_' + dateStr)) {
+                    const taskId = k.split('_')[0];
+                    const t = tasks.find(x => x.id === taskId);
+                    
+                    // 防止重复添加
+                    if (t && $(`#fc-col-${i}`).find(`[title*="${escHtml(t.name)}"]`).length === 0) {
+                        const sClass = statMap[k].error ? 'error' : 'success';
+                        
+                        // 简单丢到全天区
+                        const statusDot = sClass === 'error' ? '🔴' : '🟢';
+                        $(`#fc-all-day-col-${i}`).append(`
+                            <div class="cal-event-item ${catClass(t.category)}" title="${escHtml(t.name)}" style="padding:2px 4px; border-radius:4px; font-size:10px;">
+                                ${statusDot} ${escHtml(t.name)}
+                            </div>
+                        `);
+                    }
+                }
+            });
+        });
+        
+        // 自动滚动到当前小时附近 (如果包含今天)
+        setTimeout(() => {
+            const hasToday = dates.some(d => d.toDateString() === todayStrLocal);
+            if (hasToday) {
+                const currentHour = new Date().getHours();
+                const scrollPos = Math.max(0, currentHour * 60 - 60); // 向上减1小时偏移
+                $body.scrollTop(scrollPos);
+            }
+        }, 10);
+    }
+    // ================================================================
+    //  周视图
+    // ================================================================
+    function renderWeek() {
+        if (!state.calDate) state.calDate = new Date();
+        const date = new Date(state.calDate);
+        
+        // 找到本周日 (Fullcalendar 周日开头或周一开头，这里用周日开头比较常见，但要求说 Mon-Sun 也行，咱们按之前周一开头就好)
+        const day = date.getDay();
+        const diff = date.getDate() - day + (day == 0 ? -6 : 1);
+        const monday = new Date(date.setDate(diff));
+        monday.setHours(0, 0, 0, 0);
+
+        let weekDates = [];
+        for (let i = 0; i < 7; i++) {
+            let nextDay = new Date(monday);
+            nextDay.setDate(monday.getDate() + i);
+            weekDates.push(nextDay);
+        }
+
+        const year = monday.getFullYear();
+        const month = monday.getMonth() + 1;
+        
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+        }
+
+        const formatStr = "{{ 'admin.task.week_format'|trans({}, 'messages')|default('%year%年%month%月 第%week%周') }}";
+        $('#week-title').text(formatStr.replace('%year%', year).replace('%month%', month).replace('%week%', getWeekNumber(monday)));
+
+        request('GET', `${BASE}/calendar?year=${year}&month=${month}`).then(res => {
+            const { tasks, stats } = res;
+            buildTimeGrid($('#week-grid'), weekDates, tasks, stats);
+        });
+    }
+
+    function weekNav(delta) {
+        if (!state.calDate) state.calDate = new Date();
+        const d = new Date(state.calDate);
+        d.setDate(d.getDate() + (delta * 7));
+        state.calDate = d;
+        renderWeek();
+    }
+
+    function weekGoToday() {
+        state.calDate = new Date();
+        renderWeek();
+    }
+
+    // ================================================================
+    //  天视图
+    // ================================================================
+    function renderDay() {
+        if (!state.calDate) state.calDate = new Date();
+        const d = state.calDate;
+        
+        const y = d.getFullYear();
+        const m = d.getMonth() + 1;
+        const dt = d.getDate();
+        
+        const formatStr = "{{ 'admin.task.day_format'|trans({}, 'messages')|default('%year%年%month%月%day%日') }}";
+        $('#day-title').text(formatStr.replace('%year%', y).replace('%month%', m).replace('%day%', dt));
+
+        request('GET', `${BASE}/calendar?year=${y}&month=${m}`).then(res => {
+            const { tasks, stats } = res;
+            buildTimeGrid($('#day-timeline'), [d], tasks, stats);
+        });
+    }
+
+    function dayNav(delta) {
+        if (!state.calDate) state.calDate = new Date();
+        const d = new Date(state.calDate);
+        d.setDate(d.getDate() + delta);
+        state.calDate = d;
+        renderDay();
+    }
+
+    function dayGoToday() {
+        state.calDate = new Date();
+        renderDay();
+    }
+
+    // ================================================================
+    //  工具函数
+    // ================================================================
+    function statusLabel(s) {
+        return { success: '成功', error: '失败', running: '执行中', pending: '计划中', none: '未执行' }[s] || s;
+    }
+
+    function escHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function shortHandler(h) {
+        if (!h) return '';
+        const parts = h.split('\\');
+        return parts[parts.length - 1];
+    }
+
+    function debounceSearch() {
+        clearTimeout(state.searchTimer);
+        state.page = 1;
+        state.searchTimer = setTimeout(loadTasks, 400);
+    }
+
+    function setCron(expr) {
+        $('#f-cron').val(expr);
+        updateCronDesc(expr);
+    }
+
+    // ================================================================
+    //  初始化
+    // ================================================================
+    function init() {
+        loadStats(); // 统计卡片 + 分类下拉，合并为一次请求
+
+        // 默认进入列表视图并加载数据
+        switchView('list');
+
+        // 初始化 Cron 构建器（默认"每隔N秒"）
+        switchCronPeriod('second');
+
+        // 单次执行时间选择器（使用 daterangepicker）
+        $('#f-once-datetime').daterangepicker({
+            ...EFDate.getDefaultOptions('YYYY-MM-DD HH:mm'),
+            singleDatePicker: true,
+            timePicker: true,
+            timePicker24Hour: true,
+            autoUpdateInput: false,
+            showDropdowns: true,
+        }).on('apply.daterangepicker', function(ev, picker) {
+            // 格式化为 "YYYY-MM-DD HH:mm"
+            $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm'));
+        }).on('cancel.daterangepicker', function() {
+            $(this).val('');
+        });
+    }
+
+    // 暴露给模板 onclick 使用
+    return {
+        init,
+        loadTasks,
+        debounceSearch,
+        switchView,
+        openCreateDrawer,
+        openEditDrawer,
+        closeDrawer,
+        submitTask,
+        toggleTask,
+        runNow,
+        deleteTask,
+        openLogs,
+        closeLogModal,
+        calNav,
+        calGoToday,
+        weekNav,
+        weekGoToday,
+        dayNav,
+        dayGoToday,
+        setCron,
+        switchTaskType,
+        switchCronPeriod,
+        buildCronFromUI,
+        toggleWeekDay,
+        toggleMonthDayInput,
+        parseAiSchedule,
+        applyAiResult,
+        loadLogPage,
+        cronToHuman,
+    };
+
+})(jQuery);
+
+// 全局代理函数（供 HTML onclick 调用）
+function switchView(v)         { TaskMgr.switchView(v); }
+function openCreateDrawer()    { TaskMgr.openCreateDrawer(); }
+function openEditDrawer(id)    { TaskMgr.openEditDrawer(id); }
+function closeDrawer()         { TaskMgr.closeDrawer(); }
+function submitTask()          { TaskMgr.submitTask(); }
+function toggleTask(id, el)    { TaskMgr.toggleTask(id, el); }
+function runNow(id, name)      { TaskMgr.runNow(id, name); }
+function deleteTask(id, name)  { TaskMgr.deleteTask(id, name); }
+function openLogs(id, name)    { TaskMgr.openLogs(id, name); }
+function closeLogModal()       { TaskMgr.closeLogModal(); }
+function calNav(d)             { TaskMgr.calNav(d); }
+function calGoToday()          { TaskMgr.calGoToday(); }
+function weekNav(d)            { TaskMgr.weekNav(d); }
+function weekGoToday()         { TaskMgr.weekGoToday(); }
+function dayNav(d)             { TaskMgr.dayNav(d); }
+function dayGoToday()          { TaskMgr.dayGoToday(); }
+function setCron(e)            { TaskMgr.setCron(e); }
+function debounceSearch()      { TaskMgr.debounceSearch(); }
+function loadTasks()           { TaskMgr.loadTasks(); }
+function switchTaskType(t)     { TaskMgr.switchTaskType(t); }
+function switchCronPeriod(p)   { TaskMgr.switchCronPeriod(p); }
+function buildCronFromUI()     { TaskMgr.buildCronFromUI(); }
+function toggleWeekDay(btn)    { TaskMgr.toggleWeekDay(btn); }
+function toggleMonthDayInput() { TaskMgr.toggleMonthDayInput(); }
+function parseAiSchedule()     { TaskMgr.parseAiSchedule(); }
+function applyAiResult()       { TaskMgr.applyAiResult(); }
+
+$(document).ready(function() {
+    TaskMgr.init();
+});
+</script>
+{% endblock %}

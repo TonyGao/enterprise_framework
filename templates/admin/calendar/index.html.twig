@@ -1,0 +1,1158 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}系统日历{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+/* ================================================================
+   系统日历页面样式（设计语言与定时任务页面一致）
+================================================================ */
+.cal-page {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    inset: 0;
+    background: var(--bg-base, #f5f7fb);
+    padding: 24px;
+    gap: 20px;
+    overflow: auto;
+    --primary: rgb(22, 93, 255);
+    --primary-dark: rgb(18, 79, 216);
+}
+
+/* ---- 页头 ---- */
+.cal-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+.cal-page-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary, #1a1d2e);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+.cal-page-header h1 i { color: var(--primary, #165dff); font-size: 18px; }
+.cal-header-actions { display: flex; gap: 10px; align-items: center; }
+
+/* ---- 统计卡片 ---- */
+.cal-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    flex-shrink: 0;
+}
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    border: 1px solid rgba(0,0,0,.05);
+    transition: box-shadow .2s;
+}
+.stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.10); }
+.stat-card-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+}
+.stat-card-icon.red    { background: #fee2e2; color: #dc2626; }
+.stat-card-icon.orange { background: #ffedd5; color: #ea580c; }
+.stat-card-icon.blue   { background: #dbeafe; color: #2563eb; }
+.stat-card-icon.gray   { background: #f3f4f6; color: #6b7280; }
+.stat-card-value {
+    font-size: 26px; font-weight: 700;
+    color: var(--text-primary, #1a1d2e); line-height: 1.2;
+}
+.stat-card-label {
+    font-size: 13px; color: var(--text-secondary, #8a8fa8); margin-top: 2px;
+}
+
+/* ---- 主内容区 ---- */
+.cal-main-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    border: 1px solid rgba(0,0,0,.05);
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ---- 工具栏 ---- */
+.cal-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border, #f0f0f5);
+    flex-shrink: 0;
+    gap: 12px;
+}
+.cal-nav-group { display: flex; align-items: center; gap: 8px; }
+.cal-nav-btn {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid var(--border, #e5e7ef); background: #fff;
+    cursor: pointer; font-size: 13px;
+    color: var(--text-secondary, #8a8fa8); transition: all .15s;
+    display: flex; align-items: center; justify-content: center;
+}
+.cal-nav-btn:hover { border-color: var(--primary, #165dff); color: var(--primary, #165dff); }
+.cal-month-title {
+    font-size: 16px; font-weight: 700; color: var(--text-primary, #1a1d2e);
+    min-width: 130px; text-align: center;
+}
+.cal-today-btn {
+    height: 32px; padding: 0 14px; border-radius: 8px;
+    border: 1px solid var(--border, #e5e7ef); background: #fff;
+    font-size: 13px; color: var(--text-secondary, #8a8fa8);
+    cursor: pointer; transition: all .15s;
+}
+.cal-today-btn:hover { border-color: var(--primary, #165dff); color: var(--primary, #165dff); }
+
+/* ---- 视图 Tab ---- */
+.view-tabs {
+    display: flex; gap: 0; background: #fff;
+    border-radius: 10px; padding: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    border: 1px solid rgba(0,0,0,.05); width: fit-content;
+}
+.view-tab-btn {
+    padding: 6px 16px; border-radius: 7px; border: none;
+    background: transparent; font-size: 13px;
+    color: var(--text-secondary, #8a8fa8); cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all .15s; font-weight: 500;
+}
+.view-tab-btn.active,
+.view-tab-btn:hover { background: var(--primary, #165dff); color: #fff; }
+
+/* ---- 图例条 ---- */
+.cal-legend-bar {
+    display: flex; gap: 18px; align-items: center;
+    padding: 8px 20px; border-bottom: 1px solid var(--border, #f0f0f5);
+    flex-shrink: 0; flex-wrap: wrap;
+}
+.cal-legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary, #8a8fa8); }
+.cal-legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+/* ---- 月视图 ---- */
+#cal-month-view { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.cal-weekday-row {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    background: var(--bg-base, #f8f9fc);
+    border-bottom: 1px solid var(--border, #f0f0f5);
+    flex-shrink: 0;
+}
+.cal-dow-cell {
+    padding: 8px 10px; text-align: center; font-size: 11px;
+    font-weight: 700; color: var(--text-secondary, #8a8fa8);
+    text-transform: uppercase; letter-spacing: .5px;
+}
+.cal-month-grid {
+    flex: 1; display: grid; grid-template-columns: repeat(7, 1fr);
+    overflow-y: auto;
+}
+.cal-day-cell {
+    min-height: 110px; padding: 8px;
+    border-right: 1px solid var(--border, #f0f0f5);
+    border-bottom: 1px solid var(--border, #f0f0f5);
+    background: #fff; cursor: pointer; transition: background .12s;
+}
+.cal-day-cell:hover { background: #f8f9fc; }
+.cal-day-cell.other-month { background: var(--bg-base, #fafafa); }
+.cal-day-cell.other-month .cal-day-num { color: #d1d5db; }
+.cal-day-num {
+    font-size: 13px; font-weight: 600; color: var(--text-primary, #374151);
+    margin-bottom: 6px; width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+}
+.cal-day-cell.today .cal-day-num {
+    background: var(--primary, #165dff); color: #fff;
+}
+.cal-event-tag {
+    display: flex; align-items: center; gap: 4px;
+    padding: 2px 7px; border-radius: 5px; font-size: 11px;
+    font-weight: 600; margin-bottom: 2px; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: opacity .12s;
+}
+.cal-event-tag:hover { opacity: .85; }
+.cal-event-tag.holiday    { background: #fee2e2; color: #dc2626; }
+.cal-event-tag.workday    { background: #ffedd5; color: #ea580c; }
+.cal-event-tag.makeup_day { background: #dbeafe; color: #2563eb; }
+.cal-event-tag.custom,
+.cal-event-tag.company_event { background: #f3f4f6; color: #4b5563; }
+.cal-day-more { font-size: 11px; color: var(--text-tertiary, #b0b5cc); padding: 1px 7px; }
+
+/* ---- 事务视图 ---- */
+#cal-agenda-view { flex: 1; display: none; overflow: hidden; }
+.cal-agenda-list { flex: 1; width: 100%; height: 100%; overflow-y: auto; padding: 16px 20px; }
+.cal-agenda-item {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 16px 18px; background: #fff; border-radius: 12px;
+    margin-bottom: 10px; border-left: 4px solid #e5e7ef;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05); cursor: pointer;
+    transition: box-shadow .15s, border-color .15s;
+}
+.cal-agenda-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,.10); }
+.cal-agenda-item.holiday    { border-left-color: #dc2626; }
+.cal-agenda-item.workday    { border-left-color: #ea580c; }
+.cal-agenda-item.makeup_day { border-left-color: #2563eb; }
+.cal-agenda-item.custom,
+.cal-agenda-item.company_event { border-left-color: #9ca3af; }
+.cal-agenda-date-col { text-align: center; min-width: 44px; flex-shrink: 0; }
+.cal-agenda-day { font-size: 30px; font-weight: 800; color: var(--text-primary, #1a1d2e); line-height: 1; }
+.cal-agenda-weekday { font-size: 11px; color: var(--text-secondary, #8a8fa8); margin-top: 2px; }
+.cal-agenda-body { flex: 1; min-width: 0; }
+.cal-agenda-title { font-size: 15px; font-weight: 700; color: var(--text-primary, #1a1d2e); }
+.cal-agenda-sub { display: flex; align-items: center; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+.type-badge {
+    display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 500;
+}
+.type-badge.holiday    { background: #fee2e2; color: #dc2626; }
+.type-badge.workday    { background: #ffedd5; color: #ea580c; }
+.type-badge.makeup_day { background: #dbeafe; color: #2563eb; }
+.type-badge.custom,
+.type-badge.company_event { background: #f3f4f6; color: #4b5563; }
+.cal-agenda-note { font-size: 12px; color: var(--text-secondary, #8a8fa8); }
+
+/* ---- 空状态 ---- */
+.cal-empty {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; height: 100%; min-height: 360px;
+    color: var(--text-tertiary, #b0b5cc);
+}
+.cal-empty i { font-size: 72px; margin-bottom: 24px; }
+.cal-empty p { font-size: 16px; margin: 0; }
+
+/* ---- 导入弹窗 ---- */
+.cal-import-tip {
+    margin-top: 4px; font-size: 12px; line-height: 1.6;
+    color: var(--text-secondary, #8a8fa8);
+}
+.cal-import-result {
+    margin-top: 10px; min-height: 108px; border-radius: 12px;
+    border: 1px solid var(--border, #eaecf4); background: var(--bg-base, #f8f9fc);
+    padding: 16px; color: var(--text-primary, #1a1d2e);
+}
+.cal-import-result-empty {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    color: var(--text-tertiary, #b0b5cc);
+}
+.cal-import-summary { display: flex; gap: 10px; flex-wrap: wrap; }
+.cal-import-chip {
+    min-width: 92px; padding: 10px 12px; border-radius: 10px;
+    background: #fff; border: 1px solid rgba(0,0,0,.05);
+}
+.cal-import-chip strong { display: block; font-size: 20px; line-height: 1.1; }
+.cal-import-chip span { display: block; margin-top: 4px; font-size: 12px; color: var(--text-secondary, #8a8fa8); }
+.cal-import-chip.success strong { color: #16a34a; }
+.cal-import-chip.info strong { color: var(--primary, #165dff); }
+.cal-import-chip.warn strong { color: #ea580c; }
+.cal-import-detail-list {
+    margin: 14px 0 0; padding-left: 18px; max-height: 160px; overflow-y: auto;
+    color: var(--text-secondary, #5a5f7d); font-size: 12px;
+}
+.cal-import-detail-list li + li { margin-top: 6px; }
+
+/* ---- 弹窗表单 ---- */
+.cal-form-group { margin-bottom: 18px; }
+.cal-form-label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: var(--text-secondary, #5a5f7d); margin-bottom: 6px;
+}
+.cal-form-label .req { color: #ef4444; margin-left: 2px; }
+.cal-form-error { font-size: 12px; color: #ef4444; margin-top: 6px; display: none; }
+/* 事务类型管理行 */
+.type-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+
+/* ---- 按钮 ---- */
+.btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 0 16px; height: 36px; border-radius: 8px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1px solid transparent; transition: all .15s;
+    text-decoration: none; white-space: nowrap;
+}
+.btn-primary {
+    background: var(--primary, #165dff); color: #fff;
+    border-color: var(--primary, #165dff);
+}
+.btn-primary:hover {
+    background: var(--primary-dark, #1248d1);
+    border-color: var(--primary-dark, #1248d1); color: #fff;
+}
+.btn[disabled] {
+    opacity: .45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.btn-default {
+    background: #fff; color: var(--text-secondary, #5a5f7d);
+    border-color: var(--border, #e5e7ef);
+}
+.btn-default:hover { border-color: var(--primary, #165dff); color: var(--primary, #165dff); }
+.btn-danger { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
+.btn-danger:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+
+/* ---- Toast ---- */
+.cal-toast-wrap {
+    position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+}
+.toast-item {
+    background: #1a1d2e; color: #fff; padding: 12px 18px; border-radius: 10px;
+    font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+    display: flex; align-items: center; gap: 8px;
+    animation: toast-in .3s ease; pointer-events: auto;
+}
+.toast-item.success i { color: #2dbe78; }
+.toast-item.error   i { color: #ef4444; }
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1200px) {
+    .cal-stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+{% endblock %}
+
+{% block app_content_container %}
+<div class="cal-page">
+
+    {# ---- 页头 ---- #}
+    <div class="cal-page-header">
+        <h1>
+            <i class="fa-solid fa-calendar-days"></i>
+            系统日历
+        </h1>
+        <div class="cal-header-actions">
+            <button class="btn btn-default" onclick="CalMgr.openImportModal()">
+                <i class="fa-solid fa-cloud-arrow-down"></i> 导入假日
+            </button>
+            <button class="btn btn-primary" onclick="CalMgr.openCreate()">
+                <i class="fa-solid fa-plus"></i> 添加事件
+            </button>
+            <button class="btn btn-default" onclick="CalMgr.openTypeManager()">
+                <i class="fa-solid fa-tags"></i> 事务类型
+            </button>
+        </div>
+    </div>
+
+    {# ---- 统计卡片 ---- #}
+    <div class="cal-stats-row">
+        <div class="stat-card">
+            <div class="stat-card-icon red"><i class="fa-solid fa-umbrella-beach"></i></div>
+            <div>
+                <div class="stat-card-value" id="stat-holiday">—</div>
+                <div class="stat-card-label">本月法定假日</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon orange"><i class="fa-solid fa-briefcase"></i></div>
+            <div>
+                <div class="stat-card-value" id="stat-workday">—</div>
+                <div class="stat-card-label">本月补班上班</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon blue"><i class="fa-solid fa-bed"></i></div>
+            <div>
+                <div class="stat-card-value" id="stat-makeup">—</div>
+                <div class="stat-card-label">本月调休休息</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon gray"><i class="fa-solid fa-tag"></i></div>
+            <div>
+                <div class="stat-card-value" id="stat-custom">—</div>
+                <div class="stat-card-label">本月其他事务</div>
+            </div>
+        </div>
+    </div>
+
+    {# ---- 主内容卡片 ---- #}
+    <div class="cal-main-card">
+
+        {# 工具栏 #}
+        <div class="cal-toolbar">
+            <div class="cal-nav-group">
+                <button class="cal-nav-btn" onclick="CalMgr.nav(-1)" data-tip="上一月">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button class="cal-nav-btn" onclick="CalMgr.nav(1)" data-tip="下一月">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <button class="cal-today-btn" onclick="CalMgr.goToday()">今天</button>
+                <span class="cal-month-title" id="cal-month-title">—</span>
+            </div>
+            <div class="view-tabs">
+                <button class="view-tab-btn active" data-view="month" onclick="CalMgr.switchView('month')">
+                    <i class="fa-solid fa-calendar-days"></i> 月视图
+                </button>
+                <button class="view-tab-btn" data-view="agenda" onclick="CalMgr.switchView('agenda')">
+                    <i class="fa-solid fa-list"></i> 事务视图
+                </button>
+            </div>
+        </div>
+
+        {# 图例 #}
+        <div class="cal-legend-bar">
+            <div class="cal-legend-item">
+                <div class="cal-legend-dot" style="background:#dc2626;"></div> 法定假日
+            </div>
+            <div class="cal-legend-item">
+                <div class="cal-legend-dot" style="background:#ea580c;"></div> 补班上班
+            </div>
+            <div class="cal-legend-item">
+                <div class="cal-legend-dot" style="background:#2563eb;"></div> 调休休息
+            </div>
+            <div class="cal-legend-item">
+                <div class="cal-legend-dot" style="background:#6b7280;"></div> 自定义事务
+            </div>
+        </div>
+
+        {# 月视图 #}
+        <div id="cal-month-view">
+            <div class="cal-weekday-row">
+                <div class="cal-dow-cell">一</div>
+                <div class="cal-dow-cell">二</div>
+                <div class="cal-dow-cell">三</div>
+                <div class="cal-dow-cell">四</div>
+                <div class="cal-dow-cell">五</div>
+                <div class="cal-dow-cell">六</div>
+                <div class="cal-dow-cell">日</div>
+            </div>
+            <div class="cal-month-grid" id="cal-month-grid"></div>
+        </div>
+
+        {# 事务视图 #}
+        <div id="cal-agenda-view">
+            <div class="cal-agenda-list" id="cal-agenda-list"></div>
+        </div>
+
+    </div>{# /cal-main-card #}
+
+</div>{# /cal-page #}
+
+{# ---- 新建/编辑事件模态框 ---- #}
+<div class="ef-modal-container" id="cal-event-modal" style="z-index: 1001; display: none;">
+    <div class="ef-modal-mask" onclick="CalMgr.closeModal()"></div>
+    <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
+        <div class="ef-modal" style="width: 480px; max-width: 96vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="ef-modal-header">
+                <div class="ef-modal-title ef-modal-title-align-left" id="cal-modal-title">添加事件</div>
+                <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="CalMgr.closeModal()">
+                    <span class="ef-icon-hover">
+                        <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                            <path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="ef-modal-body" style="overflow-y: auto; flex: 1;">
+                <input type="hidden" id="cal-event-id">
+                <div class="cal-form-group">
+                    <label class="cal-form-label">标题 <span class="req">*</span></label>
+                    <span class="ef-input-wrapper" style="width: 100%;">
+                        <input type="text" class="ef-input ef-input-size-medium text" id="f-cal-title" placeholder="如：元旦假期、公司年会">
+                    </span>
+                </div>
+                <div class="cal-form-group">
+                    <label class="cal-form-label">类型</label>
+                    <input type="hidden" id="f-cal-type" value="custom" component="select">
+                    <span
+                        class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium ef-select-view-search"
+                        style="width: 100%;"
+                        chosen="false"
+                        id="f-cal-type-select"
+                        contentId="f-cal-type-dropdown"
+                    >
+                        <input class="ef-select-view-input" placeholder="请选择类型...">
+                        <span class="ef-select-view-value ef-select-view-value-hidden"></span>
+                        <span class="ef-select-view-suffix">
+                            <span class="ef-select-view-icon">
+                                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-expand" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter" style="transform: rotate(-45deg);">
+                                    <path d="M7 26v14c0 .552.444 1 .996 1H22m19-19V8c0-.552-.444-1-.996-1H26"></path>
+                                </svg>
+                            </span>
+                        </span>
+                    </span>
+                    <div class="ef-trigger-popup ef-trigger-position-bl"
+                         trigger-placement="bl"
+                         style="z-index: 1100; pointer-events: auto;"
+                         id="f-cal-type-dropdown"
+                         parentId="f-cal-type-select"
+                    >
+                        <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
+                            <div class="ef-trigger-content">
+                                <div class="ef-select-dropdown">
+                                    <div class="ef-scrollbar ef-scrollbar-type-embed">
+                                        <div class="ef-scrollbar-container ef-select-dropdown-list-wrapper">
+                                            <ul class="ef-select-dropdown-list" id="f-cal-type-options">
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cal-form-group">
+                    <label class="cal-form-label">日期 <span class="req">*</span></label>
+                    <span class="ef-input-wrapper" style="width: 100%;">
+                        <input type="text" class="ef-input ef-input-size-medium text" id="f-cal-date" placeholder="请选择日期" autocomplete="off">
+                    </span>
+                </div>
+                <div class="cal-form-group">
+                    <label class="ef-checkbox" id="f-cal-recurring-label">
+                        <input type="checkbox" id="f-cal-recurring" class="ef-checkbox-target">
+                        <span class="ef-icon-hover ef-checkbox-icon-hover">
+                            <div class="ef-checkbox-icon"></div>
+                        </span>
+                        <span class="ef-checkbox-label">每年重复（适用于固定节假日）</span>
+                    </label>
+                </div>
+                <div class="cal-form-group">
+                    <label class="cal-form-label">备注</label>
+                    <span class="ef-textarea-wrapper" style="width: 100%;">
+                        <textarea class="ef-textarea" id="f-cal-note" rows="3" placeholder="可选备注说明"></textarea>
+                    </span>
+                </div>
+                <div class="cal-form-error" id="cal-form-error"></div>
+            </div>
+            <div class="ef-modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <button class="btn red medium" id="cal-btn-delete" onclick="CalMgr.deleteEvent()" style="display:none;">
+                        <i class="fa-solid fa-trash"></i> 删除
+                    </button>
+                </div>
+                <div>
+                    <button class="btn secondary medium" onclick="CalMgr.closeModal()">取消</button>
+                    <button class="btn primary medium" onclick="CalMgr.saveEvent()">
+                        <i class="fa-solid fa-check"></i> 保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ---- 导入法定假日模态框 ---- #}
+<div class="ef-modal-container" id="holiday-import-modal" style="z-index: 1002; display: none;">
+    <div class="ef-modal-mask" onclick="CalMgr.closeImportModal()"></div>
+    <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
+        <div class="ef-modal" style="width: 460px; max-width: 96vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="ef-modal-header">
+                <div class="ef-modal-title ef-modal-title-align-left">导入法定假日</div>
+                <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="CalMgr.closeImportModal()">
+                    <span class="ef-icon-hover">
+                        <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                            <path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="ef-modal-body" style="overflow-y: auto; flex: 1;">
+                <div class="cal-form-group">
+                    <label class="cal-form-label">年份 <span class="req">*</span></label>
+                    <span class="ef-input-wrapper" style="width: 100%;">
+                        <input type="number" class="ef-input ef-input-size-medium text" id="f-import-year" min="2000" max="2100" step="1" placeholder="例如：2026">
+                    </span>
+                </div>
+                <div class="cal-form-group">
+                    <label class="cal-form-label">数据源</label>
+                    <span class="ef-input-wrapper" style="width: 100%; padding: 0;">
+                        <select class="ef-input ef-input-size-medium text" id="f-import-source" style="width: 100%; border: none; background: transparent; padding: 0 12px;">
+                            <option value="timor">TimOR API</option>
+                            <option value="holiday_cn">Holiday CN</option>
+                        </select>
+                    </span>
+                    <div class="cal-import-tip">导入是幂等的：同一日期与同一类型的事件不会重复创建。</div>
+                </div>
+                <div class="cal-import-result cal-import-result-empty" id="cal-import-result">选择年份和数据源后开始导入</div>
+            </div>
+            <div class="ef-modal-footer">
+                <button class="btn secondary medium" onclick="CalMgr.closeImportModal()">关闭</button>
+                <button class="btn primary medium" id="cal-import-submit" onclick="CalMgr.importHolidays()">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> 开始导入
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ---- 事务类型管理模态框 ---- #}
+<div class="ef-modal-container" id="type-manager-modal" style="z-index: 1002; display: none;">
+    <div class="ef-modal-mask" onclick="$('#type-manager-modal').hide();"></div>
+    <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
+        <div class="ef-modal" style="width: 780px; max-width: 96vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="ef-modal-header">
+                <div class="ef-modal-title ef-modal-title-align-left">事务类型管理</div>
+                <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="$('#type-manager-modal').hide();">
+                    <span class="ef-icon-hover">
+                        <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                            <path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="ef-modal-body" style="overflow-y: auto; flex: 1;">
+                <div style="margin-bottom: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <span class="ef-input-wrapper" style="width: 160px;">
+                        <input id="new-type-key" class="ef-input ef-input-size-medium text" placeholder="key（英文字母下划线）">
+                    </span>
+                    <span class="ef-input-wrapper" style="width: 200px;">
+                        <input id="new-type-label" class="ef-input ef-input-size-medium text" placeholder="名称">
+                    </span>
+                    <span class="ef-input-wrapper" style="width: 60px; padding: 4px;">
+                        <input id="new-type-color" class="ef-input ef-input-size-medium" type="color" value="#6b7280" style="padding: 0; cursor: pointer; border: none; background: transparent;">
+                    </span>
+                    <button class="btn primary medium" id="new-type-create"><i class="fa-solid fa-plus"></i> 添加</button>
+                </div>
+                <div id="type-manager-list"></div>
+            </div>
+            <div class="ef-modal-footer">
+                <button class="btn secondary medium" onclick="$('#type-manager-modal').hide();">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="cal-toast-wrap" id="cal-toast-wrap"></div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+const CalMgr = (function ($) {
+    'use strict';
+    const BASE = '/admin/calendar/api';
+    const WEEK_DAYS = ['一', '二', '三', '四', '五', '六', '日'];
+    // 动态加载的类型映射：key -> {label,color,sort}
+    let typesMap = {};
+
+    function loadTypes() {
+        return request('GET', BASE + '/types').then(function (data) {
+            var list = Array.isArray(data) ? data : [];
+            typesMap = {};
+            list.forEach(function (t) { typesMap[t.key] = t; });
+            // 更新事件模态的 ef-select 选项
+            var $opts = $('#f-cal-type-options');
+            $opts.empty();
+            list.forEach(function (t) {
+                $opts.append('<li class="ef-select-option" value="' + t.key + '"><span class="ef-select-option-content">' + esc(t.label) + '</span></li>');
+            });
+            // 默认选中第一项
+            if (list.length > 0) setTypeSelect(list[0].key, list[0].label);
+            // 更新图例条
+            var legendHtml = '';
+            list.forEach(function (t) {
+                legendHtml += '<div class="cal-legend-item"><div class="cal-legend-dot" style="background:' + (t.color || '#9ca3af') + '"></div> ' + esc(t.label) + '</div>';
+            });
+            $('.cal-legend-bar').html(legendHtml);
+            // 更新类型管理列表（如果打开）
+            renderTypeManager(list);
+            return list;
+        });
+    }
+
+    function renderTypeManager(list) {
+        if (!$('#type-manager-list').length) return;
+        var html = '';
+        list.forEach(function (t) {
+            var deleteAttrs = t.isSystem ? ' disabled title="系统预设类型不可删除"' : '';
+            html += '<div class="type-row" data-key="' + t.key + '">'
+                + '<span class="ef-input-wrapper" style="width:150px;"><input class="ef-input ef-input-size-medium text type-key" value="' + esc(t.key) + '" disabled></span>'
+                + '<span class="ef-input-wrapper" style="width:200px;"><input class="ef-input ef-input-size-medium text type-label" value="' + esc(t.label) + '"></span>'
+                + '<span class="ef-input-wrapper" style="width:60px; padding:4px;"><input class="ef-input ef-input-size-medium type-color" type="color" value="' + esc(t.color || '#6b7280') + '" style="padding:0; cursor:pointer; border:none; background:transparent;"></span>'
+                + (t.isSystem ? '<span style="font-size:12px;color:#8a8fa8;min-width:60px;">系统类型</span>' : '<span style="min-width:60px;"></span>')
+                + '<button class="btn secondary medium type-save">保存</button>'
+                + '<button class="btn red medium type-del"' + deleteAttrs + '>删除</button>'
+                + '</div>';
+        });
+        $('#type-manager-list').html(html);
+        // bind actions
+        $('#type-manager-list .type-save').off('click').on('click', function () {
+            var $row = $(this).closest('.type-row');
+            var key = $row.data('key');
+            var label = $row.find('.type-label').val();
+            var color = $row.find('.type-color').val();
+            request('PUT', BASE + '/type/' + encodeURIComponent(key), { label: label, color: color }).then(function () { loadTypes(); toast('已保存', 'success'); });
+        });
+        $('#type-manager-list .type-del').off('click').on('click', function () {
+            var $row = $(this).closest('.type-row');
+            var key = $row.data('key');
+            if (!confirm('确认删除类型 ' + key + '？')) return;
+            request('DELETE', BASE + '/type/' + encodeURIComponent(key)).then(function () { loadTypes(); toast('已删除', 'success'); });
+        });
+    }
+
+    const state = {
+        view:   'month',
+        year:   new Date().getFullYear(),
+        month:  new Date().getMonth() + 1,
+        events: [],
+    };
+
+    // ─── 网络请求 ──────────────────────────────────────────────────────────
+    function request(method, url, data) {
+        return $.ajax({
+            method,
+            url,
+            contentType: 'application/json',
+            data: data ? JSON.stringify(data) : undefined,
+        }).then(function (res) {
+            if (typeof res.data === 'string') {
+                try { return JSON.parse(res.data); } catch (e) { return res.data; }
+            }
+            return res.data !== undefined ? res.data : res;
+        }).fail(function (xhr) {
+            console.error('CalMgr request failed', xhr);
+            toast(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : '操作失败', 'error');
+        });
+    }
+
+    // ─── 数据加载 ──────────────────────────────────────────────────────────
+    function loadEvents() {
+        request('GET', BASE + '/events?year=' + state.year + '&month=' + state.month).then(function (events) {
+            state.events = Array.isArray(events) ? events : [];
+            updateStats();
+            render();
+        });
+    }
+
+    function updateStats() {
+        var ev = state.events;
+        $('#stat-holiday').text(ev.filter(function (e) { return e.type === 'holiday'; }).length);
+        $('#stat-workday').text(ev.filter(function (e) { return e.type === 'workday'; }).length);
+        $('#stat-makeup').text(ev.filter(function (e) { return e.type === 'makeup_day'; }).length);
+        $('#stat-custom').text(ev.filter(function (e) { return e.type !== 'holiday' && e.type !== 'workday' && e.type !== 'makeup_day'; }).length);
+    }
+
+    // ─── 渲染 ──────────────────────────────────────────────────────────────
+    function render() {
+        updateTitle();
+        if (state.view === 'month') renderMonth(); else renderAgenda();
+    }
+
+    function updateTitle() {
+        $('#cal-month-title').text(state.year + ' 年 ' + state.month + ' 月');
+    }
+
+    // ─── 月视图 ────────────────────────────────────────────────────────────
+    function renderMonth() {
+        var today = new Date(); today.setHours(0, 0, 0, 0);
+        var firstDay = new Date(state.year, state.month - 1, 1);
+        var lastDay  = new Date(state.year, state.month, 0);
+
+        var startDow = firstDay.getDay();
+        startDow = startDow === 0 ? 6 : startDow - 1; // Mon=0
+
+        var cells = [];
+        for (var i = startDow - 1; i >= 0; i--) {
+            var d = new Date(firstDay); d.setDate(d.getDate() - i - 1);
+            cells.push({ date: d, otherMonth: true });
+        }
+        for (var dd = 1; dd <= lastDay.getDate(); dd++) {
+            cells.push({ date: new Date(state.year, state.month - 1, dd), otherMonth: false });
+        }
+        var rows = Math.ceil(cells.length / 7);
+        while (cells.length < rows * 7) {
+            var last = cells[cells.length - 1].date;
+            var next = new Date(last); next.setDate(next.getDate() + 1);
+            cells.push({ date: next, otherMonth: true });
+        }
+
+        var eventMap = {};
+        for (var ei = 0; ei < state.events.length; ei++) {
+            var ev = state.events[ei];
+            if (!eventMap[ev.date]) eventMap[ev.date] = [];
+            eventMap[ev.date].push(ev);
+        }
+
+        var html = '';
+        for (var ci = 0; ci < cells.length; ci++) {
+            var cell = cells[ci];
+            var key  = fmt(cell.date);
+            var evs  = eventMap[key] || [];
+            var isToday = cell.date.toDateString() === today.toDateString();
+            var cls = 'cal-day-cell' + (cell.otherMonth ? ' other-month' : '') + (isToday ? ' today' : '');
+            var dateStr = fmt(cell.date);
+
+            html += '<div class="' + cls + '" onclick="CalMgr.openCreate(\'' + dateStr + '\')">';
+            html += '<div class="cal-day-num">' + cell.date.getDate() + '</div>';
+            for (var ti = 0; ti < Math.min(evs.length, 3); ti++) {
+                var ev = evs[ti];
+                html += '<div class="cal-event-tag ' + (ev.type || 'custom') + '" title="' + esc(ev.title) + '" onclick="event.stopPropagation();CalMgr.openEdit(\'' + ev.id + '\')">' + esc(ev.title) + '</div>';
+            }
+            if (evs.length > 3) {
+                html += '<div class="cal-day-more">+' + (evs.length - 3) + ' 更多</div>';
+            }
+            html += '</div>';
+        }
+        $('#cal-month-grid').html(html);
+    }
+
+    function fmt(d) {
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+    }
+
+    // ─── 事务视图 ──────────────────────────────────────────────────────────
+    function renderAgenda() {
+        var sorted = state.events.slice().sort(function (a, b) {
+            return (a.date || '').localeCompare(b.date || '');
+        });
+        if (!sorted.length) {
+            $('#cal-agenda-list').html('<div class="cal-empty"><i class="fa-regular fa-calendar-xmark"></i><p>本月暂无事件</p></div>');
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < sorted.length; i++) {
+            var ev    = sorted[i];
+            var parts = (ev.date || '').split('-');
+            var day   = parts[2] ? parseInt(parts[2], 10) : '?';
+            var dow   = ev.date ? WEEK_DAYS[(new Date(ev.date).getDay() + 6) % 7] : '';
+            var label = (typesMap[ev.type] && typesMap[ev.type].label) || ev.type;
+            html += '<div class="cal-agenda-item ' + (ev.type || 'custom') + '" onclick="CalMgr.openEdit(\'' + ev.id + '\')">';
+            html += '<div class="cal-agenda-date-col">';
+            html += '<div class="cal-agenda-day">' + day + '</div>';
+            html += '<div class="cal-agenda-weekday">周' + dow + '</div>';
+            html += '</div>';
+            html += '<div class="cal-agenda-body">';
+            html += '<div class="cal-agenda-title">' + esc(ev.title) + '</div>';
+            html += '<div class="cal-agenda-sub">';
+            html += '<span class="type-badge ' + (ev.type || 'custom') + '">' + label + '</span>';
+            if (ev.note) html += '<span class="cal-agenda-note">' + esc(ev.note) + '</span>';
+            if (ev.recurring) html += '<i class="fa-solid fa-rotate" style="color:#9ca3af;font-size:11px;" data-tip="每年重复"></i>';
+            html += '</div>';
+            html += '</div>';
+            html += '</div>';
+        }
+        $('#cal-agenda-list').html(html);
+    }
+
+    // ─── 导航 ──────────────────────────────────────────────────────────────
+    function nav(delta) {
+        state.month += delta;
+        if (state.month > 12) { state.month = 1;  state.year++; }
+        if (state.month < 1)  { state.month = 12; state.year--; }
+        loadEvents();
+    }
+
+    function goToday() {
+        var now = new Date();
+        state.year  = now.getFullYear();
+        state.month = now.getMonth() + 1;
+        loadEvents();
+    }
+
+    function switchView(view) {
+        state.view = view;
+        document.querySelectorAll('.view-tab-btn[data-view]').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.view === view);
+        });
+        $('#cal-month-view').toggle(view === 'month');
+        $('#cal-agenda-view').css('display', view === 'agenda' ? 'flex' : 'none');
+        render();
+    }
+
+    // ─── 模态框 ────────────────────────────────────────────────────────────
+    function openCreate(date) {
+        resetForm();
+        initDatePickerOnce();
+        $('#cal-modal-title').text('添加事件');
+        $('#cal-btn-delete').hide();
+        if (date) $('#f-cal-date').val(date);
+        $('#cal-event-modal').show();
+        setTimeout(function () { $('#f-cal-title').focus(); }, 50);
+    }
+
+    function openEdit(id) {
+        var ev = null;
+        for (var i = 0; i < state.events.length; i++) {
+            if (state.events[i].id === id) { ev = state.events[i]; break; }
+        }
+        if (!ev) return;
+        resetForm();
+        initDatePickerOnce();
+        $('#cal-modal-title').text('编辑事件');
+        $('#cal-btn-delete').show();
+        $('#cal-event-id').val(ev.id);
+        $('#f-cal-title').val(ev.title);
+        // 设置 ef-select 类型
+        var typeKey = ev.type || 'custom';
+        var $typeOpt = $('#f-cal-type-options .ef-select-option[value="' + typeKey + '"]');
+        if ($typeOpt.length) setTypeSelect(typeKey, $typeOpt.children('.ef-select-option-content').text());
+        $('#f-cal-date').val(ev.date || '');
+        setEfCheckbox('f-cal-recurring-label', !!ev.recurring);
+        $('#f-cal-note').val(ev.note || '');
+        $('#cal-event-modal').show();
+    }
+
+    function closeModal() {
+        $('#cal-event-modal').hide();
+    }
+
+    // ef-checkbox 状态同步辅助
+    var EF_CHECK_ICON = '<svg aria-hidden="true" focusable="false" viewBox="0 0 1024 1024" width="200" height="200" fill="currentColor" class="ef-checkbox-icon-check"><path d="M877.44815445 206.10060629a64.72691371 64.72691371 0 0 0-95.14856334 4.01306852L380.73381888 685.46812814 235.22771741 533.48933518a64.72691371 64.72691371 0 0 0-92.43003222-1.03563036l-45.82665557 45.82665443a64.72691371 64.72691371 0 0 0-0.90617629 90.61767965l239.61903446 250.10479331a64.72691371 64.72691371 0 0 0 71.19960405 15.14609778 64.33855261 64.33855261 0 0 0 35.08198741-21.23042702l36.24707186-42.71976334 40.5190474-40.77795556-3.36579926-3.49525333 411.40426297-486.74638962a64.72691371 64.72691371 0 0 0-3.88361443-87.64024149l-45.3088404-45.43829334z" p-id="840"></path></svg>';
+    function setEfCheckbox(labelId, checked) {
+        var $label = $('#' + labelId);
+        var $icon  = $label.find('.ef-checkbox-icon');
+        var $hover = $label.find('.ef-checkbox-icon-hover');
+        $label.toggleClass('ef-checkbox-checked', checked);
+        $hover.toggleClass('ef-icon-hover-disabled', checked);
+        $icon.html(checked ? EF_CHECK_ICON : '');
+        $label.find('.ef-checkbox-target').prop('checked', checked);
+    }
+
+    function setTypeSelect(key, label) {
+        var $hidden = $('#f-cal-type');
+        var $select = $('#f-cal-type-select');
+        $hidden.val(key);
+        $select.attr('chosen', 'true');
+        $select.children('.ef-select-view-input').addClass('ef-select-view-input-hidden');
+        $select.children('.ef-select-view-value').html(esc(label)).removeClass('ef-select-view-value-hidden');
+        var closeIcon = '<i class="fa-regular fa-circle-xmark"></i>';
+        $select.children('.ef-select-view-suffix').find('.ef-select-view-icon').html(closeIcon);
+        // mark option active
+        $('#f-cal-type-options .ef-select-option-active').removeClass('ef-select-option-active');
+        $('#f-cal-type-options .ef-select-option[value="' + key + '"]').addClass('ef-select-option-active');
+    }
+
+    function resetTypeSelect() {
+        var $hidden = $('#f-cal-type');
+        var $select = $('#f-cal-type-select');
+        $hidden.val('');
+        $select.attr('chosen', 'false');
+        $select.children('.ef-select-view-input').removeClass('ef-select-view-input-hidden').val('');
+        $select.children('.ef-select-view-value').addClass('ef-select-view-value-hidden').html('');
+        var expandIcon = '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-expand" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter" style="transform: rotate(-45deg);"><path d="M7 26v14c0 .552.444 1 .996 1H22m19-19V8c0-.552-.444-1-.996-1H26"></path></svg>';
+        $select.children('.ef-select-view-suffix').find('.ef-select-view-icon').html(expandIcon);
+        $('#f-cal-type-options .ef-select-option-active').removeClass('ef-select-option-active');
+    }
+
+    function initDatePickerOnce() {
+        var $input = $('#f-cal-date');
+        if ($input.data('daterangepicker')) return;
+        $input.daterangepicker({
+            ...EFDate.getDefaultOptions('YYYY-MM-DD'),
+            singleDatePicker: true,
+            showDropdowns: true,
+            autoUpdateInput: false
+        }).on('apply.daterangepicker', function (ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD'));
+        }).on('cancel.daterangepicker', function (ev, picker) {
+            $(this).val('');
+        });
+    }
+
+    function resetForm() {
+        $('#cal-event-id, #f-cal-title, #f-cal-date, #f-cal-note').val('');
+        resetTypeSelect();
+        // 默认选中第一个类型
+        var $firstOpt = $('#f-cal-type-options .ef-select-option:first');
+        if ($firstOpt.length) setTypeSelect($firstOpt.attr('value'), $firstOpt.children('.ef-select-option-content').text());
+        setEfCheckbox('f-cal-recurring-label', false);
+        $('#cal-form-error').hide().text('');
+    }
+
+    function saveEvent() {
+        var title = $('#f-cal-title').val().trim();
+        var date  = $('#f-cal-date').val().trim();
+        if (!title) { showError('标题不能为空'); return; }
+        if (!date)  { showError('请选择日期');   return; }
+
+        var id        = $('#cal-event-id').val();
+        var recurring = $('#f-cal-recurring').is(':checked');
+        var dateParts = date.split('-');
+        var payload   = {
+            title:  title,
+            date:   date,
+            type:   $('#f-cal-type').val(),
+            recurring: recurring,
+            note:   $('#f-cal-note').val().trim() || null,
+            recurringRule: recurring ? {
+                type:  'annual',
+                month: parseInt(dateParts[1], 10),
+                day:   parseInt(dateParts[2], 10),
+            } : null,
+        };
+
+        var method = id ? 'PUT'  : 'POST';
+        var url    = id ? BASE + '/event/' + id : BASE + '/event';
+
+        request(method, url, payload).then(function () {
+            closeModal();
+            loadEvents();
+            toast(id ? '事件已更新' : '事件已添加', 'success');
+        });
+    }
+
+    function deleteEvent() {
+        var id = $('#cal-event-id').val();
+        if (!id || !confirm('确认删除此事件？')) return;
+        request('DELETE', BASE + '/event/' + id).then(function () {
+            closeModal();
+            loadEvents();
+            toast('事件已删除', 'success');
+        });
+    }
+
+    function showError(msg) {
+        $('#cal-form-error').text(msg).show();
+    }
+
+    // ─── 工具 ──────────────────────────────────────────────────────────────
+    function esc(s) {
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function toast(msg, type) {
+        type = type || 'success';
+        var icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-xmark';
+        var $t = $('<div class="toast-item ' + type + '"><i class="fa-solid ' + icon + '"></i>' + esc(msg) + '</div>');
+        $('#cal-toast-wrap').append($t);
+        setTimeout(function () { $t.fadeOut(300, function () { $t.remove(); }); }, 2800);
+    }
+
+    // ─── 初始化 ────────────────────────────────────────────────────────────
+    function openTypeManager() {
+        loadTypes();
+        $('#type-manager-modal').show();
+    }
+
+    function openImportModal() {
+        $('#f-import-year').val(state.year);
+        if (!$('#f-import-source').val()) {
+            $('#f-import-source').val('timor');
+        }
+        resetImportResult();
+        $('#holiday-import-modal').show();
+    }
+
+    function closeImportModal() {
+        $('#holiday-import-modal').hide();
+        setImportLoading(false);
+    }
+
+    function resetImportResult() {
+        $('#cal-import-result')
+            .addClass('cal-import-result-empty')
+            .html('选择年份和数据源后开始导入');
+    }
+
+    function setImportLoading(loading) {
+        var $btn = $('#cal-import-submit');
+        if (!$btn.data('default-html')) {
+            $btn.data('default-html', $btn.html());
+        }
+
+        $btn.prop('disabled', loading);
+        $btn.html(loading ? '<i class="fa-solid fa-spinner fa-spin"></i> 导入中...' : $btn.data('default-html'));
+    }
+
+    function renderImportResult(result) {
+        result = result || {};
+        var details = Array.isArray(result.details) ? result.details : [];
+        var html = '';
+
+        html += '<div class="cal-import-summary">';
+        html += '<div class="cal-import-chip success"><strong>' + esc(result.imported || 0) + '</strong><span>新增</span></div>';
+        html += '<div class="cal-import-chip info"><strong>' + esc(result.skipped || 0) + '</strong><span>跳过</span></div>';
+        html += '<div class="cal-import-chip warn"><strong>' + esc(result.errors || 0) + '</strong><span>错误</span></div>';
+        html += '</div>';
+
+        if (details.length) {
+            html += '<ul class="cal-import-detail-list">';
+            details.slice(0, 12).forEach(function (detail) {
+                html += '<li>' + esc(detail) + '</li>';
+            });
+            html += '</ul>';
+        }
+
+        $('#cal-import-result').removeClass('cal-import-result-empty').html(html);
+    }
+
+    function importHolidays() {
+        var year = parseInt($('#f-import-year').val(), 10);
+        var source = $('#f-import-source').val() || 'timor';
+
+        if (!year || year < 2000 || year > 2100) {
+            new Alert($('#holiday-import-modal .ef-modal-body')).error('年份范围需在 2000-2100 之间', { percent: '320px', title: '提示', closable: true });
+            return;
+        }
+
+        setImportLoading(true);
+
+        request('POST', BASE + '/import-holidays', { year: year, source: source })
+            .then(function (result) {
+                renderImportResult(result);
+                state.year = year;
+                loadEvents();
+                toast('法定假日已导入', 'success');
+            })
+            .always(function () {
+                setImportLoading(false);
+            });
+    }
+
+    function init() {
+        // 先加载类型，再加载事件
+        loadTypes().then(function () { loadEvents(); });
+        // 新建类型
+        $('#new-type-create').on('click', function () {
+            var key   = $('#new-type-key').val().trim();
+            var label = $('#new-type-label').val().trim();
+            var color = $('#new-type-color').val().trim();
+            if (!key || !label) { new Alert($('#type-manager-modal .ef-modal-body')).error('请填写 key 和 名称', {percent: '320px', title: '提示', closable: true}); return; }
+            request('POST', BASE + '/type', { key: key, label: label, color: color }).then(function () {
+                $('#new-type-key, #new-type-label, #new-type-color').val('');
+                loadTypes();
+                toast('已添加', 'success');
+            });
+        });
+    }
+
+    return {
+        init:       init,
+        nav:        nav,
+        goToday:    goToday,
+        switchView: switchView,
+        openCreate: openCreate,
+        openEdit:   openEdit,
+        openImportModal: openImportModal,
+        closeImportModal: closeImportModal,
+        importHolidays: importHolidays,
+        closeModal: closeModal,
+        openTypeManager: openTypeManager,
+        saveEvent:  saveEvent,
+        deleteEvent: deleteEvent,
+    };
+
+}(jQuery));
+
+$(document).ready(function () { CalMgr.init(); });
+</script>
+{% endblock %}

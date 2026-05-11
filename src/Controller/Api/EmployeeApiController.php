@@ -2,10 +2,12 @@
 
 namespace App\Controller\Api;
 
+use App\Controller\Api\ApiResponse;
 use App\Entity\Organization\Employee;
 use App\Repository\Organization\CompanyRepository;
 use App\Repository\Organization\DepartmentRepository;
 use App\Repository\Organization\PositionRepository;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -156,18 +158,40 @@ class EmployeeApiController extends AbstractController
         try {
             $em->persist($employee);
             $em->flush();
-            
-            return $this->json([
-                'success' => true,
+
+            // 如果勾选了“按入职日期启用账号”
+            if (!empty($data['activateOnHireDate']) && !empty($data['hireDate'])) {
+                $executeAt = $data['scheduledTask']['executeAt'] ?? null;
+                $this->createActivationTask($employee, $data['hireDate'], $em, $executeAt);
+            }
+
+            return ApiResponse::success(json_encode([
                 'employee' => [
-                    'id' => $employee->getId(),
-                    'name' => $employee->getName(),
-                    'employeeNo' => $employee->getEmployeeNo()
-                ]
-            ]);
+                    'id'         => (string) $employee->getId(),
+                    'name'       => $employee->getName(),
+                    'employeeNo' => $employee->getEmployeeNo(),
+                ],
+            ]));
+        } catch (UniqueConstraintViolationException $e) {
+            $msgKey = $this->resolveUniqueViolationKey($e->getMessage());
+            return ApiResponse::error(json_encode([]), 409, $msgKey);
         } catch (\Exception $e) {
-            return $this->json(['success' => false, 'error' => $e->getMessage()], 500);
+            return ApiResponse::error(json_encode([]), 500, 'employee.error.create_failed');
         }
+    }
+
+    /** 根据 UniqueConstraintViolationException 消息推断违反了哪个字段约束 */
+    private function resolveUniqueViolationKey(string $message): string
+    {
+        if (preg_match('/Key \(([^)]+)\)=/', $message, $matches)) {
+            return match ($matches[1]) {
+                'email'       => 'employee.error.duplicate_email',
+                'username'    => 'employee.error.duplicate_username',
+                'employee_no' => 'employee.error.duplicate_employee_no',
+                default       => 'employee.error.duplicate_field',
+            };
+        }
+        return 'employee.error.create_failed';
     }
 
     #[Route('/delete', name: 'api_employee_delete', methods: ['POST'])]
@@ -213,5 +237,48 @@ class EmployeeApiController extends AbstractController
             'deleted' => $deleted,
             'errors' => $errors
         ]);
+    }
+
+    private function createActivationTask(Employee $employee, string $hireDateStr, EntityManagerInterface $em, ?string $executeAt = null): void
+    {
+        try {
+            $hireDate = new \DateTime($hireDateStr);
+
+            // 如果传入了具体执行时间，优先使用；否则默认为入职当天 00:05
+            if ($executeAt) {
+                $scheduledAt = new \DateTimeImmutable($executeAt);
+            } else {
+                $scheduledAt = \DateTimeImmutable::createFromMutable($hireDate)->setTime(0, 5);
+            }
+
+            // Cron 格式: 分 时 日 月 *
+            $cron = sprintf('%d %d %d %d *',
+                (int)$scheduledAt->format('i'),
+                (int)$scheduledAt->format('G'),
+                (int)$scheduledAt->format('j'),
+                (int)$scheduledAt->format('n')
+            );
+            
+            $task = new \App\Entity\System\Task();
+            $task->setName('入职账号启用: ' . $employee->getName());
+            $task->setDescription(sprintf('为员工 %s (%s) 在入职日期 %s 自动启用账号', $employee->getName(), $employee->getEmployeeNo(), $hireDateStr));
+            $task->setCronExpression($cron);
+            $task->setHandler('App\Task\ActivateAccountByHireDateTask');
+            $task->setPayload(['employeeId' => (string)$employee->getId()]);
+            $task->setEnabled(true);
+            $task->setCategory('security');
+
+            // 如果执行时间在过去，立即触发
+            $now = new \DateTimeImmutable();
+            if ($scheduledAt < $now) {
+                $scheduledAt = $now;
+            }
+            $task->setNextRunAt($scheduledAt);
+
+            $em->persist($task);
+            $em->flush();
+        } catch (\Exception $e) {
+            // Log error but don't fail the whole request
+        }
     }
 }

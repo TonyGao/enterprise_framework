@@ -72,6 +72,21 @@ $(document).ready(function () {
     renderDepartmentInfo(modal, getDepartmentInfoFromNode(content));
   }
 
+  function normalizePathWithCompanyScope(path, companyScope) {
+    if (!path || !companyScope) {
+      return path || '';
+    }
+
+    const parts = path.split('/').filter(Boolean);
+    if (parts.length < 2) {
+      return path;
+    }
+
+    // Keep group/department hierarchy, only replace the company segment.
+    parts[1] = companyScope;
+    return parts.join('/');
+  }
+
   function syncDepartmentPopupSize(departmentInput, contentId) {
     const popup = $('#' + contentId);
     if (popup.length === 0) {
@@ -598,13 +613,18 @@ $(document).ready(function () {
     let choseId = $(this).attr('choseId');
     let mode = $(this).attr('mode');
     let path = $(this).attr('path');
+    let modal = $(this).parents(
+      ".ef-modal-container[inputid='" + inputid + "']"
+    );
+    const companyScope = (modal.attr('data-company-scope') || '').trim();
+    const displayPath = normalizePathWithCompanyScope(path, companyScope);
     let departmentInput = $('#' + inputid);
     let selectionUl = departmentInput
       .children()
       .find('.ef-department-selection-span ul');
     let template = `<li class="ef-department-selection-li">
     <div class="ef-department-selection-li-content">
-      <a href="link" class="ef-link" id="${choseId}">${path}</a>
+      <a href="link" class="ef-link" id="${choseId}">${displayPath}</a>
       <span class="ef-department-view-suffix close-chose-department" style="display: none;">
         <span class="ef-department-view-icon">
           <i class="fa-regular fa-circle-xmark"></i>
@@ -613,9 +633,6 @@ $(document).ready(function () {
     </div>
     </li>`;
 
-    let modal = $(this).parents(
-      ".ef-modal-container[inputid='" + inputid + "']"
-    );
     if (mode === 'single') {
       selectionUl.html(template);
       modal.hide();
@@ -652,5 +669,43 @@ $(document).ready(function () {
     input.show();
     input.focus();
     $(this).parents('.ef-department-selection-li').remove();
+  });
+
+  // Auto-bind company→department linkage.
+  // Any department span with data-company-select-id="<hidden-input-id>" gets
+  // data-company-id / data-company-name synced automatically whenever the
+  // referenced company select changes — no per-template JS needed.
+  $('[data-company-select-id]').each(function () {
+    const $deptSpan = $(this);
+    const $companyHidden = $('#' + $deptSpan.attr('data-company-select-id'));
+    if (!$companyHidden.length) return;
+
+    // Initial sync: keep current department selection, only sync company scope.
+    let initialCompanyName = '';
+    if ($companyHidden.is('select')) {
+      initialCompanyName = $companyHidden.find(':selected').text().trim();
+    } else {
+      initialCompanyName = $companyHidden.next('.ef-select').find('.ef-select-view-value').text().trim();
+    }
+    $deptSpan
+      .attr('data-company-id', $companyHidden.val() || '')
+      .attr('data-company-name', initialCompanyName || '');
+
+    $companyHidden.on('change.deptSync', function () {
+      const companyId = $(this).val();
+      let companyName = '';
+      if ($(this).is('select')) {
+        companyName = $(this).find(':selected').text().trim();
+      } else {
+        companyName = $(this).next('.ef-select').find('.ef-select-view-value').text().trim();
+      }
+      $deptSpan
+        .attr('data-company-id', companyId || '')
+        .attr('data-company-name', companyName || '')
+        .attr('chosen', 'false');
+      $deptSpan.find('.ef-department-selection-span ul').html('');
+      $deptSpan.find('.ef-department-view-input').attr('chose', 'false').show().val('');
+      $deptSpan.closest('.ef-deparment-element').find('input[type="hidden"]').val('');
+    });
   });
 });

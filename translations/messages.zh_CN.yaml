@@ -9,6 +9,12 @@ action:
   clear: 清空
   search: 搜索
 employee:
+  error:
+    duplicate_email: '邮箱已被其他账号使用，请更换后重试'
+    duplicate_username: '登录名已存在，请更换后重试'
+    duplicate_employee_no: '员工工号已存在，请更换后重试'
+    duplicate_field: '提交的信息与现有记录冲突，请检查后重试'
+    create_failed: '创建员工失败，请稍后重试'
   gender_value:
     male: 男
     female: 女
@@ -613,3 +619,36 @@ test:
       datetime: '选择日期和时间'
       time: '选择时间'
       datetimerange: '开始时间 - 结束时间'
+admin:
+  task:
+    title: '定时任务'
+    list_view: '列表'
+    month_view: '月'
+    week_view: '周'
+    day_view: '日'
+    create_task: '新建任务'
+    total_tasks: '任务总数'
+    enabled_tasks: '已启用'
+    today_exec: '今日执行'
+    exec_errors: '执行失败'
+    all_categories: '全部分类'
+    category: '分类'
+    search_placeholder: '搜索任务名称、Cron或类名...'
+    table:
+      name: '任务名称'
+      cron: '执行时机'
+      category: '分类'
+      last_run: '上次执行'
+      next_run: '下次执行'
+      status: '最近状态'
+      enabled: '启用'
+      actions: '操作'
+    empty: '暂无任务'
+    cal_today: '今天'
+    cal_this_week: '本周'
+    legend_pending: '计划执行'
+    legend_success: '成功'
+    legend_error: '失败'
+    week_format: '%year%年%month%月 第%week%周'
+    day_format: '%year%年%month%月%day%日'
+    month_format: '%year%年%month%月'

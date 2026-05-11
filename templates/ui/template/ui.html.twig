@@ -207,10 +207,15 @@ $(document).ready(function () {
    添加额外类名：{{ ui.input('myInput', 'text', 'Please enter', '', 'ef-input-rounded', '', 'date-picker') }}
    日期选择器：{{ ui.input('myDate', 'text', '', '', 'ef-input-rounded', '', 'date-picker') }}
 #}
-{% macro input(id, type = "text", placeholder = "", value = "", wrapperClass = "", inputClass = "ef-input-size-medium", extraClasses = "") %}
+{% macro input(id, type = "text", placeholder = "", value = "", wrapperClass = "", inputClass = "ef-input-size-medium", extraClasses = "", attributes = {}) %}
+    {# Backwards-compat: some callers pass attributes as the 7th arg (extraClasses). If extraClasses is an array, treat it as attributes and clear extraClasses. #}
+    {% if extraClasses is iterable and extraClasses is not same as '' %}
+        {% set attributes = extraClasses %}
+        {% set extraClasses = '' %}
+    {% endif %}
     {% set isPicker = 'picker' in extraClasses %}
     <span class="ef-input-wrapper {{ wrapperClass }}">
-        <input class="ef-input text {{ inputClass }} {{ extraClasses }}" type="{{ type }}" id="{{ id }}" value="{{ value }}" placeholder="{{ placeholder }}"{% if isPicker %} autocomplete="off"{% endif %}>
+        <input class="ef-input text {{ inputClass }} {{ extraClasses }}" type="{{ type }}" id="{{ id }}" value="{{ value }}" placeholder="{{ placeholder }}"{% if isPicker %} autocomplete="off"{% endif %}{% for attr, val in attributes %} {{ attr }}="{{ val }}"{% endfor %}>
     </span>
 {% endmacro %}
 

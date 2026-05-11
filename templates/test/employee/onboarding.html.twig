@@ -127,6 +127,9 @@
             color: #52c41a;
             margin-bottom: 20px;
         }
+        .time-picker-only .calendar-table {
+            display: none !important;
+        }
     </style>
 {% endblock %}
 
@@ -265,7 +268,6 @@
             </div>
 
             <div class="form-actions">
-                <a href="{{ path('employee_list') }}" class="btn outline medium round" onclick="window.clearOnboardingFormCache && window.clearOnboardingFormCache();">{{ 'employee.onboarding.action.back_to_list'|trans }}</a>
                 <button class="btn primary medium round" type="button" onclick="nextStep(1)">{{ 'employee.onboarding.action.next'|trans }}</button>
             </div>
         </div>
@@ -293,16 +295,25 @@
                         <label class="form-label">{{ 'employee.onboarding.job_info.hire_date'|trans }}</label>
                         {{ ui.input('hireDate', 'text', '', '', 'ef-input-rounded ef-input-h32', '', 'date-picker') }}
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">{{ 'employee.onboarding.job_info.company'|trans }}</label>
-                        {{ ui.select(companies|map(c => {label: c.name, value: c.id}), 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.company'|trans}), '100%', 'ef-input-rounded', 'company', 'company', '') }}
+                    <div class="form-group" style="align-self: flex-end; padding-bottom: 8px; display: flex; flex-direction: row; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        {{ ui.checkbox('activateOnHireDate', '按入职日期启用账号', 'true', false, '', 'activateOnHireDate') }}
+                        <span id="activationTimeWrapper" style="display: none; align-items: center; gap: 6px;">
+                            <span style="font-size: 13px; color: #666;">启用时间</span>
+                            <span class="ef-input-wrapper ef-input-rounded" style="width: 100px;">
+                                <input class="ef-input ef-input-size-medium text" type="text" id="activationTime" name="activationTime" value="00:00" autocomplete="off" style="cursor: pointer;">
+                            </span>
+                        </span>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
+                        <label class="form-label">{{ 'employee.onboarding.job_info.company'|trans }}</label>
+                        {{ ui.select(companies|map(c => {label: c.name, value: c.id}), 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.company'|trans}), '100%', 'ef-input-rounded', 'company', 'company', '') }}
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.job_info.department'|trans }}</label>
                         <div class="ef-deparment-element">
-                            <span class="ef-department-view-single ef-department ef-department-view ef-department-view-size-medium ef-department-view-search ef-input-rounded" style="width: 100%;" chosen="false" id="departmentInput" contentid="departmentContent" data-company-id="">
+                            <span class="ef-department-view-single ef-department ef-department-view ef-department-view-size-medium ef-department-view-search ef-input-rounded" style="width: 100%;" chosen="false" id="departmentInput" contentid="departmentContent" data-company-id="" data-company-select-id="company" data-search-url="/api/admin/org/department/searchByKey" data-modal-url="/admin/org/department/singleSelect">
                                 <div class="ef-department-selection-container">
                                     <div class="ef-department-selection">
                                         <span class="ef-department-selection-span">
@@ -338,21 +349,56 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.job_info.position'|trans }}</label>
                         {{ ui.select(positions|map(p => {label: p.name, value: p.id}), 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.position'|trans}), '100%', 'ef-input-rounded', 'position', 'position', '') }}
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.job_info.manager'|trans }}</label>
-                        {{ ui.select(managers|map(m => {label: m.name, value: m.id}), 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.manager'|trans}), '100%', 'ef-input-rounded', 'manager', 'manager', '') }}
+                        <div class="ef-user-element">
+                            <span class="ef-user-view-single ef-user ef-user-view ef-user-view-size-medium ef-user-view-search ef-input-rounded" style="width: 100%;" chosen="false" id="managerInput" contentid="managerContent" data-search-url="/test/api/user/searchByKey" data-modal-url="/test/api/user/singleSelect">
+                                <div class="ef-user-selection-container">
+                                    <div class="ef-user-selection">
+                                        <span class="ef-user-selection-span">
+                                            <ul>
+                                            </ul>
+                                        </span>
+                                    </div>
+                                    <input class="ef-user-view-input" placeholder="{{ 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.manager'|trans}) }}" mode="single" chose="false">
+                                </div>
+                                <span class="ef-user-view-value ef-user-view-value-hidden"></span>
+                                <span class="ef-user-view-suffix show-user-modal">
+                                    <span class="ef-user-view-icon">
+                                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-search" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                                            <path d="M33.072 33.071c6.248-6.248 6.248-16.379 0-22.627-6.249-6.249-16.38-6.249-22.628 0-6.248 6.248-6.248 16.379 0 22.627 6.248 6.248 16.38 6.248 22.628 0Zm0 0 8.485 8.485"></path>
+                                        </svg>
+                                    </span>
+                                </span>
+                            </span>
+                            <input type="hidden" component="select" name="manager" id="manager" value="">
+                        </div>
+                        <div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; min-width: 260px; width: fit-content; display: none;" id="managerContent" parentid="managerInput">
+                            <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
+                                <div class="ef-trigger-content">
+                                    <div class="ef-user-dropdown">
+                                        <div class="ef-scrollbar ef-scrollbar-type-embed">
+                                            <div class="ef-scrollbar-container ef-user-dropdown-list-wrapper">
+                                                <ul class="ef-user-dropdown-list">
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="form-actions">
-                <button class="btn outline medium round" type="button" onclick="prevStep(1)">{{ 'employee.onboarding.action.prev'|trans }}</button>
+                <button class="btn outline medium round" type="button" onclick="prevStep(2)">{{ 'employee.onboarding.action.prev'|trans }}</button>
                 <button class="btn primary medium round" type="button" onclick="nextStep(2)">{{ 'employee.onboarding.action.next'|trans }}</button>
             </div>
         </div>
@@ -368,22 +414,28 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.account_info.password'|trans }} <span class="required">*</span></label>
-                        {{ ui.input('password', 'password', 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.account_info.password'|trans}), defaultPassword, 'ef-input-rounded') }}
+                        <span class="ef-input-wrapper ef-input-rounded">
+                            <input class="ef-input text ef-input-size-medium" type="password" id="password" value="{{ defaultPassword }}" placeholder="{{ 'employee.onboarding.placeholder.input'|trans({'%label%': 'employee.onboarding.account_info.password'|trans}) }}">
+                            <span class="ef-input-suffix" style="cursor: pointer;" onclick="togglePasswordVisibility('password', this)">
+                                <i class="fa-regular fa-eye" id="password-toggle-icon"></i>
+                            </span>
+                        </span>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.account_info.is_active'|trans }}</label>
                         <div style="padding-top: 8px;">
-                            {{ ui.checkbox('isActive', 'employee.status_value.active'|trans, 'true', true, '', 'isActive') }}
+                            {{ ui.checkbox('isActive', 'employee.account_status.enabled'|trans, 'true', true, '', 'isActive') }}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="form-actions">
-                <button class="btn outline medium round" type="button" onclick="prevStep(2)">{{ 'employee.onboarding.action.prev'|trans }}</button>
-                <button class="btn primary medium round" type="button" onclick="submitOnboardingForm()">{{ 'employee.onboarding.action.submit'|trans }}</button>
+            <div class="form-actions" style="position: relative;">
+                <div id="onboarding-submit-alert" style="width: 100%; margin-bottom: 10px;"></div>
+                <button class="btn outline medium round" type="button" onclick="prevStep(3)">{{ 'employee.onboarding.action.prev'|trans }}</button>
+                <button class="btn primary medium round" type="button" id="btn-submit-onboarding" onclick="submitOnboardingForm()">{{ 'employee.onboarding.action.submit'|trans }}</button>
             </div>
         </div>
 
@@ -418,14 +470,37 @@
             const formData = {};
             const inputs = document.querySelectorAll('#step-1-content input:not([type="hidden"]), #step-1-content select, #step-2-content input:not([type="hidden"]), #step-2-content select, #step-3-content input:not([type="hidden"]), #step-3-content select');
             inputs.forEach(input => {
-                if (input.id && input.value) {
-                    formData[input.id] = input.value;
+                if (input.id) {
+                    if (input.type === 'checkbox') {
+                        formData[input.id] = input.checked;
+                    } else if (input.value) {
+                        formData[input.id] = input.value;
+                    }
                 }
             });
-            // Also save hidden inputs for select components
-            const hiddenInputs = document.querySelectorAll('#step-1-content input[type="hidden"][component="select"], #step-2-content input[type="hidden"][component="select"], #step-3-content input[type="hidden"][component="select"]');
+            // 部门/上级组件：框架组件不更新 hidden input，直接从 selectionUl 的 <a> 读取选中值
+            const deptLink = $('#departmentInput .ef-department-selection-span ul li a.ef-link').first();
+            if (deptLink.length && deptLink.attr('id')) {
+                const deptId = deptLink.attr('id');
+                const deptLabel = deptLink.text().trim();
+                formData['department'] = deptId;
+                formData['department_label'] = deptLabel;
+                // 同步写回 hidden input，保证表单提交时有值
+                $('#department').val(deptId);
+            }
+            const managerLink = $('#managerInput .ef-user-selection-span ul li a.ef-link').first();
+            if (managerLink.length && managerLink.attr('id')) {
+                const managerId = managerLink.attr('id');
+                const managerLabel = managerLink.text().trim();
+                formData['manager'] = managerId;
+                formData['manager_label'] = managerLabel;
+                // 同步写回 hidden input
+                $('#manager').val(managerId);
+            }
+            // 其余 hidden inputs（ef-select 类组件，component="select" 属性）
+            const hiddenInputs = document.querySelectorAll('#step-1-content input[type="hidden"], #step-2-content input[type="hidden"], #step-3-content input[type="hidden"]');
             hiddenInputs.forEach(input => {
-                if (input.id && input.value) {
+                if (input.id && input.id !== 'department' && input.id !== 'manager' && input.value) {
                     formData[input.id] = input.value;
                 }
             });
@@ -442,7 +517,32 @@
                         const input = document.getElementById(id);
                         if (input) {
                             // Check if this is a select component (has component="select" attribute)
-                            if (input.getAttribute('component') === 'select') {
+                            if (id === 'department' || id === 'manager') {
+                                // 部门和直属上级：使用 ef-department-view / ef-user-view 组件，必须先于通用 select 分支判断
+                                const value = formData[id];
+                                const label = formData[id + '_label'];
+                                if (value && label) {
+                                    // 同时写回 hidden input（保证表单提交）
+                                    input.value = value;
+                                    
+                                    const viewSpan = $(input).parent().find('[id$="Input"]');
+                                    viewSpan.attr('chosen', 'true');
+                                    
+                                    if (id === 'department') {
+                                        // 还原部门选中状态：注入 <li> 到 selectionUl，隐藏搜索输入框
+                                        const selectionUl = viewSpan.find('.ef-department-selection-span ul');
+                                        selectionUl.html(`<li class="ef-department-selection-li"><div class="ef-department-selection-li-content"><a href="link" class="ef-link" id="${value}">${label}</a><span class="ef-department-view-suffix close-chose-department" style="display: none;"><span class="ef-department-view-icon"><i class="fa-regular fa-circle-xmark"></i></span></span></div></li>`);
+                                        viewSpan.find('.ef-department-view-input').val('').hide();
+                                    } else {
+                                        // 还原上级选中状态：注入 <li> 到 selectionUl，隐藏搜索输入框
+                                        const selectionUl = viewSpan.find('.ef-user-selection-span ul');
+                                        selectionUl.html(`<li class="ef-user-selection-li"><div class="ef-user-selection-li-content"><a href="link" class="ef-link" id="${value}">${label}</a><span class="ef-user-view-suffix close-chose-user" style="display: none;"><span class="ef-user-view-icon"><i class="fa-regular fa-circle-xmark"></i></span></span></div></li>`);
+                                        viewSpan.find('.ef-user-selection-container input').val('').hide();
+                                    }
+                                    
+                                    console.log('Restored special component:', id, '=', value, '(label: ' + label + ')');
+                                }
+                            } else if (input.getAttribute('component') === 'select') {
                                 const value = formData[id];
                                 const selectInput = $(input).next('.ef-select-view-single');
                                 const contentId = selectInput.attr('contentid');
@@ -467,7 +567,11 @@
                                     console.log('Restored select:', id, '=', value, '(label: ' + label + ')');
                                 }
                             } else {
-                                input.value = formData[id];
+                                if (input.type === 'checkbox') {
+                                    input.checked = (formData[id] === true || formData[id] === 'true');
+                                } else {
+                                    input.value = formData[id];
+                                }
                                 console.log('Restored input:', id, '=', formData[id]);
                             }
                         }
@@ -526,6 +630,20 @@
             saveCurrentStep(step + 1);
             goToStep(step + 1);
         };
+
+        window.togglePasswordVisibility = function(inputId, iconContainer) {
+            const input = document.getElementById(inputId);
+            const icon = iconContainer.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        };
         
         window.prevStep = function(step) {
             saveFormData();
@@ -540,10 +658,37 @@
                 alert('No form data to submit');
                 return;
             }
-            
+
+            // i18n 错误消息（通过 Twig 注入）
+            const errorMessages = {
+                'employee.error.duplicate_email':     '{{ "employee.error.duplicate_email"|trans }}',
+                'employee.error.duplicate_username':  '{{ "employee.error.duplicate_username"|trans }}',
+                'employee.error.duplicate_employee_no': '{{ "employee.error.duplicate_employee_no"|trans }}',
+                'employee.error.duplicate_field':     '{{ "employee.error.duplicate_field"|trans }}',
+                'employee.error.create_failed':       '{{ "employee.error.create_failed"|trans }}',
+            };
+
+            function showSubmitAlert(type, msg) {
+                const icons = {
+                    error: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><path fill-rule="evenodd" clip-rule="evenodd" d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4 4 12.954 4 24s8.954 20 20 20Zm4.955-27.771-4.95 4.95-4.95-4.95a1 1 0 0 0-1.414 0l-1.414 1.414a1 1 0 0 0 0 1.414l4.95 4.95-4.95 4.95a1 1 0 0 0 0 1.414l1.414 1.414a1 1 0 0 0 1.414 0l4.95-4.95 4.95 4.95a1 1 0 0 0 1.414 0l1.414-1.414a1 1 0 0 0 0-1.414l-4.95-4.95 4.95-4.95a1 1 0 0 0 0-1.414l-1.414-1.414a1 1 0 0 0-1.414 0Z" fill="currentColor" stroke="none"></path></svg>',
+                    warning: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><path fill-rule="evenodd" clip-rule="evenodd" d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4 4 12.954 4 24s8.954 20 20 20Zm-2-11a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2Zm4-18a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V15Z" fill="currentColor" stroke="none"></path></svg>',
+                };
+                const html = `<div role="alert" class="ef-alert ef-alert-${type}" style="margin-bottom:4px;">
+                    <div class="ef-alert-icon">${icons[type] || icons.warning}</div>
+                    <div class="ef-alert-body"><div class="ef-alert-content">${msg}</div></div>
+                </div>`;
+                const $el = $(html).hide();
+                $('#onboarding-submit-alert').empty().append($el);
+                $el.fadeIn(300);
+                setTimeout(() => $el.fadeOut(500, () => $el.remove()), 7000);
+            }
+
+            const $btn = $('#btn-submit-onboarding');
+            $btn.prop('disabled', true).text('{{ "action.saving"|trans }}');
+
             try {
                 const formData = JSON.parse(cached);
-                
+
                 // Collect all hidden input values for select components
                 const hiddenInputs = document.querySelectorAll('#step-1-content input[type="hidden"][component="select"], #step-2-content input[type="hidden"][component="select"], #step-3-content input[type="hidden"][component="select"]');
                 hiddenInputs.forEach(input => {
@@ -551,27 +696,40 @@
                         formData[input.id] = input.value;
                     }
                 });
-                
+
+                // Build scheduled task payload when activateOnHireDate is checked
+                if (formData.activateOnHireDate === true || formData.activateOnHireDate === 'true') {
+                    const hireDate = formData.hireDate || '';
+                    const activationTime = formData.activationTime || '00:00';
+                    if (hireDate) {
+                        formData.scheduledTask = {
+                            type: 'activate_employee_account',
+                            executeAt: hireDate + ' ' + activationTime + ':00'
+                        };
+                    }
+                }
+
                 const response = await fetch('/api/employee/create', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
-                
+
                 const result = await response.json();
-                
-                if (result.success) {
-                    // Clear cache and go to complete step
+
+                if (result.code === 200) {
                     clearOnboardingFormCache();
                     goToStep(4);
                 } else {
-                    alert('Failed to create employee: ' + (result.error || 'Unknown error'));
+                    const msgKey = result.message || 'employee.error.create_failed';
+                    const friendlyMsg = errorMessages[msgKey] || msgKey;
+                    showSubmitAlert('error', friendlyMsg);
+                    $btn.prop('disabled', false).text('{{ "employee.onboarding.action.submit"|trans }}');
                 }
             } catch (e) {
                 console.error('Submit error:', e);
-                alert('Failed to submit form: ' + e.message);
+                showSubmitAlert('error', errorMessages['employee.error.create_failed']);
+                $btn.prop('disabled', false).text('{{ "employee.onboarding.action.submit"|trans }}');
             }
         };
         
@@ -608,6 +766,40 @@
                 $(this).val('');
                 saveFormData();
             });
+
+            // Hire-date activation time picker
+            $('#activationTime').daterangepicker({
+                ...EFDate.getDefaultOptions('HH:mm'),
+                singleDatePicker: true,
+                timePicker: true,
+                timePicker24Hour: true,
+                autoUpdateInput: true,
+                startDate: moment('00:00', 'HH:mm')
+            }).on('show.daterangepicker', function(ev, picker) {
+                picker.container.addClass('time-picker-only');
+            }).on('hide.daterangepicker', function(ev, picker) {
+                picker.container.removeClass('time-picker-only');
+            }).on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('HH:mm'));
+                saveFormData();
+            }).on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('00:00');
+                saveFormData();
+            });
+
+            // activateOnHireDate checkbox: show/hide time picker
+            function syncActivationTimeVisibility() {
+                var checked = $('#activateOnHireDate').prop('checked');
+                if (checked) {
+                    $('#activationTimeWrapper').css('display', 'inline-flex');
+                } else {
+                    $('#activationTimeWrapper').hide();
+                }
+            }
+            $('#activateOnHireDate').on('change', function() {
+                syncActivationTimeVisibility();
+                saveFormData();
+            });
             
             // Attach form listeners to all inputs (with IME composition support)
             const inputs = document.querySelectorAll('#step-1-content input:not([type="hidden"]), #step-1-content select, #step-2-content input:not([type="hidden"]), #step-2-content select, #step-3-content input:not([type="hidden"]), #step-3-content select');
@@ -635,40 +827,26 @@
                 console.log('Hidden input changed:', this.id, '=', this.value);
                 saveFormData();
             });
-            
-            // Company dropdown change - update department selector's companyId and clear department selection
-            $('#company').on('change', function(e) {
-                const companyId = $(this).val();
-                const departmentInput = $('#departmentInput');
-                const departmentHidden = $('#department');
-                
-                // Update data-company-id attribute
-                departmentInput.attr('data-company-id', companyId || '');
-                departmentHidden.attr('company-id', companyId || '');
-                
-                // Clear department selection if company changed
-                if (companyId) {
-                    // Clear the department selection UI
-                    const selectionUl = departmentInput.find('.ef-department-selection-span ul');
-                    selectionUl.html('');
-                    
-                    const input = departmentInput.find('.ef-department-selection-container input.ef-department-view-input');
-                    input.attr('chose', 'false');
-                    input.show();
-                    input.val('');
-                    
-                    departmentInput.attr('chosen', 'false');
-                    departmentHidden.val('');
-                    
-                    console.log('Company changed to:', companyId, '- Department selection cleared');
-                }
-                
-                saveFormData();
+
+            // 部门/上级组件不触发 change 事件，用事件委托捕获选中动作后主动保存
+            $('body').on('click', '.ef-department-option', function() {
+                setTimeout(saveFormData, 50);
+            });
+            $('body').on('click', '[type="button"].confirmDepartment', function() {
+                setTimeout(saveFormData, 50);
+            });
+            $('body').on('click', '[type="button"].confirmuser', function() {
+                setTimeout(saveFormData, 50);
+            });
+            $('body').on('click', '.ef-user-option', function() {
+                setTimeout(saveFormData, 50);
             });
             
             // Restore cached data and step
             restoreFormData();
             restoreCurrentStep();
+            // Sync time picker visibility after restoring form
+            syncActivationTimeVisibility();
             
             // Warn before leaving if form has data
             window.addEventListener('beforeunload', function(e) {

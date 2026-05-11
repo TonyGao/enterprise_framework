@@ -10,6 +10,12 @@ action:
   clear: Clear
   search: Search
 employee:
+  error:
+    duplicate_email: 'This email address is already in use. Please use a different one.'
+    duplicate_username: 'This username is already taken. Please choose another.'
+    duplicate_employee_no: 'This employee number already exists. Please use a different one.'
+    duplicate_field: 'The submitted information conflicts with an existing record. Please check and try again.'
+    create_failed: 'Failed to create employee. Please try again later.'
   gender_value:
     male: Male
     female: Female
@@ -603,3 +609,36 @@ function_binding:
   function_code: 'Function Code'
   system_default: 'System Default'
   select_template: 'Please select a template'
+admin:
+  task:
+    title: 'Scheduled Tasks'
+    list_view: 'List'
+    month_view: 'Month'
+    week_view: 'Week'
+    day_view: 'Day'
+    create_task: 'New Task'
+    total_tasks: 'Total Tasks'
+    enabled_tasks: 'Enabled'
+    today_exec: 'Today Execs'
+    exec_errors: 'Exec Errors'
+    all_categories: 'All Categories'
+    category: 'Category'
+    search_placeholder: 'Search task name, cron or handler...'
+    table:
+      name: 'Task Name'
+      cron: 'Schedule'
+      category: 'Category'
+      last_run: 'Last Run'
+      next_run: 'Next Run'
+      status: 'Latest Status'
+      enabled: 'Enabled'
+      actions: 'Actions'
+    empty: 'No tasks found'
+    cal_today: 'Today'
+    cal_this_week: 'This Week'
+    legend_pending: 'Pending'
+    legend_success: 'Success'
+    legend_error: 'Error'
+    week_format: 'Week %week%, %month% %year%'
+    day_format: '%month% %day%, %year%'
+    month_format: '%month% %year%'

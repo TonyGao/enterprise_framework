@@ -77,6 +77,51 @@
     .time-picker-only .calendar-table {
         display: none !important;
     }
+    .usage-block {
+      background: #f8fafc;
+      border-top: 1px solid #e5e7eb;
+      padding: 20px 24px;
+    }
+    .usage-block h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 10px 0;
+    }
+    .usage-code {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 6px;
+      padding: 14px 16px;
+      font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre;
+      margin: 0;
+    }
+    .usage-code .c-tag { color: #7dd3fc; }
+    .usage-code .c-attr { color: #86efac; }
+    .usage-code .c-val { color: #fca5a5; }
+    .usage-code .c-comment { color: #94a3b8; font-style: italic; }
+    .usage-code .c-js-key { color: #c084fc; }
+    .usage-note {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+    .usage-badge {
+      display: inline-block;
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+    .usage-badge.green { background: #dcfce7; color: #15803d; }
   </style>
 {% endblock %}
 
@@ -179,6 +224,11 @@
         </span>
       </div>
     </div>
+    <div class="usage-block">
+      <h4><span class="usage-badge green">自动初始化</span>只需添加 CSS 类名，无需编写 JS</h4>
+      <pre class="usage-code"><span class="c-tag">&lt;input</span> <span class="c-attr">class</span>=<span class="c-val">"ef-input date-picker"</span> <span class="c-attr">type</span>=<span class="c-val">"text"</span> <span class="c-attr">autocomplete</span>=<span class="c-val">"off"</span><span class="c-tag">&gt;</span></pre>
+      <p class="usage-note">输出格式：<code>YYYY-MM-DD</code>。点击"确定"写入值，点击"清除"清空值。</p>
+    </div>
   </div>
 
   <!-- 2. DateTime (Symfony DateTime Constraint) -->
@@ -201,6 +251,11 @@
         </span>
       </div>
     </div>
+    <div class="usage-block">
+      <h4><span class="usage-badge green">自动初始化</span>只需添加 CSS 类名，无需编写 JS</h4>
+      <pre class="usage-code"><span class="c-tag">&lt;input</span> <span class="c-attr">class</span>=<span class="c-val">"ef-input datetime-picker"</span> <span class="c-attr">type</span>=<span class="c-val">"text"</span> <span class="c-attr">autocomplete</span>=<span class="c-val">"off"</span><span class="c-tag">&gt;</span></pre>
+      <p class="usage-note">输出格式：<code>YYYY-MM-DD HH:mm</code>，使用 24 小时制时间选择器。</p>
+    </div>
   </div>
 
   <!-- 3. Time (Symfony Time Constraint) -->
@@ -222,6 +277,13 @@
           <input class="ef-input ef-input-size-medium text time-picker" type="text" placeholder="{{ 'test.date.placeholder.time'|trans }}" autocomplete="off">
         </span>
       </div>
+    </div>
+    <div class="usage-block">
+      <h4><span class="usage-badge green">自动初始化</span>只需添加 CSS 类名，无需编写 JS</h4>
+      <pre class="usage-code"><span class="c-tag">&lt;input</span> <span class="c-attr">class</span>=<span class="c-val">"ef-input time-picker"</span> <span class="c-attr">type</span>=<span class="c-val">"text"</span> <span class="c-attr">autocomplete</span>=<span class="c-val">"off"</span><span class="c-tag">&gt;</span></pre>
+      <p class="usage-note">输出格式：<code>HH:mm</code>。实现原理：通过在 <code>show</code> 事件时给弹层添加 <code>time-picker-only</code> class，配合 CSS 隐藏日历表格，仅保留时间选择区域。需在页面中声明：</p>
+      <pre class="usage-code" style="margin-top:8px;"><span class="c-comment">/* 页面内声明，或添加到全局样式 */</span>
+<span class="c-attr">.time-picker-only</span> <span class="c-attr">.calendar-table</span> { <span class="c-js-key">display</span>: none <span class="c-val">!important</span>; }</pre>
     </div>
   </div>
 
@@ -296,6 +358,74 @@
           <input class="ef-input ef-input-size-medium text datetimerange-picker" type="text" placeholder="{{ 'test.date.placeholder.datetimerange'|trans }}" autocomplete="off" style="width: 100%; cursor: pointer;">
         </span>
       </div>
+    </div>
+    <div class="usage-block">
+      <h4><span class="usage-badge">手动初始化</span>范围选择器无自动初始化，需手动调用</h4>
+      <pre class="usage-code"><span class="c-tag">&lt;input</span> <span class="c-attr">class</span>=<span class="c-val">"ef-input datetimerange-picker"</span> <span class="c-attr">type</span>=<span class="c-val">"text"</span> <span class="c-attr">autocomplete</span>=<span class="c-val">"off"</span><span class="c-tag">&gt;</span>
+
+<span class="c-comment">// JS 初始化</span>
+<span class="c-attr">$</span>(<span class="c-val">'.datetimerange-picker'</span>).<span class="c-js-key">daterangepicker</span>({
+  ...<span class="c-attr">EFDate</span>.<span class="c-js-key">getDefaultOptions</span>(<span class="c-val">'YYYY-MM-DD HH:mm'</span>),
+  <span class="c-js-key">timePicker</span>: <span class="c-val">true</span>,
+  <span class="c-js-key">timePicker24Hour</span>: <span class="c-val">true</span>,
+  <span class="c-js-key">autoUpdateInput</span>: <span class="c-val">false</span>
+}).<span class="c-js-key">on</span>(<span class="c-val">'apply.daterangepicker'</span>, <span class="c-js-key">function</span>(ev, picker) {
+  <span class="c-attr">$</span>(<span class="c-val">this</span>).<span class="c-js-key">val</span>(picker.startDate.<span class="c-js-key">format</span>(<span class="c-val">'YYYY-MM-DD HH:mm'</span>) + <span class="c-val">' - '</span> + picker.endDate.<span class="c-js-key">format</span>(<span class="c-val">'YYYY-MM-DD HH:mm'</span>));
+}).<span class="c-js-key">on</span>(<span class="c-val">'cancel.daterangepicker'</span>, <span class="c-js-key">function</span>() { <span class="c-attr">$</span>(<span class="c-val">this</span>).<span class="c-js-key">val</span>(<span class="c-val">''</span>); });</pre>
+      <p class="usage-note">输出格式：<code>YYYY-MM-DD HH:mm - YYYY-MM-DD HH:mm</code>。</p>
+    </div>
+  </div>
+
+  <!-- 7. 全局使用说明 -->
+  <div class="demo-section">
+    <div class="demo-section-header">
+      <h2 class="demo-section-title">全局使用说明</h2>
+      <p class="demo-section-desc">EFDate 帮助对象 API 与注意事项</p>
+    </div>
+    <div class="usage-block">
+      <h4>依赖（已在 base.html.twig 全局引入，无需重复引入）</h4>
+      <pre class="usage-code"><span class="c-comment">{# moment.js + daterangepicker 插件 + EFDate 帮助对象 #}</span>
+<span class="c-tag">&lt;script</span> <span class="c-attr">src</span>=<span class="c-val">"/lib/daterangepicker/moment.min.js"</span><span class="c-tag">&gt;&lt;/script&gt;</span>
+<span class="c-tag">&lt;script</span> <span class="c-attr">src</span>=<span class="c-val">"/lib/daterangepicker/daterangepicker.js"</span><span class="c-tag">&gt;&lt;/script&gt;</span>
+<span class="c-tag">&lt;script</span> <span class="c-attr">src</span>=<span class="c-val">"/sunui/components/date.js"</span><span class="c-tag">&gt;&lt;/script&gt;</span></pre>
+    </div>
+    <div class="usage-block" style="border-top-color: #e5e7eb;">
+      <h4>EFDate API</h4>
+      <pre class="usage-code"><span class="c-comment">// 获取多语言 locale 配置（根据 &lt;html lang&gt; 自动切换中/英）</span>
+<span class="c-attr">EFDate</span>.<span class="c-js-key">getLocaleConfig</span>(<span class="c-val">'YYYY-MM-DD'</span>);
+
+<span class="c-comment">// 获取 daterangepicker 公共配置（locale + 按钮样式）</span>
+<span class="c-attr">EFDate</span>.<span class="c-js-key">getDefaultOptions</span>(<span class="c-val">'YYYY-MM-DD'</span>);</pre>
+    </div>
+    <div class="usage-block" style="border-top-color: #e5e7eb;">
+      <h4>自动初始化类名汇总</h4>
+      <pre class="usage-code"><span class="c-comment">// date.js 在 document.ready 时自动扫描以下类名并初始化，已初始化的不会重复初始化</span>
+<span class="c-val">.date-picker</span>          <span class="c-comment">→ 日期选择，输出 YYYY-MM-DD</span>
+<span class="c-val">.datetime-picker</span>      <span class="c-comment">→ 日期时间，输出 YYYY-MM-DD HH:mm</span>
+<span class="c-val">.time-picker</span>          <span class="c-comment">→ 时间选择，输出 HH:mm（需页面含 .time-picker-only CSS）</span></pre>
+    </div>
+    <div class="usage-block" style="border-top-color: #e5e7eb;">
+      <h4>动态 DOM 元素手动初始化（避免重复）</h4>
+      <pre class="usage-code"><span class="c-js-key">function</span> <span class="c-attr">initDatePicker</span>(<span class="c-js-key">$input</span>) {
+  <span class="c-js-key">if</span> (<span class="c-js-key">$input</span>.<span class="c-attr">data</span>(<span class="c-val">'daterangepicker'</span>)) <span class="c-js-key">return</span>; <span class="c-comment">// 防止重复初始化</span>
+  <span class="c-js-key">$input</span>.<span class="c-attr">daterangepicker</span>({
+    ...<span class="c-attr">EFDate</span>.<span class="c-js-key">getDefaultOptions</span>(<span class="c-val">'YYYY-MM-DD'</span>),
+    <span class="c-js-key">singleDatePicker</span>: <span class="c-val">true</span>,
+    <span class="c-js-key">showDropdowns</span>: <span class="c-val">true</span>,
+    <span class="c-js-key">autoUpdateInput</span>: <span class="c-val">false</span>
+  }).<span class="c-js-key">on</span>(<span class="c-val">'apply.daterangepicker'</span>, <span class="c-js-key">function</span>(ev, picker) {
+    <span class="c-attr">$</span>(<span class="c-val">this</span>).<span class="c-js-key">val</span>(picker.startDate.<span class="c-js-key">format</span>(<span class="c-val">'YYYY-MM-DD'</span>));
+  }).<span class="c-js-key">on</span>(<span class="c-val">'cancel.daterangepicker'</span>, <span class="c-js-key">function</span>() { <span class="c-attr">$</span>(<span class="c-val">this</span>).<span class="c-js-key">val</span>(<span class="c-val">''</span>); });
+}</pre>
+    </div>
+    <div class="usage-block" style="border-top-color: #e5e7eb;">
+      <h4>配合 .ef-input-wrapper 使用（点击外壳触发弹层）</h4>
+      <pre class="usage-code"><span class="c-comment">// 点击 wrapper 区域时，将点击转发给内部 input 以触发 daterangepicker</span>
+<span class="c-attr">$</span>(<span class="c-val">'.ef-input-wrapper'</span>).<span class="c-js-key">on</span>(<span class="c-val">'click'</span>, <span class="c-js-key">function</span>(e) {
+  <span class="c-js-key">if</span> (<span class="c-attr">$</span>(e.target).<span class="c-js-key">is</span>(<span class="c-val">'input'</span>) || <span class="c-attr">$</span>(e.target).<span class="c-js-key">closest</span>(<span class="c-val">'.ef-input-clear-btn'</span>).<span class="c-js-key">length</span>) <span class="c-js-key">return</span>;
+  <span class="c-attr">$</span>(<span class="c-val">this</span>).<span class="c-js-key">find</span>(<span class="c-val">'input'</span>)[0].<span class="c-js-key">click</span>();
+  <span class="c-attr">$</span>(<span class="c-val">this</span>).<span class="c-js-key">find</span>(<span class="c-val">'input'</span>).<span class="c-js-key">focus</span>();
+});</pre>
     </div>
   </div>
 

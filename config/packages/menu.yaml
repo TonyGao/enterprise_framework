@@ -1,53 +1,59 @@
 parameters:
   app.admin_menu:
     # - ["名称", "图标", "uri", "上级部门"]
-    - ["root", "", "", "god"]
-    - ["首页", "fa-solid fa-house", "/admin/index", "root"]
-    - ["组织架构", "fa-solid fa-sitemap", "#", "root"]
-    - ["公司架构", "fa-solid fa-building", "/admin/org/corporation", "组织架构"]
+    - ['root', '', '', 'god']
+    - ['首页', 'fa-solid fa-house', '/admin/index', 'root']
+    - ['组织架构', 'fa-solid fa-sitemap', '#', 'root']
+    - ['公司架构', 'fa-solid fa-building', '/admin/org/corporation', '组织架构']
     - [
-        "部门管理",
-        "fa-solid fa-people-roof",
-        "/admin/org/department",
-        "组织架构",
+        '部门管理',
+        'fa-solid fa-people-roof',
+        '/admin/org/department',
+        '组织架构',
       ]
-    - ["岗位管理", "fa-solid fa-user-tie", "/admin/org/position", "组织架构"]
-    - ["职级管理", "fa-solid fa-layer-group", "/admin/org/position/level", "组织架构"]
-    - ["人员管理", "fa-solid fa-people-group", "#", "组织架构"]
-    - ["花名册", "fa-solid fa-address-card", "/employee/list", "人员管理"]
-    - ["模型和接口", "fa-solid fa-database", "#", "root"]
+    - ['岗位管理', 'fa-solid fa-user-tie', '/admin/org/position', '组织架构']
     - [
-        "模型管理",
-        "fa-solid fa-coins",
-        "/admin/platform/entity/index",
-        "模型和接口",
+        '职级管理',
+        'fa-solid fa-layer-group',
+        '/admin/org/position/level',
+        '组织架构',
       ]
+    - ['人员管理', 'fa-solid fa-people-group', '#', '组织架构']
+    - ['花名册', 'fa-solid fa-address-card', '/employee/list', '人员管理']
+    - ['模型和接口', 'fa-solid fa-database', '#', 'root']
     - [
-        "接口管理",
-        "fa-solid fa-manat-sign",
-        "/admin/platform/restful/index",
-        "模型和接口",
-      ]
-    - ["应用程序构建器", "fa-solid fa-compass-drafting", "#", "root"]
-    - [
-        "视图设计器",
-        "fa-solid fa-eye",
-        "/admin/platform/view/index",
-        "应用程序构建器"
+        '模型管理',
+        'fa-solid fa-coins',
+        '/admin/platform/entity/index',
+        '模型和接口',
       ]
     - [
-        "表单设计器",
-        "fa-solid fa-scroll",
-        "/admin/platform/application/form/builder",
-        "应用程序构建器"
+        '接口管理',
+        'fa-solid fa-manat-sign',
+        '/admin/platform/restful/index',
+        '模型和接口',
+      ]
+    - ['应用程序构建器', 'fa-solid fa-compass-drafting', '#', 'root']
+    - [
+        '视图设计器',
+        'fa-solid fa-eye',
+        '/admin/platform/view/index',
+        '应用程序构建器',
       ]
     - [
-        "菜单管理",
-        "fa-regular fa-compass",
-        "/admin/platform/menu/index",
-        "root"
+        '表单设计器',
+        'fa-solid fa-scroll',
+        '/admin/platform/application/form/builder',
+        '应用程序构建器',
       ]
-    - ["系统设置", "fa-solid fa-gears", "#", "root"]
-    - ["存储配置", "fa-solid fa-server", "/admin/storage", "系统设置"]
-    - ["安全配置", "fa-solid fa-shield", "/admin/security", "系统设置"]
-    - ["邮件配置", "fa-solid fa-envelope", "/admin/email", "系统设置"]
+    - [
+        '菜单管理',
+        'fa-regular fa-compass',
+        '/admin/platform/menu/index',
+        'root',
+      ]
+    - ['系统设置', 'fa-solid fa-gears', '#', 'root']
+    - ['存储配置', 'fa-solid fa-server', '/admin/storage', '系统设置']
+    - ['安全配置', 'fa-solid fa-shield', '/admin/security', '系统设置']
+    - ['邮件配置', 'fa-solid fa-envelope', '/admin/email', '系统设置']
+    - ['定时任务', 'fa-solid fa-clock-rotate-left', '/admin/task', '系统设置']

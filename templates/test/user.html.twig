@@ -1,114 +1,518 @@
-{% extends 'admin/layout.html.twig' %}
+{% extends 'base.html.twig' %}
 
-{% set userInputId = random() %}
+{% set userInputId1 = random() %}
+{% set userContentId1 = random() %}
 {% set userInputId2 = random() %}
-{% set userContentId = random() %}
 {% set userContentId2 = random() %}
+{% set userInputId3 = random() %}
+{% set userContentId3 = random() %}
+{% set userInputId4 = random() %}
+{% set userContentId4 = random() %}
 
 {% block javascripts %}
 	{{ parent() }}
 {% endblock %}
 
+{% block stylesheets %}
+  {{ parent() }}
+  <style>
+    .demo-container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .demo-header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 24px;
+    }
+    .demo-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    .demo-desc {
+      font-size: 15px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+    .demo-section {
+      margin-bottom: 48px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .demo-section-header {
+      background: #f9fafb;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .demo-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0;
+    }
+    .demo-section-desc {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 32px;
+      padding: 32px 24px;
+    }
+    .demo-item {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .demo-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #4b5563;
+    }
+    .code-tag {
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #ef4444;
+    }
+    .usage-block {
+      background: #f8fafc;
+      border-top: 1px solid #e5e7eb;
+      padding: 20px 24px;
+    }
+    .usage-block h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 10px 0;
+    }
+    .usage-code {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 6px;
+      padding: 14px 16px;
+      font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre;
+      margin: 0;
+    }
+    .usage-code .c-tag  { color: #7dd3fc; }
+    .usage-code .c-attr { color: #86efac; }
+    .usage-code .c-val  { color: #fca5a5; }
+    .usage-code .c-comment { color: #94a3b8; font-style: italic; }
+    .usage-code .c-js-key  { color: #c084fc; }
+    .usage-note {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+    .usage-badge {
+      display: inline-block;
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-right: 4px;
+    }
+    .usage-badge.green {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .usage-badge.yellow {
+      background: #fef9c3;
+      color: #a16207;
+    }
+    .usage-attr-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .usage-attr-table th {
+      background: #f1f5f9;
+      color: #374151;
+      font-weight: 600;
+      padding: 6px 10px;
+      text-align: left;
+      border: 1px solid #e5e7eb;
+    }
+    .usage-attr-table td {
+      padding: 6px 10px;
+      border: 1px solid #e5e7eb;
+      vertical-align: top;
+      color: #4b5563;
+    }
+    .usage-attr-table td code {
+      background: #f1f5f9;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #0f172a;
+    }
+  </style>
+{% endblock %}
+
 {% block body %}
-	<div class="container" style="padding-left: 20px;">
-		<h3>单用户选择器（UI静态）</h3>
-		<div class="ef-deparment-element" style="margin-bottom: 20px;">
-			<span class="ef-user-view-single ef-user ef-user-view ef-user-view-size-medium ef-user-view-search" style="width: 260px;" chosen="false" id="{{ userInputId }}" contentid="{{ userContentId }}">
-			  <div class="ef-user-selection-container">
-					<div class="ef-user-selection">
-						<span class="ef-user-selection-span">
-							<ul>
-								{# <li class="ef-user-selection-li">
-									<div class="ef-user-selection-li-content">
-										<a href="link" class="ef-link" id="21">集团简称/公司简称/行业解决方案部三/行业子部门</a>
-										<span class="ef-user-view-suffix" style="display: none;">
-											<span class="ef-user-view-icon">
-												<i class="fa-regular fa-circle-xmark"></i>
-											</span>
-										</span>
-									</div>
-								</li> #}
-							</ul>
-						</span>
-					</div>
-					<input class="ef-user-view-input" placeholder="请输入用户姓名 ..." mode="single" chose="false">
+<div class="demo-container">
+  <div class="demo-header">
+    <h1 class="demo-title">User 用户选择器</h1>
+    <p class="demo-desc">用于选择用户（员工）数据。支持 <strong>输入搜索</strong>（姓名 / 拼音）和 <strong>弹窗树状组织架构选择</strong>。支持单选、多选，以及方角、圆角两种样式。</p>
+  </div>
+
+  <!-- 1. 单用户选择器 - 方角 -->
+  <div class="demo-section">
+    <div class="demo-section-header">
+      <h2 class="demo-section-title">单用户选择器（方角）</h2>
+      <p class="demo-section-desc">默认方角样式。输入姓名或拼音搜索下拉选择，或点击放大镜弹窗选择。</p>
+    </div>
+    <div class="demo-grid">
+      <div class="demo-item">
+        <span class="demo-label">选择用户</span>
+        <div class="ef-deparment-element">
+          <input type="hidden" name="user1" value="">
+          <span class="ef-user-view-single ef-user ef-user-view ef-user-view-size-medium ef-user-view-search" style="width: 100%;" chosen="false" id="{{ userInputId1 }}" contentid="{{ userContentId1 }}" data-search-url="/test/api/user/searchByKey" data-modal-url="/test/api/user/singleSelect">
+            <div class="ef-user-selection-container">
+              <div class="ef-user-selection">
+                <span class="ef-user-selection-span">
+                  <ul></ul>
+                </span>
+              </div>
+              <input class="ef-user-view-input" placeholder="请输入用户姓名或拼音搜索 ..." mode="single" chose="false">
+              <input type="hidden" name="userId1" value="">
+            </div>
+            <span class="ef-user-view-value ef-user-view-value-hidden"></span>
+            <span class="ef-user-view-suffix show-user-modal">
+              <span class="ef-user-view-icon">
+                <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-search" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                  <path d="M33.072 33.071c6.248-6.248 6.248-16.379 0-22.627-6.249-6.249-16.38-6.249-22.628 0-6.248 6.248-6.248 16.379 0 22.627 6.248 6.248 16.38 6.248 22.628 0Zm0 0 8.485 8.485"></path>
+                </svg>
+              </span>
+            </span>
+          </span>
         </div>
+        <div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; min-width: 300px; width: 100%;" id="{{ userContentId1 }}" parentid="{{ userInputId1 }}">
+          <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
+            <div class="ef-trigger-content">
+              <div class="ef-user-dropdown">
+                <div class="ef-scrollbar ef-scrollbar-type-embed">
+                  <div class="ef-scrollbar-container ef-user-dropdown-list-wrapper">
+                    <ul class="ef-user-dropdown-list"></ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="usage-block">
+      <h4>HTML 结构（单用户 · 方角）</h4>
+      <pre class="usage-code"><span class="c-comment">&lt;!-- 隐藏 input 用于提交表单值 --&gt;</span>
+<span class="c-tag">&lt;input</span> <span class="c-attr">type</span>=<span class="c-val">"hidden"</span> <span class="c-attr">name</span>=<span class="c-val">"userId"</span> <span class="c-attr">value</span>=<span class="c-val">""</span><span class="c-tag">&gt;</span>
 
-				<span class="ef-user-view-value ef-user-view-value-hidden"></span>
-				<span class="ef-user-view-suffix show-user-modal">
-					<span class="ef-user-view-icon">
-						<svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-search" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
-							<path d="M33.072 33.071c6.248-6.248 6.248-16.379 0-22.627-6.249-6.249-16.38-6.249-22.628 0-6.248 6.248-6.248 16.379 0 22.627 6.248 6.248 16.38 6.248 22.628 0Zm0 0 8.485 8.485"></path>
-						</svg>
-					</span>
-				</span>
-			</span>
-		</div>
-		<div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; min-width: 260px; width: fit-content" id="{{ userContentId }}" parentid="{{ userInputId }}">
-			<div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
-				<div class="ef-trigger-content">
-					<div class="ef-user-dropdown">
-						<div class="ef-scrollbar ef-scrollbar-type-embed" style="">
-							<div class="ef-scrollbar-container ef-user-dropdown-list-wrapper">
-								<ul class="ef-user-dropdown-list">
-									<li id="{{ random() }}" class="ef-user-option"></li>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+<span class="c-tag">&lt;span</span>
+  <span class="c-attr">class</span>=<span class="c-val">"ef-user-view-single ef-user ef-user-view ef-user-view-size-medium ef-user-view-search"</span>
+  <span class="c-attr">id</span>=<span class="c-val">"{{ random() }}"</span>           <span class="c-comment">&lt;!-- 唯一 ID --&gt;</span>
+  <span class="c-attr">contentid</span>=<span class="c-val">"{{ random() }}"</span>    <span class="c-comment">&lt;!-- 对应下拉面板 id --&gt;</span>
+  <span class="c-attr">chosen</span>=<span class="c-val">"false"</span>
+  <span class="c-attr">data-search-url</span>=<span class="c-val">"/api/admin/org/user/searchByKey"</span>
+  <span class="c-attr">data-modal-url</span>=<span class="c-val">"/admin/org/user/singleSelect"</span><span class="c-tag">&gt;</span>
+  <span class="c-tag">&lt;div</span> <span class="c-attr">class</span>=<span class="c-val">"ef-user-selection-container"</span><span class="c-tag">&gt;</span>
+    <span class="c-tag">&lt;div</span> <span class="c-attr">class</span>=<span class="c-val">"ef-user-selection"</span><span class="c-tag">&gt;</span>
+      <span class="c-tag">&lt;span</span> <span class="c-attr">class</span>=<span class="c-val">"ef-user-selection-span"</span><span class="c-tag">&gt;&lt;ul&gt;&lt;/ul&gt;&lt;/span&gt;</span>
+    <span class="c-tag">&lt;/div&gt;</span>
+    <span class="c-tag">&lt;input</span> <span class="c-attr">class</span>=<span class="c-val">"ef-user-view-input"</span> <span class="c-attr">placeholder</span>=<span class="c-val">"搜索用户..."</span> <span class="c-attr">mode</span>=<span class="c-val">"single"</span> <span class="c-attr">chose</span>=<span class="c-val">"false"</span><span class="c-tag">&gt;</span>
+    <span class="c-tag">&lt;input</span> <span class="c-attr">type</span>=<span class="c-val">"hidden"</span> <span class="c-attr">name</span>=<span class="c-val">"userId"</span> <span class="c-attr">value</span>=<span class="c-val">""</span><span class="c-tag">&gt;</span>  <span class="c-comment">&lt;!-- 提交 id 值 --&gt;</span>
+  <span class="c-tag">&lt;/div&gt;</span>
+  <span class="c-tag">&lt;span</span> <span class="c-attr">class</span>=<span class="c-val">"ef-user-view-suffix show-user-modal"</span><span class="c-tag">&gt;</span>...放大镜图标...<span class="c-tag">&lt;/span&gt;</span>
+<span class="c-tag">&lt;/span&gt;</span>
 
-		<h3>多用户选择器(Todo)</h3>
-		<div class="ef-deparment-element">
-			<div class="ef-user-selection">
-				{# <span class="ef-user-selection-span">
-					<ul>
-						<li class="ef-user-selection-li">
-							<div class="ef-user-selection-li-content">
-								<a href="link" class="ef-link" id="123">北京子公司/高性能研发部/高性能前端设计部1</a>
-								<span class="ef-user-view-suffix">
-									<span class="ef-user-view-icon">
-										<i class="fa-regular fa-circle-xmark"></i>
-									</span>
-								</span>
-							</div>
-						</li>
-					</ul>
-				</span> #}
-			</div>
-			<span class="ef-user-view-single ef-user ef-user-view ef-user-view-size-medium ef-user-view-search" style="width: 260px;" chosen="false" id="{{ userInputId2 }}" contentid="{{ userContentId2 }}">
-				<input class="ef-user-view-input" placeholder="请输入部门名称 ..." mode="multiple" chose="false">
-				<span class="ef-user-view-value ef-user-view-value-hidden"></span>
-				<span class="ef-user-view-suffix">
-					<span class="ef-user-view-icon">
-						<svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-search" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
-							<path d="M33.072 33.071c6.248-6.248 6.248-16.379 0-22.627-6.249-6.249-16.38-6.249-22.628 0-6.248 6.248-6.248 16.379 0 22.627 6.248 6.248 16.38 6.248 22.628 0Zm0 0 8.485 8.485"></path>
-						</svg>
-					</span>
-				</span>
-			</span>
-		</div>
-		<div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; min-width: 260px; width: fit-content" id="{{ userContentId2 }}" parentid="{{ userInputId2 }}">
-			<div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
-				<div class="ef-trigger-content">
-					<div class="ef-user-dropdown">
-						<div class="ef-scrollbar ef-scrollbar-type-embed" style="">
-							<div class="ef-scrollbar-container ef-user-dropdown-list-wrapper">
-								<ul class="ef-user-dropdown-list">
-									<li id="{{ random() }}" class="ef-user-option"></li>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="ef-trigger-popup-close-button">
-				<button class="btn primary medium icon circle">
-					<i class="fa-solid fa-xmark"></i>
-				</button>
-			</div>
-		</div>
-	</div>
+<span class="c-comment">&lt;!-- 搜索结果下拉面板（id 与上方 contentid 对应）--&gt;</span>
+<span class="c-tag">&lt;div</span> <span class="c-attr">class</span>=<span class="c-val">"ef-trigger-popup ef-trigger-position-bl"</span>
+     <span class="c-attr">id</span>=<span class="c-val">"{contentid}"</span> <span class="c-attr">parentid</span>=<span class="c-val">"{id}"</span><span class="c-tag">&gt;</span>
+  &lt;div class="ef-trigger-popup-wrapper"&gt;
+    &lt;div class="ef-user-dropdown"&gt;
+      &lt;ul class="ef-user-dropdown-list"&gt;&lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+<span class="c-tag">&lt;/div&gt;</span></pre>
+      <p class="usage-note">选中值通过 <code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">input[type=hidden]</code> 内 <code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">name</code> 对应字段提交。<code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">mode="single"</code> 为单选，改为 <code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">mode="multiple"</code> 即多选。</p>
+    </div>
+  </div>
+
+  <!-- 2. 单用户选择器 - 圆角 -->
+  <div class="demo-section">
+    <div class="demo-section-header">
+      <h2 class="demo-section-title">单用户选择器（圆角）</h2>
+      <p class="demo-section-desc">追加 <span class="code-tag">ef-input-rounded</span> 类，提供更柔和的 6px 圆角。</p>
+    </div>
+    <div class="demo-grid">
+      <div class="demo-item">
+        <span class="demo-label">选择用户（圆角）</span>
+        <div class="ef-deparment-element">
+          <input type="hidden" name="user2" value="">
+          <span class="ef-user-view-single ef-user ef-user-view ef-user-view-size-medium ef-user-view-search ef-input-rounded" style="width: 100%;" chosen="false" id="{{ userInputId2 }}" contentid="{{ userContentId2 }}" data-search-url="/test/api/user/searchByKey" data-modal-url="/test/api/user/singleSelect">
+            <div class="ef-user-selection-container">
+              <div class="ef-user-selection">
+                <span class="ef-user-selection-span">
+                  <ul></ul>
+                </span>
+              </div>
+              <input class="ef-user-view-input" placeholder="请输入用户姓名或拼音搜索 ..." mode="single" chose="false">
+              <input type="hidden" name="userId2" value="">
+            </div>
+            <span class="ef-user-view-value ef-user-view-value-hidden"></span>
+            <span class="ef-user-view-suffix show-user-modal">
+              <span class="ef-user-view-icon">
+                <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-search" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                  <path d="M33.072 33.071c6.248-6.248 6.248-16.379 0-22.627-6.249-6.249-16.38-6.249-22.628 0-6.248 6.248-6.248 16.379 0 22.627 6.248 6.248 16.38 6.248 22.628 0Zm0 0 8.485 8.485"></path>
+                </svg>
+              </span>
+            </span>
+          </span>
+        </div>
+        <div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; min-width: 300px; width: 100%;" id="{{ userContentId2 }}" parentid="{{ userInputId2 }}">
+          <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
+            <div class="ef-trigger-content">
+              <div class="ef-user-dropdown">
+                <div class="ef-scrollbar ef-scrollbar-type-embed">
+                  <div class="ef-scrollbar-container ef-user-dropdown-list-wrapper">
+                    <ul class="ef-user-dropdown-list"></ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="usage-block">
+      <h4>圆角样式 — 追加 <span class="usage-badge">ef-input-rounded</span> 类</h4>
+      <pre class="usage-code"><span class="c-tag">&lt;span</span>
+  <span class="c-attr">class</span>=<span class="c-val">"ef-user-view-single ef-user ef-user-view ef-user-view-size-medium ef-user-view-search <u>ef-input-rounded</u>"</span>
+  ...<span class="c-tag">&gt;</span></pre>
+      <p class="usage-note">仅需在外层 <code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">span</code> 追加 <code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">ef-input-rounded</code> 即可得到 6px 圆角效果，其余结构完全相同。</p>
+    </div>
+  </div>
+
+  <!-- 3. 多用户选择器 - 方角 -->
+  <div class="demo-section">
+    <div class="demo-section-header">
+      <h2 class="demo-section-title">多用户选择器（方角）</h2>
+      <p class="demo-section-desc">支持选择多个用户，选中的用户会显示在输入框中并自动换行。</p>
+    </div>
+    <div class="demo-grid">
+      <div class="demo-item">
+        <span class="demo-label">选择多个用户</span>
+        <div class="ef-deparment-element">
+          <span class="ef-user-view-single ef-user ef-user-view ef-user-view-size-medium ef-user-view-search" style="width: 100%;" chosen="false" id="{{ userInputId3 }}" contentid="{{ userContentId3 }}" data-search-url="/test/api/user/searchByKey" data-modal-url="/test/api/user/singleSelect">
+            <div class="ef-user-selection-container">
+              <div class="ef-user-selection">
+                <span class="ef-user-selection-span">
+                  <ul></ul>
+                </span>
+              </div>
+              <input class="ef-user-view-input" placeholder="请输入用户姓名或拼音搜索 ..." mode="multiple" chose="false">
+            </div>
+            <span class="ef-user-view-value ef-user-view-value-hidden"></span>
+            <span class="ef-user-view-suffix show-user-modal">
+              <span class="ef-user-view-icon">
+                <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-search" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                  <path d="M33.072 33.071c6.248-6.248 6.248-16.379 0-22.627-6.249-6.249-16.38-6.249-22.628 0-6.248 6.248-6.248 16.379 0 22.627 6.248 6.248 16.38 6.248 22.628 0Zm0 0 8.485 8.485"></path>
+                </svg>
+              </span>
+            </span>
+          </span>
+        </div>
+        <div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; min-width: 300px; width: 100%;" id="{{ userContentId3 }}" parentid="{{ userInputId3 }}">
+          <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
+            <div class="ef-trigger-content">
+              <div class="ef-user-dropdown">
+                <div class="ef-scrollbar ef-scrollbar-type-embed">
+                  <div class="ef-scrollbar-container ef-user-dropdown-list-wrapper">
+                    <ul class="ef-user-dropdown-list"></ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ef-trigger-popup-close-button">
+            <button class="btn primary medium icon circle">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="usage-block">
+      <h4>多选模式 — <span class="usage-badge">mode="multiple"</span></h4>
+      <pre class="usage-code"><span class="c-tag">&lt;input</span> <span class="c-attr">class</span>=<span class="c-val">"ef-user-view-input"</span> <span class="c-attr">placeholder</span>=<span class="c-val">"搜索用户..."</span> <span class="c-attr">mode</span>=<span class="c-val">"multiple"</span> <span class="c-attr">chose</span>=<span class="c-val">"false"</span><span class="c-tag">&gt;</span></pre>
+      <p class="usage-note">将内层搜索 <code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">input</code> 的 <code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">mode</code> 改为 <code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">multiple</code> 即可启用多选。选中的用户以标签形式展示在输入框内并自动换行，面板右上角出现关闭按钮。多选时外层 span 不需要 <code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">input[type=hidden]</code>（每个选中用户通过 JS 另行处理）。</p>
+    </div>
+  </div>
+
+  <!-- 4. 多用户选择器 - 圆角 -->
+  <div class="demo-section">
+    <div class="demo-section-header">
+      <h2 class="demo-section-title">多用户选择器（圆角）</h2>
+      <p class="demo-section-desc">圆角样式的多用户选择器。追加 <span class="code-tag">ef-input-rounded</span> 类。</p>
+    </div>
+    <div class="demo-grid">
+      <div class="demo-item">
+        <span class="demo-label">选择多个用户（圆角）</span>
+        <div class="ef-deparment-element">
+          <span class="ef-user-view-single ef-user ef-user-view ef-user-view-size-medium ef-user-view-search ef-input-rounded" style="width: 100%;" chosen="false" id="{{ userInputId4 }}" contentid="{{ userContentId4 }}" data-search-url="/test/api/user/searchByKey" data-modal-url="/test/api/user/singleSelect">
+            <div class="ef-user-selection-container">
+              <div class="ef-user-selection">
+                <span class="ef-user-selection-span">
+                  <ul></ul>
+                </span>
+              </div>
+              <input class="ef-user-view-input" placeholder="请输入用户姓名或拼音搜索 ..." mode="multiple" chose="false">
+            </div>
+            <span class="ef-user-view-value ef-user-view-value-hidden"></span>
+            <span class="ef-user-view-suffix show-user-modal">
+              <span class="ef-user-view-icon">
+                <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-search" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                  <path d="M33.072 33.071c6.248-6.248 6.248-16.379 0-22.627-6.249-6.249-16.38-6.249-22.628 0-6.248 6.248-6.248 16.379 0 22.627 6.248 6.248 16.38 6.248 22.628 0Zm0 0 8.485 8.485"></path>
+                </svg>
+              </span>
+            </span>
+          </span>
+        </div>
+        <div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; min-width: 300px; width: 100%;" id="{{ userContentId4 }}" parentid="{{ userInputId4 }}">
+          <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
+            <div class="ef-trigger-content">
+              <div class="ef-user-dropdown">
+                <div class="ef-scrollbar ef-scrollbar-type-embed">
+                  <div class="ef-scrollbar-container ef-user-dropdown-list-wrapper">
+                    <ul class="ef-user-dropdown-list"></ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ef-trigger-popup-close-button">
+            <button class="btn primary medium icon circle">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="usage-block">
+      <h4>圆角 + 多选组合</h4>
+      <pre class="usage-code"><span class="c-tag">&lt;span</span>
+  <span class="c-attr">class</span>=<span class="c-val">"ef-user-view-single ef-user ef-user-view ef-user-view-size-medium ef-user-view-search ef-input-rounded"</span>
+  ...<span class="c-tag">&gt;</span>
+  ...
+  <span class="c-tag">&lt;input</span> <span class="c-attr">class</span>=<span class="c-val">"ef-user-view-input"</span> <span class="c-attr">mode</span>=<span class="c-val">"multiple"</span> ...<span class="c-tag">&gt;</span>
+  ...
+<span class="c-tag">&lt;/span&gt;</span></pre>
+      <p class="usage-note"><code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">ef-input-rounded</code> 与 <code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">mode="multiple"</code> 可自由组合使用。</p>
+    </div>
+  </div>
+
+  <!-- ────────────── 全局使用说明 ────────────── -->
+  <div class="demo-section">
+    <div class="demo-section-header">
+      <h2 class="demo-section-title">全局使用说明</h2>
+      <p class="demo-section-desc">User 选择器的完整属性参考与使用方式。</p>
+    </div>
+    <div class="usage-block">
+      <h4>外层 span 属性说明</h4>
+      <table class="usage-attr-table">
+        <tr>
+          <th>属性</th><th>必填</th><th>说明</th>
+        </tr>
+        <tr>
+          <td><code>id</code></td><td>✅</td><td>唯一标识符，与下拉面板 <code>parentid</code> 对应</td>
+        </tr>
+        <tr>
+          <td><code>contentid</code></td><td>✅</td><td>对应搜索结果下拉面板的 <code>id</code></td>
+        </tr>
+        <tr>
+          <td><code>chosen</code></td><td>✅</td><td>初始值填 <code>"false"</code>；选中后由 JS 自动改为 <code>"true"</code></td>
+        </tr>
+        <tr>
+          <td><code>data-search-url</code></td><td>✅</td><td>输入搜索时的 POST 接口，返回 <code>{ code, data: [{id, displayName}] }</code></td>
+        </tr>
+        <tr>
+          <td><code>data-modal-url</code></td><td>✅</td><td>点击放大镜弹窗的 GET 接口，返回组织架构树 HTML 片段</td>
+        </tr>
+        <tr>
+          <td><code>data-company-id</code></td><td>—</td><td>可选。过滤指定公司的员工；不传则全局搜索</td>
+        </tr>
+        <tr>
+          <td><code>ef-input-rounded</code>（class）</td><td>—</td><td>追加此类名得到 6px 圆角样式</td>
+        </tr>
+      </table>
+    </div>
+    <div class="usage-block">
+      <h4>搜索接口规范（data-search-url）</h4>
+      <pre class="usage-code"><span class="c-comment">// 请求：POST application/json</span>
+{ <span class="c-js-key">"key"</span>: <span class="c-val">"张"</span>, <span class="c-js-key">"companyId"</span>: <span class="c-val">"可选"</span> }
+
+<span class="c-comment">// 响应</span>
+{ <span class="c-js-key">"code"</span>: <span class="c-val">"200"</span>, <span class="c-js-key">"data"</span>: [
+    { <span class="c-js-key">"id"</span>: <span class="c-val">"uuid-xxx"</span>, <span class="c-js-key">"displayName"</span>: <span class="c-val">"张三 (研发部 · EMP001)"</span> },
+    ...
+] }</pre>
+      <p class="usage-note"><code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">data</code> 字段必须是数组，否则下拉不会展示。建议 <code style="background:#f1f5f9;border-radius:3px;padding:1px 5px;font-family:monospace;font-size:11px;">displayName</code> 包含部门和工号信息以便识别。</p>
+    </div>
+    <div class="usage-block">
+      <h4>弹窗接口规范（data-modal-url）</h4>
+      <pre class="usage-code"><span class="c-comment">// 请求：GET ?companyId=可选</span>
+<span class="c-comment">// 响应：HTML 片段（组织架构树），直接 innerHTML 注入弹窗左侧</span>
+<span class="c-comment">// 结构参考 admin/org/user/singleSelect.html.twig</span></pre>
+      <p class="usage-note">HTML 片段会被缓存到 localForage（以 URL 为 key），刷新页面前不会重复请求。如需强制刷新可清空浏览器 IndexedDB 存储。</p>
+    </div>
+    <div class="usage-block">
+      <h4>读取选中值（JS）</h4>
+      <pre class="usage-code"><span class="c-comment">// 单选 — 通过 hidden input 读取 id</span>
+<span class="c-js-key">const</span> userId = $(<span class="c-val">'input[name="userId"]'</span>).val();
+
+<span class="c-comment">// 多选 — 读取所有已选中用户的 id</span>
+<span class="c-js-key">const</span> ids = [];
+$(<span class="c-val">'#myUserInput .ef-user-selection-span a'</span>).each(<span class="c-js-key">function</span>() {
+  ids.push($(this).attr(<span class="c-val">'id'</span>));
+});
+
+<span class="c-comment">// 监听选中变化（单选时 hidden input 触发 change）</span>
+$(<span class="c-val">'input[name="userId"]'</span>).on(<span class="c-val">'change'</span>, <span class="c-js-key">function</span>() {
+  console.log(<span class="c-val">'selected userId:'</span>, $(this).val());
+});</pre>
+    </div>
+    <div class="usage-block">
+      <h4>键盘快捷键</h4>
+      <table class="usage-attr-table">
+        <tr><th>按键</th><th>行为</th></tr>
+        <tr><td><code>↓ ArrowDown</code></td><td>向下移动高亮选项</td></tr>
+        <tr><td><code>↑ ArrowUp</code></td><td>向上移动高亮选项</td></tr>
+        <tr><td><code>Enter</code></td><td>选中当前高亮项</td></tr>
+        <tr><td><code>Escape</code></td><td>关闭下拉面板</td></tr>
+      </table>
+      <p class="usage-note">键盘导航在下拉搜索结果面板打开时自动可用，无需额外配置。</p>
+    </div>
+  </div>
+
+</div>
 {% endblock %}

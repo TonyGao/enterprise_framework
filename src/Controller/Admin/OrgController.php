@@ -977,4 +977,155 @@ class OrgController extends BaseController
     ]);
   }
 
+  /**
+   * 用户选择器 - 渲染组织架构树（部门+人员）
+   */
+  #[Route('/admin/org/user/singleSelect', name: 'org_user_single_select', methods: ['GET'])]
+  public function singleSelectUser(Request $request, EntityManagerInterface $em): Response
+  {
+    $companyId = $request->query->get('companyId');
+    $depRepo = $em->getRepository(Department::class);
+    $empRepo = $em->getRepository(Employee::class);
+    $userInputId = Uuid::v1();
+
+    $rootDepartment = null;
+    if ($companyId) {
+      $rootDepartment = $depRepo->findOneBy([
+        'company' => $companyId,
+        'type' => 'company'
+      ]);
+      if (!$rootDepartment) {
+        $rootDepartment = $depRepo->findOneBy([
+          'id' => $companyId,
+          'type' => 'company'
+        ]);
+      }
+    }
+
+    // 预加载所有活跃员工, 按部门分组
+    $qb = $empRepo->createQueryBuilder('e')
+      ->where('e.employmentStatus = :status')
+      ->andWhere('(e.isSystem = false OR e.isSystem IS NULL)')
+      ->setParameter('status', 'active')
+      ->orderBy('e.name', 'ASC');
+    if ($companyId) {
+      $qb->andWhere('e.company = :companyId')
+         ->setParameter('companyId', $companyId);
+    }
+    $employees = $qb->getQuery()->getResult();
+
+    $employeesByDept = [];
+    foreach ($employees as $emp) {
+      $deptId = $emp->getDepartment() ? (string) $emp->getDepartment()->getId() : '_none';
+      $employeesByDept[$deptId][] = $emp;
+    }
+
+    $userSingleTree = '';
+    if (!$companyId || $rootDepartment) {
+      $userSingleTree = $depRepo->childrenHierarchy($rootDepartment, false, [
+        'decorate' => true,
+        'rootOpen' => static function (array $tree): ?string {
+          static $openCount = 0;
+          $openCount++;
+          if ($openCount === 1) {
+            return '<ol class="ol-left-tree">';
+          }
+          if ($tree[0]['type'] === 'department') {
+            return '<span class="tree-indent" style="display: none;"></span><ol class="sub-tree-content" style="display: none;">';
+          }
+          return '<span class="tree-indent"></span><ol class="sub-tree-content">';
+        },
+        'rootClose' => static function (array $child): ?string {
+          return '</ol>';
+        },
+        'childOpen' => '<li>',
+        'childClose' => '</li>',
+        'nodeDecorator' => static function (array $node) use ($userInputId, $employeesByDept, $depRepo) {
+          if ($node['type'] === 'corperations') {
+            return '
+          <div class="item-content scroll-item">
+            <div class="arrow-icon"><i class="fa-solid fa-caret-down"></i></div>
+            <div class="org-icon"><i class="fa-solid fa-building"></i></div>
+            <div class="org-name"><div class="org-text-content">' . htmlspecialchars($node['name']) . '</div></div>
+          </div>';
+          }
+
+          if ($node['type'] === 'company') {
+            $arrayIcon = !empty($node['__children']) ? '<i class="fa-solid fa-caret-right"></i>' : '';
+            return '
+          <div class="item-content scroll-item">
+            <div class="arrow-icon">' . $arrayIcon . '</div>
+            <div class="org-icon"><i class="fa-solid fa-building-user"></i></div>
+            <div class="org-name"><div class="org-text-content company" type="company">' . htmlspecialchars($node['name']) . '</div></div>
+          </div>';
+          }
+
+          if ($node['type'] === 'department') {
+            $hasChildren = !empty($node['__children']);
+            $deptEmployees = $employeesByDept[$node['id']] ?? [];
+            $hasContent = $hasChildren || !empty($deptEmployees);
+            $arrayIcon = $hasContent ? '<i class="fa-solid fa-caret-right"></i>' : '';
+
+            $html = '
+          <div class="item-content scroll-item">
+            <div class="arrow-icon">' . $arrayIcon . '</div>
+            <div class="org-icon"><i class="fa-solid fa-user-group"></i></div>
+            <div class="org-name">
+              <div class="org-text-content department" type="department" id="' . $node['id'] . '">' . htmlspecialchars($node['name']) . '</div>
+            </div>
+          </div>';
+
+            // 在部门节点下渲染该部门的员工
+            if (!empty($deptEmployees)) {
+              // 构建部门全路径
+              $deptPath = $node['path'] ?? $node['name'];
+
+              $html .= '<span class="tree-indent" style="display: none;"></span><ol class="sub-tree-content" style="display: none;">';
+              foreach ($deptEmployees as $emp) {
+                $empName = htmlspecialchars($emp->getName());
+                $empNo = htmlspecialchars($emp->getEmployeeNo() ?? '');
+                $empId = (string) $emp->getId();
+                $empDisplay = $empName;
+                if ($empNo) $empDisplay .= ' (' . $empNo . ')';
+
+                $html .= '<li>
+                <div class="item-content scroll-item">
+                  <div class="arrow-icon"></div>
+                  <span class="user-select-line">
+                    <label class="ef-radio" style="padding-right: 5px;" radioId="' . $userInputId . '">
+                      <input type="radio" class="ef-radio-target" value="A">
+                      <span class="ef-icon-hover ef-radio-icon-hover"><span class="ef-radio-icon"></span></span>
+                    </label>
+                    <div class="org-icon"><i class="fa-solid fa-user"></i></div>
+                    <div class="org-name">
+                      <div class="org-text-content user" type="user" id="' . $empId . '" 
+                        data-name="' . $empName . '" 
+                        data-employee-no="' . $empNo . '"
+                        data-department="' . htmlspecialchars($deptPath) . '"
+                        data-position="' . htmlspecialchars($emp->getPosition()?->getName() ?? '') . '"
+                        data-company="' . htmlspecialchars($emp->getCompany()?->getName() ?? '') . '"
+                        data-email="' . htmlspecialchars($emp->getEmail() ?? '') . '"
+                        data-mobile="' . htmlspecialchars($emp->getMobile() ?? '') . '"
+                        >' . $empDisplay . '</div>
+                    </div>
+                  </span>
+                </div>
+              </li>';
+              }
+              $html .= '</ol>';
+            }
+
+            return $html;
+          }
+
+          return '';
+        }
+      ]);
+    }
+
+    return $this->render('admin/org/user/singleSelect.html.twig', [
+      'userSingleTree' => $userSingleTree
+    ]);
+  }
+
 }

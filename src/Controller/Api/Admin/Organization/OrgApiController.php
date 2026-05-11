@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use App\Controller\Api\ApiResponse;
 use App\Entity\Organization\Corporation;
+use App\Entity\Organization\Employee;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -92,32 +93,11 @@ class OrgApiController extends AbstractController
       ->setParameter('key', '%' . $payload['key'] . '%')
       ->setParameter('type', 'department');
     
-    // Filter by selected company subtree if provided.
+    // Filter by selected company directly.
+    // Using d.company is safer than nested-tree intervals when tree boundaries are stale.
     if (!empty($payload['companyId'])) {
-      $rootDepartment = $repo->findOneBy([
-        'company' => $payload['companyId'],
-        'type' => 'company'
-      ]);
-
-      if (!$rootDepartment) {
-        $rootDepartment = $repo->findOneBy([
-          'id' => $payload['companyId'],
-          'type' => 'company'
-        ]);
-      }
-
-      if (!$rootDepartment) {
-        $data = [];
-        $content = $serializer->serialize($data, 'json');
-        return ApiResponse::success($content, '200', 'success');
-      }
-
-      $qb->andWhere('d.root = :treeRoot')
-         ->andWhere('d.lft > :rootLft')
-         ->andWhere('d.rgt < :rootRgt')
-         ->setParameter('treeRoot', $rootDepartment->getRoot() ?: $rootDepartment)
-         ->setParameter('rootLft', $rootDepartment->getLft())
-         ->setParameter('rootRgt', $rootDepartment->getRgt());
+      $qb->andWhere('d.company = :companyId')
+         ->setParameter('companyId', $payload['companyId']);
     }
     
     $data = $qb->getQuery()->getResult();
@@ -404,5 +384,96 @@ class OrgApiController extends AbstractController
         '删除失败：' . $e->getMessage()
       );
     }
+  }
+
+  /**
+   * 用户搜索（按姓名/拼音/工号）
+   */
+  #[Route(
+    '/api/admin/org/user/searchByKey',
+    name: 'api_org_user_searchByKey',
+    methods: ['POST']
+  )]
+  public function searchUserByKey(
+    Request $request,
+    EntityManagerInterface $em
+  ): ApiResponse {
+    $payload = $request->toArray();
+    $key = $payload['key'] ?? '';
+    $companyId = $payload['companyId'] ?? null;
+
+    if (empty($key)) {
+      return ApiResponse::success(json_encode([]), '200', 'success');
+    }
+
+    $repo = $em->getRepository(Employee::class);
+    $depRepo = $em->getRepository(Department::class);
+
+    $qb = $repo->createQueryBuilder('e')
+      ->leftJoin('e.department', 'd')
+      ->leftJoin('e.company', 'c')
+      ->where('e.employmentStatus = :status')
+      ->andWhere('(e.isSystem = false OR e.isSystem IS NULL)')
+      ->setParameter('status', 'active');
+
+    if ($companyId) {
+      $qb->andWhere('e.company = :companyId')
+         ->setParameter('companyId', $companyId);
+    }
+
+    // 搜索：姓名 / 工号模糊匹配
+    $qb->andWhere(
+      $qb->expr()->orX(
+        'e.name LIKE :key',
+        'e.employeeNo LIKE :key',
+        'e.englishName LIKE :key'
+      )
+    )->setParameter('key', '%' . $key . '%');
+
+    $qb->orderBy('e.name', 'ASC')->setMaxResults(20);
+    $employees = $qb->getQuery()->getResult();
+
+    $result = [];
+    foreach ($employees as $emp) {
+      // 构建部门全路径
+      $deptPath = '';
+      if ($emp->getDepartment()) {
+        $path = $depRepo->getPath($emp->getDepartment());
+        $pathNames = [];
+        foreach ($path as $pathItem) {
+          $itemType = $pathItem->getType();
+          if ($itemType === 'corperations') continue;
+          if ($itemType === 'company') {
+            $pathNames[] = $pathItem->getAlias() ?: $pathItem->getName();
+          } else {
+            $pathNames[] = $pathItem->getName();
+          }
+        }
+        $deptPath = implode('/', $pathNames);
+      }
+
+      $displayName = $emp->getName();
+      $extra = [];
+      if ($deptPath) $extra[] = $deptPath;
+      if ($emp->getEmployeeNo()) $extra[] = $emp->getEmployeeNo();
+      if (!empty($extra)) {
+        $displayName .= '（' . implode(' · ', $extra) . '）';
+      }
+
+      $result[] = [
+        'id' => (string) $emp->getId(),
+        'name' => $emp->getName(),
+        'employeeNo' => $emp->getEmployeeNo(),
+        'departmentName' => $emp->getDepartment()?->getName() ?? '',
+        'departmentPath' => $deptPath,
+        'companyName' => $emp->getCompany()?->getName() ?? '',
+        'positionName' => $emp->getPosition()?->getName() ?? '',
+        'email' => $emp->getEmail() ?? '',
+        'mobile' => $emp->getMobile() ?? '',
+        'displayName' => $displayName,
+      ];
+    }
+
+    return ApiResponse::success(json_encode($result), '200', 'success');
   }
 }

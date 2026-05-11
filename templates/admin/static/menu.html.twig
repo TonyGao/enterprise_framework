@@ -307,6 +307,34 @@ scrollBtnDisplay = sideMenuState == 'shrunk' ? 'flex' : 'none' %}
                   </div>
                 </div>
               </a>
+
+              <a
+                class=" link item-menu-content {{'/admin/task'== app.request.requestUri ? 'current' : '' }}"
+                href="/admin/task"
+              >
+                <div class="link-icon">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div class="link-text">
+                  <div class="link-text-content" style="max-width: 83%">
+                    定时任务
+                  </div>
+                </div>
+              </a>
+
+              <a
+                class=" link item-menu-content {{'/admin/calendar'== app.request.requestUri ? 'current' : '' }}"
+                href="/admin/calendar"
+              >
+                <div class="link-icon">
+                  <i class="fa-solid fa-calendar-days"></i>
+                </div>
+                <div class="link-text">
+                  <div class="link-text-content" style="max-width: 83%">
+                    系统日历
+                  </div>
+                </div>
+              </a>
             </div>
           </div>
         </div>

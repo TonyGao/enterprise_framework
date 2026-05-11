@@ -11,46 +11,6 @@
 
 {% block javascripts %}
 	{{ parent() }}
-	<script>
-		$(document).ready(function() {
-			// 公司-部门联动示例
-			const $companySelect = $('#demo-company-select');
-			const $departmentInput = $('#demo-company-department');
-			const $departmentHidden = $('#demo-company-department-hidden');
-			
-			// 公司下拉框变化时，更新部门选择器的 data-company-id 并清空部门
-			$companySelect.on('change', function() {
-				const companyId = $(this).val();
-				const companyName = $(this).next().find('.ef-select-view-value').text().trim();
-				
-				// 更新部门选择器的 data-company-id / name 属性
-				$departmentInput.attr('data-company-id', companyId || '');
-				$departmentInput.attr('data-company-name', companyName || '');
-				$departmentHidden.attr('company-id', companyId || '');
-				
-				// 清空已选部门
-				if (companyId) {
-					const selectionUl = $departmentInput.find('.ef-department-selection-span ul');
-					selectionUl.html('');
-					
-					const input = $departmentInput.find('.ef-department-view-input');
-					input.attr('chose', 'false');
-					input.show();
-					input.val('');
-					
-					$departmentInput.attr('chosen', 'false');
-					$departmentHidden.val('');
-					
-					console.log('Company changed to:', companyId, '- Department selection cleared');
-				}
-			});
-			
-			// 监听部门选择变化
-			$departmentHidden.on('change', function() {
-				console.log('Department selected:', $(this).val());
-			});
-		});
-	</script>
 {% endblock %}
 
 {% block stylesheets %}
@@ -146,15 +106,12 @@
     <div class="demo-grid" style="grid-template-columns: 1fr 1fr;">
       <div class="demo-item">
         <span class="demo-label">选择公司</span>
-        {{ ui.select(
-          companyOptions,
-          '请选择公司',
-          '100%',
-          'ef-input-rounded',
-          'company',
-          'demo-company-select',
-          ''
-        ) }}
+        <select id="demo-company-select" name="company" class="ef-input ef-input-size-medium" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+          <option value="">请选择公司</option>
+          {% for option in companyOptions %}
+            <option value="{{ option.value }}">{{ option.label }}</option>
+          {% endfor %}
+        </select>
       </div>
       <div class="demo-item">
         <span class="demo-label">选择部门（会按公司过滤）</span>

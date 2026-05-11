@@ -119,6 +119,19 @@ services:
   App\Lib\DataFixtures\Faker\Provider\:
     resource: '../src/Lib/DataFixtures/Faker/Provider/'
     tags: ['hautelook_alice.provider']
+
+  # 定时任务 Handler Locator（ServiceLocator 模式）
+  App\Service\Task\TaskHandlerLocator:
+    arguments:
+      $locator: !tagged_locator { tag: 'app.task_handler', index_by: 'key' }
+
+  App\Task\ActivateAccountByHireDateTask:
+    tags:
+      - {
+          name: 'app.task_handler',
+          key: 'App\Task\ActivateAccountByHireDateTask',
+        }
+
   App\Service\Platform\ParameterService:
     arguments:
       $parameterBag: '@parameter_bag'

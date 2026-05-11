@@ -41,60 +41,6 @@ $(document).ready(function () {
     selectList['selectEleId'] = selectEleId;
   });
 
-  let selectList = {
-    selectEleId: '557919876',
-    activeEle: '1999887089',
-    list: [
-      {
-        id: '1999887089',
-        idx: 1,
-        value: 'Beijing',
-      },
-      {
-        id: '1999887089',
-        idx: 1,
-        value: 'Shanghai',
-      },
-      {
-        id: '1999887089',
-        idx: 1,
-        value: 'Guangzhou',
-      },
-      {
-        id: '1999887089',
-        idx: 1,
-        value: 'Shenzhen',
-      },
-      {
-        id: '1999887089',
-        idx: 1,
-        value: 'Chengdu',
-      },
-      {
-        id: '1999887089',
-        idx: 1,
-        value: 'Wuhan',
-      },
-    ],
-  };
-
-  Array.prototype.forEach.call(elements, function (element) {
-    let listener = new window.keypress.Listener(element, config);
-    listener.register_combo({
-      keys: 'down',
-      on_keydown: function (e) {
-        let id = $(e.target).parent().attr('id');
-      },
-    });
-    listener.register_combo({
-      keys: 'up',
-      on_keydown: function (e) {
-        console.log('up');
-        //console.log($(e.target).parent().attr("id"));
-      },
-    });
-  });
-
   $('body').on('click', '.ef-select-view-search', function () {
     let isSelected = $(this).attr('chosen');
     if (isSelected !== 'true') {
@@ -311,5 +257,57 @@ $(document).ready(function () {
 
   $('body').on('focusout', '.ef-select-view-input', function () {
     $(this).val('');
+  });
+
+  // ── 键盘导航：上下箭头 + 回车选中（select 下拉）──
+  $(document).on('keydown', function (e) {
+    const key = e.key;
+    if (key !== 'ArrowDown' && key !== 'ArrowUp' && key !== 'Enter' && key !== 'Escape') return;
+
+    // 找到当前打开的 select 面板（含 .ef-select-option 的可见面板）
+    const panel = $('.ef-trigger-popup.ef-trigger-position-bl:visible').filter(function () {
+      return $(this).find('.ef-select-option').length > 0;
+    }).first();
+
+    if (!panel.length) return;
+
+    e.preventDefault();
+
+    if (key === 'Escape') {
+      panel.hide();
+      return;
+    }
+
+    const options = panel.find('.ef-select-option:visible').not('.ef-select-option-disabled');
+    if (!options.length) return;
+
+    if (key === 'Enter') {
+      const active = options.filter('.ef-select-option-active').first();
+      if (active.length) active.trigger('click');
+      return;
+    }
+
+    const currentIdx = options.index(options.filter('.ef-select-option-active'));
+    let nextIdx;
+    if (key === 'ArrowDown') {
+      nextIdx = currentIdx < options.length - 1 ? currentIdx + 1 : 0;
+    } else {
+      nextIdx = currentIdx > 0 ? currentIdx - 1 : options.length - 1;
+    }
+    options.removeClass('ef-select-option-active');
+    const nextOption = options.eq(nextIdx);
+    nextOption.addClass('ef-select-option-active');
+
+    // 滚动到可见区域
+    const list = panel.find('.ef-select-dropdown-list');
+    if (list.length) {
+      const listEl = list[0];
+      const optionEl = nextOption[0];
+      if (optionEl.offsetTop < listEl.scrollTop) {
+        listEl.scrollTop = optionEl.offsetTop;
+      } else if (optionEl.offsetTop + optionEl.offsetHeight > listEl.scrollTop + listEl.clientHeight) {
+        listEl.scrollTop = optionEl.offsetTop + optionEl.offsetHeight - listEl.clientHeight;
+      }
+    }
   });
 });
