@@ -275,8 +275,105 @@
 }
 .cal-form-label .req { color: #ef4444; margin-left: 2px; }
 .cal-form-error { font-size: 12px; color: #ef4444; margin-top: 6px; display: none; }
-/* 事务类型管理行 */
-.type-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+
+/* ---- 事务类型管理 ---- */
+.type-manager-section { background: #fff; }
+.type-manager-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #f8f9fc 0%, #fff 100%);
+    border-bottom: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+}
+.type-manager-form {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    flex-wrap: wrap;
+}
+.type-manager-form .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.type-manager-form .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8a8fa8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.type-manager-form .field-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.type-manager-form .ef-input-wrapper {
+    flex: 1;
+}
+.type-color-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.type-badge-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.type-badge-preview .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+.type-key { font-family: monospace; font-size: 12px; color: #8a8fa8; }
+.type-label { font-weight: 500; color: #1a1d2e; }
+.type-actions-cell { padding: 8px 16px; display: flex; gap: 6px; align-items: center; justify-content: center; }
+.type-actions-cell .btn { height: 26px; padding: 0 10px; font-size: 12px; line-height: 26px; border-radius: 6px; border: 1px solid #e5e7ef; background: #fff; color: #374151; }
+.type-actions-cell .btn:hover { border-color: #165dff; color: #165dff; }
+.type-actions-cell .btn.type-save-btn { background: #165dff; color: #fff; border-color: #165dff; }
+.type-actions-cell .btn.type-save-btn:hover { background: #1248d1; border-color: #1248d1; color: #fff; }
+.type-system-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: #f3f4f6;
+    color: #8a8fa8;
+}
+.type-custom-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+.type-color-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.type-color-input {
+    width: 36px;
+    height: 28px;
+    padding: 2px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+}
+.type-color-input::-webkit-color-swatch-wrapper { padding: 0; }
+.type-color-input::-webkit-color-swatch { border: none; border-radius: 4px; }
 
 /* ---- 按钮 ---- */
 .btn {
@@ -468,7 +565,7 @@
                 <input type="hidden" id="cal-event-id">
                 <div class="cal-form-group">
                     <label class="cal-form-label">标题 <span class="req">*</span></label>
-                    <span class="ef-input-wrapper" style="width: 100%;">
+                    <span class="ef-input-wrapper ef-input-rounded" style="width: 100%;">
                         <input type="text" class="ef-input ef-input-size-medium text" id="f-cal-title" placeholder="如：元旦假期、公司年会">
                     </span>
                 </div>
@@ -476,7 +573,7 @@
                     <label class="cal-form-label">类型</label>
                     <input type="hidden" id="f-cal-type" value="custom" component="select">
                     <span
-                        class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium ef-select-view-search"
+                        class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium ef-select-view-search ef-input-rounded"
                         style="width: 100%;"
                         chosen="false"
                         id="f-cal-type-select"
@@ -514,7 +611,7 @@
                 </div>
                 <div class="cal-form-group">
                     <label class="cal-form-label">日期 <span class="req">*</span></label>
-                    <span class="ef-input-wrapper" style="width: 100%;">
+                    <span class="ef-input-wrapper ef-input-rounded" style="width: 100%;">
                         <input type="text" class="ef-input ef-input-size-medium text" id="f-cal-date" placeholder="请选择日期" autocomplete="off">
                     </span>
                 </div>
@@ -529,9 +626,9 @@
                 </div>
                 <div class="cal-form-group">
                     <label class="cal-form-label">备注</label>
-                    <span class="ef-textarea-wrapper" style="width: 100%;">
+                    <div class="ef-textarea-wrapper ef-textarea-rounded" style="width: 100%;">
                         <textarea class="ef-textarea" id="f-cal-note" rows="3" placeholder="可选备注说明"></textarea>
-                    </span>
+                    </div>
                 </div>
                 <div class="cal-form-error" id="cal-form-error"></div>
             </div>
@@ -570,14 +667,14 @@
             <div class="ef-modal-body" style="overflow-y: auto; flex: 1;">
                 <div class="cal-form-group">
                     <label class="cal-form-label">年份 <span class="req">*</span></label>
-                    <span class="ef-input-wrapper" style="width: 100%;">
+                    <span class="ef-input-wrapper ef-input-rounded" style="width: 100%;">
                         <input type="number" class="ef-input ef-input-size-medium text" id="f-import-year" min="2000" max="2100" step="1" placeholder="例如：2026">
                     </span>
                 </div>
                 <div class="cal-form-group">
                     <label class="cal-form-label">数据源</label>
-                    <span class="ef-input-wrapper" style="width: 100%; padding: 0;">
-                        <select class="ef-input ef-input-size-medium text" id="f-import-source" style="width: 100%; border: none; background: transparent; padding: 0 12px;">
+                    <span class="ef-input-wrapper ef-input-rounded ef-input-h36" style="width: 100%;">
+                        <select class="ef-input ef-input-size-medium text" id="f-import-source" style="width: 100%; border: none; background: transparent; padding: 0 12px; height: 36px; box-sizing: border-box;">
                             <option value="timor">TimOR API</option>
                             <option value="holiday_cn">Holiday CN</option>
                         </select>
@@ -600,7 +697,7 @@
 <div class="ef-modal-container" id="type-manager-modal" style="z-index: 1002; display: none;">
     <div class="ef-modal-mask" onclick="$('#type-manager-modal').hide();"></div>
     <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
-        <div class="ef-modal" style="width: 780px; max-width: 96vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+        <div class="ef-modal" style="width: 720px; max-width: 96vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
             <div class="ef-modal-header">
                 <div class="ef-modal-title ef-modal-title-align-left">事务类型管理</div>
                 <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="$('#type-manager-modal').hide();">
@@ -611,20 +708,66 @@
                     </span>
                 </div>
             </div>
-            <div class="ef-modal-body" style="overflow-y: auto; flex: 1;">
-                <div style="margin-bottom: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <span class="ef-input-wrapper" style="width: 160px;">
-                        <input id="new-type-key" class="ef-input ef-input-size-medium text" placeholder="key（英文字母下划线）">
-                    </span>
-                    <span class="ef-input-wrapper" style="width: 200px;">
-                        <input id="new-type-label" class="ef-input ef-input-size-medium text" placeholder="名称">
-                    </span>
-                    <span class="ef-input-wrapper" style="width: 60px; padding: 4px;">
-                        <input id="new-type-color" class="ef-input ef-input-size-medium" type="color" value="#6b7280" style="padding: 0; cursor: pointer; border: none; background: transparent;">
-                    </span>
-                    <button class="btn primary medium" id="new-type-create"><i class="fa-solid fa-plus"></i> 添加</button>
+            <div class="ef-modal-body" style="overflow-y: auto; flex: 1; padding: 0;">
+                <div class="type-manager-section">
+                    <div class="type-manager-header">
+                        <div class="type-manager-form">
+                            <div class="field-group">
+                                <span class="field-label">Key</span>
+                                <div class="field-input">
+                                    <span class="ef-input-wrapper ef-input-rounded" style="width: 140px;">
+                                        <input id="new-type-key" class="ef-input ef-input-size-medium text" placeholder="如：holiday">
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="field-group">
+                                <span class="field-label">名称</span>
+                                <div class="field-input">
+                                    <span class="ef-input-wrapper ef-input-rounded" style="width: 160px;">
+                                        <input id="new-type-label" class="ef-input ef-input-size-medium text" placeholder="如：法定假日">
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="field-group">
+                                <span class="field-label">颜色</span>
+                                <div class="type-color-wrapper">
+                                    <span class="ef-input-wrapper ef-input-rounded" style="width: 50px; padding: 4px;">
+                                        <input id="new-type-color" type="color" value="#6b7280" style="width: 100%; padding: 0; cursor: pointer; border: none; background: transparent;">
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="field-group" style="margin-left: auto;">
+                                <span class="field-label">&nbsp;</span>
+                                <div class="field-input">
+                                    <button class="btn primary medium" id="new-type-create"><i class="fa-solid fa-plus"></i> 添加</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ef-table ef-table-size-medium ef-table-border ef-table-hover" style="flex: 1;">
+                        <div class="ef-spin">
+                            <div class="ef-table-container">
+                                <div class="ef-scrollbar ef-scrollbar-type-embed" style="height: 100%;">
+                                    <div class="ef-scrollbar-container ef-table-content ef-table-content-scroll-x">
+                                        <table class="ef-table-element" cellpadding="0" cellspacing="0">
+                                            <colgroup><col style="width: 80px;"><col style="width: 120px;"><col><col style="width: 100px;"><col style="width: 160px;"></colgroup>
+                                            <thead>
+                                                <tr class="ef-table-tr">
+                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-center"><span class="ef-table-th-title">颜色</span></span></th>
+                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-left"><span class="ef-table-th-title">Key</span></span></th>
+                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-left"><span class="ef-table-th-title">名称</span></span></th>
+                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-center"><span class="ef-table-th-title">类型</span></span></th>
+                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-center"><span class="ef-table-th-title">操作</span></span></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="type-manager-list"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div id="type-manager-list"></div>
             </div>
             <div class="ef-modal-footer">
                 <button class="btn secondary medium" onclick="$('#type-manager-modal').hide();">关闭</button>
@@ -673,33 +816,71 @@ const CalMgr = (function ($) {
 
     function renderTypeManager(list) {
         if (!$('#type-manager-list').length) return;
+        if (!list || list.length === 0) {
+            $('#type-manager-list').html('<tr class="ef-table-tr"><td colspan="5" class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-center" style="color:#8a8fa8;padding:40px;">暂无事务类型</span></td></tr>');
+            return;
+        }
         var html = '';
         list.forEach(function (t) {
-            var deleteAttrs = t.isSystem ? ' disabled title="系统预设类型不可删除"' : '';
-            html += '<div class="type-row" data-key="' + t.key + '">'
-                + '<span class="ef-input-wrapper" style="width:150px;"><input class="ef-input ef-input-size-medium text type-key" value="' + esc(t.key) + '" disabled></span>'
-                + '<span class="ef-input-wrapper" style="width:200px;"><input class="ef-input ef-input-size-medium text type-label" value="' + esc(t.label) + '"></span>'
-                + '<span class="ef-input-wrapper" style="width:60px; padding:4px;"><input class="ef-input ef-input-size-medium type-color" type="color" value="' + esc(t.color || '#6b7280') + '" style="padding:0; cursor:pointer; border:none; background:transparent;"></span>'
-                + (t.isSystem ? '<span style="font-size:12px;color:#8a8fa8;min-width:60px;">系统类型</span>' : '<span style="min-width:60px;"></span>')
-                + '<button class="btn secondary medium type-save">保存</button>'
-                + '<button class="btn red medium type-del"' + deleteAttrs + '>删除</button>'
-                + '</div>';
+            var isSystem = t.isSystem;
+            var color = t.color || '#6b7280';
+            html += '<tr class="ef-table-tr" data-key="' + esc(t.key) + '" data-editing="false">'
+                + '<td class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-center">'
+                + '<span class="type-color-dot" style="display:inline-block;width:28px;height:28px;border-radius:6px;background:' + color + ';box-shadow:0 0 0 2px #fff,0 0 0 3px #e5e7eb;vertical-align:middle;"></span>'
+                + '<input type="color" class="type-color-input" value="' + esc(color) + '" style="display:none;">'
+                + '</span></td>'
+                + '<td class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-left"><code class="type-key">' + esc(t.key) + '</code></span></td>'
+                + '<td class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-left">'
+                + '<span class="type-label-view">' + esc(t.label) + '</span>'
+                + '<span class="ef-input-wrapper ef-input-rounded" style="display:none;"><input type="text" class="ef-input ef-input-size-medium text type-label-input" value="' + esc(t.label) + '"></span>'
+                + '</span></td>'
+                + '<td class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-center">' + (isSystem ? '<span class="type-system-badge">系统类型</span>' : '<span class="type-custom-badge">自定义</span>') + '</span></td>'
+                + '<td class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-center">'
+                + '<button class="btn secondary medium type-edit-btn"><i class="fa-solid fa-pen"></i> 编辑</button>'
+                + '<button class="btn primary medium type-save-btn" style="display:none;"><i class="fa-solid fa-check"></i> 保存</button>'
+                + '<button class="btn default medium type-cancel-btn" style="display:none;"><i class="fa-solid fa-xmark"></i> 取消</button>'
+                + '</span></td>'
+                + '</tr>';
         });
         $('#type-manager-list').html(html);
-        // bind actions
-        $('#type-manager-list .type-save').off('click').on('click', function () {
-            var $row = $(this).closest('.type-row');
+        // 颜色选择器变化时同步预览
+        $('.type-color-input').off('input').on('input', function () {
+            $(this).closest('tr').find('.type-color-dot').css('background', $(this).val());
+        });
+        // 编辑按钮
+        $('#type-manager-list .type-edit-btn').off('click').on('click', function () {
+            var $row = $(this).closest('tr');
+            $row.attr('data-editing', 'true');
+            $row.find('.type-color-dot').hide();
+            $row.find('.type-color-input').show();
+            $row.find('.type-label-view').hide();
+            $row.find('.type-label-input').closest('.ef-input-wrapper').show();
+            $row.find('.type-edit-btn').hide();
+            $row.find('.type-save-btn').show();
+            $row.find('.type-cancel-btn').show();
+        });
+        // 保存按钮
+        $('#type-manager-list .type-save-btn').off('click').on('click', function () {
+            var $row = $(this).closest('tr');
             var key = $row.data('key');
-            var label = $row.find('.type-label').val();
-            var color = $row.find('.type-color').val();
+            var label = $row.find('.type-label-input').val().trim();
+            var color = $row.find('.type-color-input').val();
+            if (!label) { toast('名称不能为空', 'error'); return; }
             request('PUT', BASE + '/type/' + encodeURIComponent(key), { label: label, color: color }).then(function () { loadTypes(); toast('已保存', 'success'); });
         });
-        $('#type-manager-list .type-del').off('click').on('click', function () {
-            var $row = $(this).closest('.type-row');
-            var key = $row.data('key');
-            if (!confirm('确认删除类型 ' + key + '？')) return;
-            request('DELETE', BASE + '/type/' + encodeURIComponent(key)).then(function () { loadTypes(); toast('已删除', 'success'); });
+        // 取消按钮
+        $('#type-manager-list .type-cancel-btn').off('click').on('click', function () {
+            loadTypes();
         });
+    }
+
+    function rgbToHex(rgb) {
+        if (rgb.startsWith('#')) return rgb;
+        var match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+        if (!match) return rgb;
+        return '#' + [match[1], match[2], match[3]].map(function (x) {
+            return parseInt(x).toString(16).padStart(2, '0');
+        }).join('');
     }
 
     const state = {
@@ -1128,7 +1309,8 @@ const CalMgr = (function ($) {
             var color = $('#new-type-color').val().trim();
             if (!key || !label) { new Alert($('#type-manager-modal .ef-modal-body')).error('请填写 key 和 名称', {percent: '320px', title: '提示', closable: true}); return; }
             request('POST', BASE + '/type', { key: key, label: label, color: color }).then(function () {
-                $('#new-type-key, #new-type-label, #new-type-color').val('');
+                $('#new-type-key, #new-type-label').val('');
+                $('#new-type-color').val('#6b7280');
                 loadTypes();
                 toast('已添加', 'success');
             });

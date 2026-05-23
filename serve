@@ -31,11 +31,13 @@ show_help() {
 
 PID_FILE="$PROJECT_ROOT/var/frankenphp.pid"
 WORKER_PID_FILE="$PROJECT_ROOT/var/messenger_worker.pid"
+MCP_PID_FILE="$PROJECT_ROOT/var/mate_mcp.pid"
 WATCHER_PID_FILE="$PROJECT_ROOT/var/watcher.pid"
 WATCHER_LOCK_DIR="$PROJECT_ROOT/var/watcher.lock"
 STATE_FILE="$PROJECT_ROOT/var/frankenphp.state"
 LOG_FILE="$PROJECT_ROOT/var/log/server.log"
 WORKER_LOG_FILE="$PROJECT_ROOT/var/log/messenger_worker.log"
+MCP_LOG_FILE="$PROJECT_ROOT/var/log/mate_mcp.log"
 STOP_REASON_FILE="$PROJECT_ROOT/var/log/stop_reason.log"
 
 mkdir -p "$PROJECT_ROOT/var/log"
@@ -74,6 +76,16 @@ is_watcher_running() {
     if [ -f "$WATCHER_PID_FILE" ]; then
         WPID=$(cat "$WATCHER_PID_FILE")
         if [ -n "$WPID" ] && kill -0 "$WPID" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+is_mcp_running() {
+    if [ -f "$MCP_PID_FILE" ]; then
+        MPID=$(cat "$MCP_PID_FILE")
+        if [ -n "$MPID" ] && kill -0 "$MPID" 2>/dev/null; then
             return 0
         fi
     fi
@@ -125,6 +137,20 @@ stop_server() {
     fi
     
     pkill -f "messenger:consume async" 2>/dev/null || true
+
+    # Stop Symfony Mate MCP server via PID file
+    if [ -f "$MCP_PID_FILE" ]; then
+        MPID=$(cat "$MCP_PID_FILE")
+        if [ -n "$MPID" ] && kill -0 "$MPID" 2>/dev/null; then
+            echo "Stopping Symfony Mate MCP server PID $MPID..."
+            kill -TERM "$MPID" 2>/dev/null || true
+            sleep 1
+            kill -9 "$MPID" 2>/dev/null || true
+        fi
+        rm -f "$MCP_PID_FILE"
+    fi
+
+    pkill -f "vendor/bin/mate serve" 2>/dev/null || true
     
     # Stop FrankenPHP via PID file
     if [ -f "$PID_FILE" ]; then
@@ -173,6 +199,17 @@ start_worker() {
     echo "Messenger Worker started (PID: $WPID)"
 }
 
+start_mcp_server() {
+    if [ ! -f "$PROJECT_ROOT/vendor/bin/mate" ]; then
+        echo "Symfony Mate binary not found: $PROJECT_ROOT/vendor/bin/mate"
+        echo "Run 'composer install' first."
+        return 1
+    fi
+
+    echo "Symfony Mate MCP is managed by the MCP client via .vscode/mcp.json"
+    echo "Open the MCP panel in VS Code to start or reconnect symfony-mate"
+}
+
 wait_for_server() {
     local count=0
     local max_wait=10
@@ -202,6 +239,7 @@ start_dev() {
     
     start_worker "dev"
     start_frankenphp "dev"
+    start_mcp_server
     
     sleep 2
     
@@ -376,11 +414,14 @@ show_status() {
     else
         echo "Messenger Worker: STOPPED"
     fi
+
+    echo "Symfony Mate MCP: MANAGED BY CLIENT (.vscode/mcp.json)"
     
     echo ""
     echo "Access: http://localhost:8000"
     echo "Server Log: $LOG_FILE"
     echo "Worker Log: $WORKER_LOG_FILE"
+    echo "MCP Log: $MCP_LOG_FILE"
     echo "Stop Reason Log: $STOP_REASON_FILE"
     
     if [ -f "$STOP_REASON_FILE" ]; then

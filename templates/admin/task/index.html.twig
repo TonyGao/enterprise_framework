@@ -1534,7 +1534,7 @@
             {# 单次执行：具体日期时间选择器 #}
             <div class="form-group" id="once-group" style="display:none;">
                 <label class="form-label">执行时间 <span class="required">*</span></label>
-                <input type="text" class="form-control" id="f-once-datetime" placeholder="选择执行日期和时间" style="cursor:pointer;" readonly>
+                <input type="text" class="form-control datetime-picker" id="f-once-datetime" placeholder="选择执行日期和时间" style="cursor:pointer;" readonly>
                 <div class="form-hint">任务将在指定时间执行一次，之后自动禁用</div>
                 <div class="form-error" id="e-once"></div>
             </div>
@@ -2928,20 +2928,6 @@ const TaskMgr = (function($) {
         // 初始化 Cron 构建器（默认"每隔N秒"）
         switchCronPeriod('second');
 
-        // 单次执行时间选择器（使用 daterangepicker）
-        $('#f-once-datetime').daterangepicker({
-            ...EFDate.getDefaultOptions('YYYY-MM-DD HH:mm'),
-            singleDatePicker: true,
-            timePicker: true,
-            timePicker24Hour: true,
-            autoUpdateInput: false,
-            showDropdowns: true,
-        }).on('apply.daterangepicker', function(ev, picker) {
-            // 格式化为 "YYYY-MM-DD HH:mm"
-            $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm'));
-        }).on('cancel.daterangepicker', function() {
-            $(this).val('');
-        });
     }
 
     // 暴露给模板 onclick 使用

@@ -68,6 +68,16 @@ $(document).ready(function() {
                 singleDatePicker: true,
                 showDropdowns: true,
                 autoUpdateInput: false
+            }).on('show.daterangepicker', function(ev, picker) {
+                const val = $(this).val().trim();
+                if (val) {
+                    const m = moment(val, 'YYYY-MM-DD', true);
+                    if (m.isValid()) {
+                        picker.setStartDate(m);
+                        picker.setEndDate(m);
+                        picker.updateView();
+                    }
+                }
             }).on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('YYYY-MM-DD'));
             }).on('cancel.daterangepicker', function(ev, picker) {
@@ -86,6 +96,16 @@ $(document).ready(function() {
                 timePicker: true,
                 timePicker24Hour: true,
                 autoUpdateInput: false
+            }).on('show.daterangepicker', function(ev, picker) {
+                const val = $(this).val().trim();
+                if (val) {
+                    const m = moment(val, 'YYYY-MM-DD HH:mm', true);
+                    if (m.isValid()) {
+                        picker.setStartDate(m);
+                        picker.setEndDate(m);
+                        picker.updateView();
+                    }
+                }
             }).on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm'));
             }).on('cancel.daterangepicker', function(ev, picker) {
@@ -105,6 +125,15 @@ $(document).ready(function() {
                 autoUpdateInput: false
             }).on('show.daterangepicker', function (ev, picker) {
                 picker.container.addClass('time-picker-only');
+                const val = $(this).val().trim();
+                if (val) {
+                    const m = moment(val, 'HH:mm', true);
+                    if (m.isValid()) {
+                        picker.setStartDate(m);
+                        picker.setEndDate(m);
+                        picker.updateView();
+                    }
+                }
             }).on('hide.daterangepicker', function (ev, picker) {
                 picker.container.removeClass('time-picker-only');
             }).on('apply.daterangepicker', function(ev, picker) {
