@@ -9,34 +9,40 @@ cd "$PROJECT_ROOT"
 MODE="${1:-dev}"
 
 show_help() {
-    echo "Enterprise Framework FrankenPHP Launcher"
     echo ""
-    echo "Usage: ./serve [MODE]"
+    echo "=========================================="
+    echo "  企业框架 - FrankenPHP 启动器"
+    echo "=========================================="
     echo ""
-    echo "Modes:"
-    echo "  dev     Development mode with hot reload (default)"
-    echo "  prod    Production mode with optimal performance"
-    echo "  stop    Stop the running FrankenPHP server"
-    echo "  restart Restart the server in the previous mode"
-    echo "  status  Show server status"
-    echo "  watch   Watch mode - auto-restart on crash"
+    echo "  用法: ./serve [模式]"
     echo ""
-    echo "Examples:"
-    echo "  ./serve          Start in dev mode"
-    echo "  ./serve dev      Start in dev mode"
-    echo "  ./serve prod     Start in prod mode"
-    echo "  ./serve stop     Stop the server"
-    echo "  ./serve watch    Start in watch mode (auto-restart)"
+    echo "  模式:"
+    echo "    dev     开发模式 (热重载，默认)"
+    echo "    prod    生产模式 (优化性能)"
+    echo "    stop    停止所有服务"
+    echo "    restart 重启服务器"
+    echo "    status  查看服务状态"
+    echo "    watch   看守模式 (崩溃后自动重启)"
+    echo ""
+    echo "  示例:"
+    echo "    ./serve          启动开发模式"
+    echo "    ./serve dev      启动开发模式"
+    echo "    ./serve prod     启动生产模式"
+    echo "    ./serve stop     停止服务"
+    echo "    ./serve status   查看状态"
+    echo ""
 }
 
 PID_FILE="$PROJECT_ROOT/var/frankenphp.pid"
 WORKER_PID_FILE="$PROJECT_ROOT/var/messenger_worker.pid"
+SCHEDULER_PID_FILE="$PROJECT_ROOT/var/task_scheduler.pid"
 MCP_PID_FILE="$PROJECT_ROOT/var/mate_mcp.pid"
 WATCHER_PID_FILE="$PROJECT_ROOT/var/watcher.pid"
 WATCHER_LOCK_DIR="$PROJECT_ROOT/var/watcher.lock"
 STATE_FILE="$PROJECT_ROOT/var/frankenphp.state"
 LOG_FILE="$PROJECT_ROOT/var/log/server.log"
 WORKER_LOG_FILE="$PROJECT_ROOT/var/log/messenger_worker.log"
+SCHEDULER_LOG_FILE="$PROJECT_ROOT/var/log/task_scheduler.log"
 MCP_LOG_FILE="$PROJECT_ROOT/var/log/mate_mcp.log"
 STOP_REASON_FILE="$PROJECT_ROOT/var/log/stop_reason.log"
 
@@ -110,7 +116,9 @@ kill_stale_watchers() {
 stop_server() {
     local reason="${1:-manual_stop}"
     log "STOP REASON: $reason"
-    echo "Stopping FrankenPHP and Messenger Worker..."
+    echo ""
+    echo "正在停止服务..."
+    echo ""
     
     # Signal watcher to stop if running
     if [ -f "$WATCHER_PID_FILE" ]; then
@@ -128,21 +136,34 @@ stop_server() {
     if [ -f "$WORKER_PID_FILE" ]; then
         WPID=$(cat "$WORKER_PID_FILE")
         if [ -n "$WPID" ] && kill -0 "$WPID" 2>/dev/null; then
-            echo "Stopping Messenger Worker PID $WPID..."
             kill -TERM "$WPID" 2>/dev/null || true
             sleep 1
             kill -9 "$WPID" 2>/dev/null || true
+            echo "  ✓ 消息队列消费者已停止"
         fi
         rm -f "$WORKER_PID_FILE"
     fi
     
     pkill -f "messenger:consume async" 2>/dev/null || true
 
+    # Stop task scheduler trigger loop
+    if [ -f "$SCHEDULER_PID_FILE" ]; then
+        SPID=$(cat "$SCHEDULER_PID_FILE")
+        if [ -n "$SPID" ] && kill -0 "$SPID" 2>/dev/null; then
+            kill -TERM "$SPID" 2>/dev/null || true
+            sleep 1
+            kill -9 "$SPID" 2>/dev/null || true
+            echo "  ✓ 定时任务调度器已停止"
+        fi
+        rm -f "$SCHEDULER_PID_FILE"
+    fi
+
+    pkill -f "internal/scheduler/run" 2>/dev/null || true
+
     # Stop Symfony Mate MCP server via PID file
     if [ -f "$MCP_PID_FILE" ]; then
         MPID=$(cat "$MCP_PID_FILE")
         if [ -n "$MPID" ] && kill -0 "$MPID" 2>/dev/null; then
-            echo "Stopping Symfony Mate MCP server PID $MPID..."
             kill -TERM "$MPID" 2>/dev/null || true
             sleep 1
             kill -9 "$MPID" 2>/dev/null || true
@@ -156,8 +177,8 @@ stop_server() {
     if [ -f "$PID_FILE" ]; then
         PID=$(cat "$PID_FILE")
         if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
-            echo "Stopping FrankenPHP PID $PID..."
             kill -9 "$PID" 2>/dev/null || true
+            echo "  ✓ FrankenPHP (HTTP 服务器) 已停止"
         fi
         rm -f "$PID_FILE"
     fi
@@ -168,21 +189,20 @@ stop_server() {
     ./frankenphp stop 2>/dev/null || true
     
     rm -f "$STATE_FILE"
-    echo "Server stopped."
+    echo ""
+    echo "=========================================="
+    echo "  所有服务已停止"
+    echo "=========================================="
 }
 
 start_frankenphp() {
     local mode="$1"
     local extra_args=""
     
-    # Note: In dev mode, FrankenPHP's hot reload is handled by the external watcher script
-    # The --watch flag was removed because it conflicts with our external watcher
-    # causing potential restart loops
-    
     nohup ./frankenphp run --config Caddyfile $extra_args >> "$LOG_FILE" 2>&1 &
     FPID=$!
     echo $FPID > "$PID_FILE"
-    echo "FrankenPHP started (PID: $FPID)"
+    echo "  ✓ FrankenPHP (HTTP 服务器) PID: $FPID"
 }
 
 start_worker() {
@@ -196,18 +216,43 @@ start_worker() {
     nohup php bin/console messenger:consume async $extra_args >> "$WORKER_LOG_FILE" 2>&1 &
     WPID=$!
     echo $WPID > "$WORKER_PID_FILE"
-    echo "Messenger Worker started (PID: $WPID)"
+    echo "  ✓ 消息队列消费者 (Messenger Worker) PID: $WPID"
+}
+
+start_scheduler() {
+    local mode="${1:-dev}"
+    local app_env="dev"
+    if [ "$mode" = "prod" ]; then
+        app_env="prod"
+    fi
+
+    if [ -f "$SCHEDULER_PID_FILE" ] && kill -0 "$(cat "$SCHEDULER_PID_FILE")" 2>/dev/null; then
+        echo "  ✓ 定时任务调度器 (已运行中) PID: $(cat "$SCHEDULER_PID_FILE")"
+        return 0
+    fi
+
+    nohup /bin/bash -c '
+        while true; do
+            TS=$(date "+%Y-%m-%d %H:%M:%S")
+            OUT=$(php bin/console app:scheduler:run --env='"$app_env"' --no-interaction 2>&1)
+            RC=$?
+            echo "[$TS] EXIT=$RC $OUT"
+            sleep 30
+        done
+    ' >> "$SCHEDULER_LOG_FILE" 2>&1 &
+
+    SPID=$!
+    echo $SPID > "$SCHEDULER_PID_FILE"
+    echo "  ✓ 定时任务调度器 (每30秒检查) PID: $SPID"
 }
 
 start_mcp_server() {
     if [ ! -f "$PROJECT_ROOT/vendor/bin/mate" ]; then
-        echo "Symfony Mate binary not found: $PROJECT_ROOT/vendor/bin/mate"
-        echo "Run 'composer install' first."
-        return 1
+        echo "  ! Symfony Mate (需在 VS Code 中启动)"
+        return 0
     fi
 
-    echo "Symfony Mate MCP is managed by the MCP client via .vscode/mcp.json"
-    echo "Open the MCP panel in VS Code to start or reconnect symfony-mate"
+    echo "  ✓ Symfony Mate AI 助手 (在 VS Code MCP 面板中管理)"
 }
 
 wait_for_server() {
@@ -225,15 +270,17 @@ wait_for_server() {
 }
 
 start_dev() {
-    local skip_running_check="${1:-false}"
-
-    if [ "$skip_running_check" != "true" ] && is_running; then
-        echo "Server is already running. Use './serve stop' first."
+    if is_running; then
+        echo "服务已在运行中，请先执行 ./serve stop"
         return 1
     fi
     
-    echo "Starting FrankenPHP in DEV mode (hot reload enabled)..."
-    echo "dev" > "$STATE_FILE"
+    echo ""
+    echo "=========================================="
+    echo "  企业框架开发环境启动中..."
+    echo "=========================================="
+    echo ""
+    echo "  正在启动服务："
     
     mkdir -p "$(dirname "$LOG_FILE")"
     
@@ -244,12 +291,23 @@ start_dev() {
     sleep 2
     
     if wait_for_server; then
+        start_scheduler "dev"
+        echo ""
+        echo "=========================================="
+        echo "  ✓ 所有服务启动成功！"
+        echo "=========================================="
+        echo ""
+        echo "  访问地址：http://localhost:8000"
+        echo ""
+        echo "  日志文件："
+        echo "    - 服务器日志: $LOG_FILE"
+        echo "    - 消息队列:   $WORKER_LOG_FILE"
+        echo "    - 定时任务:   $SCHEDULER_LOG_FILE"
+        echo ""
         log "Server started successfully in DEV mode"
-        echo "Server is running. Access http://localhost:8000"
-        echo "Logs: $LOG_FILE"
     else
-        log "ERROR: Server failed to start"
-        echo "Server may have failed to start. Check logs:"
+        echo ""
+        echo "  ✗ 服务器启动失败，请查看日志"
         tail -50 "$LOG_FILE"
         return 1
     fi
@@ -257,12 +315,16 @@ start_dev() {
 
 start_prod() {
     if is_running; then
-        echo "Server is already running. Use './serve stop' first."
+        echo "服务已在运行中，请先执行 ./serve stop"
         return 1
     fi
     
-    echo "Starting FrankenPHP in PROD mode..."
-    echo "prod" > "$STATE_FILE"
+    echo ""
+    echo "=========================================="
+    echo "  企业框架生产环境启动中..."
+    echo "=========================================="
+    echo ""
+    echo "  正在启动服务："
     
     mkdir -p "$(dirname "$LOG_FILE")"
     
@@ -272,12 +334,23 @@ start_prod() {
     sleep 2
     
     if wait_for_server; then
+        start_scheduler "prod"
+        echo ""
+        echo "=========================================="
+        echo "  ✓ 所有服务启动成功！"
+        echo "=========================================="
+        echo ""
+        echo "  访问地址：http://localhost:8000"
+        echo ""
+        echo "  日志文件："
+        echo "    - 服务器日志: $LOG_FILE"
+        echo "    - 消息队列:   $WORKER_LOG_FILE"
+        echo "    - 定时任务:   $SCHEDULER_LOG_FILE"
+        echo ""
         log "Server started successfully in PROD mode"
-        echo "Server is running. Access http://localhost:8000"
-        echo "Logs: $LOG_FILE"
     else
-        log "ERROR: Server failed to start"
-        echo "Server may have failed to start. Check logs:"
+        echo ""
+        echo "  ✗ 服务器启动失败，请查看日志"
         tail -50 "$LOG_FILE"
         return 1
     fi
@@ -285,12 +358,17 @@ start_prod() {
 
 watch_mode() {
     if is_watcher_running; then
-        echo "Watcher is already running. Use './serve stop' first."
+        echo "看守模式已在运行中，请先执行 ./serve stop"
         return 1
     fi
     
-    echo "Starting in WATCH mode - server will auto-restart on crash..."
-    echo "dev" > "$STATE_FILE"
+    echo ""
+    echo "=========================================="
+    echo "  企业框架 - 启动看守模式"
+    echo "=========================================="
+    echo ""
+    echo "  系统崩溃后将自动重启..."
+    echo ""
     
     mkdir -p "$(dirname "$LOG_FILE")"
     
@@ -395,40 +473,52 @@ watch_mode() {
 }
 
 show_status() {
-    echo "=== FrankenPHP Status ==="
+    echo ""
+    echo "=========================================="
+    echo "  企业框架 - 服务状态"
+    echo "=========================================="
+    echo ""
     
     if is_watcher_running; then
-        echo "Watcher: RUNNING (PID: $(cat "$WATCHER_PID_FILE"))"
+        echo "  ✓ 看守进程 (Watch Mode): 运行中 PID: $(cat "$WATCHER_PID_FILE")"
     else
-        echo "Watcher: NOT RUNNING"
+        echo "  - 看守进程 (Watch Mode): 未运行"
     fi
     
     if is_running; then
-        echo "FrankenPHP: RUNNING (PID: $(cat "$PID_FILE"))"
+        echo "  ✓ FrankenPHP (HTTP 服务器): 运行中 PID: $(cat "$PID_FILE")"
     else
-        echo "FrankenPHP: STOPPED"
+        echo "  ✗ FrankenPHP (HTTP 服务器): 已停止"
     fi
     
     if [ -f "$WORKER_PID_FILE" ] && kill -0 "$(cat "$WORKER_PID_FILE")" 2>/dev/null; then
-        echo "Messenger Worker: RUNNING (PID: $(cat "$WORKER_PID_FILE"))"
+        echo "  ✓ 消息队列消费者: 运行中 PID: $(cat "$WORKER_PID_FILE")"
     else
-        echo "Messenger Worker: STOPPED"
+        echo "  ✗ 消息队列消费者: 已停止"
     fi
 
-    echo "Symfony Mate MCP: MANAGED BY CLIENT (.vscode/mcp.json)"
+    if [ -f "$SCHEDULER_PID_FILE" ] && kill -0 "$(cat "$SCHEDULER_PID_FILE")" 2>/dev/null; then
+        echo "  ✓ 定时任务调度器: 运行中 PID: $(cat "$SCHEDULER_PID_FILE")"
+    else
+        echo "  ✗ 定时任务调度器: 已停止"
+    fi
+
+    echo "  ✓ Symfony Mate AI 助手: 在 VS Code MCP 面板中管理"
     
     echo ""
-    echo "Access: http://localhost:8000"
-    echo "Server Log: $LOG_FILE"
-    echo "Worker Log: $WORKER_LOG_FILE"
-    echo "MCP Log: $MCP_LOG_FILE"
-    echo "Stop Reason Log: $STOP_REASON_FILE"
+    echo "  访问地址：http://localhost:8000"
+    echo ""
+    echo "  日志文件："
+    echo "    服务器日志: $LOG_FILE"
+    echo "    消息队列:   $WORKER_LOG_FILE"
+    echo "    定时任务:   $SCHEDULER_LOG_FILE"
     
-    if [ -f "$STOP_REASON_FILE" ]; then
+    if [ -f "$STOP_REASON_FILE" ] && [ -s "$STOP_REASON_FILE" ]; then
         echo ""
-        echo "=== Recent Events ==="
-        tail -10 "$STOP_REASON_FILE"
+        echo "=== 最近事件 ==="
+        tail -10 "$STOP_REASON_FILE" | sed 's/^/  /'
     fi
+    echo ""
 }
 
 setup_traps() {

@@ -30,11 +30,12 @@ class ActivateAccountByHireDateTask implements TaskHandlerInterface
             return;
         }
 
-        if ($employee->getIsActive()) {
+        if ($employee->getIsActive() && $employee->getEmploymentStatus() === 'active') {
             $this->logger->info('ActivateAccountTask: Employee account already active', ['id' => $employeeId]);
             return;
         }
 
+        $employee->setEmploymentStatus('active');
         $employee->setIsActive(true);
         $this->em->flush();
 

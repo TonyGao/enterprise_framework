@@ -242,11 +242,12 @@ class EmployeeApiController extends AbstractController
     private function createActivationTask(Employee $employee, string $hireDateStr, EntityManagerInterface $em, ?string $executeAt = null): void
     {
         try {
-            $hireDate = new \DateTime($hireDateStr);
+            $tz = new \DateTimeZone('Asia/Shanghai');
+            $hireDate = new \DateTime($hireDateStr, $tz);
 
             // 如果传入了具体执行时间，优先使用；否则默认为入职当天 00:05
             if ($executeAt) {
-                $scheduledAt = new \DateTimeImmutable($executeAt);
+                $scheduledAt = new \DateTimeImmutable($executeAt, $tz);
             } else {
                 $scheduledAt = \DateTimeImmutable::createFromMutable($hireDate)->setTime(0, 5);
             }
@@ -264,12 +265,15 @@ class EmployeeApiController extends AbstractController
             $task->setDescription(sprintf('为员工 %s (%s) 在入职日期 %s 自动启用账号', $employee->getName(), $employee->getEmployeeNo(), $hireDateStr));
             $task->setCronExpression($cron);
             $task->setHandler('App\Task\ActivateAccountByHireDateTask');
-            $task->setPayload(['employeeId' => (string)$employee->getId()]);
+            $task->setPayload([
+                'employeeId' => (string)$employee->getId(),
+                'once' => true,
+            ]);
             $task->setEnabled(true);
             $task->setCategory('security');
 
             // 如果执行时间在过去，立即触发
-            $now = new \DateTimeImmutable();
+            $now = new \DateTimeImmutable('now', $tz);
             if ($scheduledAt < $now) {
                 $scheduledAt = $now;
             }

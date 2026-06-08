@@ -8,11 +8,8 @@ use App\Entity\System\TaskLog;
 use App\Message\RunTaskMessage;
 use App\Repository\System\TaskRepository;
 use App\Repository\System\TaskLogRepository;
-use App\Service\Task\TaskHandlerLocator;
-use App\Service\Task\TaskScheduler;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -99,30 +96,52 @@ class TaskController extends AbstractController
     #[Route('/api/calendar', name: 'admin_task_api_calendar', methods: ['GET'])]
     public function apiCalendar(Request $request): ApiResponse
     {
-        $year  = $request->query->getInt('year', (int)date('Y'));
-        $month = $request->query->getInt('month', (int)date('m'));
+        $fromParam = trim((string) $request->query->get('from', ''));
+        $toParam = trim((string) $request->query->get('to', ''));
 
-        $from = new \DateTimeImmutable("{$year}-{$month}-01 00:00:00");
-        $to   = $from->modify('last day of this month')->setTime(23, 59, 59);
+        if ($fromParam !== '' && $toParam !== '') {
+            $from = new \DateTimeImmutable($fromParam);
+            $to = new \DateTimeImmutable($toParam);
+            $year = (int) $from->format('Y');
+            $month = (int) $from->format('m');
+        } else {
+            $year  = $request->query->getInt('year', (int)date('Y'));
+            $month = $request->query->getInt('month', (int)date('m'));
+            $from = new \DateTimeImmutable("{$year}-{$month}-01 00:00:00");
+            $to   = $from->modify('last day of this month')->setTime(23, 59, 59);
+        }
+
+        if ($to < $from) {
+            return ApiResponse::error(json_encode([]), 400, '时间范围无效：to 不能早于 from');
+        }
 
         $rawTasks = $this->taskRepository->findEnabledForCalendar();
 
         // 将 DateTimeImmutable / Uuid 对象序列化为字符串，避免 json_encode 失败
         $tasks = array_map(static function (array $t): array {
+            $payload = $t['payload'] ?? null;
+            if (is_string($payload)) {
+                $payload = json_decode($payload, true) ?? [];
+            }
+            // 原生 SQL 使用 snake_case 列名
+            $nextRunAtRaw = $t['next_run_at'] ?? $t['nextRunAt'] ?? null;
+            $lastRunAtRaw = $t['last_run_at'] ?? $t['lastRunAt'] ?? null;
             return [
-                'id'             => (string) $t['id'],
-                'name'           => $t['name'],
-                'category'       => $t['category'],
-                'cronExpression' => $t['cronExpression'],
-                'nextRunAt'      => $t['nextRunAt'] instanceof \DateTimeInterface
-                                    ? $t['nextRunAt']->format('Y-m-d H:i:s')
-                                    : ($t['nextRunAt'] ?? null),
-                'lastRunAt'      => $t['lastRunAt'] instanceof \DateTimeInterface
-                                    ? $t['lastRunAt']->format('Y-m-d H:i:s')
-                                    : ($t['lastRunAt'] ?? null),
+                'id'             => (string) ($t['id'] ?? ''),
+                'name'           => $t['name'] ?? '',
+                'category'       => $t['category'] ?? null,
+                'cronExpression' => $t['cron_expression'] ?? $t['cronExpression'] ?? '',
+                'payload'        => $payload,
+                'nextRunAt'      => $nextRunAtRaw instanceof \DateTimeInterface
+                                    ? $nextRunAtRaw->format('Y-m-d H:i:s')
+                                    : (is_string($nextRunAtRaw) ? $nextRunAtRaw : null),
+                'lastRunAt'      => $lastRunAtRaw instanceof \DateTimeInterface
+                                    ? $lastRunAtRaw->format('Y-m-d H:i:s')
+                                    : (is_string($lastRunAtRaw) ? $lastRunAtRaw : null),
             ];
         }, $rawTasks);
         $stats = $this->taskLogRepository->getCalendarStats($from, $to);
+        $events = $this->buildTaskScheduleEvents($tasks, $from, $to);
 
         // 以日期为键聚合日志统计
         $statMap = [];
@@ -134,9 +153,172 @@ class TaskController extends AbstractController
         return ApiResponse::success(json_encode([
             'year'  => $year,
             'month' => $month,
+            'from'  => $from->format('Y-m-d H:i:s'),
+            'to'    => $to->format('Y-m-d H:i:s'),
             'tasks' => $tasks,
             'stats' => $statMap,
+            'events' => $events,
         ]));
+    }
+
+    /**
+     * 在指定区间内推导每个任务每日的首个计划执行点，避免高频任务导致前端日历过载
+     */
+private function buildTaskScheduleEvents(array $tasks, \DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        $events = [];
+
+        foreach ($tasks as $task) {
+            $taskId = (string) ($task['id'] ?? '');
+            if ($taskId === '') {
+                continue;
+            }
+
+            $nextRunRaw = $task['nextRunAt'] ?? null;
+            $lastRunRaw = $task['lastRunAt'] ?? null;
+            $cronExpr = (string) ($task['cronExpression'] ?? '');
+
+            // 收集所有需要显示的事件时间点
+            $eventDates = [];
+
+            // 转换日期（可能是 DateTimeInterface 或字符串）
+            $parseDate = function ($v) {
+                if ($v instanceof \DateTimeInterface) {
+                    return \DateTimeImmutable::createFromInterface($v);
+                }
+                if (is_string($v)) {
+                    return new \DateTimeImmutable($v);
+                }
+                return null;
+            };
+
+            // 收集所有需要显示的事件时间点（去重）
+            $eventDates = [];
+
+            $nextRunAt = $parseDate($nextRunRaw);
+            $lastRunAt = $parseDate($lastRunRaw);
+
+            // 检查是否是单次任务
+            $payload = $task['payload'] ?? [];
+            $isOnce = ($payload['once'] ?? false) === true;
+
+            // 如果是单次任务，只需要显示 nextRunAt，不需要用 cron 展开
+            if ($isOnce) {
+                $daySeen = [];
+                $added = 0;
+                $maxPerTask = 5;
+
+                // 只添加 nextRunAt（单次任务执行后 nextRunAt 保持不变）
+                if ($nextRunAt) {
+                    $this->addSafeEventDate($events, $task, $nextRunAt, $from, $to, $daySeen, $added, $maxPerTask);
+                }
+
+                // 如果 lastRunAt 存在且与 nextRunAt 是不同天，也添加（用于显示已执行记录）
+                if ($lastRunAt) {
+                    $lastKey = $lastRunAt->format('Y-m-d');
+                    if (!isset($daySeen[$lastKey])) {
+                        $this->addSafeEventDate($events, $task, $lastRunAt, $from, $to, $daySeen, $added, $maxPerTask);
+                    }
+                }
+
+                continue;
+            }
+
+            // 收集所有需要显示的事件时间点（去重）
+            $eventDates = [];
+
+            // 如果 nextRunAt 在范围内，添加到事件列表
+            if ($nextRunAt) {
+                $eventDates[$nextRunAt->format('Y-m-d H:i')] = $nextRunAt;
+            }
+
+            // 如果是最近执行过的任务，也显示 lastRunAt（但避免与 nextRunAt 重复）
+            // 使用分钟级别去重，避免精度不同导致的重复
+            if ($lastRunAt && $lastRunAt >= $from) {
+                $key = $lastRunAt->format('Y-m-d H:i');
+                // 只有当 lastRunAt 和 nextRunAt 在分钟级别相同时不添加
+                if (!isset($eventDates[$key])) {
+                    $eventDates[$key] = $lastRunAt;
+                }
+            }
+
+            if (empty($eventDates)) {
+                continue;
+            }
+
+            $daySeen = [];
+            $added = 0;
+            $maxPerTask = 45;
+
+            // 先把 nextRunAt 落点纳入候选，保证单次任务也可显示。
+            foreach ($eventDates as $cursor) {
+                $this->addSafeEventDate($events, $task, $cursor, $from, $to, $daySeen, $added, $maxPerTask);
+            }
+
+            // 单次任务不继续用 cron 循环展开，避免产生多个重复日期
+            if ($isOnce || $cronExpr === '' || str_starts_with($cronExpr, '@')) {
+                continue;
+            }
+
+            $cronClass = 'Cron\\CronExpression';
+            if (!class_exists($cronClass)) {
+                continue;
+            }
+
+            try {
+                $cron = new $cronClass($cronExpr);
+            } catch (\Throwable) {
+                continue;
+            }
+
+            // 从 max(nextRunAt, from) 开始向后推导，按"每天只取首个执行点"收敛数量。
+            $firstDate = reset($eventDates);
+            $seed = $firstDate > $from ? $firstDate : $from;
+
+            for ($i = 0; $i < 500 && $added < $maxPerTask; $i++) {
+                $next = \DateTimeImmutable::createFromMutable($cron->getNextRunDate($seed, 0, false));
+                if ($next > $to) {
+                    break;
+                }
+
+                $this->addSafeEventDate($events, $task, $next, $from, $to, $daySeen, $added, $maxPerTask);
+                $seed = $next->modify('+1 second');
+            }
+        }
+
+        return $events;
+    }
+
+    private function addSafeEventDate(
+        array &$events,
+        array $task,
+        \DateTimeImmutable $at,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+        array &$daySeen,
+        int &$added,
+        int $maxPerTask,
+    ): void {
+        if ($at < $from || $at > $to || $added >= $maxPerTask) {
+            return;
+        }
+
+        $dateKey = $at->format('Y-m-d');
+        if (isset($daySeen[$dateKey])) {
+            return;
+        }
+
+        $events[] = [
+            'taskId' => (string) ($task['id'] ?? ''),
+            'name' => (string) ($task['name'] ?? ''),
+            'category' => $task['category'] ?? null,
+            'date' => $dateKey,
+            'time' => $at->format('H:i:s'),
+            'status' => 'pending',
+        ];
+
+        $daySeen[$dateKey] = true;
+        $added++;
     }
 
     /** API：创建任务 */
@@ -204,6 +386,7 @@ class TaskController extends AbstractController
     {
         $page     = max(1, $request->query->getInt('page', 1));
         $pageSize = min(100, max(10, $request->query->getInt('pageSize', 20)));
+        $displayTz = new \DateTimeZone('Asia/Shanghai');
 
         $result = $this->taskLogRepository->findByTaskPaginated($id, $page, $pageSize);
 
@@ -214,8 +397,8 @@ class TaskController extends AbstractController
             'executionMs' => $l->getExecutionMs(),
             'memoryPeak'  => $l->getMemoryPeakFormatted(),
             'hostName'    => $l->getHostName(),
-            'startedAt'   => $l->getStartedAt()->format('Y-m-d H:i:s'),
-            'finishedAt'  => $l->getFinishedAt()?->format('Y-m-d H:i:s'),
+            'startedAt'   => $l->getStartedAt()->setTimezone($displayTz)->format('Y-m-d H:i:s'),
+            'finishedAt'  => $l->getFinishedAt()?->setTimezone($displayTz)->format('Y-m-d H:i:s'),
         ], $result['items']);
 
         return ApiResponse::success(json_encode([
@@ -428,6 +611,8 @@ class TaskController extends AbstractController
 
     private function fillTask(Task $task, array $data): void
     {
+        $displayTz = new \DateTimeZone('Asia/Shanghai');
+
         if (isset($data['name']))           $task->setName(trim($data['name']));
         if (isset($data['description']))    $task->setDescription($data['description'] ?: null);
         if (isset($data['cronExpression'])) $task->setCronExpression(trim($data['cronExpression']));
@@ -438,7 +623,15 @@ class TaskController extends AbstractController
         if (isset($data['maxRetries']))     $task->setMaxRetries((int)$data['maxRetries']);
         if (isset($data['timeout']))        $task->setTimeout((int)$data['timeout']);
         if (isset($data['sortOrder']))      $task->setSortOrder((int)$data['sortOrder']);
-        if (isset($data['nextRunAt']))      $task->setNextRunAt(new \DateTimeImmutable($data['nextRunAt']));
+        if (isset($data['nextRunAt'])) {
+            $task->setNextRunAt(new \DateTimeImmutable($data['nextRunAt'], $displayTz));
+
+            // 单次任务修改执行时间时，自动重新启用，避免因上次执行后被禁用而不再触发。
+            $payload = $task->getPayload();
+            if (($payload['once'] ?? false) === true) {
+                $task->setEnabled(true);
+            }
+        }
     }
 
     private function isValidTaskData(array $data): bool

@@ -133,9 +133,9 @@
   border: 1px solid #dee0e3;
   border-radius: 4px;
   background-color: White;
-  border-right: none;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+  border-left: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
   cursor: pointer;
   font-size: 0.8em;
   right: -20px;

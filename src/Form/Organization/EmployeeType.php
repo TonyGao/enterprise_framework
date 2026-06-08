@@ -40,6 +40,7 @@ class EmployeeType extends AbstractType
                 'label' => 'employee.field.employment_status',
                 'choices' => [
                     'employee.employment_status.active' => 'active',
+                    'employee.employment_status.probation' => 'probation',
                     'employee.employment_status.inactive' => 'inactive',
                 ],
                 'constraints' => [

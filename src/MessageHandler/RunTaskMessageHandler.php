@@ -47,6 +47,10 @@ final class RunTaskMessageHandler
             $runner->handle($task->getPayload());
             $output = ob_get_clean() ?: null;
 
+            if (($task->getPayload()['once'] ?? false) === true) {
+                $task->setEnabled(false);
+            }
+
             $log->setStatus('success')
                 ->setOutput($output)
                 ->setExecutionMs((int)((microtime(true) - $startTime) * 1000))

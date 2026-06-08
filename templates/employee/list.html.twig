@@ -160,11 +160,17 @@
             padding: 0 !important;
             border: none !important;
         }
+
+        .left-tree:not(.visible) {
+            width: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+        }
         
         .fold-icon-wrapper {
             width: 20px;
             height: 40px;
-            background: transparent;
+            background: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -172,11 +178,23 @@
             border-top-right-radius: 8px;
             border-bottom-right-radius: 8px;
             color: #94a3b8;
-            align-self: center;
-            margin-left: -1px; /* Overlap border */
             z-index: 1001;
-            flex-shrink: 0;
             transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+            position: absolute;
+            top: 50%;
+            left: 280px;
+            transform: translate(-50%, -50%);
+        }
+
+        .inside-wrapper.tree-collapsed #collapseTree.fold-icon-wrapper {
+            left: 0 !important;
+            transform: translate(0, -50%) !important;
+        }
+
+        .inside-wrapper.tree-expanded #collapseTree.fold-icon-wrapper {
+            left: 288px !important;
+            transform: translate(-50%, -50%) !important;
         }
         .fold-icon-wrapper:hover {
             color: #475569;
@@ -1818,6 +1836,7 @@
     // Apply Filter Changes
     // Update filter badge visibility
     const FILTER_PANEL_STORAGE_KEY = 'employee_filter_panel_values';
+    const FILTER_QUERY_KEYS = ['name', 'employeeNo', 'username', 'email', 'mobile', 'filter_department_id', 'filter_position_id', 'employment_status', 'workStatus', 'gender', 'englishName', 'idCard', 'education'];
 
     function saveFilterPanelValues() {
         const filters = {
@@ -1862,10 +1881,14 @@
     }
 
     function hasFilterPanelValues() {
-        const stored = sessionStorage.getItem(FILTER_PANEL_STORAGE_KEY);
-        if (!stored) return false;
-        const values = JSON.parse(stored);
-        return Object.keys(values).length > 0;
+        const url = new URL(window.location.href);
+        return FILTER_QUERY_KEYS.some((key) => {
+            const value = (url.searchParams.get(key) || '').trim();
+            if (!value) return false;
+            // employment_status=active 为默认条件，不作为筛选红点展示。
+            if (key === 'employment_status' && value === 'active') return false;
+            return true;
+        });
     }
 
     function clearFilterPanelValues() {
@@ -1915,15 +1938,17 @@
 
     // Check badge on page load
     document.addEventListener('DOMContentLoaded', function() {
-        updateFilterBadge();
         syncFiltersFromUrl();
+        saveFilterPanelValues();
+        updateFilterBadge();
+        syncFilterTabs();
         restoreView();
     });
 
     // Sync filter tabs with employment status from URL
     function syncFilterTabs() {
         const url = new URL(window.location.href);
-        const status = url.searchParams.get('employment_status');
+        const status = url.searchParams.get('employment_status') || 'active';
         
         const tabs = document.querySelectorAll('.filter-tab');
         tabs.forEach(tab => {
@@ -1934,8 +1959,6 @@
                 if (match) {
                     const tabStatus = match[1];
                     if (tabStatus === status) {
-                        tab.classList.add('active');
-                    } else if (status === null && tabStatus === 'all') {
                         tab.classList.add('active');
                     } else if ((status === 'active' || status === 'probation') && tabStatus === 'active') {
                         tab.classList.add('active');
@@ -2167,6 +2190,10 @@
 
             // Restore View
             restoreView();
+
+            // 同步筛选面板显示值，保证红点与面板条件一致。
+            syncFiltersFromUrl();
+            saveFilterPanelValues();
              
              // Re-initialize UI
              updateSelectionUI();
@@ -2211,6 +2238,36 @@
              $target.parents('.sub-tree-content').show().prev('.tree-indent').show();
              $target.parents('.sub-tree-content').prevAll('.item-content').find('.arrow-icon i').removeClass('fa-caret-right').addClass('fa-caret-down');
          }
+    }
+
+    const TREE_COLLAPSED_KEY = 'employee_left_tree_collapsed';
+
+    function setTreeCollapsed(collapsed) {
+        const leftTree = $("#leftTree");
+        const btn = $("#collapseTree");
+        const icon = btn.find("i");
+        const insideWrapper = $(".inside-wrapper");
+
+        if (collapsed) {
+            leftTree.hide();
+        } else {
+            leftTree.show();
+        }
+
+        insideWrapper.toggleClass('tree-collapsed', collapsed);
+        insideWrapper.toggleClass('tree-expanded', !collapsed);
+
+        if (collapsed) {
+            icon.removeClass("fa-chevron-left").addClass("fa-chevron-right");
+        } else {
+            icon.removeClass("fa-chevron-right").addClass("fa-chevron-left");
+        }
+
+        try {
+            localStorage.setItem(TREE_COLLAPSED_KEY, collapsed ? '1' : '0');
+        } catch (e) {
+            // Ignore storage failures in private browsing mode.
+        }
     }
 
     // Initialize & Bind Events
@@ -2264,14 +2321,22 @@
         // Tree Fold Logic
         const leftTree = $("#leftTree");
         const btn = $("#collapseTree");
+        const collapsedByDefault = leftTree.hasClass('collapsed') || !leftTree.hasClass('visible');
+        let collapsed = collapsedByDefault;
+
+        try {
+            const saved = localStorage.getItem(TREE_COLLAPSED_KEY);
+            if (saved === '1') collapsed = true;
+            if (saved === '0') collapsed = false;
+        } catch (e) {
+            // Keep server-rendered default state.
+        }
+
+        setTreeCollapsed(collapsed);
+
         btn.on("click", function() {
-            leftTree.toggleClass("collapsed");
-            const icon = $(this).find("i");
-            if (leftTree.hasClass("collapsed")) {
-                icon.removeClass("fa-chevron-left").addClass("fa-chevron-right");
-            } else {
-                icon.removeClass("fa-chevron-right").addClass("fa-chevron-left");
-            }
+            const willCollapse = leftTree.is(':visible');
+            setTreeCollapsed(willCollapse);
         });
 
         // Remove any existing click handlers on tree nodes to prevent conflict

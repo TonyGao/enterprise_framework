@@ -21,10 +21,12 @@ class TaskRepository extends ServiceEntityRepository
      */
     public function findDueTasks(int $limit = 50): array
     {
+        $localNow = new \DateTimeImmutable('now', new \DateTimeZone('Asia/Shanghai'));
+
         return $this->createQueryBuilder('t')
             ->where('t.enabled = true')
             ->andWhere('t.nextRunAt <= :now')
-            ->setParameter('now', new \DateTimeImmutable())
+            ->setParameter('now', $localNow)
             ->orderBy('t.nextRunAt', 'ASC')
             ->setMaxResults($limit)
             ->getQuery()
@@ -71,15 +73,21 @@ class TaskRepository extends ServiceEntityRepository
 
     /**
      * 获取指定月份所有任务的计划执行时间（用于日历视图）
+     * 包括已启用的任务和最近24小时内执行过的任务（用于展示单次任务执行记录）
      * 返回 [taskId, taskName, category, cronExpression]
      */
     public function findEnabledForCalendar(): array
     {
-        return $this->createQueryBuilder('t')
-            ->select('t.id, t.name, t.category, t.cronExpression, t.nextRunAt, t.lastRunAt')
-            ->where('t.enabled = true')
-            ->orderBy('t.sortOrder', 'ASC')
-            ->getQuery()
-            ->getArrayResult();
+        $lastDay = (new \DateTimeImmutable('-24 hours'))->format('Y-m-d H:i:s');
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "SELECT t.id, t.name, t.category, t.cron_expression, t.payload,
+                       t.next_run_at, t.last_run_at
+                FROM sys_task t
+                WHERE t.enabled = true
+                   OR (t.last_run_at IS NOT NULL AND t.last_run_at >= :lastDay)
+                ORDER BY t.sort_order ASC";
+
+        return $conn->fetchAllAssociative($sql, ['lastDay' => $lastDay]);
     }
 }

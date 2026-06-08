@@ -284,9 +284,9 @@
                     <div class="form-group">
                         <label class="form-label">{{ 'employee.onboarding.job_info.status'|trans }} <span class="required">*</span></label>
                         {{ ui.select([
-                            { label: 'employee.status.active'|trans, value: 'active' },
-                            { label: 'employee.status.inactive'|trans, value: 'inactive' },
-                            { label: 'employee.status.probation'|trans, value: 'probation' }
+                            { label: 'employee.employment_status.active'|trans, value: 'active' },
+                            { label: 'employee.employment_status.probation'|trans, value: 'probation' },
+                            { label: 'employee.employment_status.inactive'|trans, value: 'inactive' }
                         ], 'employee.onboarding.placeholder.select'|trans({'%label%': 'employee.onboarding.job_info.status'|trans}), '100%', 'ef-input-rounded', 'status', 'status', 'active') }}
                     </div>
                 </div>

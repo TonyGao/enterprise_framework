@@ -513,60 +513,75 @@
 
         .calendar-body {
             flex: 1;
-            overflow: auto;
-            padding: 16px 20px 20px;
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
-        .calendar-grid {
+        .cal-weekday-row {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
+            background: var(--bg-base, #f8f9fc);
+            border-bottom: 1px solid var(--border, #f0f0f5);
+            flex-shrink: 0;
         }
 
-        .calendar-weekday {
+        .cal-dow-cell {
             text-align: center;
             font-size: 11px;
             font-weight: 700;
             color: var(--text-secondary, #8a8fa8);
             text-transform: uppercase;
-            padding: 8px 0;
+            padding: 8px 10px;
             letter-spacing: .5px;
         }
 
-        .calendar-weekday.weekend { color: #ef4444; }
+        .cal-month-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            overflow-y: auto;
+        }
 
-        .calendar-day {
+        .cal-day-cell {
             min-height: 110px;
-            border-radius: 10px;
-            background: var(--bg-base, #f8f9fc);
+            background: #fff;
             padding: 8px;
-            border: 1.5px solid transparent;
-            transition: border-color .15s, background .15s;
-            cursor: default;
+            border-right: 1px solid var(--border, #f0f0f5);
+            border-bottom: 1px solid var(--border, #f0f0f5);
+            transition: background .12s;
+            cursor: pointer;
         }
 
-        .calendar-day.other-month {
-            background: transparent;
-            opacity: .4;
+        .cal-day-cell:hover { background: #f8f9fc; }
+
+        .cal-day-cell.other-month {
+            background: var(--bg-base, #fafafa);
+            opacity: 1;
         }
 
-        .calendar-day.today {
-            border-color: var(--primary, #5b7cf6);
-            background: #f0f3ff;
-        }
+        .cal-day-cell.other-month .cal-day-num { color: #d1d5db; }
 
-        .calendar-day-num {
+        .cal-day-num {
             font-size: 13px;
-            font-weight: 700;
-            color: var(--text-secondary, #8a8fa8);
+            font-weight: 600;
+            color: var(--text-primary, #374151);
             margin-bottom: 6px;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
         }
 
-        .calendar-day.today .calendar-day-num {
-            color: var(--primary, #5b7cf6);
+        .cal-day-cell.today .cal-day-num {
+            background: var(--primary, #5b7cf6);
+            color: #fff;
         }
 
-        .calendar-day-events {
+        .cal-day-events {
             display: flex;
             flex-direction: column;
             gap: 3px;
@@ -576,7 +591,7 @@
             border-radius: 5px;
             padding: 2px 7px;
             font-size: 11px;
-            font-weight: 500;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 4px;
@@ -614,13 +629,17 @@
             display: flex;
             flex: 1;
             flex-direction: column;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
             background: #fff;
             border: 1px solid var(--border, #f0f0f5);
             border-radius: 8px;
         }
         .fc-head {
             display: flex;
+            position: sticky;
+            top: 0;
+            z-index: 50;
             border-bottom: 1px solid var(--border, #f0f0f5);
             background: var(--bg-base, #f8f9fc);
         }
@@ -684,9 +703,6 @@
         .fc-all-day-cell.fc-today { background: #fffaeb; }
         .fc-body {
             display: flex;
-            flex: 1;
-            overflow-y: auto;
-            position: relative;
         }
         .fc-time-col {
             width: 60px;
@@ -991,7 +1007,7 @@
         .log-modal {
             background: #fff;
             border-radius: 16px;
-            width: 760px;
+            width: 1120px;
             max-width: 95vw;
             max-height: 85vh;
             display: flex;
@@ -1023,6 +1039,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 13px;
+            table-layout: fixed;
         }
 
         .log-table th,
@@ -1030,6 +1047,52 @@
             padding: 10px 16px;
             text-align: left;
             border-bottom: 1px solid var(--border, #f0f0f5);
+        }
+
+        .log-col-status,
+        .log-col-started,
+        .log-col-memory {
+            white-space: nowrap;
+        }
+
+        .log-col-output {
+            width: 120px;
+            text-align: center;
+        }
+
+        .log-output-view-btn {
+            height: 28px;
+            padding: 0 10px;
+            font-size: 12px;
+        }
+
+        .log-output-modal {
+            background: #fff;
+            border-radius: 14px;
+            width: 860px;
+            max-width: 92vw;
+            max-height: 78vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+        }
+
+        .log-output-modal-body {
+            padding: 16px 20px 20px;
+            overflow: auto;
+        }
+
+        .log-output-modal-pre {
+            margin: 0;
+            background: #151826;
+            color: #d9e1ff;
+            border-radius: 10px;
+            padding: 16px 20px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
         .log-table th {
@@ -1325,21 +1388,21 @@
                 </div>
             </div>
             <div class="calendar-body">
-                <div class="calendar-grid" id="calendar-grid">
-                    {# 星期表头 #}
-                    <div class="calendar-weekday">一</div>
-                    <div class="calendar-weekday">二</div>
-                    <div class="calendar-weekday">三</div>
-                    <div class="calendar-weekday">四</div>
-                    <div class="calendar-weekday weekend">五</div>
-                    <div class="calendar-weekday weekend">六</div>
-                    <div class="calendar-weekday weekend">日</div>
+                <div class="cal-weekday-row">
+                    <div class="cal-dow-cell">一</div>
+                    <div class="cal-dow-cell">二</div>
+                    <div class="cal-dow-cell">三</div>
+                    <div class="cal-dow-cell">四</div>
+                    <div class="cal-dow-cell">五</div>
+                    <div class="cal-dow-cell">六</div>
+                    <div class="cal-dow-cell">日</div>
                 </div>
+                <div class="cal-month-grid" id="calendar-grid"></div>
             </div>
         </div>
 
         {# 周视图 #}
-        <div id="task-week-view" style="display: none;">
+        <div id="task-week-view" style="display: none; flex-direction: column; overflow: hidden; max-height: calc(100vh - 250px);">
             <div class="calendar-header">
                 <div class="calendar-nav">
                     <button class="calendar-nav-btn" onclick="weekNav(-1)"><i class="fa-solid fa-chevron-left"></i></button>
@@ -1356,7 +1419,7 @@
         </div>
 
         {# 天视图 #}
-        <div id="task-day-view" style="display: none;">
+        <div id="task-day-view" style="display: none; flex-direction: column; overflow: hidden; max-height: calc(100vh - 250px);">
             <div class="calendar-header">
                 <div class="calendar-nav">
                     <button class="calendar-nav-btn" onclick="dayNav(-1)"><i class="fa-solid fa-chevron-left"></i></button>
@@ -1599,7 +1662,7 @@
                 <div style="margin-top:4px;">
                     <button type="button" id="f-enabled" role="switch" aria-checked="true"
                         class="ef-switch ef-switch-type-circle ef-switch-checked"
-                        onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked') === 'true' ? 'false' : 'true'); this.classList.toggle('ef-switch-checked');">
+                        onclick="toggleFormEnabledSwitch()">
                         <span class="ef-switch-handle"><span class="ef-switch-handle-icon"></span></span>
                     </button>
                 </div>
@@ -1627,12 +1690,12 @@
             <table class="log-table">
                 <thead>
                     <tr>
-                        <th>状态</th>
-                        <th>开始时间</th>
+                        <th class="log-col-status">状态</th>
+                        <th class="log-col-started">开始时间</th>
                         <th>耗时</th>
-                        <th>内存</th>
+                        <th class="log-col-memory">内存</th>
                         <th>节点</th>
-                        <th>输出</th>
+                        <th class="log-col-output">输出</th>
                     </tr>
                 </thead>
                 <tbody id="log-table-body"></tbody>
@@ -1641,6 +1704,18 @@
         <div class="log-modal-footer">
             <div class="pagination-info" id="log-pagination-info"></div>
             <div class="pagination-btns" id="log-pagination-btns"></div>
+        </div>
+    </div>
+</div>
+
+<div class="log-modal-overlay" id="log-output-modal-overlay" onclick="closeLogOutputModal()">
+    <div class="log-output-modal" onclick="event.stopPropagation()">
+        <div class="log-modal-header">
+            <div class="log-modal-title">日志输出详情</div>
+            <button class="task-drawer-close" onclick="closeLogOutputModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="log-output-modal-body">
+            <pre class="log-output-modal-pre" id="log-output-modal-content">-</pre>
         </div>
     </div>
 </div>
@@ -1679,6 +1754,7 @@ const TaskMgr = (function($) {
         logPage: 1,
         logPageSize: 20,
         logTotal: 0,
+        logOutputMap: {},
     };
 
     // ---- API 基础路径 ----
@@ -1711,6 +1787,24 @@ const TaskMgr = (function($) {
             const err = body?.message || body?.error || '请求失败，请稍后重试';
             toast(err, 'error');
         });
+    }
+
+    function normalizeBool(v) {
+        if (v === true || v === false) return v;
+        if (typeof v === 'number') return v === 1;
+        if (typeof v === 'string') {
+            const s = v.trim().toLowerCase();
+            if (s === 'true' || s === '1' || s === 'yes' || s === 'on') return true;
+            if (s === 'false' || s === '0' || s === 'no' || s === 'off' || s === '') return false;
+        }
+        return !!v;
+    }
+
+    function toggleFormEnabledSwitch() {
+        const $btn = $('#f-enabled');
+        const next = !normalizeBool($btn.attr('aria-checked'));
+        $btn.attr('aria-checked', next ? 'true' : 'false');
+        $btn.toggleClass('ef-switch-checked', next);
     }
 
     // ================================================================
@@ -1806,6 +1900,7 @@ const TaskMgr = (function($) {
         }
 
         const rows = tasks.map((t, idx) => {
+            const isEnabled = normalizeBool(t.enabled);
             const statusHtml = t.latestStatus
                 ? `<span class="status-badge ${t.latestStatus}">${statusLabel(t.latestStatus)}</span>`
                 : `<span class="status-badge none">未执行</span>`;
@@ -1834,8 +1929,8 @@ const TaskMgr = (function($) {
                 <td>${statusHtml}</td>
                 <td>
                     <button type="button" role="switch"
-                        aria-checked="${t.enabled ? 'true' : 'false'}"
-                        class="ef-switch ef-switch-type-circle${t.enabled ? ' ef-switch-checked' : ''}"
+                        aria-checked="${isEnabled ? 'true' : 'false'}"
+                        class="ef-switch ef-switch-type-circle${isEnabled ? ' ef-switch-checked' : ''}"
                         onclick="toggleTask('${t.id}', this)">
                         <span class="ef-switch-handle"><span class="ef-switch-handle-icon"></span></span>
                     </button>
@@ -1989,7 +2084,7 @@ const TaskMgr = (function($) {
         $('#f-sort').val(task.sortOrder);
         $('#f-retries').val(task.maxRetries);
         $('#f-timeout').val(task.timeout);
-        const enabled = !!task.enabled;
+        const enabled = normalizeBool(task.enabled);
         $('#f-enabled').attr('aria-checked', enabled ? 'true' : 'false');
         enabled ? $('#f-enabled').addClass('ef-switch-checked') : $('#f-enabled').removeClass('ef-switch-checked');
         updateCronDesc(task.cronExpression);
@@ -2030,14 +2125,16 @@ const TaskMgr = (function($) {
         return `${year}-${m}-${d} ${h}:${min}`;
     }
 
-    /** 格式化 datetime 字符串用于表格显示 "YYYY-MM-DD HH:mm" → "M月D日 HH:mm" */
+    /** 格式化 datetime 字符串用于表格显示 "YYYY-MM-DD HH:mm" → "Y年M月D日 HH:mm" */
     function formatDatetime(dt) {
         if (!dt) return '-';
         const s = dt.replace('T', ' ').substring(0, 16);
         const [datePart, timePart] = s.split(' ');
         if (!datePart) return s;
         const [y, mo, dd] = datePart.split('-');
-        return `${parseInt(mo)}月${parseInt(dd)}日 ${timePart || ''}`;
+        const year = parseInt(y, 10);
+        const prefix = Number.isFinite(year) ? `${year}年` : '';
+        return `${prefix}${parseInt(mo, 10)}月${parseInt(dd, 10)}日 ${timePart ? timePart.substring(0, 5) : ''}`;
     }
 
     /** 将单次执行 Cron 转成可读的日期时间用于徽章显示 */
@@ -2047,7 +2144,9 @@ const TaskMgr = (function($) {
         const [datePart, timePart] = dt.replace('T', ' ').split(' ');
         if (!datePart) return dt;
         const [y, mo, dd] = datePart.split('-');
-        return `${parseInt(mo)}月${parseInt(dd)}日 ${timePart || ''}`;
+        const year = parseInt(y, 10);
+        const prefix = Number.isFinite(year) ? `${year}年` : '';
+        return `${prefix}${parseInt(mo, 10)}月${parseInt(dd, 10)}日 ${timePart ? timePart.substring(0, 5) : ''}`;
     }
 
     /** 切换任务类型：recurring（循环）| once（单次）| ai（AI 表达） */
@@ -2282,6 +2381,12 @@ const TaskMgr = (function($) {
             valid = false;
         }
 
+        if (taskType === 'once') {
+            payload.once = true;
+            // 单次任务重设执行时间默认重新启用，避免已执行后保持禁用。
+            $('#f-enabled').attr('aria-checked', 'true').addClass('ef-switch-checked');
+        }
+
         if (!valid) return;
 
         const data = {
@@ -2294,7 +2399,7 @@ const TaskMgr = (function($) {
             sortOrder:   parseInt($('#f-sort').val()) || 0,
             maxRetries:  parseInt($('#f-retries').val()) || 3,
             timeout:     parseInt($('#f-timeout').val()) || 0,
-            enabled:     $('#f-enabled').attr('aria-checked') === 'true',
+            enabled:     normalizeBool($('#f-enabled').attr('aria-checked')),
         };
 
         if (nextRunAt) data.nextRunAt = nextRunAt;
@@ -2434,6 +2539,7 @@ const TaskMgr = (function($) {
 
     function loadLogPage(page) {
         state.logPage = page;
+        state.logOutputMap = {};
         $('#log-table-body').html('<tr><td colspan="6" style="text-align:center;padding:24px;color:#b0b5cc;">加载中...</td></tr>');
         $('#log-pagination-btns').empty();
         $('#log-pagination-info').text('');
@@ -2465,16 +2571,19 @@ const TaskMgr = (function($) {
                 $('#log-table-body').html('<tr><td colspan="6" style="text-align:center;padding:24px;color:#b0b5cc;">暂无日志</td></tr>');
                 return;
             }
-            const rows = res.items.map(l => `
+            const rows = res.items.map(l => {
+                state.logOutputMap[l.id] = l.output || '';
+                return `
                 <tr>
-                    <td><span class="status-badge ${l.status}">${statusLabel(l.status)}</span></td>
-                    <td style="font-size:12px;">${l.startedAt}</td>
+                    <td class="log-col-status"><span class="status-badge ${l.status}">${statusLabel(l.status)}</span></td>
+                    <td class="log-col-started" style="font-size:12px;">${l.startedAt}</td>
                     <td style="font-size:12px;">${l.executionMs != null ? l.executionMs + ' ms' : '-'}</td>
-                    <td style="font-size:12px;">${l.memoryPeak || '-'}</td>
+                    <td class="log-col-memory" style="font-size:12px;">${l.memoryPeak || '-'}</td>
                     <td style="font-size:12px;">${escHtml(l.hostName || '-')}</td>
-                    <td>${l.output ? `<pre class="log-output-pre">${escHtml(l.output)}</pre>` : '<span style="color:#b0b5cc;">-</span>'}</td>
+                    <td class="log-col-output">${l.output ? `<button type="button" class="btn btn-default log-output-view-btn" onclick="openLogOutputById('${l.id}')">查看</button>` : '<span style="color:#b0b5cc;">-</span>'}</td>
                 </tr>
-            `);
+            `;
+            });
             $('#log-table-body').html(rows.join(''));
         }).fail((xhr) => {
             const msg = xhr.responseJSON?.message || '加载失败，请稍后重试';
@@ -2488,11 +2597,27 @@ const TaskMgr = (function($) {
         $('#log-modal-overlay').removeClass('open');
     }
 
+    function openLogOutputById(logId) {
+        const output = state.logOutputMap[logId] || '';
+        $('#log-output-modal-content').text(output || '-');
+        $('#log-output-modal-overlay').addClass('open');
+    }
+
+    function closeLogOutputModal() {
+        $('#log-output-modal-overlay').removeClass('open');
+    }
+
     // ================================================================
     //  视图切换
     // ================================================================
     function switchView(view) {
         state.view = view;
+
+        // 更新 URL hash，支持直接访问和浏览器前进/后退
+        if (location.hash !== '#' + view) {
+            history.pushState(null, '', '#' + view);
+        }
+
         $('#tab-list, #tab-calendar, #tab-week, #tab-day').removeClass('active');
         $('#task-list-view, #task-calendar-view, #task-week-view, #task-day-view').removeClass('active').hide();
         
@@ -2503,15 +2628,20 @@ const TaskMgr = (function($) {
             $('#task-pagination').show();
             loadTasks();
         } else if (view === 'calendar') {
+            // 从 week/day 视图切换时同步月份
+            if (state.calDate) {
+                state.calYear = state.calDate.getFullYear();
+                state.calMonth = state.calDate.getMonth() + 1;
+            }
             $('#task-calendar-view').addClass('active').show();
             $('#task-pagination').hide();
             renderCalendar();
         } else if (view === 'week') {
-            $('#task-week-view').addClass('active').show();
+            $('#task-week-view').addClass('active').css('display', 'flex');
             $('#task-pagination').hide();
             renderWeek();
         } else if (view === 'day') {
-            $('#task-day-view').addClass('active').show();
+            $('#task-day-view').addClass('active').css('display', 'flex');
             $('#task-pagination').hide();
             renderDay();
         }
@@ -2526,99 +2656,98 @@ const TaskMgr = (function($) {
         $('#cal-title').text(formatStr.replace('%year%', y).replace('%month%', m));
 
         request('GET', `${BASE}/calendar?year=${y}&month=${m}`).then(res => {
-            buildCalendarGrid(y, m, res.tasks, res.stats);
+            buildCalendarGrid(y, m, res.tasks || [], res.stats || {}, res.events || []);
         });
     }
 
-    function buildCalendarGrid(year, month, tasks, statMap) {
-        // 生成日期格子
+    function buildCalendarGrid(year, month, tasks, statMap, plannedEvents) {
+        const plannedMap = {};
+        (plannedEvents || []).forEach(ev => {
+            if (!ev || !ev.date) return;
+            if (!plannedMap[ev.date]) plannedMap[ev.date] = [];
+            plannedMap[ev.date].push(ev);
+        });
+
+        const taskMap = {};
+        (tasks || []).forEach(t => {
+            if (t && t.id) taskMap[t.id] = t;
+        });
+
         const firstDay = new Date(year, month - 1, 1);
         const lastDay  = new Date(year, month, 0);
-        const totalDays = lastDay.getDate();
-
-        // 周一为第一天 (0=周日 → 6, 1=周一 → 0, ...)
         let startDow = firstDay.getDay(); // 0=Sun
-        startDow = startDow === 0 ? 6 : startDow - 1; // 转为周一=0
+        startDow = startDow === 0 ? 6 : startDow - 1; // Mon=0
+
+        const cells = [];
+        for (let i = startDow - 1; i >= 0; i--) {
+            const d = new Date(firstDay);
+            d.setDate(d.getDate() - i - 1);
+            cells.push({ date: d, otherMonth: true });
+        }
+
+        for (let d = 1; d <= lastDay.getDate(); d++) {
+            cells.push({ date: new Date(year, month - 1, d), otherMonth: false });
+        }
+
+        const rows = Math.ceil(cells.length / 7);
+        while (cells.length < rows * 7) {
+            const tail = cells[cells.length - 1].date;
+            const next = new Date(tail);
+            next.setDate(next.getDate() + 1);
+            cells.push({ date: next, otherMonth: true });
+        }
 
         const today = new Date();
         const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
-        const $grid = $('#calendar-grid');
-        // 保留星期表头（前7个子元素），移除日期格子
-        $grid.children('.calendar-day').remove();
+        let html = '';
+        const MAX_VISIBLE = 3;
 
-        // 前置空白格
-        for (let i = 0; i < startDow; i++) {
-            $grid.append('<div class="calendar-day other-month"></div>');
-        }
-
-        for (let d = 1; d <= totalDays; d++) {
-            const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        cells.forEach(cell => {
+            const d = cell.date;
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             const isToday = dateStr === todayStr;
-            const $day = $(`<div class="calendar-day${isToday ? ' today' : ''}"></div>`);
-            $day.append(`<div class="calendar-day-num">${d}</div>`);
+            const cls = `cal-day-cell${cell.otherMonth ? ' other-month' : ''}${isToday ? ' today' : ''}`;
 
-            const $events = $('<div class="calendar-day-events"></div>');
-            let count = 0;
-            const MAX_VISIBLE = 3;
-
-            tasks.forEach(task => {
-                let statusClass = '';
-                const key = task.id + '_' + dateStr;
-                if (statMap[key]) {
-                    statusClass = statMap[key].error ? 'error' : 'success';
-                } else {
-                    // 检查该任务是否在此日期有计划执行（通过 nextRunAt 日期比较）
-                    if (task.nextRunAt && task.nextRunAt.startsWith(dateStr)) {
-                        statusClass = 'pending';
-                    } else {
-                        return; // 此任务在此日期没有事件
-                    }
+            const plannedForDate = (plannedMap[dateStr] || []).map(ev => {
+                const statKey = ev.taskId + '_' + dateStr;
+                const stat = statMap[statKey];
+                let status = 'pending';
+                if (stat) {
+                    if (stat.error) status = 'error';
+                    else if (stat.success) status = 'success';
                 }
-
-                if (count >= MAX_VISIBLE) { return; }
-                count++;
-
-                const cc = catClass(task.category);
-                const dot = statusClass === 'error' ? 'error-dot' : (statusClass === 'success' ? 'success-dot' : '');
-                $events.append(`<div class="cal-event-item ${cc}" title="${escHtml(task.name)} [${statusLabel(statusClass)}]">
-                    <span class="event-dot"></span>
-                    <span style="overflow:hidden;text-overflow:ellipsis;">${escHtml(task.name)}</span>
-                </div>`);
+                return { ...ev, status };
             });
 
-            if (count === 0) {
-                // 检查日期是否有任何日志
-                const hasAnyLog = Object.keys(statMap).some(k => k.endsWith('_' + dateStr));
-                if (hasAnyLog) {
-                    const logEntry = Object.entries(statMap).find(([k]) => k.endsWith('_' + dateStr));
-                    if (logEntry) {
-                        const taskId = logEntry[0].split('_')[0];
-                        const t = tasks.find(t => t.id === taskId);
-                        if (t) {
-                            const statusClass = logEntry[1].error ? 'error' : 'success';
-                            $events.append(`<div class="cal-event-item ${catClass(t.category)}" title="${escHtml(t.name)}">
-                                <span class="event-dot"></span>
-                                <span>${escHtml(t.name)}</span>
-                            </div>`);
-                            count++;
-                        }
-                    }
-                }
+            const merged = plannedForDate;
+            html += `<div class="${cls}">`;
+            html += `<div class="cal-day-num">${d.getDate()}</div>`;
+            html += '<div class="cal-day-events">';
+
+            merged.slice(0, MAX_VISIBLE).forEach(item => {
+                const tip = buildTaskTipText({
+                    name: item.name,
+                    category: item.category,
+                    status: item.status,
+                    date: dateStr,
+                    time: item.time || '',
+                });
+                html += `<div class="cal-event-item ${catClass(item.category)}" title="${escHtml(tip)}">
+                    <span class="event-dot"></span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;">${escHtml(item.name)}</span>
+                </div>`;
+            });
+
+            if (merged.length > MAX_VISIBLE) {
+                html += `<div class="cal-event-more">+${merged.length - MAX_VISIBLE} 更多</div>`;
             }
 
-            $day.append($events);
-            $grid.append($day);
-        }
+            html += '</div>';
+            html += '</div>';
+        });
 
-        // 补足末尾空白格（使总数为7的倍数）
-        const totalCells = startDow + totalDays;
-        const remainder  = totalCells % 7;
-        if (remainder > 0) {
-            for (let i = 0; i < 7 - remainder; i++) {
-                $grid.append('<div class="calendar-day other-month"></div>');
-            }
-        }
+        $('#calendar-grid').html(html);
     }
 
     function calNav(delta) {
@@ -2637,8 +2766,15 @@ const TaskMgr = (function($) {
     // ================================================================
     //  通用构建 TimeGrid
     // ================================================================
-    function buildTimeGrid($container, dates, tasks, statMap) {
+    function buildTimeGrid($container, dates, tasks, statMap, plannedEvents) {
         $container.empty();
+
+        const plannedByDate = {};
+        (plannedEvents || []).forEach(ev => {
+            if (!ev || !ev.date) return;
+            if (!plannedByDate[ev.date]) plannedByDate[ev.date] = [];
+            plannedByDate[ev.date].push(ev);
+        });
 
         // 1. 头栏: 左侧空列 + 右侧日期列
         const $head = $('<div class="fc-head"></div>');
@@ -2711,97 +2847,112 @@ const TaskMgr = (function($) {
             const dStr = String(date.getDate()).padStart(2, '0');
             const dateStr = `${y}-${m}-${dStr}`;
 
-            tasks.forEach(task => {
-                let statusClass = '';
-                const key = task.id + '_' + dateStr;
-                let targetHour = null;
-                let targetMinute = 0;
-
-                if (statMap[key]) {
-                    statusClass = statMap[key].error ? 'error' : 'success';
-                    if (task.lastRunAt && task.lastRunAt.startsWith(dateStr)) {
-                        const timePart = task.lastRunAt.split(' ')[1];
-                        if (timePart) {
-                            targetHour = parseInt(timePart.split(':')[0], 10);
-                            targetMinute = parseInt(timePart.split(':')[1], 10);
-                        }
-                    }
-                } else if (task.nextRunAt && task.nextRunAt.startsWith(dateStr)) {
-                    statusClass = 'pending';
-                    const timePart = task.nextRunAt.split(' ')[1];
-                    if (timePart) {
-                        targetHour = parseInt(timePart.split(':')[0], 10);
-                        targetMinute = parseInt(timePart.split(':')[1], 10);
-                    }
-                } else {
-                    return; 
+            // 只显示计划事件，用 statMap 更新执行状态
+            const dayEvents = (plannedByDate[dateStr] || []).map(ev => {
+                const rawTime = ev.time || '00:00';
+                const time = rawTime.length <= 5 ? rawTime : rawTime.substring(0, 5);
+                const statKey = ev.taskId + '_' + dateStr;
+                const stat = statMap[statKey];
+                let status = 'pending';
+                if (stat) {
+                    if (stat.error) status = 'error';
+                    else if (stat.success) status = 'success';
                 }
+                return {
+                    name: ev.name,
+                    category: ev.category,
+                    status,
+                    time,
+                };
+            });
+            dayEvents.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+            const renderedKey = new Set();
+            const laneCountByMinute = {};
 
-                // 如果没解析出时间，或者不需要放到时间点，放全天区（目前尽量放时间点）
-                if (targetHour === null) {
-                    const statusDot = statusClass === 'error' ? '🔴' : (statusClass === 'success' ? '🟢' : '🔵');
-                    $(`#fc-all-day-col-${i}`).append(`
-                        <div class="cal-event-item ${catClass(task.category)}" title="${escHtml(task.name)}" style="padding:2px 4px; border-radius:4px; font-size:10px;">
-                            ${statusDot} ${escHtml(task.name)}
+            dayEvents.forEach(ev => {
+                const timePart = ev.time || '00:00:00';
+                const [hh, mm] = timePart.split(':');
+                const targetHour = parseInt(hh || '0', 10);
+                const targetMinute = parseInt(mm || '0', 10);
+                const uniq = `${ev.name}|${targetHour}|${targetMinute}|${ev.status}`;
+                if (renderedKey.has(uniq)) return;
+                renderedKey.add(uniq);
+
+                if (Number.isNaN(targetHour) || targetHour < 0 || targetHour > 23) {
+                    const statusDot = ev.status === 'error' ? '🔴' : (ev.status === 'success' ? '🟢' : '🔵');
+                    $container.find(`#fc-all-day-col-${i}`).append(`
+                        <div class="cal-event-item ${catClass(ev.category)}" title="${escHtml(ev.name)}" style="padding:2px 4px; border-radius:4px; font-size:10px;">
+                            ${statusDot} ${escHtml(ev.name)}
                         </div>
                     `);
                     return;
                 }
 
-                // 渲染到 Absolute 坐标 
-                const SLOT_HEIGHT = 60; // css .fc-time-slot height
+                const SLOT_HEIGHT = 60;
                 const top = targetHour * SLOT_HEIGHT + (targetMinute / 60) * SLOT_HEIGHT;
                 const topPercent = (top / (24 * SLOT_HEIGHT)) * 100;
-                
-                // 暂定每次执行占用 40px 高度（不够长可能字被截断，足够即可）
                 const eventHeight = 40;
-
-                const cc = catClass(task.category);
-                const titleStr = escHtml(task.name);
+                const cc = catClass(ev.category);
+                const titleStr = escHtml(ev.name);
                 const timeLabel = `${String(targetHour).padStart(2,'0')}:${String(targetMinute).padStart(2,'0')}`;
-                
+                const minuteKey = `${targetHour}:${targetMinute}`;
+                const lane = laneCountByMinute[minuteKey] || 0;
+                laneCountByMinute[minuteKey] = lane + 1;
+                const leftPx = 4 + Math.min(lane, 5) * 8;
+                const rightPx = 4;
+                const zIndex = 5 + lane;
+
                 const eventEl = $(`
-                    <div class="fc-event ${cc}" style="top: ${topPercent}%; height: ${eventHeight}px;" title="${titleStr} [${statusLabel(statusClass)}]">
+                    <div class="fc-event ${cc}" style="top: ${topPercent}%; height: ${eventHeight}px; left:${leftPx}px; right:${rightPx}px; z-index:${zIndex};" title="${titleStr} [${statusLabel(ev.status)}] ${timeLabel}">
                         <div class="fc-event-time">${timeLabel}</div>
                         <div class="fc-event-title">${titleStr}</div>
                     </div>
                 `);
-
-                $(`#fc-col-${i}`).append(eventEl);
-            });
-            
-            // 如果有独立于 tasks.nextRunAt/lastRunAt 的日志，也能尝试填充
-            Object.keys(statMap).forEach(k => {
-                if (k.endsWith('_' + dateStr)) {
-                    const taskId = k.split('_')[0];
-                    const t = tasks.find(x => x.id === taskId);
-                    
-                    // 防止重复添加
-                    if (t && $(`#fc-col-${i}`).find(`[title*="${escHtml(t.name)}"]`).length === 0) {
-                        const sClass = statMap[k].error ? 'error' : 'success';
-                        
-                        // 简单丢到全天区
-                        const statusDot = sClass === 'error' ? '🔴' : '🟢';
-                        $(`#fc-all-day-col-${i}`).append(`
-                            <div class="cal-event-item ${catClass(t.category)}" title="${escHtml(t.name)}" style="padding:2px 4px; border-radius:4px; font-size:10px;">
-                                ${statusDot} ${escHtml(t.name)}
-                            </div>
-                        `);
-                    }
-                }
+                $container.find(`#fc-col-${i}`).append(eventEl);
             });
         });
-        
-        // 自动滚动到当前小时附近 (如果包含今天)
-        setTimeout(() => {
-            const hasToday = dates.some(d => d.toDateString() === todayStrLocal);
-            if (hasToday) {
-                const currentHour = new Date().getHours();
-                const scrollPos = Math.max(0, currentHour * 60 - 60); // 向上减1小时偏移
-                $body.scrollTop(scrollPos);
-            }
-        }, 10);
     }
+    // ================================================================
+    //  时间网格自动滚动
+    // ================================================================
+    function autoScrollTimeGrid($grid, dates, opts = {}) {
+        const options = { autoScrollToNow: true, ...opts };
+        const el = $grid[0];
+        if (!el) return;
+
+        const GRID_FULL_HEIGHT = 24 * 60; // 24小时 × 60px = 1440px
+
+        const tryScroll = (retries) => {
+            // 等待容器有高度且内容已溢出（scrollHeight > clientHeight）
+            if ((el.clientHeight === 0 || el.scrollHeight <= el.clientHeight) && retries < 10) {
+                setTimeout(() => tryScroll(retries + 1), 50);
+                return;
+            }
+            const todayStrLocal = new Date().toDateString();
+            const hasToday = dates.some(d => d.toDateString() === todayStrLocal);
+            const maxScroll = Math.max(0, el.scrollHeight - el.clientHeight);
+
+            if (hasToday && options.autoScrollToNow) {
+                const currentHour = new Date().getHours();
+                $grid.scrollTop(Math.min(maxScroll, Math.max(0, currentHour * 60 - 60)));
+            } else {
+                // 根据第一个事件的 CSS top 百分比计算滚动位置
+                const allEvents = el.querySelectorAll('.fc-event');
+                let targetScroll = 8 * 60; // 默认 08:00
+                if (allEvents.length > 0) {
+                    const topPct = parseFloat(allEvents[0].style.top) || 0;
+                    const topPx = (topPct / 100) * GRID_FULL_HEIGHT;
+                    targetScroll = Math.max(0, Math.floor(topPx) - 60);
+                }
+                // 如果 scrollHeight 未就绪，直接用计算值
+                const effectiveMax = maxScroll > 0 ? maxScroll : GRID_FULL_HEIGHT - el.clientHeight;
+                $grid.scrollTop(Math.min(effectiveMax, targetScroll));
+            }
+        };
+        // 延迟执行，确保浏览器完成布局
+        setTimeout(() => tryScroll(0), 100);
+    }
+
     // ================================================================
     //  周视图
     // ================================================================
@@ -2835,9 +2986,14 @@ const TaskMgr = (function($) {
         const formatStr = "{{ 'admin.task.week_format'|trans({}, 'messages')|default('%year%年%month%月 第%week%周') }}";
         $('#week-title').text(formatStr.replace('%year%', year).replace('%month%', month).replace('%week%', getWeekNumber(monday)));
 
-        request('GET', `${BASE}/calendar?year=${year}&month=${month}`).then(res => {
-            const { tasks, stats } = res;
-            buildTimeGrid($('#week-grid'), weekDates, tasks, stats);
+        const from = `${weekDates[0].getFullYear()}-${String(weekDates[0].getMonth() + 1).padStart(2, '0')}-${String(weekDates[0].getDate()).padStart(2, '0')} 00:00:00`;
+        const endDate = weekDates[6];
+        const to = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')} 23:59:59`;
+
+        request('GET', `${BASE}/calendar?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`).then(res => {
+            const { tasks, stats, events } = res;
+            buildTimeGrid($('#week-grid'), weekDates, tasks || [], stats || {}, events || []);
+            autoScrollTimeGrid($('#week-grid'), weekDates);
         });
     }
 
@@ -2868,9 +3024,13 @@ const TaskMgr = (function($) {
         const formatStr = "{{ 'admin.task.day_format'|trans({}, 'messages')|default('%year%年%month%月%day%日') }}";
         $('#day-title').text(formatStr.replace('%year%', y).replace('%month%', m).replace('%day%', dt));
 
-        request('GET', `${BASE}/calendar?year=${y}&month=${m}`).then(res => {
-            const { tasks, stats } = res;
-            buildTimeGrid($('#day-timeline'), [d], tasks, stats);
+        const from = `${y}-${String(m).padStart(2, '0')}-${String(dt).padStart(2, '0')} 00:00:00`;
+        const to = `${y}-${String(m).padStart(2, '0')}-${String(dt).padStart(2, '0')} 23:59:59`;
+
+        request('GET', `${BASE}/calendar?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`).then(res => {
+            const { tasks, stats, events } = res;
+            buildTimeGrid($('#day-timeline'), [new Date(d)], tasks || [], stats || {}, events || []);
+            autoScrollTimeGrid($('#day-timeline'), [new Date(d)]);
         });
     }
 
@@ -2892,6 +3052,18 @@ const TaskMgr = (function($) {
     // ================================================================
     function statusLabel(s) {
         return { success: '成功', error: '失败', running: '执行中', pending: '计划中', none: '未执行' }[s] || s;
+    }
+
+    function buildTaskTipText(item) {
+        const lines = [];
+        lines.push(`任务: ${item.name || '-'}`);
+        lines.push(`状态: ${statusLabel(item.status || 'none')}`);
+        lines.push(`分类: ${catLabel(item.category)}`);
+        if (item.date) {
+            const timePart = item.time ? ` ${item.time.slice(0, 5)}` : '';
+            lines.push(`时间: ${item.date}${timePart}`);
+        }
+        return lines.join('\n');
     }
 
     function escHtml(str) {
@@ -2922,12 +3094,22 @@ const TaskMgr = (function($) {
     function init() {
         loadStats(); // 统计卡片 + 分类下拉，合并为一次请求
 
-        // 默认进入列表视图并加载数据
-        switchView('list');
+        // 根据 URL hash 确定初始视图（支持直接访问 /admin/task/#week 等）
+        const validViews = ['list', 'calendar', 'week', 'day'];
+        const hashView = (location.hash || '').replace('#', '');
+        const initialView = validViews.includes(hashView) ? hashView : 'list';
+        switchView(initialView);
 
         // 初始化 Cron 构建器（默认"每隔N秒"）
         switchCronPeriod('second');
 
+        // 监听浏览器前进/后退按钮
+        window.addEventListener('hashchange', function() {
+            const newView = (location.hash || '').replace('#', '');
+            if (validViews.includes(newView) && newView !== state.view) {
+                switchView(newView);
+            }
+        });
     }
 
     // 暴露给模板 onclick 使用
@@ -2944,6 +3126,8 @@ const TaskMgr = (function($) {
         runNow,
         deleteTask,
         openLogs,
+        openLogOutputById,
+        closeLogOutputModal,
         closeLogModal,
         calNav,
         calGoToday,
@@ -2975,6 +3159,8 @@ function toggleTask(id, el)    { TaskMgr.toggleTask(id, el); }
 function runNow(id, name)      { TaskMgr.runNow(id, name); }
 function deleteTask(id, name)  { TaskMgr.deleteTask(id, name); }
 function openLogs(id, name)    { TaskMgr.openLogs(id, name); }
+function openLogOutputById(id)  { TaskMgr.openLogOutputById(id); }
+function closeLogOutputModal()  { TaskMgr.closeLogOutputModal(); }
 function closeLogModal()       { TaskMgr.closeLogModal(); }
 function calNav(d)             { TaskMgr.calNav(d); }
 function calGoToday()          { TaskMgr.calGoToday(); }
