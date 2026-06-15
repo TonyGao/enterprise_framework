@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}404 - 页面未找到{% endblock %}
+
+{% block body %}
+<style>
+    .error-404-page {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #f2f3f5;
+        font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, "Segoe UI", "PingFang SC", "Microsoft Yahei", "Hiragino Sans GB", sans-serif;
+    }
+
+    .error-404-container {
+        text-align: center;
+        padding: 48px 32px;
+    }
+
+    .error-404-image {
+        width: 480px;
+        max-width: 90%;
+        height: auto;
+        margin-bottom: 24px;
+        opacity: 0.85;
+    }
+
+    .error-404-code {
+        font-size: 72px;
+        font-weight: 700;
+        color: #3370ff;
+        line-height: 1;
+        margin-bottom: 12px;
+        letter-spacing: -2px;
+    }
+
+    .error-404-title {
+        font-size: 20px;
+        font-weight: 500;
+        color: #1f2329;
+        margin-bottom: 8px;
+    }
+
+    .error-404-desc {
+        font-size: 14px;
+        color: #646a73;
+        margin-bottom: 32px;
+        line-height: 1.6;
+    }
+
+    .error-404-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 24px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #fff;
+        background: #3370ff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+
+    .error-404-btn:hover {
+        background: #2563eb;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .error-404-btn i {
+        font-size: 14px;
+    }
+</style>
+
+<div class="error-404-page">
+    <div class="error-404-container">
+        <img class="error-404-image" src="{{ asset('status/empty.png', 'image') }}" alt="404">
+        <div class="error-404-code">404</div>
+        <div class="error-404-title">页面未找到</div>
+        <div class="error-404-desc">您访问的页面不存在或已被移除</div>
+        <a class="error-404-btn" href="{{ app.user ? path('admin_index') : path('app_login') }}">
+            <i class="fa-solid fa-house"></i>
+            {{ app.user ? '返回首页' : '返回登录' }}
+        </a>
+    </div>
+</div>
+{% endblock %}

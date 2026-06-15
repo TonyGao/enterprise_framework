@@ -54,14 +54,14 @@ class InitOfficersCommand extends Command
 
             $user->setRoles([$data['role']]);
             $user->setIsSystem(true);
-            
-            // Default password
-            $password = 'Officer@123'; 
+
+            $password = bin2hex(random_bytes(8));
             $hashedPassword = $this->passwordHasher->hashPassword($user, $password);
             $user->setPassword($hashedPassword);
 
             $this->entityManager->persist($user);
-            $io->success(sprintf('User "%s" set with role %s. Password: %s', $username, $data['role'], $password));
+            $io->success(sprintf('User "%s" set with role %s.', $username, $data['role']));
+            $io->note(sprintf('  Password: %s', $password));
         }
 
         $this->entityManager->flush();

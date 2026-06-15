@@ -36,7 +36,7 @@ class CodeFormatterService extends BaseService
             throw new ProcessFailedException($process);
         }
 
-        echo $process->getOutput();
+        // $process->getOutput() 仅用于调试，不应在请求中 echo
     }
 
     private function getFormatterByExtension(string $extension): ?string

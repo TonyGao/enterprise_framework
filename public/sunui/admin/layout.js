@@ -55,5 +55,11 @@ $(document).ready(async function () {
       $(this).addClass('current');
     }
   });
+
+  // 首页默认展开所有菜单
+  if (currentPath === '/admin/index') {
+    $('.parent-menu .sub-menu-content').show();
+    $('.parent-menu .link-text i.fa-chevron-down').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+  }
 })
 

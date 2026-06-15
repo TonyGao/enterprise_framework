@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ status_code }} - {{ status_text }}{% endblock %}
+
+{% block body %}
+<style>
+    .error-page {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #f2f3f5;
+        font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, "Segoe UI", "PingFang SC", "Microsoft Yahei", "Hiragino Sans GB", sans-serif;
+    }
+
+    .error-container {
+        text-align: center;
+        padding: 48px 32px;
+    }
+
+    .error-image {
+        width: 480px;
+        max-width: 90%;
+        height: auto;
+        margin-bottom: 24px;
+        opacity: 0.85;
+    }
+
+    .error-code {
+        font-size: 72px;
+        font-weight: 700;
+        color: #3370ff;
+        line-height: 1;
+        margin-bottom: 12px;
+        letter-spacing: -2px;
+    }
+
+    .error-title {
+        font-size: 20px;
+        font-weight: 500;
+        color: #1f2329;
+        margin-bottom: 8px;
+    }
+
+    .error-desc {
+        font-size: 14px;
+        color: #646a73;
+        margin-bottom: 32px;
+        line-height: 1.6;
+    }
+
+    .error-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 24px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #fff;
+        background: #3370ff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+
+    .error-btn:hover {
+        background: #2563eb;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .error-btn i {
+        font-size: 14px;
+    }
+</style>
+
+<div class="error-page">
+    <div class="error-container">
+        <img class="error-image" src="{{ asset('status/empty.png', 'image') }}" alt="error">
+        <div class="error-code">{{ status_code }}</div>
+        <div class="error-title">{{ status_text }}</div>
+        <div class="error-desc">抱歉，服务器处理请求时发生错误</div>
+        <a class="error-btn" href="{{ app.user ? path('admin_index') : path('app_login') }}">
+            <i class="fa-solid fa-house"></i>
+            {{ app.user ? '返回首页' : '返回登录' }}
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -990,7 +990,8 @@ body {
   transform-origin: right;
 }
 
-.parent-menu .parent-menu .sub-menu-content .link-text-content {
+/* 移除菜单缩进样式 */
+/* .parent-menu .parent-menu .sub-menu-content .link-text-content {
   padding-left: 20px;
 }
 
@@ -1005,7 +1006,7 @@ body {
   .sub-menu-content
   .link-text-content {
   padding-left: 60px;
-}
+} */
 
 .warning-content {
   display: flex;

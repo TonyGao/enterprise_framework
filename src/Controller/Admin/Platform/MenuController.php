@@ -81,6 +81,7 @@ class MenuController extends BaseController
               <div class="node-name">
                 <div class="tree-text-content branch" type="menu" id="' . $node['id'] . '">' .
             $node['label']
+            . (($node['enabled'] ?? true) ? '' : ' <span style="color:#f53f3f;font-size:12px;">[已禁用]</span>')
             . '</div>
               </div>
               <div class="node-tail-icon">
@@ -137,6 +138,40 @@ class MenuController extends BaseController
     }
 
     $f =  $form->createView();
+    return $this->render('/admin/platform/menu/menuNew.html.twig', [
+      'form' => $f,
+    ]);
+  }
+
+  #[Route('/admin/platform/menu/{id}/edit', name: 'platform_menu_edit')]
+  public function editMenu(string $id, Request $request, EntityManagerInterface $em): Response
+  {
+    $repo = $em->getRepository(Menu::class);
+    $menu = $repo->find($id);
+
+    if (!$menu) {
+      throw $this->createNotFoundException('菜单不存在');
+    }
+
+    $form = $this->createForm(MenuType::class, $menu, [
+      'action' => $this->generateUrl('platform_menu_edit', ['id' => $id])
+    ]);
+
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+      $em->flush();
+
+      try {
+        $this->menuStaticGenerator->generateStaticMenu();
+      } catch (\RuntimeException $e) {
+          $this->addFlash('error', $e->getMessage());
+      }
+
+      return $this->redirectToRoute('platform_menu');
+    }
+
+    $f = $form->createView();
     return $this->render('/admin/platform/menu/menuNew.html.twig', [
       'form' => $f,
     ]);

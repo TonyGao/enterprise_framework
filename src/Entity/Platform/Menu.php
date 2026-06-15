@@ -100,6 +100,16 @@ class Menu implements GedmoNode
     #[ORM\Column("menu_description", type: "string", length: 200, nullable: true)]
     private $description;
 
+    /**
+     * 是否启用
+     * @Ef(
+     *     group="menu_base_info",
+     *     isBF=true
+     * )
+     */
+    #[ORM\Column("enabled", type: "boolean", options: ["default" => true])]
+    private $enabled = true;
+
     #[Gedmo\TreeLeft]
     #[ORM\Column(name: 'lft', type: 'integer')]
     private $lft;
@@ -428,6 +438,26 @@ class Menu implements GedmoNode
     public function setDescription($description)
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of enabled
+     */
+    public function getEnabled(): bool
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * Set the value of enabled
+     *
+     * @return  self
+     */
+    public function setEnabled(bool $enabled)
+    {
+        $this->enabled = $enabled;
 
         return $this;
     }

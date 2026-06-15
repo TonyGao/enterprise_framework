@@ -37,6 +37,9 @@ class MenuStaticGenerator extends BaseService
     $root = $repo->childrenHierarchy();
     $menus = $root !== [] ? $root[0]['__children'] : [];
 
+    // 过滤掉禁用的菜单及其子菜单
+    $menus = $this->filterEnabledMenus($menus);
+
     $html = $this->twig->render('admin/dynamic/menu.html.twig', [
       'menus' => $menus
     ]);
@@ -66,6 +69,21 @@ class MenuStaticGenerator extends BaseService
     } catch (\Exception $exception) {
       $this->handleException($exception, $io);
     }
+  }
+
+  private function filterEnabledMenus(array $menus): array
+  {
+    $result = [];
+    foreach ($menus as $menu) {
+      if (($menu['enabled'] ?? true) !== true) {
+        continue;
+      }
+      if (!empty($menu['__children'])) {
+        $menu['__children'] = $this->filterEnabledMenus($menu['__children']);
+      }
+      $result[] = $menu;
+    }
+    return $result;
   }
 
   private function handleException(\Exception $exception, ?SymfonyStyle $io): void

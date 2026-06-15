@@ -82,4 +82,26 @@ $(document).ready(async function () {
       }
     })
   })
+
+  $("#modify").on("click", async function() {
+    if (choseMenus.length === 0) {
+      $.alert.warning('请先选择一个菜单', { title: '提示' });
+      return;
+    }
+    if (choseMenus.length > 1) {
+      $.alert.warning('一次只能修改一个菜单', { title: '提示' });
+      return;
+    }
+    const menuId = choseMenus[0].id;
+    const editRoute = await route.generate("platform_menu_edit", { id: menuId });
+    $.ajax({
+      url: editRoute.path,
+      type: editRoute.methods[0],
+      async: false,
+      dataType: "html",
+      success: function(data) {
+        $(".right-content").html(data);
+      }
+    })
+  })
 })

@@ -35,7 +35,6 @@ node_modules/**/*
 ###< 忽略字体文件 ###
 
 temp.md
-.env
 
 ###> IDE & OS Files ###
 .idea/

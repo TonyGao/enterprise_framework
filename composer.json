@@ -1,4 +1,6 @@
 {
+    "name": "enterprise-framework/enterprise-framework",
+    "description": "Enterprise Framework - 企业级低代码开发框架",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",
@@ -15,7 +17,6 @@
         "doctrine/orm": "^2.13",
         "firebase/php-jwt": "^7.0",
         "friendsofphp/php-cs-fixer": "^3.64",
-        "friendsoftwig/twigcs": "^6.4",
         "imagine/imagine": "^1.5",
         "league/flysystem-aws-s3-v3": "^3.32",
         "league/flysystem-bundle": "^3.6",
@@ -28,9 +29,9 @@
         "ramsey/uuid": "^4.7",
         "runtime/frankenphp-symfony": "^1.0",
         "stof/doctrine-extensions-bundle": "^1.7",
-        "symfony/ai-agent": "*",
-        "symfony/ai-bundle": "*",
-        "symfony/ai-generic-platform": "*",
+        "symfony/ai-agent": "^0.1.0",
+        "symfony/ai-bundle": "^0.1.0",
+        "symfony/ai-generic-platform": "^0.1.0",
         "symfony/ai-store": "^0.1.0",
         "symfony/asset": "7.4.*",
         "symfony/console": "7.4.*",
@@ -64,7 +65,6 @@
         "symfony/yaml": "7.4.*",
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/twig": "^2.12|^3.0",
-        "vincentlanglet/twig-cs-fixer": "^3.1",
         "web-auth/webauthn-symfony-bundle": "^5.2"
     },
     "config": {
