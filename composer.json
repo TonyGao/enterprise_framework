@@ -1,8 +1,8 @@
 {
-    "name": "enterprise-framework/enterprise-framework",
-    "description": "Enterprise Framework - 企业级低代码开发框架",
+    "name": "doggy/skeleton",
+    "description": "狗狗框架 - 基于 Symfony 7.4 LTS 的企业级低代码开发框架",
     "type": "project",
-    "license": "proprietary",
+    "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
@@ -16,7 +16,6 @@
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/orm": "^2.13",
         "firebase/php-jwt": "^7.0",
-        "friendsofphp/php-cs-fixer": "^3.64",
         "imagine/imagine": "^1.5",
         "league/flysystem-aws-s3-v3": "^3.32",
         "league/flysystem-bundle": "^3.6",
@@ -106,12 +105,25 @@
             "assets:install %PUBLIC_DIR%": "symfony-cmd"
         },
         "post-install-cmd": [
-            "@auto-scripts",
-            "npm install prettier"
+            "@auto-scripts"
         ],
         "post-update-cmd": [
-            "@auto-scripts",
-            "npm install prettier"
+            "@auto-scripts"
+        ],
+        "post-create-project-cmd": [
+            "@setup-dotenv"
+        ],
+        "setup-dotenv": [
+            "php -r \"copy('.env', '.env.local');\"",
+            "php -r \"file_put_contents('.env.local', preg_replace('/^APP_SECRET=.*$/m', 'APP_SECRET=' . bin2hex(random_bytes(32)), file_get_contents('.env.local')));\"",
+            "echo \"\\n✅ .env.local 已生成\"",
+            "echo \"⚠️  请编辑 .env.local 配置 DATABASE_URL 后运行：\"",
+            "echo \"   php bin/console doctrine:database:create\"",
+            "echo \"   php bin/console doctrine:migrations:migrate -n\"",
+            "echo \"   php bin/console ef:init-admin-menu\"",
+            "echo \"   php bin/console ef:init-storage-config\"",
+            "echo \"\"",
+            "echo \"启动开发服务器: ./serve\""
         ]
     },
     "conflict": {
@@ -125,6 +137,7 @@
     },
     "require-dev": {
         "hautelook/alice-bundle": "^2.12",
+        "friendsofphp/php-cs-fixer": "^3.64",
         "phpunit/phpunit": "^9.5",
         "symfony/ai-mate": "*",
         "symfony/ai-symfony-mate-extension": "^0.9.0",
