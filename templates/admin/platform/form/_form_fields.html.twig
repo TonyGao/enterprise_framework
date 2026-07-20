@@ -1,0 +1,369 @@
+{% set _columns = section_config.columns|default(1) %}
+{% set _fieldLayout = section_config.fieldLayout|default('horizontal') %}
+{% if _columns > 1 or _fieldLayout == 'vertical' %}
+<style>
+{% if _columns > 1 %}
+.form-grid-{{ _columns }} {
+    display: grid;
+    grid-template-columns: repeat({{ _columns }}, 1fr);
+    gap: 24px;
+}
+.form-grid-{{ _columns }} .ef-form-item {
+    width: 100%;
+}
+{% endif %}
+{% if _fieldLayout == 'vertical' %}
+form.edit-form {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+}
+.form-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.form-group-vertical .ef-form-item-label,
+.form-group-vertical .form-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+    padding: 0;
+    min-height: auto;
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+.form-group-vertical .ef-form-item-label-col,
+.form-group-vertical .ef-col {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+.form-group-vertical .ef-form-item-wrapper-col {
+    padding-left: 0 !important;
+}
+.form-group-vertical .ef-form-item-content-wrapper {
+    padding: 0 !important;
+}
+.form-group-vertical .ef-form-item-content {
+    min-height: auto !important;
+}
+.form-group-vertical .ef-form-item {
+    margin-bottom: 0;
+}
+.form-actions {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+{% if _columns > 1 %}
+.form-actions {
+    grid-column: 1 / -1;
+}
+{% endif %}
+.btn-save {
+    background: #0f172a !important;
+    color: #fff !important;
+    border: none !important;
+    padding: 10px 24px !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all 0.2s !important;
+}
+.btn-save:hover {
+    background: #334155 !important;
+}
+.btn-cancel {
+    background: #fff !important;
+    color: #64748b !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 10px 24px !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all 0.2s !important;
+}
+.btn-cancel:hover {
+    background: #f8fafc !important;
+    color: #0f172a !important;
+}
+{% endif %}
+.section-header {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+}
+.section-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.section-header h4 i {
+    color: #64748b;
+    font-size: 16px;
+}
+.section-divider {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: #f1f5f9;
+    margin: 8px 0;
+}
+</style>
+{% endif %}
+{% if not editor_mode|default(false) %}
+{{ form_start(form, {attr: form_attr|default({})}) }}
+{% endif %}
+{% if _columns > 1 %}
+<div class="form-grid-{{ _columns }}">
+{% endif %}
+{% if editor_mode|default(false) %}
+<style>
+.ef-form-widget {
+    pointer-events: none;
+    user-select: none;
+}
+.ef-form-widget input,
+.ef-form-widget select,
+.ef-form-widget textarea,
+.ef-form-widget button {
+    pointer-events: none;
+    user-select: none;
+}
+</style>
+{% endif %}
+{% if editor_mode|default(false) %}
+  {% for field in fields %}
+    {% set fieldName = field.fieldName %}
+    {% set colSpan = field.config.colSpan|default(1) %}
+    {% if field.config.sectionDivider is defined and field.config.sectionDivider %}
+    <div class="section-divider"></div>
+    {% endif %}
+    {% if field.config.sectionHeader is defined and field.config.sectionHeader is not empty %}
+    <div class="section-header">
+      <h4><i class="fa-solid fa-sitemap" style="color: #64748b; margin-right: 8px; font-size: 16px;"></i> {{ field.config.sectionHeader|trans }}</h4>
+    </div>
+    {% endif %}
+    {% if _fieldLayout == 'vertical' %}
+    <div class="form-group-vertical editor-field-row"{% if colSpan > 1 %} style="grid-column: span {{ colSpan }};"{% endif %}>
+      <div class="ef-component ef-form-label" data-field-name="{{ fieldName }}"
+        data-col-span="{{ colSpan }}"
+        {% set rawHeight = field.config.height|default(field.fieldType == 'text' ? 3 : 36) %}
+        {% set displayHeight = (field.fieldType == 'text' and rawHeight > 20) ? max(1, (rawHeight / 14)|round) : rawHeight %}
+        data-height="{{ displayHeight }}"
+        data-rounded="{{ field.config.rounded|default(true) ? 'true' : 'false' }}"
+        data-label-col="{{ field.config.labelCol|default(8) }}"
+        data-placeholder="{{ field.config.placeholder|default('') }}"
+        data-required="{{ field.config.required|default(false) ? 'true' : 'false' }}"
+        {% set _regularBg = field.config.regularBg|default('') %}{% if _regularBg is not empty and _regularBg|upper != '#FFFFFF' %} data-regular-bg="{{ _regularBg }}"{% endif %}
+        {% set _requiredBg = field.config.requiredBg|default('') %}{% if _requiredBg is not empty %}{% set _requiredBg = _requiredBg|upper == '#FFF2E8' and general_config.requiredBg|default(false) ? general_config.requiredBg : _requiredBg %} data-required-bg="{{ _requiredBg }}"{% endif %}>
+        {{ form_label(attribute(form, fieldName)) }}
+      </div>
+      <div style="flex:1;">
+        <div class="ef-component ef-form-widget" data-field-name="{{ fieldName }}" data-field-type="{{ field.fieldType }}">
+          {{ form_widget(attribute(form, fieldName)) }}
+          {{ form_errors(attribute(form, fieldName)) }}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal editor-field-row"{% if colSpan > 1 %} style="grid-column: span {{ colSpan }};"{% endif %}>
+      {% set labelCol = field.config.labelCol|default(8) %}
+      {% set widgetCol = 24 - labelCol %}
+      <div class="ef-col ef-col-{{ labelCol }} ef-form-item-label-col editor-col">
+        <div class="ef-component ef-form-label" data-field-name="{{ fieldName }}"
+          data-col-span="{{ colSpan }}"
+          {% set rawHeight = field.config.height|default(field.fieldType == 'text' ? 3 : 36) %}
+          {% set displayHeight = (field.fieldType == 'text' and rawHeight > 20) ? max(1, (rawHeight / 14)|round) : rawHeight %}
+          data-height="{{ displayHeight }}"
+          data-rounded="{{ field.config.rounded|default(true) ? 'true' : 'false' }}"
+          data-label-col="{{ field.config.labelCol|default(8) }}"
+          data-placeholder="{{ field.config.placeholder|default('') }}"
+          data-required="{{ field.config.required|default(false) ? 'true' : 'false' }}"
+          {% set _regularBg = field.config.regularBg|default('') %}{% if _regularBg is not empty and _regularBg|upper != '#FFFFFF' %} data-regular-bg="{{ _regularBg }}"{% endif %}
+          {% set _requiredBg = field.config.requiredBg|default('') %}{% if _requiredBg is not empty %}{% set _requiredBg = _requiredBg|upper == '#FFF2E8' and general_config.requiredBg|default(false) ? general_config.requiredBg : _requiredBg %} data-required-bg="{{ _requiredBg }}"{% endif %}>
+          {{ form_label(attribute(form, fieldName)) }}
+        </div>
+      </div>
+      <div class="ef-col ef-col-{{ widgetCol }} ef-form-item-wrapper-col editor-col">
+        <div class="ef-form-item-content-wrapper">
+          <div class="ef-form-item-content ef-form-item-content-flex">
+            <div class="ef-component ef-form-widget" data-field-name="{{ fieldName }}" data-field-type="{{ field.fieldType }}">
+              {{ form_widget(attribute(form, fieldName)) }}
+              {{ form_errors(attribute(form, fieldName)) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  {% endfor %}
+{% else %}
+  {% for field in fields %}
+    {% set fieldName = field.fieldName %}
+    {% if field.config.sectionDivider is defined and field.config.sectionDivider %}
+    <div class="section-divider"></div>
+    {% endif %}
+    {% if field.config.sectionHeader is defined and field.config.sectionHeader is not empty %}
+    <div class="section-header">
+      <h4><i class="fa-solid fa-sitemap" style="color: #64748b; margin-right: 8px; font-size: 16px;"></i> {{ field.config.sectionHeader|trans }}</h4>
+    </div>
+    {% endif %}
+    {% set _regularBg = field.config.regularBg|default('') %}
+    {% set _requiredBg = field.config.requiredBg|default('') %}
+    {% set _widgetAttr = {} %}
+    {% if _regularBg is not empty and _regularBg|upper != '#FFFFFF' %}
+      {% set _widgetAttr = _widgetAttr|merge({'data-regular-bg': _regularBg}) %}
+    {% endif %}
+    {% if _requiredBg is not empty %}
+      {% set _requiredBg = _requiredBg|upper == '#FFF2E8' and general_config.requiredBg|default(false) ? general_config.requiredBg : _requiredBg %}
+      {% set _widgetAttr = _widgetAttr|merge({'data-required-bg': _requiredBg}) %}
+    {% endif %}
+    {% if _fieldLayout == 'vertical' %}
+    <div class="form-group-vertical">
+      <label class="form-label">{{ form_label(attribute(form, fieldName)) }}</label>
+      <div>
+        {% if _widgetAttr is not empty %}
+          {{ form_widget(attribute(form, fieldName), {attr: _widgetAttr}) }}
+        {% else %}
+          {{ form_widget(attribute(form, fieldName)) }}
+        {% endif %}
+        {{ form_errors(attribute(form, fieldName)) }}
+      </div>
+    </div>
+    {% else %}
+    <div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
+      {% set labelCol = field.config.labelCol|default(8) %}
+      {% set widgetCol = 24 - labelCol %}
+      <div class="ef-col ef-col-{{ labelCol }} ef-form-item-label-col">
+        {{ form_label(attribute(form, fieldName)) }}
+      </div>
+      <div class="ef-col ef-col-{{ widgetCol }} ef-form-item-wrapper-col">
+        <div class="ef-form-item-content-wrapper">
+          <div class="ef-form-item-content ef-form-item-content-flex">
+            {% if _widgetAttr is not empty %}
+              {{ form_widget(attribute(form, fieldName), {attr: _widgetAttr}) }}
+            {% else %}
+              {{ form_widget(attribute(form, fieldName)) }}
+            {% endif %}
+            {{ form_errors(attribute(form, fieldName)) }}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+{% if _columns > 1 %}
+</div>
+{% endif %}
+{% if editor_mode|default(false) %}
+  <div class="ef-row ef-row-align-start ef-row-justify-start">
+    <div class="ef-col-24 item-block" style="min-height: 56px; line-height: 56px; border: 1px dashed #d5d8dc; padding: 0 12px;">
+      <div class="ef-space ef-space-horizontal ef-space-align-center">
+        <div class="ef-space-item" style="margin-right: 8px;">
+          <button class="btn primary medium" type="submit">提交</button>
+        </div>
+        <div class="ef-space-item">
+          <button class="btn primary medium back-btn" type="button">返回</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% elseif _fieldLayout == 'vertical' %}
+  <div class="form-actions">
+    <button type="button" class="btn-cancel back-btn">{{ 'action.cancel'|trans|default('Cancel') }}</button>
+    <button type="submit" class="btn-save"><i class="fa-solid fa-check" style="margin-right: 6px;"></i> {{ 'action.save'|trans|default('Save') }}</button>
+  </div>
+{% else %}
+  <div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
+    <div class="ef-col ef-col-5 ef-form-item-label-col">
+      <label class="ef-form-item-label"></label>
+    </div>
+    <div class="ef-col ef-col-19 ef-form-item-wrapper-col">
+      <div class="ef-form-item-content-wrapper">
+        <div class="ef-form-item-content ef-form-item-content-flex">
+          <div class="ef-space ef-space-horizontal ef-space-align-center">
+            <div class="ef-space-item" style="margin-right: 8px;">
+          <button class="btn primary medium" type="button" disabled>提交</button>
+            </div>
+            <div class="ef-space-item">
+              <button class="btn primary medium back-btn" type="button">返回</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% if not editor_mode|default(false) %}
+{{ form_end(form) }}
+{% endif %}
+{% if not editor_mode|default(false) %}
+<script>
+(function() {
+  function wrapper(el) {
+    if (el.matches('input')) return el.closest('.ef-input-wrapper');
+    if (el.matches('textarea')) return el.closest('.ef-textarea-wrapper');
+    if (el.matches('select')) return el.closest('.ef-select-view-single');
+    return null;
+  }
+  function toggleBg(el) {
+    var regularBg = el.getAttribute('data-regular-bg') || '';
+    var requiredBg = el.getAttribute('data-required-bg') || '';
+    var empty = !el.value || el.value.trim() === '';
+    var bg = empty ? (requiredBg || regularBg || '') : (regularBg || '');
+    if (bg) {
+      el.style.setProperty('background-color', bg);
+    } else {
+      el.style.removeProperty('background-color');
+    }
+    var w = wrapper(el);
+    if (w) {
+      if (bg) {
+        w.style.setProperty('background-color', bg);
+      } else {
+        w.style.removeProperty('background-color');
+      }
+    }
+  }
+  var els = document.querySelectorAll('input[data-regular-bg], input[data-required-bg], textarea[data-regular-bg], textarea[data-required-bg], select[data-regular-bg], select[data-required-bg]');
+  for (var i = 0; i < els.length; i++) {
+    toggleBg(els[i]);
+    els[i].addEventListener('input', function() { toggleBg(this); });
+    els[i].addEventListener('change', function() { toggleBg(this); });
+  }
+  var btns = document.querySelectorAll('button[data-required-bg]');
+  function toggleSwitchBg(btn) {
+    var bg = btn.getAttribute('data-required-bg');
+    if (btn.getAttribute('aria-checked') === 'true' && bg) {
+      btn.style.setProperty('background-color', bg);
+    } else {
+      btn.style.removeProperty('background-color');
+    }
+  }
+  for (var i = 0; i < btns.length; i++) {
+    toggleSwitchBg(btns[i]);
+    btns[i].addEventListener('click', function() {
+      var self = this;
+      setTimeout(function() { toggleSwitchBg(self); }, 0);
+    });
+  }
+})();
+</script>
+{% endif %}

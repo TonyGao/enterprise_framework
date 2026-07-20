@@ -1,6 +1,8 @@
 .ef-switch {
   position: relative;
   box-sizing: border-box;
+  display: inline-flex;
+  align-self: flex-start;
   min-width: 40px;
   height: 24px;
   padding: 0;

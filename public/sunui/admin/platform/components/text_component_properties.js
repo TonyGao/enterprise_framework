@@ -25,7 +25,9 @@
                     <div class="property-item">
                         <label class="property-label">字体颜色</label>
                         <div class="property-control">
-                            <input type="color" id="text-color" value="#000000" style="width: 50px; height: 30px; border: 1px solid #ddd; border-radius: 4px;">
+                            <span class="ef-input-wrapper ef-input-rounded" style="padding: 2px; width: auto; cursor: pointer;" id="text-color-trigger">
+                                <span id="text-color-preview" style="display: block; width: 50px; height: 30px; background: #000000; border-radius: 2px;"></span>
+                            </span>
                         </div>
                     </div>
                     
@@ -105,14 +107,11 @@
         $('.component-panel').show();
         
         // 切换到组件标签页
-        const $componentTab = $('.tabs-nav li').eq(1); // 组件标签页是第二个
+        const $componentTab = $('#property-tabs .tabs li').eq(1);
         if ($componentTab.length > 0) {
-            // 移除其他标签的active状态
-            $('.tabs-nav li').removeClass('tabs-active');
-            $('.panel').hide();
-            
-            // 激活组件标签页
-            $componentTab.addClass('tabs-active');
+            $('#property-tabs .tabs li').removeClass('tabs-selected');
+            $('#property-tabs .panel').hide();
+            $componentTab.addClass('tabs-selected');
             $('.component-panel').show();
         }
         
@@ -133,7 +132,8 @@
         
         // 字体颜色
         const color = rgbToHex($text.css('color')) || '#000000';
-        $('#text-color').val(color);
+        $('#text-color-preview').css('background-color', color);
+        if (window.textColorPicker) window.textColorPicker.setColor(color);
         
         // 字体粗细
         const fontWeight = $text.css('font-weight') || 'normal';
@@ -155,12 +155,23 @@
         });
         
         // 字体颜色
-        $(document).on('change', '#text-color', function() {
-            const selectedComponent = window.ComponentProperties?.getSelectedComponent();
-            if (selectedComponent) {
-                updateTextProperty('color', $(this).val());
-            }
-        });
+        if (!window.textColorPicker && window.ColorPicker) {
+            window.textColorPicker = new ColorPicker({
+                container: document.body,
+                defaultColor: '#000000',
+                onChange: function(color) {
+                    $('#text-color-preview').css('background-color', color);
+                    const selectedComponent = window.ComponentProperties?.getSelectedComponent();
+                    if (selectedComponent) {
+                        updateTextProperty('color', color);
+                    }
+                }
+            });
+            $(document).on('click', '#text-color-trigger', function(e) {
+                e.stopPropagation();
+                if (window.textColorPicker) window.textColorPicker.open(this);
+            });
+        }
         
         // 字体粗细选择器
         initFontWeightSelect();

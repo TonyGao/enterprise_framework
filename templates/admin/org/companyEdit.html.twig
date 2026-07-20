@@ -16,7 +16,11 @@
 	<div class="org-structure-container">
 		<div class="outside-wrapper">
 			<div class="inside-wrapper" style="border-left: none; border-top:  none;">
+        {% include 'admin/org/_designer_link.html.twig' %}
         <div class="ef-row ef-row-align-start ef-row-justify-start">
+          {% if dynamicFormHtml is defined %}
+            {{ dynamicFormHtml|raw }}
+          {% else %}
           {{ form_start(form) }}
             {{ form_widget(form) }}
             <div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
@@ -39,6 +43,7 @@
               </div>
             </div>
           {{ form_end(form) }}
+          {% endif %}
         </div>
 			</div>
 		</div>

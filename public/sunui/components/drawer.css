@@ -23,7 +23,7 @@
   flex-direction: column;
   width: 100%;
   height: 100%; 
-  overflow: hidden;
+  overflow: visible;
   line-height: 1.5715;
   background-color: #fff;
   box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
@@ -41,7 +41,7 @@
   background: linear-gradient(135deg, #3370ff 0%, #2563eb 100%);
   border-bottom: none;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .ef-drawer-header::before {
@@ -116,7 +116,7 @@
   box-sizing: border-box;
   height: 100%;
   padding: 0;
-  overflow: hidden;
+  overflow-y: auto;
   color: #1f2329;
   width: 100%;
   background: #f8fafc;

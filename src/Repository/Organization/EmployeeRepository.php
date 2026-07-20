@@ -146,6 +146,19 @@ class EmployeeRepository extends ServiceEntityRepository implements PasswordUpgr
     }
 
     /**
+     * 查找所有系统账号 (isSystem = true)
+     */
+    public function findSystemUsers(): array
+    {
+        return $this->createQueryBuilder('e')
+            ->andWhere('e.isSystem = :isSystem')
+            ->setParameter('isSystem', true)
+            ->orderBy('e.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * 查找某个经理的所有下属
      */
     public function findSubordinates($managerId)

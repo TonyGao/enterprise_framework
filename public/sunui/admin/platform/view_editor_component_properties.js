@@ -35,6 +35,8 @@
             showTableProperties($component.is('table') ? $component : $component.find('table').first());
         } else if ($component.hasClass('ef-text') || $component.find('.ef-text').length > 0) {
             showTextProperties($component.hasClass('ef-text') ? $component : $component.find('.ef-text').first());
+        } else if ($component.hasClass('ef-form-label') || $component.hasClass('ef-form-widget')) {
+            showFormLabelProperties($component);
         } else {
             // 其他组件类型的属性面板可以在这里添加
             hideAllPropertyPanels();
@@ -56,6 +58,9 @@
         }
         if (window.TextComponentProperties) {
             window.TextComponentProperties.hide();
+        }
+        if (window.FormFieldComponentProperties) {
+            window.FormFieldComponentProperties.hide();
         }
         // 其他组件属性面板也在这里隐藏
     }
@@ -80,6 +85,15 @@
         }
     }
     
+    // 显示表单项属性面板（标签或控件均可）
+    function showFormLabelProperties($el) {
+        hideAllPropertyPanels();
+
+        if (window.FormFieldComponentProperties) {
+            window.FormFieldComponentProperties.show($el);
+        }
+    }
+
     // 表格属性加载已移至 table_component_properties.js
     
     // 表格属性事件初始化已移至 table_component_properties.js

@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('lib/prism/prism.css') }}">
     <link rel="stylesheet" href="{{ asset('checkbox.css', 'ui') }}">
     <style>
         body {
@@ -348,7 +349,7 @@
                             <span class="ef-checkbox-label">选项 3</span>
                         </label>
                     </div>
-                    <div class="docs-code">
+                    <pre class="docs-code"><code class="language-html">
 &lt;label class="ef-checkbox"&gt;
     &lt;input type="checkbox" class="ef-checkbox-target" value="1"&gt;
     &lt;span class="ef-icon-hover ef-checkbox-icon-hover"&gt;
@@ -356,7 +357,7 @@
     &lt;/span&gt;
     &lt;span class="ef-checkbox-label"&gt;选项 1&lt;/span&gt;
 &lt;/label&gt;
-                    </div>
+                    </code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -384,13 +385,13 @@
                             <span class="ef-checkbox-label">选项 3</span>
                         </label>
                     </div>
-                    <div class="docs-code">
+                    <pre class="docs-code"><code class="language-html">
 &lt;div class="ef-checkbox-group ef-checkbox-group-direction-vertical"&gt;
     &lt;label class="ef-checkbox"&gt;...&lt;/label&gt;
     &lt;label class="ef-checkbox"&gt;...&lt;/label&gt;
     &lt;label class="ef-checkbox"&gt;...&lt;/label&gt;
 &lt;/div&gt;
-                    </div>
+                    </code></pre>
                 </div>
             </div>
         </div>
@@ -421,12 +422,12 @@
                         <span class="ef-checkbox-label">可用选项</span>
                     </label>
                 </div>
-                <div class="docs-code">
+                <pre class="docs-code"><code class="language-html">
 &lt;label class="ef-checkbox ef-checkbox-disabled"&gt;
     &lt;input type="checkbox" class="ef-checkbox-target" value="1" disabled&gt;
     ...
 &lt;/label&gt;
-                </div>
+                </code></pre>
             </div>
         </div>
     </section>
@@ -471,4 +472,5 @@
         </div>
     </section>
 </div>
+<script src="{{ asset('lib/prism/prism.js') }}"></script>
 {% endblock %}

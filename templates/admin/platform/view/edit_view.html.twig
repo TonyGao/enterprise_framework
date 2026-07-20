@@ -1,0 +1,15 @@
+{% import 'ui/template/ui.html.twig' as ui %}
+<div style="padding: 16px;">
+    <h3 style="margin-bottom: 16px;">
+        <i class="fa-solid fa-edit" style="margin-right: 8px;"></i>
+        编辑视图 - {{ view.label }}
+    </h3>
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        {% if form.template is defined %}
+            {% include 'admin/platform/view/_template_selector.html.twig' %}
+        {% endif %}
+        {{ ui.formSubmitButton() }}
+    {{ form_end(form) }}
+</div>
+{{ ui.formValid() }}

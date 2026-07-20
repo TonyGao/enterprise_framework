@@ -5,6 +5,7 @@ twig:
     form_themes:
         - 'form/ef_ui_form_theme.html.twig'
         - 'form/ef_ui_form_theme_department.html.twig'
+        - 'form/ef_ui_form_theme_user.html.twig'
     # extensions:
     #     - App\Twig\TwigExtension
 

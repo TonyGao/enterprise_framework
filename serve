@@ -20,8 +20,9 @@ show_help() {
     echo "    dev     开发模式 (热重载，默认)"
     echo "    prod    生产模式 (优化性能)"
     echo "    stop    停止所有服务"
-    echo "    restart 重启服务器"
-    echo "    status  查看服务状态"
+echo "    restart 重启服务器"
+        echo "    refresh 清除缓存并重启服务器"
+        echo "    status  查看服务状态"
     echo "    watch   看守模式 (崩溃后自动重启)"
     echo ""
     echo "  示例:"
@@ -560,6 +561,44 @@ case "$MODE" in
         if [ "$PREV_MODE" = "prod" ]; then
             start_prod
         else
+            start_dev
+        fi
+        ;;
+    refresh)
+        echo ""
+        echo "=========================================="
+        echo "  清除缓存并优雅重启 (服务不中断)"
+        echo "=========================================="
+        echo ""
+        php bin/console cache:clear --no-interaction
+        echo ""
+        echo "  正在优雅重载 worker..."
+        ADMIN_ADDR="localhost:2019"
+        # 等待 admin API 就绪（最多 5 秒）
+        for i in 1 2 3 4 5; do
+            CONFIG=$(curl -s "http://$ADMIN_ADDR/config/" 2>/dev/null)
+            if [ -n "$CONFIG" ]; then
+                break
+            fi
+            sleep 1
+        done
+        if [ -n "$CONFIG" ]; then
+            HTTP_CODE=$(curl -s -X POST "http://$ADMIN_ADDR/load" \
+                -H "Content-Type: application/json" \
+                -d "$CONFIG" \
+                -o /dev/null -w "%{http_code}")
+            if [ "$HTTP_CODE" = "200" ]; then
+                echo "  ✓ 工作进程已优雅重启，服务未中断"
+            else
+                echo "  ✗ API 返回 $HTTP_CODE，尝试硬重启..."
+                stop_server "refresh_fallback"
+                sleep 1
+                start_dev
+            fi
+        else
+            echo "  ! 无法连接 admin API，尝试硬重启..."
+            stop_server "refresh_fallback"
+            sleep 1
             start_dev
         fi
         ;;

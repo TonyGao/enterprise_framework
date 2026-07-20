@@ -13,10 +13,14 @@
 <div class="ef-page-content">
     <div class="ef-card">
         <div class="ef-card-body">
-            {{ form_start(form, {'attr': {'class': 'ef-form'}}) }}
-                {{ form_widget(form) }}
-                {{ ui.formSubmitButton() }}
-            {{ form_end(form) }}
+            {% if dynamicFormHtml is defined %}
+                {{ dynamicFormHtml|raw }}
+            {% else %}
+                {{ form_start(form, {'attr': {'class': 'ef-form'}}) }}
+                    {{ form_widget(form) }}
+                    {{ ui.formSubmitButton() }}
+                {{ form_end(form) }}
+            {% endif %}
         </div>
     </div>
 </div>

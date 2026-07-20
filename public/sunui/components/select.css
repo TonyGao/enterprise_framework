@@ -222,9 +222,7 @@
 }
 
 .ef-select-dropdown .ef-select-option-content {
-  overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
   user-select: none;
 }
 

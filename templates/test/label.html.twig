@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('lib/prism/prism.css') }}">
     <link rel="stylesheet" href="{{ asset('label.css', 'ui') }}">
     <style>
         body {
@@ -329,13 +330,13 @@
                     <label class="ef-label grey">Grey</label>
                     <label class="ef-label black">Black</label>
                 </div>
-                <div class="docs-code">
+                <pre class="docs-code"><code class="language-html">
 &lt;label class="ef-label red"&gt;Red&lt;/label&gt;
 &lt;label class="ef-label orange"&gt;Orange&lt;/label&gt;
 &lt;label class="ef-label green"&gt;Green&lt;/label&gt;
 &lt;label class="ef-label blue"&gt;Blue&lt;/label&gt;
 ...
-                </div>
+                </code></pre>
             </div>
         </div>
     </section>
@@ -358,7 +359,7 @@
                     <label class="ef-label huge">Huge</label>
                     <label class="ef-label massive">Massive</label>
                 </div>
-                <div class="docs-code">
+                <pre class="docs-code"><code class="language-html">
 &lt;label class="ef-label mini"&gt;Mini&lt;/label&gt;
 &lt;label class="ef-label tiny"&gt;Tiny&lt;/label&gt;
 &lt;label class="ef-label small"&gt;Small&lt;/label&gt;
@@ -367,7 +368,7 @@
 &lt;label class="ef-label big"&gt;Big&lt;/label&gt;
 &lt;label class="ef-label huge"&gt;Huge&lt;/label&gt;
 &lt;label class="ef-label massive"&gt;Massive&lt;/label&gt;
-                </div>
+                </code></pre>
             </div>
         </div>
     </section>
@@ -408,4 +409,5 @@
         </div>
     </section>
 </div>
+<script src="{{ asset('lib/prism/prism.js') }}"></script>
 {% endblock %}

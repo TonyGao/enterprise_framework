@@ -1,1 +1,9 @@
-{% include 'admin/platform/form_render.html.twig' with { 'form': form } %}
+{% import 'ui/template/ui.html.twig' as ui %}
+{{ form_start(form) }}
+    {{ form_widget(form) }}
+    {% if form.template is defined %}
+        {% include 'admin/platform/view/_template_selector.html.twig' %}
+    {% endif %}
+    {{ ui.formSubmitButton() }}
+{{ form_end(form) }}
+{{ ui.formValid() }}

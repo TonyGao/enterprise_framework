@@ -6,8 +6,10 @@ use App\Lib\Str;
 use Twig\Environment;
 use App\Service\BaseService;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\Platform\EntityProperty;
 use App\Entity\Platform\EntityPropertyGroup;
 use Symfony\Component\Form\FormFactoryInterface;
+use App\Form\Common\SwitchType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -37,7 +39,7 @@ class EntityFormService extends BaseService
    * 添加字段的表单字段，其中Group是通过查询EntityPropertyGroup动态获取的这个Entity的分组
    * 每个Entity都有各自的Group
    */
-  public function getFieldView($epgToken, $choosedGroup, $init = true)
+  public function getFieldView($epgToken, $choosedGroup = null, $init = true, $data = null)
   {
     $groupRepo = $this->em->getRepository(EntityPropertyGroup::class);
     $entity = $groupRepo->findOneBy(['token' => $epgToken]);
@@ -62,7 +64,7 @@ class EntityFormService extends BaseService
       $defaultValue = $choosedGroup;
     }
 
-    $formBuilder = $this->createFormBuilder();
+    $formBuilder = $this->createFormBuilder($data);
     $commentToken = Str::generateFieldToken();
     $fieldNameToken = Str::generateFieldToken();
     $fileTypeToken = Str::generateFieldToken();
@@ -75,6 +77,7 @@ class EntityFormService extends BaseService
           'id' => $commentToken,
           'name' => 'fieldComment'.$commentToken,
           'fieldName' => 'comment',
+          'rounded' => true,
         ]
       ])
       ->add('fieldName', TextType::class, [
@@ -83,6 +86,7 @@ class EntityFormService extends BaseService
           'id' => $fieldNameToken,
           'name' => 'fieldName'.$fieldNameToken,
           'fieldName' => 'name',
+          'rounded' => true,
         ]
       ])
       ->add('fieldType', ChoiceType::class, [
@@ -98,15 +102,16 @@ class EntityFormService extends BaseService
           'name' => 'fieldType'.$fileTypeToken,
           'data-field-type' => 'true',
           'fieldName' => 'type',
+          'rounded' => true,
         ],
       ])
-      ->add('fieldGroup', ChoiceType::class, [
+      ->add('fieldGroup', ChoiceType::class, ($data === null ? ['data' => $defaultValue] : []) + [
         'choices' => $groupArr,
-        'data' => $defaultValue,
         'attr' => [
           'id' => $fieldGroupToken,
           'name' => 'fieldGroup'.$fieldGroupToken,
           'fieldName' => 'group',
+          'rounded' => true,
         ],
       ])
       ->add('fieldHeight', IntegerType::class, [
@@ -115,9 +120,10 @@ class EntityFormService extends BaseService
           'class' => 'fieldHeight',
           'placeholder' => '高度(px)',
           'fieldName' => 'height',
+          'rounded' => true,
         ]
       ])
-      ->add('fieldRounded', CheckboxType::class, [
+      ->add('fieldRounded', SwitchType::class, [
         'required' => false,
         'attr' => [
           'class' => 'fieldRounded',
@@ -207,5 +213,35 @@ class EntityFormService extends BaseService
       $result['additional'] = $additional;
     }
     return $result;
+  }
+
+  public function getEditFieldForm($epgToken, $propertyToken)
+  {
+    $repo = $this->em->getRepository(EntityProperty::class);
+    $property = $repo->findOneBy(['token' => $propertyToken]);
+
+    $data = [
+      'fieldComment' => $property->getComment(),
+      'fieldName' => $property->getPropertyName(),
+      'fieldType' => $property->getType(),
+      'fieldGroup' => (string) $property->getGroup()->getId(),
+      'fieldHeight' => $property->getHeight(),
+      'fieldRounded' => $property->getRounded(),
+      'fieldRows' => $property->getFormOptions()['rows'] ?? null,
+      'fieldAutosize' => $property->getFormOptions()['autosize'] ?? false,
+    ];
+
+    $formView = $this->getFieldView($epgToken, null, true, $data);
+
+    $form = $this->twig->render('ui/drawer/editField.html.twig', [
+      'formView' => $formView['form'],
+      'propertyToken' => $propertyToken,
+      'type' => $property->getType(),
+      'length' => $property->getLength() ?? 255,
+      'nullable' => $property->getNullable(),
+      'unique' => $property->getUniqueable(),
+    ]);
+
+    return $form;
   }
 }

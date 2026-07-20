@@ -7,6 +7,7 @@
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" type="text/css" href="{{ asset('platform/treeLayout.css', 'admin') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('platform/treeCollapse.css', 'admin') }}"/>
     <style>
         /* Draggable Column Styles */
         .column-item {
@@ -165,40 +166,6 @@
             width: 0 !important;
             padding: 0 !important;
             border: none !important;
-        }
-        
-        .fold-icon-wrapper {
-            width: 20px;
-            height: 40px;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border-top-right-radius: 8px;
-            border-bottom-right-radius: 8px;
-            color: #94a3b8;
-            z-index: 1001;
-            transition: all 0.3s ease;
-            border: 1px solid #e2e8f0;
-            position: absolute;
-            top: 50%;
-            left: 280px;
-            transform: translate(-50%, -50%);
-        }
-
-        .inside-wrapper.tree-collapsed #collapseTree.fold-icon-wrapper {
-            left: 0 !important;
-            transform: translate(0, -50%) !important;
-        }
-
-        .inside-wrapper.tree-expanded #collapseTree.fold-icon-wrapper {
-            left: 288px !important;
-            transform: translate(-50%, -50%) !important;
-        }
-        .fold-icon-wrapper:hover {
-            color: #475569;
-            background: #f1f5f9;
         }
 
         .department-tree-wrapper {
@@ -2242,34 +2209,6 @@
 
     const TREE_COLLAPSED_KEY = 'employee_left_tree_collapsed';
 
-    function setTreeCollapsed(collapsed) {
-        const leftTree = $("#leftTree");
-        const btn = $("#collapseTree");
-        const icon = btn.find("i");
-        const insideWrapper = $(".inside-wrapper");
-
-        if (collapsed) {
-            leftTree.hide();
-        } else {
-            leftTree.show();
-        }
-
-        insideWrapper.toggleClass('tree-collapsed', collapsed);
-        insideWrapper.toggleClass('tree-expanded', !collapsed);
-
-        if (collapsed) {
-            icon.removeClass("fa-chevron-left").addClass("fa-chevron-right");
-        } else {
-            icon.removeClass("fa-chevron-right").addClass("fa-chevron-left");
-        }
-
-        try {
-            localStorage.setItem(TREE_COLLAPSED_KEY, collapsed ? '1' : '0');
-        } catch (e) {
-            // Ignore storage failures in private browsing mode.
-        }
-    }
-
     // Initialize & Bind Events
     $(document).ready(function() {
         // Initialize Selection UI
@@ -2316,27 +2255,6 @@
             }
             
             saveSelection(selection);
-        });
-
-        // Tree Fold Logic
-        const leftTree = $("#leftTree");
-        const btn = $("#collapseTree");
-        const collapsedByDefault = leftTree.hasClass('collapsed') || !leftTree.hasClass('visible');
-        let collapsed = collapsedByDefault;
-
-        try {
-            const saved = localStorage.getItem(TREE_COLLAPSED_KEY);
-            if (saved === '1') collapsed = true;
-            if (saved === '0') collapsed = false;
-        } catch (e) {
-            // Keep server-rendered default state.
-        }
-
-        setTreeCollapsed(collapsed);
-
-        btn.on("click", function() {
-            const willCollapse = leftTree.is(':visible');
-            setTreeCollapsed(willCollapse);
         });
 
         // Remove any existing click handlers on tree nodes to prevent conflict
@@ -2553,4 +2471,5 @@
         }
     });
 </script>
+<script src="{{ asset('platform/treeCollapse.js', 'admin') }}"></script>
 {% endblock %}

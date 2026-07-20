@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('lib/prism/prism.css') }}">
     <link rel="stylesheet" href="{{ asset('button.css', 'ui') }}">
     <style>
         body {
@@ -359,7 +360,7 @@
                         <button class="btn primary medium">主要按钮</button>
                         <button class="btn primary medium icon"><i class="fa-solid fa-plus"></i>带图标</button>
                     </div>
-                    <div class="docs-code">&lt;button class="btn primary medium"&gt;主要按钮&lt;/button&gt;</div>
+                    <pre class="docs-code"><code class="language-html">&lt;button class="btn primary medium"&gt;主要按钮&lt;/button&gt;</code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -368,7 +369,7 @@
                         <button class="btn secondary medium">次要按钮</button>
                         <button class="btn secondary medium icon"><i class="fa-solid fa-ellipsis"></i>更多</button>
                     </div>
-                    <div class="docs-code">&lt;button class="btn secondary medium"&gt;次要按钮&lt;/button&gt;</div>
+                    <pre class="docs-code"><code class="language-html">&lt;button class="btn secondary medium"&gt;次要按钮&lt;/button&gt;</code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -377,7 +378,7 @@
                         <button class="btn outline medium">轮廓按钮</button>
                         <button class="btn outline primary medium">主要轮廓</button>
                     </div>
-                    <div class="docs-code">&lt;button class="btn outline medium"&gt;轮廓按钮&lt;/button&gt;</div>
+                    <pre class="docs-code"><code class="language-html">&lt;button class="btn outline medium"&gt;轮廓按钮&lt;/button&gt;</code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -387,7 +388,7 @@
                         <button class="btn secondary medium icon circle"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                         <button class="btn outline medium icon"><i class="fa-solid fa-trash-can"></i>删除</button>
                     </div>
-                    <div class="docs-code">&lt;button class="btn primary medium icon circle"&gt;&lt;i class="fa-solid fa-plus"&gt;&lt;/i&gt;&lt;/button&gt;</div>
+                    <pre class="docs-code"><code class="language-html">&lt;button class="btn primary medium icon circle"&gt;&lt;i class="fa-solid fa-plus"&gt;&lt;/i&gt;&lt;/button&gt;</code></pre>
                 </div>
             </div>
         </div>
@@ -408,12 +409,12 @@
                     <button class="btn primary medium">Medium</button>
                     <button class="btn primary large">Large</button>
                 </div>
-                <div class="docs-code">
+                <pre class="docs-code"><code class="language-html">
 &lt;button class="btn primary mini"&gt;Mini&lt;/button&gt;
 &lt;button class="btn primary small"&gt;Small&lt;/button&gt;
 &lt;button class="btn primary medium"&gt;Medium&lt;/button&gt;
 &lt;button class="btn primary large"&gt;Large&lt;/button&gt;
-                </div>
+                </code></pre>
             </div>
         </div>
     </section>
@@ -434,11 +435,11 @@
                     <button class="btn primary medium">主要</button>
                     <button class="btn secondary medium">次要</button>
                 </div>
-                <div class="docs-code">
+                <pre class="docs-code"><code class="language-html">
 &lt;button class="btn green medium"&gt;成功&lt;/button&gt;
 &lt;button class="btn orange medium"&gt;警告&lt;/button&gt;
 &lt;button class="btn red medium"&gt;危险&lt;/button&gt;
-                </div>
+                </code></pre>
             </div>
         </div>
     </section>
@@ -458,7 +459,7 @@
                         <button class="btn secondary medium disabled">次要禁用</button>
                         <button class="btn outline medium disabled">轮廓禁用</button>
                     </div>
-                    <div class="docs-code">&lt;button class="btn primary medium disabled"&gt;主要禁用&lt;/button&gt;</div>
+                    <pre class="docs-code"><code class="language-html">&lt;button class="btn primary medium disabled"&gt;主要禁用&lt;/button&gt;</code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -467,7 +468,7 @@
                         <button class="btn primary medium disabled icon"><i class="fa-solid fa-circle-notch icon-loading"></i>加载中</button>
                         <button class="btn secondary medium disabled icon"><i class="fa-solid fa-circle-notch icon-loading"></i>处理中</button>
                     </div>
-                    <div class="docs-code">&lt;button class="btn primary medium disabled icon"&gt;&lt;i class="fa-solid fa-circle-notch icon-loading"&gt;&lt;/i&gt;加载中&lt;/button&gt;</div>
+                    <pre class="docs-code"><code class="language-html">&lt;button class="btn primary medium disabled icon"&gt;&lt;i class="fa-solid fa-circle-notch icon-loading"&gt;&lt;/i&gt;加载中&lt;/button&gt;</code></pre>
                 </div>
             </div>
         </div>
@@ -487,10 +488,10 @@
                     <button class="btn primary medium icon circle"><i class="fa-solid fa-plus"></i></button>
                     <button class="btn secondary medium icon circle"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                 </div>
-                <div class="docs-code">
+                <pre class="docs-code"><code class="language-html">
 &lt;button class="btn primary medium round"&gt;大圆角按钮&lt;/button&gt;
 &lt;button class="btn primary medium icon circle"&gt;&lt;i class="fa-solid fa-plus"&gt;&lt;/i&gt;&lt;/button&gt;
-                </div>
+                </code></pre>
             </div>
         </div>
     </section>
@@ -510,13 +511,13 @@
                         <div class="or"></div>
                         <button class="btn green medium">保存</button>
                     </div>
-                    <div class="docs-code">
+                    <pre class="docs-code"><code class="language-html">
 &lt;div class="ef buttons"&gt;
     &lt;button class="btn secondary medium"&gt;取消&lt;/button&gt;
     &lt;div class="or"&gt;&lt;/div&gt;
     &lt;button class="btn green medium"&gt;保存&lt;/button&gt;
 &lt;/div&gt;
-                    </div>
+                    </code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -525,12 +526,12 @@
                         <button class="btn primary medium icon"><i class="fa-solid fa-angle-left"></i>上一页</button>
                         <button class="btn primary medium icon">下一页<i class="fa-solid fa-angle-right"></i></button>
                     </div>
-                    <div class="docs-code">
+                    <pre class="docs-code"><code class="language-html">
 &lt;div class="ef buttons"&gt;
     &lt;button class="btn primary medium icon"&gt;&lt;i class="fa-solid fa-angle-left"&gt;&lt;/i&gt;上一页&lt;/button&gt;
     &lt;button class="btn primary medium icon"&gt;下一页&lt;i class="fa-solid fa-angle-right"&gt;&lt;/i&gt;&lt;/button&gt;
 &lt;/div&gt;
-                    </div>
+                    </code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -541,12 +542,12 @@
                         <button class="btn secondary medium only-icon"><i class="fa-solid fa-align-right"></i></button>
                         <button class="btn secondary medium only-icon"><i class="fa-solid fa-align-justify"></i></button>
                     </div>
-                    <div class="docs-code">
+                    <pre class="docs-code"><code class="language-html">
 &lt;div class="ef buttons"&gt;
     &lt;button class="btn secondary medium only-icon"&gt;&lt;i class="fa-solid fa-align-left"&gt;&lt;/i&gt;&lt;/button&gt;
     ...
 &lt;/div&gt;
-                    </div>
+                    </code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -557,12 +558,12 @@
                         <button class="btn secondary medium icon rightline"><i class="fa-solid fa-upload"></i></button>
                         <button class="btn secondary medium icon"><i class="fa-solid fa-download"></i></button>
                     </div>
-                    <div class="docs-code">
+                    <pre class="docs-code"><code class="language-html">
 &lt;div class="ef buttons"&gt;
     &lt;button class="btn secondary medium icon rightline"&gt;...&lt;/button&gt;
     ...
 &lt;/div&gt;
-                    </div>
+                    </code></pre>
                 </div>
             </div>
         </div>
@@ -583,12 +584,12 @@
                     <button class="btn style3 medium">Style 3</button>
                     <button class="btn style4 medium">Style 4</button>
                 </div>
-                <div class="docs-code">
+                <pre class="docs-code"><code class="language-html">
 &lt;button class="btn style1 medium"&gt;Style 1&lt;/button&gt;
 &lt;button class="btn style2 medium"&gt;Style 2&lt;/button&gt;
 &lt;button class="btn style3 medium"&gt;Style 3&lt;/button&gt;
 &lt;button class="btn style4 medium"&gt;Style 4&lt;/button&gt;
-                </div>
+                </code></pre>
             </div>
         </div>
     </section>
@@ -670,4 +671,5 @@
         </div>
     </div>
 </div>
+<script src="{{ asset('lib/prism/prism.js') }}"></script>
 {% endblock %}

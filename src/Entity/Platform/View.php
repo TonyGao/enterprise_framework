@@ -48,6 +48,32 @@ class View implements GedmoNode
   #[ORM\Column(type: 'string', length: 200, nullable: true)]
   private $path;
 
+  /**
+   * 是否系统内置 (true=系统预置, false=用户自定义)
+   */
+  #[ORM\Column(name: 'is_built_in', type: 'boolean', options: ['default' => false])]
+  private bool $builtIn = false;
+
+  /**
+   * 系统内置视图使用的模板路径
+   */
+  #[ORM\Column(name: 'template', type: 'string', length: 255, nullable: true)]
+  private ?string $template = null;
+
+  /**
+   * 关联的实体模型（表单视图使用）
+   */
+  #[ORM\ManyToOne(targetEntity: Entity::class)]
+  #[ORM\JoinColumn(name: 'entity_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
+  private ?Entity $formEntity = null;
+
+  /**
+   * Section 配置 (JSON)
+   * {contentWidth: "boxed"|"full-width", width: number, unit: "px"|"%"|"em"|"rem"|"vw"}
+   */
+  #[ORM\Column(name: 'section_config', type: 'json', nullable: true)]
+  private ?array $sectionConfig = null;
+
   #[Gedmo\TreeLeft]
   #[ORM\Column(name: "lft", type: "integer")]
   private $lft;
@@ -133,6 +159,50 @@ class View implements GedmoNode
     public function setPath(?string $path): self
     {
         $this->path = $path;
+        return $this;
+    }
+
+    public function isBuiltIn(): bool
+    {
+        return $this->builtIn;
+    }
+
+    public function setBuiltIn(bool $builtIn): self
+    {
+        $this->builtIn = $builtIn;
+        return $this;
+    }
+
+    public function getTemplate(): ?string
+    {
+        return $this->template;
+    }
+
+    public function setTemplate(?string $template): self
+    {
+        $this->template = $template;
+        return $this;
+    }
+
+    public function getFormEntity(): ?Entity
+    {
+        return $this->formEntity;
+    }
+
+    public function setFormEntity(?Entity $formEntity): self
+    {
+        $this->formEntity = $formEntity;
+        return $this;
+    }
+
+    public function getSectionConfig(): ?array
+    {
+        return $this->sectionConfig;
+    }
+
+    public function setSectionConfig(?array $sectionConfig): self
+    {
+        $this->sectionConfig = $sectionConfig;
         return $this;
     }
 

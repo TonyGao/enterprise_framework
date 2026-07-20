@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('lib/prism/prism.css') }}">
     <link rel="stylesheet" href="{{ asset('alert.css', 'ui') }}">
     <style>
         body {
@@ -249,14 +250,14 @@
                 </div>
             </div>
             
-            <div class="docs-code">
+            <pre class="docs-code"><code class="language-html">
 &lt;div role="alert" class="ef-alert ef-alert-info"&gt;
     &lt;div class="ef-alert-icon"&gt;...SVG图标...&lt;/div&gt;
     &lt;div class="ef-alert-body"&gt;
         &lt;div class="ef-alert-content"&gt;这是一条信息提示。&lt;/div&gt;
     &lt;/div&gt;
 &lt;/div&gt;
-            </div>
+            </code></pre>
         </div>
     </section>
     
@@ -299,7 +300,7 @@
                 </div>
             </div>
             
-            <div class="docs-code">
+            <pre class="docs-code"><code class="language-html">
 &lt;div role="alert" class="ef-alert ef-alert-success ef-alert-with-title"&gt;
     &lt;div class="ef-alert-icon"&gt;...SVG图标...&lt;/div&gt;
     &lt;div class="ef-alert-body"&gt;
@@ -308,7 +309,7 @@
     &lt;/div&gt;
     &lt;div class="ef-alert-close-btn"&gt;...关闭按钮...&lt;/div&gt;
 &lt;/div&gt;
-            </div>
+            </code></pre>
         </div>
     </section>
     
@@ -359,4 +360,5 @@
         </div>
     </section>
 </div>
+<script src="{{ asset('lib/prism/prism.js') }}"></script>
 {% endblock %}

@@ -731,9 +731,12 @@ body {
 }
 
 .app-side-menu.collapsed {
-  position: relative;
-  width: 0px; /* 默认保留 15px 宽度 */
+  position: fixed;
+  z-index: 1001;
+  flex: none;
+  width: 15px;
   transition: width 0.3s ease-in-out;
+  height: 80vh;
 }
 
 /* 展开按钮样式 */
@@ -751,7 +754,7 @@ body {
   left: 0;
   top: 50%; /* 垂直居中 */
   transform: translateY(-50%);
-  z-index: 10;
+  z-index: 1000;
 
   /* 使用 clip-path 创建梯形效果 */
   clip-path: polygon(0 0, 100% 15%, 100% 85%, 0 100%);

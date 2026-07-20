@@ -1,0 +1,140 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'components/datagrid.html.twig' as grid %}
+{% import 'ui/template/ui.html.twig' as ui %}
+
+{% block title %}系统管理员管理{% endblock %}
+
+{% block javascripts %}
+	{{ parent() }}
+	<script>
+		function openSystemAdminViewDrawer(adminId) {
+			$('#system-admin-drawer-' + adminId).remove();
+			$('[id^="system-admin-drawer-"]').remove();
+
+			ajax({
+				method: 'POST',
+				url: '{{ path("admin_system_admin_drawer") }}',
+				data: {
+					adminId: adminId,
+					action: 'view'
+				},
+				contentType: 'application/json',
+				dataType: 'html',
+				success: function(html) {
+					$('body').append(html);
+					$().showDrawer('system-admin-drawer-' + adminId);
+				},
+				error: function(xhr, status, error) {
+					console.error('Error loading system admin drawer:', error);
+					alert('加载管理员详情失败，请重试');
+				}
+			});
+		}
+
+		function openSystemAdminEditDrawer(adminId) {
+			$('#system-admin-drawer-' + adminId).remove();
+			$('[id^="system-admin-drawer-"]').remove();
+
+			ajax({
+				method: 'POST',
+				url: '{{ path("admin_system_admin_drawer") }}',
+				data: {
+					adminId: adminId,
+					action: 'edit'
+				},
+				contentType: 'application/json',
+				dataType: 'html',
+				success: function(html) {
+					$('body').append(html);
+					$().showDrawer('system-admin-drawer-' + adminId);
+				},
+				error: function(xhr, status, error) {
+					console.error('Error loading system admin edit drawer:', error);
+					alert('加载管理员编辑失败，请重试');
+				}
+			});
+		}
+
+		function openSystemAdminCreateDrawer() {
+			$('[id^="system-admin-drawer-"]').remove();
+
+			ajax({
+				method: 'POST',
+				url: '{{ path("admin_system_admin_drawer") }}',
+				data: {
+					action: 'create'
+				},
+				contentType: 'application/json',
+				dataType: 'html',
+				success: function(html) {
+					$('body').append(html);
+					$().showDrawer('system-admin-drawer-new');
+				},
+				error: function(xhr, status, error) {
+					console.error('Error loading system admin create drawer:', error);
+					alert('加载新增管理员失败，请重试');
+				}
+			});
+		}
+
+		$(document).ready(function() {
+			$('#add-admin-button').on('click', function() {
+				openSystemAdminCreateDrawer();
+			});
+
+			$(document).on('click', '.view-button', function(e) {
+				e.preventDefault();
+				const id = $(this).data('id');
+				if (id) {
+					openSystemAdminViewDrawer(id);
+				}
+			});
+
+			$(document).on('click', '.edit-button', function(e) {
+				e.preventDefault();
+				const id = $(this).data('id');
+				if (id) {
+					openSystemAdminEditDrawer(id);
+				}
+			});
+		});
+	</script>
+{% endblock %}
+
+{% block app_content_container %}
+<div class="org-structure-container">
+	<div class="outside-wrapper" style="padding: 20px;">
+		{{ grid.dataGrid(
+			admins|default([]),
+			[
+				{field: 'username', label: '用户名'},
+				{field: 'name', label: '姓名'},
+				{field: 'email', label: '邮箱'},
+				{field: 'mobile', label: '手机号'},
+				{field: 'roles', label: '角色'},
+				{field: 'isActive', label: '状态', raw: true},
+				{field: 'lastLoginAt', label: '最后登录'},
+			],
+			{
+				createUrl: '#',
+				toolbarButtons: [
+					{ type: 'create', text: '新增管理员', icon: 'fa-solid fa-plus-circle', id: 'add-admin-button' },
+				],
+				actionButtons: [
+					{ type: 'view', text: '查看', icon: 'fa-solid fa-eye' },
+					{ type: 'edit', text: '编辑', icon: 'fa-solid fa-edit' },
+				],
+				emptyText: '暂无系统管理员',
+				sortable: true,
+				maxWidth: '100%',
+				minHeight: '500px',
+				gridId: 'system-admin-grid',
+				pagination: false,
+				serverSide: false,
+				showCheckbox: false,
+				showRowNumber: true,
+			}
+		) }}
+	</div>
+</div>
+{% endblock %}

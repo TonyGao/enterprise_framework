@@ -12,6 +12,25 @@ $(document).ready(function () {
     });
   }
 
+  function autoFitDropdownWidth(panel) {
+    if (!panel || !panel[0]) return;
+    panel.css({ width: '', minWidth: '' });
+    requestAnimationFrame(function () {
+      var panelEl = panel[0];
+      var rect = panelEl.getBoundingClientRect();
+      var viewportWidth = window.innerWidth;
+      var overflowRight = rect.right - viewportWidth;
+      var overflowLeft = -rect.left;
+      if (overflowRight > 0 || overflowLeft > 0) {
+        var currentLeft = parseFloat(panelEl.style.left) || 0;
+        var adjust = 0;
+        if (overflowRight > 0) adjust = -(overflowRight + 10);
+        if (overflowLeft > 0) adjust = overflowLeft + 10;
+        panel.css({ left: (currentLeft + adjust) + 'px' });
+      }
+    });
+  }
+
   let elements = document.getElementsByClassName('ef-select');
   let config = {
     prevent_repeat: true,
@@ -93,6 +112,8 @@ $(document).ready(function () {
         right: 'auto',
       });
     }
+
+    autoFitDropdownWidth(panel);
 
     $('.ef-trigger-popup.ef-trigger-position-bl')
       .not('#' + contentId)

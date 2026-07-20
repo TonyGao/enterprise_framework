@@ -44,7 +44,7 @@ class PositionLevelType extends AbstractType
                 'scale' => 2,
             ])
             ->add('description', TextareaType::class, [
-                'label' => '级别描述', 'attr' => ['rounded' => $rounded, 'height' => $height],
+                'label' => '级别描述', 'attr' => ['rounded' => $rounded, 'rows' => 10],
                 'required' => false,
             ])
             ->add('state', CheckboxType::class, [

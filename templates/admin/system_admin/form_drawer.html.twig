@@ -1,0 +1,110 @@
+<link rel="stylesheet" href="{{ asset('sunui/components/position-drawer.css') }}">
+{% import 'ui/template/ui.html.twig' as ui %}
+
+{% macro formField(field, labelCol = 'ef-col-4', wrapperCol = 'ef-col-20') %}
+    <div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
+        <div class="ef-col {{ labelCol }} ef-form-item-label-col">
+            {{ form_label(field) }}
+        </div>
+        <div class="ef-col {{ wrapperCol }} ef-form-item-wrapper-col">
+            <div class="ef-form-item-content-wrapper">
+                <div class="ef-form-item-content ef-form-item-content-flex">
+                    {{ form_widget(field) }}
+                </div>
+            </div>
+        </div>
+        {{ form_errors(field) }}
+    </div>
+{% endmacro %}
+
+<div class="ef-drawer-container" style="z-index: 1001; display: none;" id="{{ drawerId }}">
+    <div class="ef-drawer-mask" maskid="{{ drawerId }}"></div>
+    <div class="ef-drawer" style="right: -650px; width: 650px; box-shadow: -4px 0 20px rgba(0,0,0,0.15);">
+        <div class="ef-drawer-header">
+            <div class="ef-drawer-title">
+                <i class="fa-solid {{ admin.id ? 'fa-edit' : 'fa-user-plus' }}" style="margin-right: 12px; font-size: 18px;"></i>
+                {{ title }}
+                {% if admin.name %}
+                <span style="font-size: 14px; font-weight: 400; margin-left: 8px; opacity: 0.8;">{{ admin.name }}</span>
+                {% endif %}
+            </div>
+            <div tabindex="-1" role="button" aria-label="Close" class="ef-drawer-close-btn">
+                <span class="ef-icon-hover">
+                    <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+                        <path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path>
+                    </svg>
+                </span>
+            </div>
+        </div>
+        <div class="ef-drawer-body">
+            <div class="ef-drawer-content">
+                {{ form_start(form, {'attr': {'id': 'system-admin-form', 'class': 'ef-form'}}) }}
+                    <div class="ef-row">
+                        <div class="ef-col-24">
+                            {{ _self.formField(form.username) }}
+                        </div>
+                    </div>
+                    <div class="ef-row">
+                        <div class="ef-col-12">{{ form_row(form.name) }}</div>
+                        <div class="ef-col-12">{{ form_row(form.employeeNo) }}</div>
+                    </div>
+                    <div class="ef-row">
+                        <div class="ef-col-12">{{ form_row(form.email) }}</div>
+                        <div class="ef-col-12">{{ form_row(form.mobile) }}</div>
+                    </div>
+                    {% if form.password is defined %}
+                    <div class="ef-row">
+                        <div class="ef-col-24">
+                            {{ _self.formField(form.password) }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="ef-row">
+                        <div class="ef-col-24">
+                            {{ _self.formField(form.roles) }}
+                        </div>
+                    </div>
+                    <div class="ef-row">
+                        <div class="ef-col-24">
+                            {{ _self.formField(form.isActive) }}
+                        </div>
+                    </div>
+                    {{ ui.formSubmitButton() }}
+                {{ form_end(form) }}
+            </div>
+        </div>
+        <div class="ef-drawer-footer">
+            <button class="cancelDrawer ef-drawer-btn ef-drawer-btn-secondary" type="button" onclick="closeSystemAdminDrawer('{{ drawerId }}')">取消</button>
+        </div>
+    </div>
+</div>
+
+{{ ui.formValid() }}
+
+<script>
+function addDrawerOpenClass() { $('body').addClass('ef-drawer-open'); }
+function removeDrawerOpenClass() { $('body').removeClass('ef-drawer-open'); }
+
+$(document).ready(function() {
+    addDrawerOpenClass();
+
+    $('.ef-drawer-close-btn').on('click', function() {
+        removeDrawerOpenClass();
+    });
+
+    $('.ef-drawer-mask').on('click', function() {
+        removeDrawerOpenClass();
+    });
+});
+
+function onFormSubmitSuccess() {
+    removeDrawerOpenClass();
+    $().hideDrawer('{{ drawerId }}');
+    window.location.reload();
+}
+
+function closeSystemAdminDrawer(drawerId) {
+    removeDrawerOpenClass();
+    $().hideDrawer(drawerId);
+}
+</script>

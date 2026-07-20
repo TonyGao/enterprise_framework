@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('lib/prism/prism.css') }}">
     <link rel="stylesheet" href="{{ asset('radio.css', 'ui') }}">
     <style>
         body {
@@ -354,7 +355,7 @@
                         <span class="ef-radio-label">选项 D</span>
                     </label>
                 </div>
-                <div class="docs-code">
+                <pre class="docs-code"><code class="language-html">
 &lt;label class="ef-radio" radioId="group1"&gt;
     &lt;input type="radio" class="ef-radio-target" name="demo" value="A"&gt;
     &lt;span class="ef-icon-hover ef-radio-icon-hover"&gt;
@@ -362,7 +363,7 @@
     &lt;/span&gt;
     &lt;span class="ef-radio-label"&gt;选项 A&lt;/span&gt;
 &lt;/label&gt;
-                </div>
+                </code></pre>
             </div>
         </div>
     </section>
@@ -418,4 +419,5 @@
         </div>
     </div>
 </div>
+<script src="{{ asset('lib/prism/prism.js') }}"></script>
 {% endblock %}

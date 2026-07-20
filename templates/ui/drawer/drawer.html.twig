@@ -2,7 +2,7 @@
 {% set drawerWidth = width %}
 
 
-<div class="ef-drawer-container" style="z-index: 1001;" id="{{ drawerid }}" entitytoken="{{ id }}">
+<div class="ef-drawer-container" style="z-index: 1001;" id="{{ drawerid }}" entitytoken="{{ id }}" {% if propertyToken is defined %}propertytoken="{{ propertyToken }}"{% endif %}>
 	<div class="ef-drawer-mask" maskid="{{ drawerid }}"></div>
 	<div class="ef-drawer" style="right: 0px; width: {{ drawerWidth }}px;">
 		<div class="ef-drawer-header">
@@ -16,7 +16,7 @@
 			{% endif %}
 
 			{% if drawerTitleAddon is defined %}
-			<div class="ef-drawer-addon" style="display: flex; justify-content: center; align-items: center;">
+			<div class="ef-drawer-addon" style="display: flex; justify-content: center; align-items: center; color: #fff;">
 			  <span style="margin-right: 10px;">默认分组</span> <span>{{ drawerTitleAddon|raw }}</span>
 			</div>
 			{% endif %}

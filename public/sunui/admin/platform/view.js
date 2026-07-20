@@ -4,6 +4,113 @@ $(document).ready(function () {
     parent: '',
     type: ''
   };
+  let generalConfigPicker = null;
+  let themeColorPicker = null;
+
+  function initGeneralConfigPicker() {
+    if (generalConfigPicker || !window.ColorPicker) return;
+    generalConfigPicker = new ColorPicker({
+      container: document.body,
+      defaultColor: $('#generalConfigRequiredBgText').val() || '#FFF2E8',
+      onChange: function(color) {
+        $('#generalConfigRequiredBgPreview').css('background-color', color);
+        $('#generalConfigRequiredBgText').val(color);
+      }
+    });
+    $(document).on('click', '#generalConfigRequiredBgTrigger', function(e) {
+      e.stopPropagation();
+      if (generalConfigPicker) {
+        generalConfigPicker.open(this);
+      }
+    });
+  }
+
+  function initThemeColorPicker() {
+    if (themeColorPicker || !window.ColorPicker) return;
+    themeColorPicker = new ColorPicker({
+      container: document.body,
+      defaultColor: $('#generalConfigThemeColorText').val() || '#165DFF',
+      onChange: function(color) {
+        $('#generalConfigThemeColorPreview').css('background-color', color);
+        $('#generalConfigThemeColorText').val(color);
+      }
+    });
+    $(document).on('click', '#generalConfigThemeColorTrigger', function(e) {
+      e.stopPropagation();
+      if (themeColorPicker) {
+        themeColorPicker.open(this);
+      }
+    });
+  }
+
+  async function loadGeneralConfig() {
+    let route = new Route();
+    let uri = await route.generate('api_platform_view_get_general_config');
+    ajax({
+      url: uri.path,
+      method: 'GET',
+      dataType: 'json',
+      success: function(resp) {
+        if (resp.data && resp.data.requiredBg) {
+          const bg = resp.data.requiredBg;
+          $('#generalConfigRequiredBgPreview').css('background-color', bg);
+          $('#generalConfigRequiredBgText').val(bg);
+          if (generalConfigPicker) generalConfigPicker.setColor(bg);
+        }
+        if (resp.data && resp.data.themeColor) {
+          const c = resp.data.themeColor;
+          $('#generalConfigThemeColorPreview').css('background-color', c);
+          $('#generalConfigThemeColorText').val(c);
+          if (themeColorPicker) themeColorPicker.setColor(c);
+        }
+      }
+    });
+  }
+
+  // 通用配置按钮
+  $('#generalConfigBtn').on('click', function(e) {
+    e.preventDefault();
+    initGeneralConfigPicker();
+    initThemeColorPicker();
+    loadGeneralConfig();
+    $().showDrawer('generalConfigDrawer');
+  });
+
+  // 文本输入同步到预览
+  $('#generalConfigRequiredBgText').on('input', function() {
+    const v = $(this).val();
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+      $('#generalConfigRequiredBgPreview').css('background-color', v);
+      if (generalConfigPicker) generalConfigPicker.setColor(v);
+    }
+  });
+  $('#generalConfigThemeColorText').on('input', function() {
+    const v = $(this).val();
+    $('#generalConfigThemeColorPreview').css('background-color', v);
+    if (themeColorPicker) themeColorPicker.setColor(v);
+  });
+
+  // 保存通用配置
+  $('#generalConfigSaveBtn').on('click', async function() {
+    const bg = $('#generalConfigRequiredBgText').val();
+    const themeColor = $('#generalConfigThemeColorText').val();
+    let route = new Route();
+    let uri = await route.generate('api_platform_view_save_general_config');
+    ajax({
+      url: uri.path,
+      method: 'POST',
+      contentType: 'application/json',
+      data: { requiredBg: bg, themeColor: themeColor },
+      success: function(resp) {
+        $().hideDrawer('generalConfigDrawer');
+        alert.success('配置已保存', { percent: '280px', title: '操作提示', closable: false });
+        setTimeout(function() { $('.app-alert').remove(); }, 3000);
+      },
+      error: function(xhr) {
+        alert.error('保存失败', { percent: '280px', title: '操作提示', closable: true });
+      }
+    });
+  });
   
   // 监听视图编辑器按钮的点击事件
   $("#viewEditor").on("click", async function (event) {
@@ -29,6 +136,62 @@ $(document).ready(function () {
       alert.error("生成编辑器URL失败", { percent: '40%', title: "请求错误", closable: true });
     }
   });
+  // 加载视图详情
+  async function loadViewDetail(viewId) {
+    let route = new Route();
+    let uri = await route.generate('platform_view_detail');
+    ajax({
+      url: uri.path,
+      method: 'GET',
+      data: { id: viewId },
+      dataType: 'html',
+      success: function(html) {
+        $('.right-content').html(html);
+      },
+      error: function() {
+        alert.error('加载视图详情失败', { percent: '280px', title: '操作提示', closable: true });
+      }
+    });
+  }
+
+  // 供模板调用的编辑视图函数
+  window.loadEditView = function(viewId) {
+    let route = new Route();
+    route.generate('platform_view_edit_view').then(function(uri) {
+      ajax({
+        url: uri.path,
+        method: 'GET',
+        data: { id: viewId },
+        dataType: 'html',
+        success: function(data) {
+          $('.right-content').html(data);
+          $('.right-content form').on('submit', function(e) {
+            $(this).ajaxSubmit({
+              success: function(response) {
+                if (response.includes('视图管理')) {
+                  window.location.reload();
+                } else {
+                  $('.right-content').html(response);
+                }
+              },
+              error: function(xhr) {
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                  alert.error(xhr.responseJSON.message, { percent: '40%', title: '编辑失败', closable: true });
+                } else {
+                  alert.error('编辑视图失败，请检查输入', { percent: '40%', title: '编辑失败', closable: true });
+                }
+              }
+            });
+            return false;
+          });
+        },
+        error: function() {
+          alert.error('加载编辑表单失败', { percent: '280px', title: '操作提示', closable: true });
+        }
+      });
+    });
+  };
+
   $(".tree-text-content").on("click", function (event) {
     let thisChosen = false;
     let type = $(this).attr("type");
@@ -40,6 +203,10 @@ $(document).ready(function () {
       $(this).addClass("chosen");
       createPayload.parent = $(this).attr("id");
       createPayload.type = type;
+      // 视图节点：加载详情
+      if (type === 'view') {
+        loadViewDetail($(this).attr('id'));
+      }
     }
   })
   // 监听创建文件夹按钮的点击事件
@@ -138,4 +305,391 @@ $(document).ready(function () {
       }
     });
   })
+
+  $("#editView").on("click", async function (event) {
+    event.preventDefault();
+
+    const selectedNode = $(".tree-text-content.chosen");
+    if (!selectedNode.length || selectedNode.attr("type") !== "view") {
+      alert.error("请先选择一个视图节点", { percent: '40%', title: "操作提示", closable: true });
+      return;
+    }
+
+    const viewId = selectedNode.attr("id");
+    let route = new Route();
+    let uri = await route.generate("platform_view_edit_view");
+    ajax({
+      url: uri.path,
+      method: "GET",
+      data: { id: viewId },
+      async: false,
+      dataType: "html",
+      success: function (data) {
+        $(".right-content").html(data);
+
+        $(".right-content form").on("submit", function(e) {
+          $(this).ajaxSubmit({
+            success: function(response) {
+              if (response.includes('视图管理')) {
+                window.location.reload();
+              } else {
+                $(".right-content").html(response);
+              }
+            },
+            error: function(xhr) {
+              if (xhr.responseJSON && xhr.responseJSON.message) {
+                alert.error(xhr.responseJSON.message, { percent: '40%', title: "编辑失败", closable: true });
+              } else {
+                alert.error("编辑视图失败，请检查输入", { percent: '40%', title: "编辑失败", closable: true });
+              }
+            }
+          });
+          return false;
+        });
+      },
+      error: function (xhr, status, error) {
+        let errorMsg = "编辑视图失败";
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          errorMsg = xhr.responseJSON.message;
+        }
+        console.error("编辑视图失败: "+ errorMsg);
+        alert.error(errorMsg, { percent: '40%', title: "请求错误", closable: true });
+      }
+    });
+  })
+
+  // 重命名文件夹（弹窗）
+  $("#renameFolder").on("click", async function (event) {
+    event.preventDefault();
+
+    const selectedNode = $(".tree-text-content.chosen");
+    if (!selectedNode.length || selectedNode.attr("type") !== "folder") {
+      alert.error("请先选择一个文件夹节点", { percent: '40%', title: "操作提示", closable: true });
+      return;
+    }
+
+    const folderId = selectedNode.attr("id");
+    let route = new Route();
+    let uri = await route.generate("platform_view_rename_folder");
+    ajax({
+      url: uri.path,
+      method: "GET",
+      data: { id: folderId },
+      dataType: "html",
+      success: function (data) {
+        $('#renameFolderModalBody').html(data);
+        openModal('renameFolderModal');
+      },
+      error: function (xhr, status, error) {
+        let errorMsg = "重命名文件夹失败";
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          errorMsg = xhr.responseJSON.message;
+        }
+        alert.error(errorMsg, { percent: '40%', title: "请求错误", closable: true });
+      }
+    });
+  })
+
+  // ===== 重命名文件夹弹窗表单提交 =====
+  $('#renameFolderModalBody').on('submit', 'form', function(e) {
+    e.preventDefault();
+    var $form = $(this);
+    $.ajax({
+      url: $form.attr('action'),
+      method: 'POST',
+      data: $form.serialize(),
+      dataType: 'json',
+      success: function(response) {
+        if (response.success) {
+          closeModal('renameFolderModal');
+          window.location.reload();
+        } else if (response.html) {
+          $('#renameFolderModalBody').html(response.html);
+        }
+      },
+      error: function(xhr) {
+        var msg = "重命名文件夹失败，请检查输入";
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          msg = xhr.responseJSON.message;
+        }
+        alert.error(msg, { percent: '40%', title: "重命名失败", closable: true });
+      }
+    });
+  });
+
+  // ===== Tree Node Context Menu =====
+  var treeContextMenu = $('#tree-context-menu');
+  var ctxMenuItems = treeContextMenu.find('.menu-item');
+  var ctxSepFolder = $('#ctx-sep-folder');
+  var ctxSepView = $('#ctx-sep-view');
+  var ctxSepDelete = $('#ctx-sep-delete');
+
+  function hideContextMenu() {
+    treeContextMenu.hide();
+  }
+
+  function showContextMenu(e, nodeData) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // 先隐藏所有可切换项
+    ctxMenuItems.hide();
+    ctxSepFolder.hide();
+    ctxSepView.hide();
+    ctxSepDelete.hide();
+
+    if (!nodeData) {
+      // 空白区域右键
+      ctxMenuItems.filter('[data-action="createFolder"]').show();
+      ctxMenuItems.filter('[data-action="generalConfig"]').show();
+    } else if (nodeData.type === 'root') {
+      ctxMenuItems.filter('[data-action="createView"]').show();
+      ctxMenuItems.filter('[data-action="createFolder"]').show();
+    } else if (nodeData.type === 'folder') {
+      ctxMenuItems.filter('[data-action="createView"]').show();
+      ctxMenuItems.filter('[data-action="createFolder"]').show();
+      ctxSepFolder.show();
+      ctxMenuItems.filter('[data-action="renameFolder"]').show();
+      ctxSepDelete.show();
+      ctxMenuItems.filter('[data-action="deleteNode"]').show();
+    } else if (nodeData.type === 'view') {
+      ctxSepView.show();
+      ctxMenuItems.filter('[data-action="viewEditor"]').show();
+      ctxMenuItems.filter('[data-action="editView"]').show();
+      ctxSepDelete.show();
+      ctxMenuItems.filter('[data-action="deleteNode"]').show();
+    }
+
+    // 定位菜单
+    var menuWidth = 180;
+    var menuHeight = treeContextMenu.find('.menu-item:visible').length * 34 + 16;
+    var x = e.clientX;
+    var y = e.clientY;
+    var winW = $(window).width();
+    var winH = $(window).height();
+    if (x + menuWidth > winW) x = winW - menuWidth - 8;
+    if (y + menuHeight > winH) y = winH - menuHeight - 8;
+    if (x < 0) x = 8;
+    if (y < 0) y = 8;
+
+    treeContextMenu.css({ left: x, top: y, display: 'block' });
+  }
+
+  // 右击树节点
+  $('.common-tree-wrapper').on('contextmenu', '.tree-text-content', function(e) {
+    // 选中该节点
+    $('.tree-text-content.chosen').removeClass('chosen');
+    $(this).addClass('chosen');
+    createPayload.parent = $(this).attr('id');
+    createPayload.type = $(this).attr('type');
+
+    var nodeData = { type: $(this).attr('type'), id: $(this).attr('id') };
+    showContextMenu(e, nodeData);
+  });
+
+  // 右击树的空白区域
+  $('.common-tree-wrapper, .left-tree-wrapper').on('contextmenu', function(e) {
+    // 如果点击的是空白区域而非节点
+    if ($(e.target).closest('.tree-text-content').length) return;
+    // 取消选中
+    $('.tree-text-content.chosen').removeClass('chosen');
+    createPayload.parent = '';
+    createPayload.type = '';
+    showContextMenu(e, null);
+  });
+
+  // 菜单项点击
+  treeContextMenu.on('click', '.menu-item', function() {
+    var action = $(this).data('action');
+    hideContextMenu();
+    switch (action) {
+      case 'createView':
+        $('#createView').trigger('click');
+        break;
+      case 'createFolder':
+        $('#createFolder').trigger('click');
+        break;
+      case 'renameFolder':
+        $('#renameFolder').trigger('click');
+        break;
+      case 'viewEditor':
+        $('#viewEditor').trigger('click');
+        break;
+      case 'editView':
+        $('#editView').trigger('click');
+        break;
+      case 'generalConfig':
+        $('#generalConfigBtn').trigger('click');
+        break;
+      case 'deleteNode':
+        showDeleteConfirm();
+        break;
+    }
+  });
+
+  // 点击菜单外部隐藏
+  $(document).on('click', function(e) {
+    if (treeContextMenu.is(':visible') && !$(e.target).closest('#tree-context-menu').length) {
+      hideContextMenu();
+    }
+  });
+
+  // ===== 删除确认弹窗 =====
+  var _deleteNodeId = null;
+
+  function showDeleteConfirm() {
+    var chosen = $('.tree-text-content.chosen');
+    if (!chosen.length) return;
+    _deleteNodeId = chosen.attr('id');
+    var nodeName = chosen.find('.tree-text').text().trim() || '未命名';
+
+    $('#delete-confirm-input').val('').trigger('input');
+    $('#delete-confirm-error').hide();
+    $('#delete-confirm-submit').prop('disabled', true).css('opacity', '0.5');
+    // 更新提示中的节点名称
+    $('#delete-confirm-modal .ef-modal-body p').html(
+      '<strong style="color: #ff4d4f;">此操作不可撤回。</strong>一旦删除将无法挽回。<br>' +
+      '将删除：<strong>' + $('<span>').text(nodeName).html() + '</strong><br><br>' +
+      '请输入 <strong style="color: #ff4d4f;">确认删除</strong> 以继续：'
+    );
+    $('#delete-confirm-modal').show();
+  }
+
+  // 输入监听：只有输入"确认删除"才启用按钮
+  $(document).on('input', '#delete-confirm-input', function() {
+    var val = $(this).val().trim();
+    if (val === '确认删除') {
+      $('#delete-confirm-submit').prop('disabled', false).css('opacity', '1');
+      $('#delete-confirm-error').hide();
+    } else {
+      $('#delete-confirm-submit').prop('disabled', true).css('opacity', '0.5');
+    }
+  });
+
+  // 确认删除
+  $(document).on('click', '#delete-confirm-submit', function() {
+    if ($(this).prop('disabled')) return;
+    if (!_deleteNodeId) return;
+
+    var $btn = $(this);
+    $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 删除中...');
+
+    $.ajax({
+      url: '/api/admin/platform/view/' + _deleteNodeId + '/delete',
+      method: 'POST',
+      success: function(resp) {
+        $('#delete-confirm-modal').hide();
+        // 刷新页面以更新树
+        location.reload();
+      },
+      error: function(xhr) {
+        var msg = '删除失败';
+        try {
+          var r = JSON.parse(xhr.responseText);
+          if (r && r.message) msg = r.message;
+        } catch(e) {}
+        $('#delete-confirm-error').text(msg).show();
+        $btn.prop('disabled', false).text('确认删除');
+      }
+    });
+  });
+
+  // 取消删除
+  $(document).on('click', '#delete-confirm-cancel, #delete-confirm-modal .ef-modal-overlay', function(e) {
+    if (e.target === this || $(e.target).closest('#delete-confirm-cancel').length) {
+      $('#delete-confirm-modal').hide();
+      _deleteNodeId = null;
+    }
+  });
+  // 点击背景关闭
+  $(document).on('click', '#delete-confirm-modal', function(e) {
+    if (e.target === this) {
+      $('#delete-confirm-modal').hide();
+      _deleteNodeId = null;
+    }
+  });
+
+  // ===== End 删除确认弹窗 =====
+
+  // 用 SortableJS 实现跨文件夹拖拽（原生支持嵌套容器 group）
+  if (typeof Sortable !== 'undefined') {
+    setTimeout(function() {
+    var containers = document.querySelectorAll('.common-tree-wrapper .sub-tree-content');
+    for (var i = 0; i < containers.length; i++) {
+      new Sortable(containers[i], {
+        group: {
+          name: 'view-tree',
+          pull: true,
+          put: true
+        },
+        animation: 150,
+        forceFallback: true,
+        fallbackOnBody: true,
+        scroll: false,
+        direction: 'vertical',
+        onStart: function () {
+          // reveal 所有 hidden 容器供 SortableJS onMove 检测
+          document.querySelectorAll('.sub-tree-content').forEach(function(el) {
+            if (el.style.display === 'none') {
+              el.style.display = '';
+              var span = el.previousElementSibling;
+              if (span && span.classList.contains('tree-indent')) {
+                span.style.display = '';
+              }
+            }
+            // 空容器内可能有空白文本节点导致 :empty 不匹配，
+            // 直接设 min-height + min-width 确保有放置区
+            if (!el.querySelector('li')) {
+              el.style.minHeight = '20px';
+              el.style.minWidth = 'calc(100% - 16px)';
+            }
+          });
+        },
+        onEnd: function (evt) {
+          // 拖拽结束后清理 min-height，隐藏仍然空的容器
+          document.querySelectorAll('.sub-tree-content').forEach(function(el) {
+            el.style.minHeight = '';
+            el.style.minWidth = '';
+            if (!el.querySelector('li')) {
+              el.style.display = 'none';
+              var span = el.previousElementSibling;
+              if (span && span.classList.contains('tree-indent')) {
+                span.style.display = 'none';
+              }
+            }
+          });
+          var $item = $(evt.item);
+          var $targetOl = $(evt.to);
+          var $parentLi = $targetOl.closest('li');
+          var $parentNode = $parentLi.find('.tree-text-content').first();
+          var parentId = $parentNode.attr('type') === 'root' ? null : ($parentNode.attr('id') || null);
+          var nodeId = $item.find('.tree-text-content').first().attr('id');
+          if (!nodeId) return;
+          var payload = { nodeId: nodeId, parentId: parentId };
+          // 同容器排序：通过下一个兄弟的 id 定位插入位置
+          if (evt.from === evt.to) {
+            var nextSibling = evt.item.nextElementSibling;
+            if (nextSibling) {
+              var nextIdEl = nextSibling.querySelector('.tree-text-content');
+              if (nextIdEl) {
+                payload.siblingId = nextIdEl.getAttribute('id');
+                delete payload.parentId;
+              }
+            }
+          }
+          ajax({
+            url: '/api/admin/platform/view/move',
+            method: 'POST',
+            contentType: 'application/json',
+            data: payload,
+            error: function(xhr) {
+              alert.error('移动失败', { percent: '280px', title: '操作提示', closable: true });
+              window.location.reload();
+            }
+          });
+        }
+      });
+    }
+    }, 100);
+  }
 })

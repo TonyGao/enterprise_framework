@@ -121,10 +121,10 @@ class EntityService extends BaseService
   public function addProperty($property)
   {
     $pName = $property['name']['value'];
-    $nullable = $property['nullable']['value'] === '1' ? true : false;
+    $nullable = ($property['nullable']['value'] ?? '0') === '1' ? true : false;
     $property['nullable']['value'] = $nullable;
 
-    $unique = $property['unique']['value'] === '1' ? true : false;
+    $unique = ($property['unique']['value'] ?? '0') === '1' ? true : false;
     $property['unique']['value'] = $unique;
 
     // 检查属性是否已存在于数据库模型中以及EntityProperty中
@@ -144,16 +144,16 @@ class EntityService extends BaseService
         ->addComment($comment);
 
       if ($type === 'string') {
-        $attributeArr = ['type' => 'string', 'length' => (int) $property['length']['value'], 'nullable' => $nullable];
+        $attributeArr = ['type' => 'string', 'length' => (int) ($property['length']['value'] ?? 255), 'nullable' => $nullable];
       } else {
         $attributeArr = ['type' => 'text', 'nullable' => $nullable];
       }
 
       // 默认值
-      if ($property['defaultValue']['value'] !== '') {
+      if (($property['defaultValue']['value'] ?? '') !== '') {
         $defaultValue = $property['defaultValue']['value'];
         $attributeArr['options'] = ['default' => $defaultValue];
-        $this->class->setDefaultValue($pName, $defaultValue);
+        $class->setValue($defaultValue);
       }
 
       // 唯一性
@@ -162,6 +162,15 @@ class EntityService extends BaseService
       }
 
       $class->addAttribute('Doctrine\ORM\Mapping\Column', $attributeArr);
+    } elseif ($type === 'user') {
+      $finalType = 'array';
+
+      $prop = $this->class->addProperty($pName)
+        ->setVisibility('private')
+        ->addComment($comment)
+        ->setValue([]);
+
+      $prop->addAttribute('Doctrine\ORM\Mapping\Column', ['type' => 'json', 'nullable' => $nullable]);
     }
 
     // 添加属性的 setter 方法
@@ -174,6 +183,9 @@ class EntityService extends BaseService
       ->addBody('return $this;');
 
     $method->addParameter($pName);
+    if ($type === 'user') {
+      $method->getParameter($pName)->setType('array');
+    }
 
     // 添加属性的 getter 方法
     $getterMethodName = 'get' . ucfirst($pName);
@@ -208,7 +220,8 @@ class EntityService extends BaseService
       ->setComment($property['comment']['value'])
       ->setType($property['type']['value'])
       ->setFieldName(Str::tableize($property['name']['value']))
-      ->setNullable(true)
+      ->setNullable($property['nullable']['value'] ?? true)
+      ->setUniqueable($property['unique']['value'] ?? false)
       ->setEntity($this->entity)
       ->setGroup($group);
 
@@ -236,6 +249,104 @@ class EntityService extends BaseService
     }
 
     $this->em->persist($prop);
+  }
+
+  /**
+   * 更新现有属性的元数据
+   * 更新 EntityProperty 记录 + PHP 实体文件注解 + 生成迁移
+   */
+  public function updateProperty($propertyToken, $fields)
+  {
+    $epRepo = $this->em->getRepository(EntityProperty::class);
+    $entityProperty = $epRepo->findOneBy(['token' => $propertyToken]);
+
+    if ($entityProperty === null) {
+      throw new \Exception("Property with token '{$propertyToken}' not found.");
+    }
+
+    $oldPropertyName = $entityProperty->getPropertyName();
+
+    // 获取 Entity 对象
+    $entity = $entityProperty->getEntity();
+
+    // 加载 PHP 实体文件
+    $this->loadByToken($entity->getToken())
+      ->loadEntity();
+
+    // 准备字段值
+    $comment = $fields['comment']['value'] ?? $entityProperty->getComment();
+    $type = $fields['type']['value'] ?? $entityProperty->getType();
+    $groupId = $fields['group']['value'] ?? $entityProperty->getGroup()->getId();
+    $groupRepo = $this->em->getRepository(EntityPropertyGroup::class);
+    $group = $groupRepo->find($groupId);
+    $nullable = ($fields['nullable']['value'] ?? ($entityProperty->getNullable() ? '1' : '0')) === '1' ? true : false;
+    $unique = ($fields['unique']['value'] ?? ($entityProperty->getUniqueable() ? '1' : '0')) === '1' ? true : false;
+    $length = isset($fields['length']['value']) && $fields['length']['value'] !== '' ? (int) $fields['length']['value'] : $entityProperty->getLength();
+    $height = isset($fields['height']['value']) && $fields['height']['value'] !== '' ? (int) $fields['height']['value'] : $entityProperty->getHeight();
+    $rounded = isset($fields['rounded']['value']) ? (bool) $fields['rounded']['value'] : $entityProperty->getRounded();
+
+    $formOptions = $entityProperty->getFormOptions() ?: [];
+    if (isset($fields['rows']['value']) && $fields['rows']['value'] !== '') {
+      $formOptions['rows'] = (int) $fields['rows']['value'];
+    } elseif (isset($fields['rows'])) {
+      unset($formOptions['rows']);
+    }
+    if (isset($fields['autosize']['value'])) {
+      $formOptions['autosize'] = (bool) $fields['autosize']['value'];
+    } elseif (isset($fields['autosize'])) {
+      unset($formOptions['autosize']);
+    }
+
+    // 在 PHP class 中找到对应属性
+    $class = $this->class;
+    try {
+      $propInClass = $class->getProperty($oldPropertyName);
+    } catch (\Exception $e) {
+      throw new \Exception("Property '{$oldPropertyName}' not found in entity class.");
+    }
+
+    // 移除旧的 Column 注解
+    $existingAttrs = array_values(array_filter($propInClass->getAttributes(), function ($attr) {
+      return $attr->getName() !== 'Doctrine\ORM\Mapping\Column';
+    }));
+    $propInClass->setAttributes($existingAttrs);
+
+    // 更新注释
+    $propInClass->setComment($comment);
+
+    // 构建新的 Column 属性
+    $attributeArr = ['type' => $type, 'nullable' => $nullable];
+    if ($type === 'string') {
+      $attributeArr['length'] = $length;
+    }
+    if ($unique) {
+      $attributeArr['unique'] = true;
+    }
+
+    // 默认值
+    if (isset($fields['defaultValue']['value']) && $fields['defaultValue']['value'] !== '') {
+      $defaultValue = $fields['defaultValue']['value'];
+      $attributeArr['options'] = ['default' => $defaultValue];
+      $propInClass->setValue($defaultValue);
+    }
+
+    $propInClass->addAttribute('Doctrine\ORM\Mapping\Column', $attributeArr);
+
+    // 更新 EntityProperty 记录
+    $entityProperty->setComment($comment)
+      ->setLength($length)
+      ->setNullable($nullable)
+      ->setUniqueable($unique)
+      ->setHeight($height)
+      ->setRounded($rounded)
+      ->setGroup($group)
+      ->setFormOptions($formOptions);
+
+    // 保存
+    $this->em->persist($entityProperty);
+    $this->save();
+
+    return $entityProperty;
   }
 
   public function isExisted($property)

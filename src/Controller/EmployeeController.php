@@ -37,22 +37,109 @@ use App\Repository\Security\PasswordPolicyRepository;
 class EmployeeController extends AbstractController
 {
     #[Route('/employee/{id}/edit', name: 'employee_edit', requirements: ['id' => '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'])]
-    public function edit(string $id, EntityManagerInterface $em, Request $request, HubInterface $hub, TranslatorInterface $translator): Response
-    {
+    public function edit(
+        string $id,
+        EntityManagerInterface $em,
+        Request $request,
+        HubInterface $hub,
+        TranslatorInterface $translator,
+        \App\Service\Form\FormFieldRenderer $formFieldRenderer
+    ): Response {
         $employee = $em->getRepository(Employee::class)->find($id);
 
         if (!$employee) {
             throw $this->createNotFoundException('Employee not found');
         }
 
+        // 查找视图设计器
+        $view = $em->getRepository(\App\Entity\Platform\View::class)
+            ->findOneBy(['name' => 'employee_edit_form', 'builtIn' => true]);
+
+        $viewWithFields = $view && $view->getFormEntity()
+            && $em->getRepository(\App\Entity\Platform\ViewField::class)
+                ->count(['view' => $view]) > 0;
+
+        $designerVariables = [];
+        if ($view && $view->getFormEntity()) {
+            $designerVariables = [
+                'designerViewId' => $view->getId(),
+                'designerViewName' => 'employee_edit_form',
+                'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+                'designerViewEntityId' => $view->getFormEntity()?->getId(),
+                'designerEntityFqn' => \App\Entity\Organization\Employee::class,
+            ];
+        } elseif ($this->isGranted('ROLE_SYS_ADMIN')) {
+            $designerVariables = [
+                'designerViewName' => 'employee_edit_form',
+                'designerViewLabel' => '人员编辑表单',
+                'designerEntityFqn' => \App\Entity\Organization\Employee::class,
+            ];
+        }
+
+        if ($viewWithFields && $request->isXmlHttpRequest()) {
+            try {
+                $generalConfig = [];
+                $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+                if (file_exists($configFile)) {
+                    $json = file_get_contents($configFile);
+                    $generalConfig = json_decode($json, true) ?? [];
+                }
+
+                $result = $formFieldRenderer->build($view, $employee, $generalConfig);
+                $form = $result['form'];
+                $form->handleRequest($request);
+
+                if ($form->isSubmitted() && $form->isValid()) {
+                    $employee = $form->getData();
+                    $em->flush();
+
+                    $statusTransKey = [
+                        'active' => 'employee.employment_status.active',
+                        'inactive' => 'employee.employment_status.inactive'
+                    ][$employee->getEmploymentStatus()] ?? 'employee.employment_status.active';
+
+                    $update = new Update(
+                        '/entity/employee/' . $employee->getId(),
+                        json_encode([
+                            'type' => 'sync',
+                            'entity' => 'Employee',
+                            'id' => $employee->getId(),
+                            'name' => $employee->getName(),
+                            'employeeNo' => $employee->getEmployeeNo(),
+                            'department' => $employee->getDepartment() ? $employee->getDepartment()->getName() : '',
+                            'position' => $employee->getPosition() ? $employee->getPosition()->getName() : '',
+                            'employmentStatus' => $employee->getEmploymentStatus(),
+                            'workStatus' => $employee->getWorkStatus(),
+                            'statusTrans' => $translator->trans($statusTransKey, [], 'messages'),
+                            'workStatusTrans' => $translator->trans('employee.work_status.' . $employee->getWorkStatus(), [], 'messages'),
+                            'hireDate' => $employee->getHireDate() ? $employee->getHireDate()->format('Y-m-d') : ''
+                        ])
+                    );
+                    $hub->publish($update);
+
+                    return $this->json(['status' => 'success']);
+                }
+
+                $response = new Response(null, $form->isSubmitted() ? 422 : 200);
+                return $this->render('employee/edit_drawer.html.twig', array_merge([
+                    'employee' => $employee,
+                    'form' => $result['formView'],
+                    'designerFormView' => $result['formView'],
+                    'designerFields' => $result['fields'],
+                    'drawerId' => 'employee-drawer-' . $id,
+                ], $designerVariables), $response);
+            } catch (\Exception $e) {
+                // fallback to standard form below
+            }
+        }
+
         $form = $this->createForm(EmployeeType::class, $employee);
         $form->handleRequest($request);
 
-        
         if ($form->isSubmitted() && $form->isValid()) {
             $em->flush();
             $this->addFlash('success', 'action.edit_success');
-            
+
             $statusTransKey = [
                 'active' => 'employee.employment_status.active',
                 'inactive' => 'employee.employment_status.inactive'
@@ -77,22 +164,21 @@ class EmployeeController extends AbstractController
                 ])
             );
             $hub->publish($update);
-            
+
             if ($request->isXmlHttpRequest()) {
                 return $this->json(['status' => 'success']);
             }
-            
-            // Can redirect back to the edit page or list
+
             return $this->redirectToRoute('employee_edit', ['id' => $id]);
         }
 
         if ($request->isXmlHttpRequest()) {
             $response = new Response(null, $form->isSubmitted() ? 422 : 200);
-            return $this->render('employee/edit_drawer.html.twig', [
+            return $this->render('employee/edit_drawer.html.twig', array_merge([
                 'employee' => $employee,
                 'form' => $form->createView(),
                 'drawerId' => 'employee-drawer-' . $id,
-            ], $response);
+            ], $designerVariables), $response);
         }
 
         return $this->render('employee/edit.html.twig', [

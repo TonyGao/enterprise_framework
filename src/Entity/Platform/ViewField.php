@@ -79,11 +79,18 @@ class ViewField
     #[ORM\Column(type: "text", nullable: true)]
     private $valuePosition;
 
-    /**
-     * 排序号
-     */
-    #[ORM\Column(type: "integer", options: ["default" => 0])]
-    private $sortOrder = 0;
+  /**
+   * 字段配置（JSONB）
+   * 存储验证规则、列宽、占位符、选项值等
+   */
+  #[ORM\Column(type: "json", nullable: true)]
+  private ?array $config = null;
+
+  /**
+   * 排序号
+   */
+  #[ORM\Column(type: "integer", options: ["default" => 0])]
+  private $sortOrder = 0;
 
     public function __construct()
     {
@@ -200,6 +207,16 @@ class ViewField
         $this->valuePosition = $valuePosition;
         return $this;
     }
+    public function getConfig(): ?array
+    {
+        return $this->config;
+    }
+
+    public function setConfig(?array $config): self
+    {
+        $this->config = $config;
+        return $this;
+    }
 
     public function getSortOrder(): int
     {
@@ -209,6 +226,7 @@ class ViewField
     public function setSortOrder(int $sortOrder): self
     {
         $this->sortOrder = $sortOrder;
+
         return $this;
     }
 }

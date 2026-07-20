@@ -18,73 +18,78 @@
     <div class="ef-page-content">
         <div class="ef-card">
             <div class="ef-card-body">
-                {{ form_start(form, {'attr': {'class': 'ef-form'}}) }}
-                    <div class="ef-form-section">
-                        <div class="ef-form-section-title">基本信息</div>
-                        <div class="ef-form-row">
-                            <div class="ef-form-col">
-                                {{ form_row(form.name) }}
+                {% if dynamicFormHtml is defined %}
+                    {{ dynamicFormHtml|raw }}
+                {% else %}
+                    {{ form_start(form, {'attr': {'class': 'ef-form'}}) }}
+                        <div class="ef-form-section">
+                            <div class="ef-form-section-title">基本信息</div>
+                            <div class="ef-form-row">
+                                <div class="ef-form-col">
+                                    {{ form_row(form.name) }}
+                                </div>
+                                <div class="ef-form-col">
+                                    {{ form_row(form.code) }}
+                                </div>
                             </div>
-                            <div class="ef-form-col">
-                                {{ form_row(form.code) }}
+                            <div class="ef-form-row">
+                                <div class="ef-form-col">
+                                    {{ form_row(form.department) }}
+                                </div>
+                                <div class="ef-form-col">
+                                    {{ form_row(form.type) }}
+                                </div>
+                            </div>
+                            <div class="ef-form-row">
+                                <div class="ef-form-col">
+                                    {{ form_row(form.level) }}
+                                </div>
+                                <div class="ef-form-col">
+                                    {{ form_row(form.parent) }}
+                                </div>
+                            </div>
+                            <div class="ef-form-row">
+                                <div class="ef-form-col">
+                                    {{ form_row(form.headcount) }}
+                                </div>
+                                <div class="ef-form-col">
+                                    {{ form_row(form.sortOrder) }}
+                                </div>
+                            </div>
+                            <div class="ef-form-row">
+                                <div class="ef-form-col">
+                                    {{ form_row(form.state) }}
+                                </div>
                             </div>
                         </div>
-                        <div class="ef-form-row">
-                            <div class="ef-form-col">
-                                {{ form_row(form.department) }}
-                            </div>
-                            <div class="ef-form-col">
-                                {{ form_row(form.type) }}
-                            </div>
-                        </div>
-                        <div class="ef-form-row">
-                            <div class="ef-form-col">
-                                {{ form_row(form.level) }}
-                            </div>
-                            <div class="ef-form-col">
-                                {{ form_row(form.parent) }}
-                            </div>
-                        </div>
-                        <div class="ef-form-row">
-                            <div class="ef-form-col">
-                                {{ form_row(form.headcount) }}
-                            </div>
-                            <div class="ef-form-col">
-                                {{ form_row(form.sortOrder) }}
-                            </div>
-                        </div>
-                        <div class="ef-form-row">
-                            <div class="ef-form-col">
-                                {{ form_row(form.state) }}
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="ef-form-section">
-                        <div class="ef-form-section-title">详细信息</div>
-                        <div class="ef-form-row">
-                            <div class="ef-form-col">
-                                {{ form_row(form.responsibility) }}
+                        <div class="ef-form-section">
+                            <div class="ef-form-section-title">详细信息</div>
+                            <div class="ef-form-row">
+                                <div class="ef-form-col">
+                                    {{ form_row(form.responsibility) }}
+                                </div>
+                            </div>
+                            <div class="ef-form-row">
+                                <div class="ef-form-col">
+                                    {{ form_row(form.requirement) }}
+                                </div>
+                            </div>
+                            <div class="ef-form-row">
+                                <div class="ef-form-col">
+                                    {{ form_row(form.remark) }}
+                                </div>
                             </div>
                         </div>
-                        <div class="ef-form-row">
-                            <div class="ef-form-col">
-                                {{ form_row(form.requirement) }}
-                            </div>
-                        </div>
-                        <div class="ef-form-row">
-                            <div class="ef-form-col">
-                                {{ form_row(form.remark) }}
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="ef-form-actions">
-                        <button type="submit" class="ef-button ef-button-primary">保存</button>
-                        <a href="{{ path('org_position') }}" class="ef-button ef-button-default">取消</a>
-                    </div>
-                {{ form_end(form) }}
+                        <div class="ef-form-actions">
+                            <button type="submit" class="ef-button ef-button-primary">保存</button>
+                            <a href="{{ path('org_position') }}" class="ef-button ef-button-default">取消</a>
+                        </div>
+                    {{ form_end(form) }}
+                {% endif %}
             </div>
         </div>
     </div>
+    {% include 'admin/org/_designer_link.html.twig' %}
 {% endblock %}

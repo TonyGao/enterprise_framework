@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('lib/prism/prism.css') }}">
     <link rel="stylesheet" href="{{ asset('modal.css', 'ui') }}">
     <style>
         body {
@@ -319,8 +320,7 @@
                 <div class="demo-modal-btn">
                     <button class="btn primary medium" type="button" onclick="openModal('basicModal')">打开模态窗口</button>
                 </div>
-                <div class="docs-code">
-&lt;div class="ef-modal-container" id="basicModal"&gt;
+                <pre class="docs-code"><code class="language-html">&lt;div class="ef-modal-container" id="basicModal"&gt;
     &lt;div class="ef-modal-mask"&gt;&lt;/div&gt;
     &lt;div class="ef-modal-wrapper ef-modal-wrapper-align-center"&gt;
         &lt;div class="ef-modal"&gt;
@@ -336,7 +336,7 @@
         &lt;/div&gt;
     &lt;/div&gt;
 &lt;/div&gt;
-                </div>
+</code></pre>
             </div>
         </div>
     </section>
@@ -404,8 +404,7 @@
             <p class="docs-section-desc">通过 JavaScript 函数来打开和关闭模态窗口。</p>
         </div>
         <div class="docs-section-content">
-            <div class="docs-code">
-// 打开模态窗口
+            <pre class="docs-code"><code class="language-javascript">// 打开模态窗口
 function openModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
 }
@@ -421,7 +420,7 @@ document.querySelectorAll('.ef-modal-mask').forEach(mask => {
         this.parentElement.style.display = 'none';
     });
 });
-            </div>
+</code></pre>
         </div>
     </section>
 </div>
@@ -455,6 +454,7 @@ document.querySelectorAll('.ef-modal-mask').forEach(mask => {
     </div>
 </div>
 
+<script src="{{ asset('lib/prism/prism.js') }}"></script>
 <script>
     function openModal(modalId) {
         document.getElementById(modalId).style.display = 'block';

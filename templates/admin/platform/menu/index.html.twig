@@ -7,12 +7,14 @@
 {% block stylesheets %}
 	{{ parent() }}
   <link rel="stylesheet" type="text/css" href="{{ asset('platform/treeLayout.css', 'admin') }}"/>
+	<link rel="stylesheet" type="text/css" href="{{ asset('platform/treeCollapse.css', 'admin') }}"/>
 	<link rel="stylesheet" type="text/css" href="{{ asset('platform/menu.css', 'admin') }}"/>
 	
 {% endblock %}
 
 {% block javascripts %}
 	{{ parent() }}
+	<script src="{{ asset('platform/treeCollapse.js', 'admin') }}"></script>
 	<script src=" {{ asset('platform/menu.js', 'admin') }} "></script>
 
 {% endblock %}
@@ -33,7 +35,7 @@
 	<div class="org-structure-container">
 		<div class="outside-wrapper">
 			<div class="inside-wrapper">
-				<div class="left-tree visible">
+				<div class="left-tree visible" id="leftTree">
 					<div class="left-tree-wrapper">
 					  <div class="ef-menu-left-title">
 						  <span class="ef-menu-left-title-content">Menu</span>
@@ -83,9 +85,9 @@
 							{{ menu | raw }}
 						</div>
 					</div>
-					<div class="fold-icon-wrapper collapse" id="collapseCompany">
-						<i class="fa-solid fa-play"></i>
-					</div>
+				</div>
+				<div class="fold-icon-wrapper" id="collapseTree">
+					<i class="fa-solid fa-chevron-left"></i>
 				</div>
 				<div class="right-content">
 				  <div class="empty-content" id="platform-entity-empty">

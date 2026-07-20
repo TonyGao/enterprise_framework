@@ -363,17 +363,14 @@
     align-items: center;
     justify-content: center;
 }
-.type-color-input {
-    width: 36px;
-    height: 28px;
-    padding: 2px;
-    border: none;
-    background: transparent;
+.color-dot-trigger {
     cursor: pointer;
+}
+.color-dot-trigger:hover {
+    outline: 2px solid #4a86e8;
+    outline-offset: 1px;
     border-radius: 6px;
 }
-.type-color-input::-webkit-color-swatch-wrapper { padding: 0; }
-.type-color-input::-webkit-color-swatch { border: none; border-radius: 4px; }
 
 /* ---- 按钮 ---- */
 .btn {
@@ -731,8 +728,8 @@
                             <div class="field-group">
                                 <span class="field-label">颜色</span>
                                 <div class="type-color-wrapper">
-                                    <span class="ef-input-wrapper ef-input-rounded" style="width: 50px; padding: 4px;">
-                                        <input id="new-type-color" type="color" value="#6b7280" style="width: 100%; padding: 0; cursor: pointer; border: none; background: transparent;">
+                                    <span class="ef-input-wrapper ef-input-rounded color-dot-trigger" id="new-type-color-trigger" style="padding: 4px; width: 42px;">
+                                        <span id="new-type-color-preview" style="display: block; width: 34px; height: 22px; background: #6b7280; border-radius: 2px;"></span>
                                     </span>
                                 </div>
                             </div>
@@ -781,6 +778,7 @@
 
 {% block javascripts %}
 {{ parent() }}
+<script src="{{ asset('platform/color_picker.js', 'admin') }}"></script>
 <script>
 const CalMgr = (function ($) {
     'use strict';
@@ -826,8 +824,7 @@ const CalMgr = (function ($) {
             var color = t.color || '#6b7280';
             html += '<tr class="ef-table-tr" data-key="' + esc(t.key) + '" data-editing="false">'
                 + '<td class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-center">'
-                + '<span class="type-color-dot" style="display:inline-block;width:28px;height:28px;border-radius:6px;background:' + color + ';box-shadow:0 0 0 2px #fff,0 0 0 3px #e5e7eb;vertical-align:middle;"></span>'
-                + '<input type="color" class="type-color-input" value="' + esc(color) + '" style="display:none;">'
+                + '<span class="type-color-dot color-dot-trigger" data-color="' + esc(color) + '" style="display:inline-block;width:28px;height:28px;border-radius:6px;background:' + color + ';box-shadow:0 0 0 2px #fff,0 0 0 3px #e5e7eb;vertical-align:middle;"></span>'
                 + '</span></td>'
                 + '<td class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-left"><code class="type-key">' + esc(t.key) + '</code></span></td>'
                 + '<td class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-left">'
@@ -843,16 +840,33 @@ const CalMgr = (function ($) {
                 + '</tr>';
         });
         $('#type-manager-list').html(html);
-        // 颜色选择器变化时同步预览
-        $('.type-color-input').off('input').on('input', function () {
-            $(this).closest('tr').find('.type-color-dot').css('background', $(this).val());
+        // 颜色选择器：点击色块打开 ColorPicker
+        $('.type-color-dot').off('click').on('click', function (e) {
+            e.stopPropagation();
+            var $dot = $(this);
+            if ($dot.closest('tr').attr('data-editing') !== 'true') return;
+            var currentColor = $dot.data('color') || '#6b7280';
+            if (!window.typeRowColorPicker) {
+                window.typeRowColorPicker = new ColorPicker({
+                    container: document.body,
+                    defaultColor: currentColor,
+                    onChange: function(color) {
+                        var $activeDot = window._activeTypeColorDot;
+                        if ($activeDot) {
+                            $activeDot.css('background', color).attr('data-color', color);
+                        }
+                    }
+                });
+            }
+            window._activeTypeColorDot = $dot;
+            window.typeRowColorPicker.setColor(currentColor);
+            window.typeRowColorPicker.open(this);
         });
         // 编辑按钮
         $('#type-manager-list .type-edit-btn').off('click').on('click', function () {
             var $row = $(this).closest('tr');
             $row.attr('data-editing', 'true');
-            $row.find('.type-color-dot').hide();
-            $row.find('.type-color-input').show();
+            // 颜色色块保持可见，用于点击触发 ColorPicker
             $row.find('.type-label-view').hide();
             $row.find('.type-label-input').closest('.ef-input-wrapper').show();
             $row.find('.type-edit-btn').hide();
@@ -864,7 +878,7 @@ const CalMgr = (function ($) {
             var $row = $(this).closest('tr');
             var key = $row.data('key');
             var label = $row.find('.type-label-input').val().trim();
-            var color = $row.find('.type-color-input').val();
+            var color = $row.find('.type-color-dot').data('color') || '#6b7280';
             if (!label) { toast('名称不能为空', 'error'); return; }
             request('PUT', BASE + '/type/' + encodeURIComponent(key), { label: label, color: color }).then(function () { loadTypes(); toast('已保存', 'success'); });
         });
@@ -1299,18 +1313,39 @@ const CalMgr = (function ($) {
             });
     }
 
+    function initColorPickers() {
+        if (!window.ColorPicker) return;
+        // "新建类型" 颜色选择器
+        if (!window.newTypeColorPicker) {
+            window.newTypeColorPicker = new ColorPicker({
+                container: document.body,
+                defaultColor: '#6b7280',
+                onChange: function(color) {
+                    $('#new-type-color-preview').css('background-color', color);
+                }
+            });
+            $(document).on('click', '#new-type-color-trigger', function(e) {
+                e.stopPropagation();
+                if (window.newTypeColorPicker) window.newTypeColorPicker.open(this);
+            });
+        }
+    }
+
     function init() {
+        initColorPickers();
         // 先加载类型，再加载事件
         loadTypes().then(function () { loadEvents(); });
         // 新建类型
         $('#new-type-create').on('click', function () {
             var key   = $('#new-type-key').val().trim();
             var label = $('#new-type-label').val().trim();
-            var color = $('#new-type-color').val().trim();
+            var color = $('#new-type-color-preview').css('background-color');
+            color = rgbToHex(color) || '#6b7280';
             if (!key || !label) { new Alert($('#type-manager-modal .ef-modal-body')).error('请填写 key 和 名称', {percent: '320px', title: '提示', closable: true}); return; }
             request('POST', BASE + '/type', { key: key, label: label, color: color }).then(function () {
                 $('#new-type-key, #new-type-label').val('');
-                $('#new-type-color').val('#6b7280');
+                $('#new-type-color-preview').css('background-color', '#6b7280');
+                if (window.newTypeColorPicker) window.newTypeColorPicker.setColor('#6b7280');
                 loadTypes();
                 toast('已添加', 'success');
             });

@@ -1,30 +1,96 @@
 {% extends 'admin/layout.html.twig' %}
 {% import 'ui/template/ui.html.twig' as ui %}
 
+{% macro render_tree(nodes, is_root) %}
+  {% import _self as self %}
+  {% if is_root %}
+    <ol class="ol-left-tree">
+  {% elseif nodes is empty %}
+    <span class="tree-indent" style="display:none"></span><ol class="sub-tree-content" style="display:none">
+  {% else %}
+    <span class="tree-indent"></span><ol class="sub-tree-content">
+  {% endif %}
+    {% for node in nodes %}
+      <li>
+        {% if node.type == 'root' %}
+          <div class="item-content scroll-item">
+            <div class="arrow-icon"><i class="fa-solid fa-caret-down"></i></div>
+            <div class="org-icon"><i class="fa-solid fa-newspaper"></i></div>
+            <div class="node-name">
+              <div class="tree-text-content entity-root" type="root">视图</div>
+            </div>
+          </div>
+        {% elseif node.type == 'folder' %}
+          <div class="item-content scroll-item">
+            <div class="arrow-icon">{% if node.__children is not empty %}<i class="fa-solid fa-caret-down"></i>{% endif %}</div>
+            <div class="org-icon"><i class="fa-regular fa-folder"></i></div>
+            <div class="node-name">
+              <div class="tree-text-content branch folder" type="folder" id="{{ node.id }}">{{ node.name }}</div>
+            </div>
+          </div>
+        {% elseif node.type == 'view' %}
+          <div class="item-content scroll-item">
+            <div class="arrow-icon">{% if node.__children is not empty %}<i class="fa-solid fa-caret-right"></i>{% endif %}</div>
+            <div class="org-icon"><i class="fa-solid fa-o"></i></div>
+            <div class="node-name">
+              <div class="tree-text-content branch" type="view" id="{{ node.id }}">{{ node.name }}</div>
+              {% if node.label is defined and node.label is not empty and node.label != node.name %}
+                <div class="postscript">{{ node.label }}</div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+        {% if node.type == 'folder' or node.type == 'root' %}
+          {{ self.render_tree(node.__children|default([]), false) }}
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+{% endmacro %}
+
 {% block stylesheets %}
   {{ parent() }}
 	<link rel="stylesheet" type="text/css" href="{{ asset('platform/view.css', 'admin') }}"/>
+	<link rel="stylesheet" type="text/css" href="{{ asset('platform/treeLayout.css', 'admin') }}"/>
+	<link rel="stylesheet" type="text/css" href="{{ asset('platform/treeCollapse.css', 'admin') }}"/>
+	<link rel="stylesheet" type="text/css" href="{{ asset('sunui/components/tree.css') }}"/>
+	<link rel="stylesheet" type="text/css" href="{{ asset('sunui/components/drawer.css') }}"/>
+	<link rel="stylesheet" type="text/css" href="{{ asset('sunui/components/modal.css') }}"/>
 {% endblock %}
 
 {% block javascripts %}
 	{{ parent() }}
+	<script src="{{ asset('platform/treeCollapse.js', 'admin') }}"></script>
 	<script src=" {{ asset('platform/view.js', 'admin') }} "></script>
+	<script src="{{ asset('platform/color_picker.js', 'admin') }}"></script>
+	<script src="{{ asset('sunui/components/tree.js') }}"></script>
+	<script src="{{ asset('sunui/components/drawer.js') }}"></script>
+	<script src="{{ asset('sunui/components/modal.js') }}"></script>
 {% endblock %}
 
 {% block app_content_container %}
 	<div class="org-structure-container">
 		<div class="outside-wrapper">
 			{# 渲染工具栏，并传入按钮配置数组 #}
-			{{ ui.toolBar([
+			{% set toolbarButtons = [
 				  {'type': 'modify', 'text': '视图编辑器', 'id': 'viewEditor'},
 					{'type': 'create', 'text': '新建视图', 'id': 'createView'},
-					{'type': 'modify', 'text': '修改名称', 'id': 'modifyView'},
-					{'type': 'create', 'text': '新建文件夹', 'icon': 'fa-solid fa-folder-plus', 'id': 'createFolder'}
-			]) }}
+			] %}
+			{% if is_granted('ROLE_SYS_ADMIN') %}
+				{% set toolbarButtons = toolbarButtons|merge([
+					{'type': 'edit', 'text': '编辑视图', 'id': 'editView'},
+					{'type': 'modify', 'text': '重命名文件夹', 'icon': 'fa-solid fa-pen', 'id': 'renameFolder'},
+				]) %}
+			{% endif %}
+			{% set toolbarButtons = toolbarButtons|merge([
+				{'type': 'create', 'text': '新建文件夹', 'icon': 'fa-solid fa-folder-plus', 'id': 'createFolder'},
+				{'type': 'modify', 'text': '通用配置', 'icon': 'fa-solid fa-gear', 'id': 'generalConfigBtn'}
+			]) %}
+			{{ ui.toolBar(toolbarButtons) }}
 			<div class="inside-wrapper">
-				<div class="left-tree visible {% if not views  %} no-data {% endif %}">
-					<div class="left-tree-wrapper {% if not views  %} no-data {% endif %}">
-					  {% if views %}
+				<div class="left-tree visible {% if treeData is empty %} no-data {% endif %}" id="leftTree">
+					<div class="left-tree-wrapper {% if treeData is empty %} no-data {% endif %}">
+					  {% if treeData is not empty %}
 							<div class="search-wrapper">
 								<span class="ef-input-wrapper">
 									<input class="ef-input ef-input-size-mini text" type="text" clearable="true" placeholder="请输入视图名称"/>
@@ -34,7 +100,8 @@
 								</span>
 							</div>
 							<div class="common-tree-wrapper">
-								{{ views | raw }}
+								{% import _self as view_tree %}
+{{ view_tree.render_tree(treeData, true) }}
 							</div>
 						{% else %}
 							<div class="empty-tree-placeholder">
@@ -43,9 +110,9 @@
 							</div>
 						{% endif %}
 					</div>
-					<div class="fold-icon-wrapper collapse" id="collapseCompany">
-						<i class="fa-solid fa-play"></i>
-					</div>
+				</div>
+				<div class="fold-icon-wrapper" id="collapseTree">
+					<i class="fa-solid fa-chevron-left"></i>
 				</div>
 				<div class="right-content">
 				  <div class="empty-content">
@@ -56,4 +123,125 @@
 			</div>
 		</div>
 	</div>
+
+	{# 通用配置抽屉 #}
+	<div class="ef-drawer-container" id="generalConfigDrawer" style="z-index: 1001; display: none;">
+		<div class="ef-drawer-mask"></div>
+		<div class="ef-drawer" style="right: 0px; width: 450px;">
+			<div class="ef-drawer-header">
+				<div class="ef-drawer-title">通用配置</div>
+				<div class="ef-drawer-close-btn">
+					<span class="ef-icon-hover"><i class="fa-solid fa-times"></i></span>
+				</div>
+			</div>
+			<div class="ef-drawer-body">
+				<div class="ef-drawer-content">
+					<div class="ef-drawer-section">
+						<div class="ef-drawer-section-header">
+							<i class="fa-solid fa-palette"></i>
+							表单控件配置
+						</div>
+						<div class="ef-drawer-section-body">
+							<div class="ef-drawer-form-group">
+								<label class="ef-drawer-form-label">表单控件必填项底色</label>
+								<div style="display: flex; align-items: center; gap: 12px;">
+									<span class="ef-input-wrapper ef-input-rounded" style="padding: 2px; width: auto; cursor: pointer;" id="generalConfigRequiredBgTrigger">
+										{% set requiredBg = generalConfig.requiredBg|default('#FFF2E8') %}
+									<span id="generalConfigRequiredBgPreview" style="display: block; width: 36px; height: 24px; background: {{ requiredBg }}; border-radius: 2px;"></span>
+									</span>
+									<input type="text" id="generalConfigRequiredBgText" value="{{ requiredBg }}" class="ef-input ef-input-size-small" style="width: 100px; font-family: monospace;">
+								</div>
+								<div style="margin-top: 4px; font-size: 12px; color: #999;">开启"必填"开关时，自动填入的控件底色</div>
+							</div>
+							<div class="ef-drawer-form-group" style="margin-top: 16px;">
+								<label class="ef-drawer-form-label">框架主题色</label>
+								<div style="display: flex; align-items: center; gap: 12px;">
+									<span class="ef-input-wrapper ef-input-rounded" style="padding: 2px; width: auto; cursor: pointer;" id="generalConfigThemeColorTrigger">
+										{% set themeColor = generalConfig.themeColor|default('#165DFF') %}
+									<span id="generalConfigThemeColorPreview" style="display: block; width: 36px; height: 24px; background: {{ themeColor }}; border-radius: 2px;"></span>
+									</span>
+									<input type="text" id="generalConfigThemeColorText" value="{{ themeColor }}" class="ef-input ef-input-size-small" style="width: 140px; font-family: monospace;">
+								</div>
+								<div style="margin-top: 4px; font-size: 12px; color: #999;">全局框架主题色，用于控件主色调</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="ef-drawer-footer">
+				<button class="ef-drawer-btn ef-drawer-btn-secondary cancelDrawer" type="button" style="margin-right: 8px;">取消</button>
+				<button class="ef-drawer-btn ef-drawer-btn-primary" type="button" id="generalConfigSaveBtn">保存</button>
+			</div>
+		</div>
+	</div>
+
+	{# 重命名文件夹弹窗 #}
+	<div class="ef-modal-container" id="renameFolderModal" style="z-index: 1001; display: none;">
+		<div class="ef-modal-mask" onclick="closeModal('renameFolderModal')"></div>
+		<div class="ef-modal-wrapper ef-modal-wrapper-align-center">
+			<div class="ef-modal" style="width: 480px;">
+				<div class="ef-modal-header">
+					<div class="ef-modal-title ef-modal-title-align-left">重命名文件夹</div>
+					<div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="closeModal('renameFolderModal')">
+						<span class="ef-icon-hover">
+							<svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+								<path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path>
+							</svg>
+						</span>
+					</div>
+				</div>
+				<div class="ef-modal-body" id="renameFolderModalBody">
+					<div style="text-align: center; padding: 32px 0; color: #999;">
+						<i class="fa-solid fa-spinner fa-spin" style="font-size: 24px;"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{# 树节点右键菜单 #}
+	<div id="tree-context-menu" class="context-menu" style="display: none;">
+		<div class="menu-item" data-action="createView"><i class="fa-solid fa-o"></i><span>新建视图</span></div>
+		<div class="menu-item" data-action="createFolder"><i class="fa-regular fa-folder"></i><span>新建文件夹</span></div>
+		<div class="menu-separator" style="display: none;" id="ctx-sep-folder"></div>
+		<div class="menu-item" data-action="renameFolder"><i class="fa-solid fa-pen"></i><span>重命名文件夹</span></div>
+		<div class="menu-separator" style="display: none;" id="ctx-sep-view"></div>
+		<div class="menu-item" data-action="viewEditor"><i class="fa-solid fa-pen-to-square"></i><span>打开编辑器</span></div>
+		<div class="menu-item" data-action="editView"><i class="fa-solid fa-pencil"></i><span>编辑视图信息</span></div>
+		<div class="menu-separator" style="display: none;" id="ctx-sep-delete"></div>
+		<div class="menu-item" data-action="deleteNode" style="color: #ff4d4f;"><i class="fa-regular fa-trash-can"></i><span>删除</span></div>
+	</div>
+
+	{# 删除确认弹窗 #}
+	<div id="delete-confirm-modal" class="ef-modal-overlay" style="display: none;">
+		<div class="ef-modal" style="width: 420px;">
+			<div class="ef-modal-header">
+				<span class="ef-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color: #ff4d4f; margin-right: 8px;"></i>确认删除</span>
+			</div>
+			<div class="ef-modal-body">
+				<p style="margin: 0 0 16px 0; font-size: 14px; color: #1e293b; line-height: 1.6;">
+					<strong style="color: #ff4d4f;">此操作不可撤回。</strong>一旦删除将无法挽回。<br>
+					请输入 <strong style="color: #ff4d4f;">确认删除</strong> 以继续：
+				</p>
+				<input type="text" id="delete-confirm-input" class="ef-input" placeholder="请输入“确认删除”" style="width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; outline: none; box-sizing: border-box;">
+				<div id="delete-confirm-error" style="color: #ff4d4f; font-size: 12px; margin-top: 6px; display: none;">请输入"确认删除"以继续</div>
+			</div>
+			<div class="ef-modal-footer" style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 24px 20px;">
+				<button type="button" class="btn secondary medium" id="delete-confirm-cancel">取消</button>
+				<button type="button" class="btn primary medium" id="delete-confirm-submit" disabled style="background: #ff4d4f; border-color: #ff4d4f; opacity: 0.5;">确认删除</button>
+			</div>
+		</div>
+	</div>
+
+	<style>
+	.ef-modal-overlay {
+		position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+		background: rgba(0,0,0,0.45); z-index: 10000;
+		display: flex; align-items: center; justify-content: center;
+	}
+	.ef-modal { background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+	.ef-modal-header { padding: 20px 24px 0; font-size: 16px; font-weight: 600; color: #1e293b; }
+	.ef-modal-body { padding: 16px 24px; }
+	.ef-modal-footer { padding: 0 24px 20px; display: flex; justify-content: flex-end; gap: 8px; }
+	</style>
 {% endblock %}

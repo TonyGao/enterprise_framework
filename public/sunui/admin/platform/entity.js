@@ -38,6 +38,26 @@ $(document).ready(function () {
     }
   );
 
+  $("#platform-entity").on("click", "button.edit-field", function () {
+    let propertyToken = $(this).attr("token");
+    let epgToken = $("button.create").attr("token");
+    let id = "drawer" + epgToken + "_edit_" + propertyToken;
+
+    $("#" + id).remove();
+
+    $.ajax({
+      url: "/admin/platform/entity/editFieldDrawer",
+      method: "POST",
+      dataType: "html",
+      contentType: "application/json",
+      data: JSON.stringify({ token: epgToken, propertyToken: propertyToken }),
+      success: function (response) {
+        $("#app").append(response);
+        $().showDrawer(id);
+      },
+    });
+  });
+
   // $("#platform-entity").off("click", "button .create");
   $("#platform-entity").on("click", "button.create", function () {
     let token = $(this).attr("token");
@@ -132,11 +152,12 @@ $(document).ready(function () {
 
   let somethingWrong = false;
   $("body").on("click", "#submitFormButton", async function (e) {
-    e.preventDefault(); // 阻止按钮的默认行为
-    // $(this).closest(".ef-drawer");
-    let token = $(this).closest(".ef-drawer-container").attr("entitytoken");
+    e.preventDefault();
+    let container = $(this).closest(".ef-drawer-container");
+    let token = container.attr("entitytoken");
+    let propertyToken = container.attr("propertytoken");
+    let isEditMode = propertyToken && propertyToken.length > 0;
 
-    // 校验表单必填和规则校验
     let form = $(this).parents(".ef-drawer").find("#submitFields");
     form.formValid();
 
@@ -145,45 +166,72 @@ $(document).ready(function () {
       return;
     }
 
-    let groupedData = collectFormData(form);
+    let alert = new Alert(container);
 
+    if (isEditMode) {
+      let formData = collectFormData(form);
+      let fields = formData.length > 0 ? formData[0] : {};
 
-    let payload = {
-      entity: {
-        epgToken: $(this).closest(".ef-drawer-container").attr("entitytoken"),
-        fields: groupedData
-      }
-    };
+      let payload = {
+        propertyToken: propertyToken,
+        fields: fields
+      };
 
-    console.log(JSON.stringify(payload, null, 2));
+      let route = new Route();
+      let endpoint = await route.generate("api_platform_entity_updateField");
 
-    // 发送 AJAX 请求
-    let route = new Route();
-    let field = await route.generate("api_platform_entity_batchfields");
-    let uri = await route.generate("platform_entity");
-    let alert = new Alert($(this).closest(".ef-drawer"));
-    $.ajax({
-      type: field.methods[0],
-      url: field.path, // 提交表单的路由路径
-      contentType: "application/json",
-      data: JSON.stringify(payload),
-      success: function (response) {
-        // 在成功响应时执行的操作，可以是重定向、显示消息等
-        alert.success('表单提交成功', {
-          percent: '50%',
-          callback: function () {
-            window.location.href = uri.path;
-          }
-        });
-        // 如果有必要，在这里可以执行其他操作，比如隐藏模态框
-      },
-      error: function (xhr, status, error) {
-        let errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : error;
-        // 在发生错误时执行的操作
-        console.error("表单提交失败: " + errorMessage);
-        alert.error("表单提交失败: " + errorMessage, { percent: '40%', title: "请求错误", closable: true });
-      },
-    });
+      $.ajax({
+        type: "POST",
+        url: endpoint.path,
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+          alert.success('字段更新成功', {
+            percent: '50%',
+            callback: function () {
+              window.location.reload();
+            }
+          });
+        },
+        error: function (xhr, status, error) {
+          let errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : error;
+          alert.error("字段更新失败: " + errorMessage, { percent: '40%', title: "请求错误", closable: true });
+        }
+      });
+    } else {
+      let groupedData = collectFormData(form);
+
+      let payload = {
+        entity: {
+          epgToken: token,
+          fields: groupedData
+        }
+      };
+
+      let route = new Route();
+      let field = await route.generate("api_platform_entity_batchfields");
+      let uri = await route.generate("platform_entity");
+
+      $.ajax({
+        type: field.methods[0],
+        url: field.path,
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: function (response) {
+          alert.success('表单提交成功', {
+            percent: '50%',
+            callback: function () {
+              window.location.href = uri.path;
+            }
+          });
+        },
+        error: function (xhr, status, error) {
+          let errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : error;
+          console.error("表单提交失败: " + errorMessage);
+          alert.error("表单提交失败: " + errorMessage, { percent: '40%', title: "请求错误", closable: true });
+        },
+      });
+    }
   });
 
   $("body").on("click", "#ef-drawer-body-form .close-field-row", function (e) {
@@ -203,7 +251,7 @@ $(document).ready(function () {
   });
 
   // text addition attributes
-  // 获取文本类型字段的补充属性模板
+  // 获取文本类型字段的补充属性模板 (仅用于新增模式，编辑模式下字段直接在模板中渲染)
   function getTextFieldAttributes () {
     // 生成每个组件的唯一随机字符串
     const fieldLengthId = Str.generateRandomString(40);

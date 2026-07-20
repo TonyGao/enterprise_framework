@@ -25,7 +25,7 @@ class Company implements GedmoNode
 	use CommonTrait;
 
 	#[ORM\Id]
-	#[ORM\Column(type: "uuid", unique: true)]
+	#[ORM\Column(type: 'uuid', unique: true)]
 	private $id;
 
 	/**
@@ -98,23 +98,23 @@ class Company implements GedmoNode
 	#[ORM\Column(type: 'boolean', nullable: true)]
 	private $loginIndependent;
 
-    #[ORM\Column(type: 'string', length: 180, nullable: true)]
-    private $address;
+	#[ORM\Column(type: 'string', length: 180, nullable: true)]
+	private $address;
 
-    #[ORM\Column(type: 'string', length: 40, nullable: true)]
-    private $phone;
+	#[ORM\Column(type: 'string', length: 40, nullable: true)]
+	private $phone;
 
-    #[ORM\Column(type: 'string', length: 180, nullable: true)]
-    private $email;
+	#[ORM\Column(type: 'string', length: 180, nullable: true)]
+	private $email;
 
-    #[ORM\Column(type: 'string', length: 180, nullable: true)]
-    private $website;
+	#[ORM\Column(type: 'string', length: 180, nullable: true)]
+	private $website;
 
-    #[ORM\Column(type: 'text', nullable: true)]
-    private $description;
+	#[ORM\Column(type: 'text', nullable: true)]
+	private $description;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    private $sortOrder;
+	#[ORM\Column(type: 'integer', nullable: true)]
+	private $sortOrder;
 
 	/**
 	 * 上级公司
@@ -157,6 +157,11 @@ class Company implements GedmoNode
 	#[ORM\OneToMany(targetEntity: 'Company', mappedBy: 'parent')]
 	#[ORM\OrderBy(['lft' => 'ASC'])]
 	private $children;
+
+	/** 公司法人 */
+	#[ORM\Column(type: 'string', length: 255, nullable: true)]
+	private $gongSiFaRen;
+
 
 	public function __construct()
 	{
@@ -340,77 +345,90 @@ class Company implements GedmoNode
 		return $this;
 	}
 
-    public function getAddress(): ?string
-    {
-        return $this->address;
-    }
 
-    public function setAddress(?string $address): self
-    {
-        $this->address = $address;
+	public function getAddress(): ?string
+	{
+		return $this->address;
+	}
 
-        return $this;
-    }
 
-    public function getPhone(): ?string
-    {
-        return $this->phone;
-    }
+	public function setAddress(?string $address): self
+	{
+		$this->address = $address;
 
-    public function setPhone(?string $phone): self
-    {
-        $this->phone = $phone;
+		return $this;
+	}
 
-        return $this;
-    }
 
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
+	public function getPhone(): ?string
+	{
+		return $this->phone;
+	}
 
-    public function setEmail(?string $email): self
-    {
-        $this->email = $email;
 
-        return $this;
-    }
+	public function setPhone(?string $phone): self
+	{
+		$this->phone = $phone;
 
-    public function getWebsite(): ?string
-    {
-        return $this->website;
-    }
+		return $this;
+	}
 
-    public function setWebsite(?string $website): self
-    {
-        $this->website = $website;
 
-        return $this;
-    }
+	public function getEmail(): ?string
+	{
+		return $this->email;
+	}
 
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
 
-    public function setDescription(?string $description): self
-    {
-        $this->description = $description;
+	public function setEmail(?string $email): self
+	{
+		$this->email = $email;
 
-        return $this;
-    }
+		return $this;
+	}
 
-    public function getSortOrder(): ?int
-    {
-        return $this->sortOrder;
-    }
 
-    public function setSortOrder(?int $sortOrder): self
-    {
-        $this->sortOrder = $sortOrder;
+	public function getWebsite(): ?string
+	{
+		return $this->website;
+	}
 
-        return $this;
-    }
+
+	public function setWebsite(?string $website): self
+	{
+		$this->website = $website;
+
+		return $this;
+	}
+
+
+	public function getDescription(): ?string
+	{
+		return $this->description;
+	}
+
+
+	public function setDescription(?string $description): self
+	{
+		$this->description = $description;
+
+		return $this;
+	}
+
+
+	public function getSortOrder(): ?int
+	{
+		return $this->sortOrder;
+	}
+
+
+	public function setSortOrder(?int $sortOrder): self
+	{
+		$this->sortOrder = $sortOrder;
+
+		return $this;
+	}
+
 
 	/**
 	 * Get 上级公司
@@ -442,4 +460,23 @@ class Company implements GedmoNode
 		return $this->name;
 	}
 
+
+	/**
+	 * 公司法人 Setter
+	 * @return self
+	 */
+	public function setGongSiFaRen($gongSiFaRen): Company
+	{
+		$this->gongSiFaRen = $gongSiFaRen;
+		return $this;
+	}
+
+
+	/**
+	 * 公司法人 Getter
+	 */
+	public function getGongSiFaRen(): string
+	{
+		return $this->gongSiFaRen;
+	}
 }

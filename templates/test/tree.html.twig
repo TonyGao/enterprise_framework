@@ -5,6 +5,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('lib/prism/prism.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('platform/treeLayout.css', 'admin') }}"/>
     <style>
         body {
@@ -286,7 +287,7 @@
             <h2 class="docs-section-title">使用方法</h2>
         </div>
         <div class="docs-section-content">
-            <div class="docs-code">
+            <pre class="docs-code"><code class="language-twig">
 {% verbatim %}
 {% import 'components/tree.html.twig' as treeComponent %}
 
@@ -302,7 +303,7 @@
     }) }}
 &lt;/div&gt;
 {% endverbatim %}
-            </div>
+            </code></pre>
         </div>
     </section>
     
@@ -360,4 +361,5 @@
         });
     </script>
 {% endblock %}
+<script src="{{ asset('lib/prism/prism.js') }}"></script>
 {% endblock %}

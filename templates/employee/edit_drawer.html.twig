@@ -1,4 +1,5 @@
 {% form_theme form 'form/ef_ui_form_theme.html.twig' %}
+{% if designerFormView is defined %}{% form_theme designerFormView 'form/ef_ui_form_theme.html.twig' %}{% endif %}
 <div class="ef-drawer-container" style="z-index: 1001; display: none;" id="{{ drawerId }}">
     <div class="ef-drawer-mask" maskid="{{ drawerId }}" onclick="closeDrawer('{{ drawerId }}')"></div>
     <div class="ef-drawer" style="right: -650px; width: 650px; box-shadow: -4px 0 20px rgba(0,0,0,0.15);">
@@ -7,6 +8,31 @@
                 <i class="fa-solid fa-user-pen" style="margin-right: 12px; font-size: 18px;"></i>
                 {{ 'employee.detail.action.edit'|trans({}, 'messages')|default('Edit Employee') }} - {{ employee.name }}
             </div>
+            {% if is_granted('ROLE_SYS_ADMIN') %}
+                <div style="margin-left: auto; display: flex; gap: 6px; align-items: center; margin-right: 12px;">
+                    {% if designerViewId is defined %}
+                        <a href="{{ path('platform_view_editor', {id: designerViewId}) }}" target="_blank"
+                           style="padding: 4px 10px; background: #f0f7ff; border: 1px solid #cce5ff; border-radius: 14px;
+                                  font-size: 12px; color: #0066cc; text-decoration: none; white-space: nowrap;
+                                  display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-pen-to-square"></i> 视图设计器
+                        </a>
+                        <button type="button" onclick="unbindEmployeeView(this, '{{ designerViewId }}')"
+                                style="padding: 4px 10px; background: #fff0f0; border: 1px solid #ffccc7; border-radius: 14px;
+                                       font-size: 12px; color: #a8071a; white-space: nowrap; cursor: pointer;
+                                       display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-chain-broken"></i> 解绑视图
+                        </button>
+                    {% elseif designerViewName is defined %}
+                        <button type="button" onclick="autoCreateEmployeeView(this)"
+                                style="padding: 4px 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 14px;
+                                       font-size: 12px; color: #856404; white-space: nowrap; cursor: pointer;
+                                       display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-link"></i> 新建视图
+                        </button>
+                    {% endif %}
+                </div>
+            {% endif %}
             <div tabindex="-1" role="button" aria-label="Close" class="ef-drawer-close-btn" onclick="closeDrawer('{{ drawerId }}')">
                 <span class="ef-icon-hover">
                     <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
@@ -235,96 +261,105 @@
                 </div>
 
                 {% import 'ui/template/ui.html.twig' as ui %}
-                {{ form_start(form, {'attr': {'id': 'employee-edit-form-' ~ employee.id, 'class': 'edit-form'}}) }}
+                {% set fv = designerFormView is defined ? designerFormView : form %}
+                {% set colSpanMap = {email: 2, mobile: 2, company: 2} %}
+                {% if designerFields is defined %}
+                  {% for df in designerFields %}
+                    {% set colSpanMap = colSpanMap|merge({(df.fieldName): df.config.colSpan|default(1)}) %}
+                  {% endfor %}
+                {% endif %}
+                {% macro spanClass(map, name) %}{% if map[name]|default(1) > 1 %} full-width{% endif %}{% endmacro %}
+                {% import _self as helpers %}
+                {{ form_start(fv, {'attr': {'id': 'employee-edit-form-' ~ employee.id, 'class': 'edit-form'}}) }}
                     <div class="modern-form-grid">
-                        <div class="modern-form-group">
-                            {{ form_label(form.name, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.name) }}
-                            {{ form_errors(form.name) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'name') }}">
+                            {{ form_label(fv.name, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.name) }}
+                            {{ form_errors(fv.name) }}
                         </div>
-                        <div class="modern-form-group">
-                            {{ form_label(form.englishName, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.englishName) }}
-                            {{ form_errors(form.englishName) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'englishName') }}">
+                            {{ form_label(fv.englishName, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.englishName) }}
+                            {{ form_errors(fv.englishName) }}
                         </div>
-                        <div class="modern-form-group">
-                            {{ form_label(form.employeeNo, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.employeeNo) }}
-                            {{ form_errors(form.employeeNo) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'employeeNo') }}">
+                            {{ form_label(fv.employeeNo, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.employeeNo) }}
+                            {{ form_errors(fv.employeeNo) }}
                         </div>
                         
-                        <div class="modern-form-group">
-                            {{ form_label(form.employmentStatus, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.employmentStatus) }}
-                            {{ form_errors(form.employmentStatus) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'employmentStatus') }}">
+                            {{ form_label(fv.employmentStatus, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.employmentStatus) }}
+                            {{ form_errors(fv.employmentStatus) }}
                         </div>
 
-                        <div class="modern-form-group">
-                            {{ form_label(form.workStatus, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.workStatus) }}
-                            {{ form_errors(form.workStatus) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'workStatus') }}">
+                            {{ form_label(fv.workStatus, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.workStatus) }}
+                            {{ form_errors(fv.workStatus) }}
                         </div>
 
-                        <div class="modern-form-group">
-                            {{ form_label(form.isActive, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.isActive) }}
-                            {{ form_errors(form.isActive) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'isActive') }}">
+                            {{ form_label(fv.isActive, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.isActive) }}
+                            {{ form_errors(fv.isActive) }}
                         </div>
 
-                        <div class="modern-form-group">
-                            {{ form_label(form.hireDate, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.hireDate) }}
-                            {{ form_errors(form.hireDate) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'hireDate') }}">
+                            {{ form_label(fv.hireDate, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.hireDate) }}
+                            {{ form_errors(fv.hireDate) }}
                         </div>
 
-                        <div class="modern-form-group">
-                            {{ form_label(form.position, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.position) }}
-                            {{ form_errors(form.position) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'position') }}">
+                            {{ form_label(fv.position, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.position) }}
+                            {{ form_errors(fv.position) }}
                         </div>
 
-                        <div class="modern-form-group full-width">
-                            {{ form_label(form.email, null, {'label_attr': {'class': 'modern-label'}}) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'email') }}">
+                            {{ form_label(fv.email, null, {'label_attr': {'class': 'modern-label'}}) }}
                             <div style="display: flex; gap: 8px; align-items: center;">
-                                <div style="flex: 1;">{{ form_widget(form.email) }}</div>
+                                <div style="flex: 1;">{{ form_widget(fv.email) }}</div>
                                 <button type="button" class="btn-verify" onclick="sendVerification('{{ employee.id }}', this)">
                                     <i class="fa-regular fa-envelope"></i> {{ 'employee.edit_drawer.send_verification_mail'|trans }}
                                 </button>
                             </div>
-                            {{ form_errors(form.email) }}
+                            {{ form_errors(fv.email) }}
                         </div>
 
-                        <div class="modern-form-group full-width">
-                            {{ form_label(form.mobile, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.mobile) }}
-                            {{ form_errors(form.mobile) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'mobile') }}">
+                            {{ form_label(fv.mobile, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.mobile) }}
+                            {{ form_errors(fv.mobile) }}
                         </div>
                     </div>
 
                     <div class="modern-divider"></div>
 
                     <div class="modern-form-grid">
-                        <div class="modern-form-group full-width">
-                            {{ form_label(form.company, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.company) }}
-                            {{ form_errors(form.company) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'company') }}">
+                            {{ form_label(fv.company, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.company) }}
+                            {{ form_errors(fv.company) }}
                         </div>
 
-                        <div class="modern-form-group">
-                            {{ form_label(form.department, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.department) }}
-                            {{ form_errors(form.department) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'department') }}">
+                            {{ form_label(fv.department, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.department) }}
+                            {{ form_errors(fv.department) }}
                         </div>
 
-                        <div class="modern-form-group">
-                            {{ form_label(form.manager, null, {'label_attr': {'class': 'modern-label'}}) }}
-                            {{ form_widget(form.manager) }}
-                            {{ form_errors(form.manager) }}
+                        <div class="modern-form-group{{ helpers.spanClass(colSpanMap, 'manager') }}">
+                            {{ form_label(fv.manager, null, {'label_attr': {'class': 'modern-label'}}) }}
+                            {{ form_widget(fv.manager) }}
+                            {{ form_errors(fv.manager) }}
                         </div>
                     </div>
 
                     <button class="btn-full-save" type="submit">{{ 'employee.edit_drawer.save_changes'|trans }}</button>
-                {{ form_end(form) }}
+                {{ form_end(fv) }}
             </div>
         </div>
     </div>
@@ -489,6 +524,11 @@
         });
     });
 
+    // Back button handler for View Designer form
+    $(document).on('click', '#{{ drawerId }} .back-btn', function() {
+        window.closeDrawer('{{ drawerId }}');
+    });
+
     window.removeAvatar = function(employeeId, btn) {
         if (!confirm('确定要移除头像吗？')) return;
         
@@ -554,4 +594,62 @@
             }
         });
     };
+
+    window.onFormSubmitSuccess = function() {
+        window.closeDrawer('{{ drawerId }}');
+        window.location.reload();
+    };
+
+{% if designerViewId is defined %}
+    window.unbindEmployeeView = function(btn, viewId) {
+        if (!confirm('确定要解绑视图吗？表单将恢复为标准布局。')) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        ajax({
+            url: '{{ path('api_platform_view_unbind_entity', {id: '__VIEW_ID__'}) }}'.replace('__VIEW_ID__', viewId),
+            method: 'POST',
+            success: function() {
+                window.closeDrawer('{{ drawerId }}');
+                window.location.reload();
+            },
+            error: function(xhr) {
+                var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : '解绑失败';
+                alert(msg);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-chain-broken"></i> 解绑视图';
+            }
+        });
+    };
+{% endif %}
+
+{% if designerViewName is defined %}
+    window.autoCreateEmployeeView = function(btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 创建中...';
+        ajax({
+            url: '{{ path('api_platform_view_auto_bind') }}',
+            method: 'POST',
+            contentType: 'application/json',
+            data: {
+                viewName: '{{ designerViewName }}',
+                viewLabel: '{{ designerViewLabel|default(designerViewName) }}',
+                entityFqn: '{{ designerEntityFqn|e('js') }}',
+                fields: ['name','englishName','employeeNo','employmentStatus','workStatus','isActive','hireDate','position','email','mobile','company','department','manager']
+            },
+            success: function(resp) {
+                var info = resp.data;
+                if (info && info.viewId) {
+                    window.open('{{ path('platform_view_editor', {id: '__VIEW_ID__'}) }}'.replace('__VIEW_ID__', info.viewId), '_blank');
+                    setTimeout(function() { location.reload(); }, 500);
+                }
+            },
+            error: function(xhr) {
+                var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : '创建失败';
+                alert(msg);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-link"></i> 新建视图';
+            }
+        });
+    };
+{% endif %}
 </script>

@@ -174,8 +174,13 @@ class Department implements GedmoNode
 	#[ORM\Column(type: 'string', length: 255, nullable: true, unique: true)]
 	private $tEST;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    private $sortOrder;
+	#[ORM\Column(type: 'integer', nullable: true)]
+	private $sortOrder;
+
+	/** 总监 */
+	#[ORM\Column(type: 'json', nullable: false)]
+	private $zongJian = [];
+
 
 	public function __construct()
 	{
@@ -544,10 +549,12 @@ class Department implements GedmoNode
 		return $this->tEST;
 	}
 
+
 	public function getSortOrder(): ?int
 	{
 		return $this->sortOrder;
 	}
+
 
 	public function setSortOrder(?int $sortOrder): self
 	{
@@ -556,10 +563,12 @@ class Department implements GedmoNode
 		return $this;
 	}
 
+
 	public function getLft(): ?int
 	{
 		return $this->lft;
 	}
+
 
 	public function setLft(int $lft): self
 	{
@@ -568,10 +577,12 @@ class Department implements GedmoNode
 		return $this;
 	}
 
+
 	public function getRgt(): ?int
 	{
 		return $this->rgt;
 	}
+
 
 	public function setRgt(int $rgt): self
 	{
@@ -580,10 +591,12 @@ class Department implements GedmoNode
 		return $this;
 	}
 
+
 	public function getLvl(): ?int
 	{
 		return $this->lvl;
 	}
+
 
 	public function setLvl(int $lvl): self
 	{
@@ -592,10 +605,12 @@ class Department implements GedmoNode
 		return $this;
 	}
 
+
 	public function getRoot(): ?self
 	{
 		return $this->root;
 	}
+
 
 	public function setRoot(?self $root): self
 	{
@@ -603,6 +618,7 @@ class Department implements GedmoNode
 
 		return $this;
 	}
+
 
 	/**
 	 * Set sibling node
@@ -614,6 +630,7 @@ class Department implements GedmoNode
 		// For now, we'll leave it empty as it's typically handled by Gedmo internally
 	}
 
+
 	/**
 	 * Get sibling node
 	 */
@@ -623,5 +640,25 @@ class Department implements GedmoNode
 		// Implementation depends on your specific tree manipulation needs
 		// For now, we'll return null as it's typically handled by Gedmo internally
 		return null;
+	}
+
+
+	/**
+	 * 总监 Setter
+	 * @return self
+	 */
+	public function setZongJian(array $zongJian): Department
+	{
+		$this->zongJian = $zongJian;
+		return $this;
+	}
+
+
+	/**
+	 * 总监 Getter
+	 */
+	public function getZongJian(): array
+	{
+		return $this->zongJian;
 	}
 }

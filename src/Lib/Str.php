@@ -5,7 +5,11 @@ namespace App\Lib;
 use App\Form\Common\DepartmentType;
 use App\Form\Common\SwitchType;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Doctrine\Inflector\InflectorFactory;
@@ -57,8 +61,26 @@ class Str
             case 'department':
                 $class = DepartmentType::class;
                 break;
+            case 'user':
+                $class = TextType::class;
+                break;
             case 'entity':
                 $class = EntityType::class;
+                break;
+            case 'select':
+                $class = ChoiceType::class;
+                break;
+            case 'email':
+                $class = EmailType::class;
+                break;
+            case 'date':
+                $class = DateType::class;
+                break;
+            case 'decimal':
+                $class = NumberType::class;
+                break;
+            default:
+                $class = TextType::class;
                 break;
         }
 

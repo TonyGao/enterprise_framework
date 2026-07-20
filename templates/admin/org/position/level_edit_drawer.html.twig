@@ -6,7 +6,27 @@
             <div class="ef-drawer-title">
                 <i class="fa-solid fa-edit" style="margin-right: 12px; font-size: 18px;"></i>
                 编辑岗位级别
+                <span style="font-size: 14px; font-weight: 400; margin-left: 8px; opacity: 0.8;">{{ positionLevel.name }}</span>
             </div>
+            {% if is_granted('ROLE_SYS_ADMIN') %}
+                <div style="margin-left: auto; display: flex; gap: 6px; align-items: center; margin-right: 12px;">
+                    {% if designerViewId is defined %}
+                        <a href="{{ path('platform_view_editor', {id: designerViewId}) }}" target="_blank"
+                           style="padding: 4px 10px; background: #f0f7ff; border: 1px solid #cce5ff; border-radius: 14px;
+                                  font-size: 12px; color: #0066cc; text-decoration: none; white-space: nowrap;
+                                  display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-pen-to-square"></i> 视图设计器
+                        </a>
+                    {% elseif designerViewName is defined %}
+                        <button type="button" onclick="autoCreatePositionView(this)"
+                                style="padding: 4px 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 14px;
+                                       font-size: 12px; color: #856404; white-space: nowrap; cursor: pointer;
+                                       display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-link"></i> 新建视图
+                        </button>
+                    {% endif %}
+                </div>
+            {% endif %}
             <div tabindex="-1" role="button" aria-label="Close" class="ef-drawer-close-btn">
                 <span class="ef-icon-hover">
                     <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
@@ -18,10 +38,14 @@
         <div class="ef-drawer-body">
             <div class="ef-drawer-content">
                 {% import 'ui/template/ui.html.twig' as ui %}
-                {{ form_start(form, {'attr': {'id': 'position-level-edit-form', 'class': 'ef-form'}}) }}
-                    {{ form_widget(form) }}
-                    {{ ui.formSubmitButton() }}
-                {{ form_end(form) }}
+                {% if dynamicFormHtml is defined %}
+                    {{ dynamicFormHtml|raw }}
+                {% else %}
+                    {{ form_start(form, {'attr': {'id': 'position-level-edit-form', 'class': 'ef-form'}}) }}
+                        {{ form_widget(form) }}
+                        {{ ui.formSubmitButton() }}
+                    {{ form_end(form) }}
+                {% endif %}
             </div>
         </div>
         <div class="ef-drawer-footer">
@@ -35,37 +59,67 @@
 {{ ui.formValid() }}
 
 <script>
-// 抽屉打开时添加body类，防止页面布局变化
 function addDrawerOpenClass() {
     $('body').addClass('ef-drawer-open');
 }
-
-// 抽屉关闭时移除body类
 function removeDrawerOpenClass() {
     $('body').removeClass('ef-drawer-open');
 }
-
-// 监听抽屉显示事件
 $(document).ready(function() {
-    // 当前抽屉显示时添加类
     addDrawerOpenClass();
-    
-    // 监听关闭按钮点击
     $('.ef-drawer-close-btn').on('click', function() {
         removeDrawerOpenClass();
         $().hideDrawer('{{ drawerId }}');
     });
-    
-    // 监听遮罩层点击
     $('.ef-drawer-mask').on('click', function() {
         removeDrawerOpenClass();
         $().hideDrawer('{{ drawerId }}');
     });
-
-    // 监听取消按钮点击
     $('.cancelDrawer').on('click', function() {
         removeDrawerOpenClass();
         $().hideDrawer('{{ drawerId }}');
     });
 });
+
+function onFormSubmitSuccess() {
+    removeDrawerOpenClass();
+    $().hideDrawer('{{ drawerId }}');
+    alert('岗位级别保存成功！');
+    window.location.reload();
+}
+
+function closeDrawer() {
+    removeDrawerOpenClass();
+    $().hideDrawer('{{ drawerId }}');
+}
+
+{% if designerViewName is defined %}
+function autoCreatePositionView(btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 创建中...';
+    ajax({
+        url: '{{ path('api_platform_view_auto_bind') }}',
+        method: 'POST',
+        contentType: 'application/json',
+        data: {
+            viewName: '{{ designerViewName }}',
+            viewLabel: '{{ designerViewLabel|default(designerViewName) }}',
+            entityFqn: '{{ designerEntityFqn|e('js') }}'
+        },
+        success: function(resp) {
+            var info = resp.data;
+            if (info && info.viewId) {
+                window.open('{{ path('platform_view_editor', {id: '__VIEW_ID__'}) }}'.replace('__VIEW_ID__', info.viewId), '_blank');
+                setTimeout(function() { location.reload(); }, 500);
+            }
+        },
+        error: function(xhr) {
+            var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : '创建失败';
+            alert(msg);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-link"></i> 新建视图';
+        }
+    });
+}
+{% endif %}
 </script>

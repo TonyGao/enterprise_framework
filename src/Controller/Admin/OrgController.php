@@ -55,8 +55,11 @@ class OrgController extends BaseController
    * 集团编辑页面
    */
   #[Route('/admin/org/corporation/edit', name: 'org_corporation_edit')]
-  public function createCorporation(Request $request, EntityManagerInterface $em): Response
-  {
+  public function createCorporation(
+    Request $request,
+    EntityManagerInterface $em,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer
+  ): Response {
     $repo = $em->getRepository(Corporation::class);
     $corporationArr = $repo->findAll();
     $corporation = new Corporation();
@@ -64,6 +67,70 @@ class OrgController extends BaseController
     if ($corporationArr !== []) {
       $corporation = $corporationArr[0];
       $isFirstTime = false;
+    }
+
+    // 检查是否存在内置视图且有 ViewField 配置
+    $view = $em->getRepository(\App\Entity\Platform\View::class)
+      ->findOneBy(['name' => 'company_structure_form', 'builtIn' => true]);
+    $viewWithFields = $view && $view->getFormEntity()
+      && $em->getRepository(\App\Entity\Platform\ViewField::class)
+        ->count(['view' => $view]) > 0;
+
+    if ($viewWithFields) {
+      try {
+        $generalConfig = [];
+        $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+        if (file_exists($configFile)) {
+          $json = file_get_contents($configFile);
+          $generalConfig = json_decode($json, true) ?? [];
+        }
+        $result = $formFieldRenderer->render($view, $corporation, false, [], $generalConfig);
+        $form = $result['form'];
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+          $corporation = $form->getData();
+          $em->persist($corporation);
+          $em->flush();
+
+          if ($isFirstTime) {
+            $company = new Company();
+            $department = new Department();
+          }
+          if (!$isFirstTime) {
+            $repo = $em->getRepository(Company::class);
+            $company = $repo->findOneBy(['lvl' => 0]);
+            $depRepo = $em->getRepository(Department::class);
+            $department = $depRepo->findOneBy(['lvl' => 0]);
+          }
+          $company->setName($corporation->getName());
+          if ($corporation->getAlias() != null) {
+            $company->setAlias($corporation->getAlias());
+          }
+          $em->persist($company);
+          $em->flush();
+          $department->setName($corporation->getName())
+            ->setType('corperations')
+            ->setPath($corporation->getName());
+          if ($corporation->getAlias() != null) {
+            $department->setAlias($corporation->getAlias());
+          }
+          $em->persist($department);
+          $em->flush();
+          return $this->redirectToRoute('org_corporation');
+        }
+
+        $tplVars = [
+          'form' => $result['formView'],
+          'dynamicFormHtml' => $result['html'],
+          'designerViewId' => $view->getId(),
+          'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+          'designerViewEntityId' => $view->getFormEntity()?->getId(),
+        ];
+        return $this->render('admin/org/corporationEdit.html.twig', $tplVars);
+      } catch (\Exception $e) {
+        // fallback to default form
+      }
     }
 
     $form = $this->createForm(CorporationFormType::class, $corporation);
@@ -74,28 +141,22 @@ class OrgController extends BaseController
       $em->persist($corporation);
       $em->flush();
 
-      // 如果是首次创建集团信息，初始化相关的根公司，再初始化相关的根部门
       if ($isFirstTime) {
         $company = new Company();
         $department = new Department();
       }
-
-      // 如果不是第一次更新集团信息，同时更新根公司和根部门
       if (!$isFirstTime) {
         $repo = $em->getRepository(Company::class);
         $company = $repo->findOneBy(['lvl' => 0]);
-
         $depRepo = $em->getRepository(Department::class);
         $department = $depRepo->findOneBy(['lvl' => 0]);
       }
-
       $company->setName($corporation->getName());
       if ($corporation->getAlias() != null) {
         $company->setAlias($corporation->getAlias());
       }
       $em->persist($company);
       $em->flush();
-
       $department->setName($corporation->getName())
         ->setType('corperations')
         ->setPath($corporation->getName());
@@ -108,20 +169,79 @@ class OrgController extends BaseController
       return $this->redirectToRoute('org_corporation');
     }
 
-    return $this->render('admin/org/corporationEdit.html.twig', [
-      'form' => $form->createView(),
-    ]);
+    $tplVars = ['form' => $form->createView()];
+
+    return $this->render('admin/org/corporationEdit.html.twig', $tplVars);
   }
 
   /**
    * 公司编辑页面
    */
   #[Route('/admin/org/company/edit/{id}', name: 'org_company_edit')]
-  public function editCompany(Request $request, EntityManagerInterface $em, string $id): Response
-  {
+  public function editCompany(
+    Request $request,
+    EntityManagerInterface $em,
+    string $id,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer
+  ): Response {
+    // Pre-load all companies before loading the specific entity. This ensures
+    // Company's self-referencing ManyToOne associations (parent) reuse
+    // existing entities from the identity map instead of creating proxies,
+    // avoiding "Entity must be managed" errors from EntityType's IdReader.
+    // The EntityType choice loader would run the same findAll() anyway.
+    $em->getRepository(Company::class)->findAll();
+
     $repo = $em->getRepository(Company::class);
     $company = $repo->findOneBy(['id' => $id]);
     $oldName = $company->getName();
+
+    $view = $em->getRepository(\App\Entity\Platform\View::class)
+      ->findOneBy(['name' => 'company_edit_form', 'builtIn' => true]);
+
+    $viewWithFields = $view && $view->getFormEntity()
+      && $em->getRepository(\App\Entity\Platform\ViewField::class)
+        ->count(['view' => $view]) > 0;
+
+    if ($viewWithFields) {
+      try {
+        $generalConfig = [];
+        $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+        if (file_exists($configFile)) {
+          $json = file_get_contents($configFile);
+          $generalConfig = json_decode($json, true) ?? [];
+        }
+        $result = $formFieldRenderer->render($view, $company, false, [], $generalConfig);
+        $form = $result['form'];
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+          $submitCompany = $form->getData();
+          $em->persist($submitCompany);
+          $em->flush();
+
+          $depRepo = $em->getRepository(Department::class);
+          $department = $depRepo->findOneBy(['name' => $oldName]);
+          if ($department) {
+            $department->setName($submitCompany->getName())
+              ->setAlias($submitCompany->getAlias());
+            $em->persist($department);
+            $em->flush();
+          }
+          return $this->redirectToRoute('org_corporation');
+        }
+
+        $tplVars = [
+          'form' => $result['formView'],
+          'dynamicFormHtml' => $result['html'],
+          'designerViewId' => $view->getId(),
+          'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+          'designerViewEntityId' => $view->getFormEntity() ? $view->getFormEntity()->getId() : null,
+        ];
+        return $this->render('admin/org/companyEdit.html.twig', $tplVars);
+      } catch (\Exception $e) {
+        // fallback to default form
+      }
+    }
 
     $form = $this->createForm(CompanyType::class, $company, [
       'rounded' => true,
@@ -141,13 +261,18 @@ class OrgController extends BaseController
         $em->persist($department);
         $em->flush();
       }
-
       return $this->redirectToRoute('org_corporation');
     }
 
-    return $this->render('admin/org/companyEdit.html.twig', [
-      'form' => $form->createView(),
-    ]);
+    $tplVars = ['form' => $form->createView()];
+
+    if ($view) {
+      $tplVars['designerViewId'] = $view->getId();
+      $tplVars['designerViewLabel'] = $view->getLabel() ?: $view->getName();
+      $tplVars['designerViewEntityId'] = $view->getFormEntity() ? $view->getFormEntity()->getId() : null;
+    }
+
+    return $this->render('admin/org/companyEdit.html.twig', $tplVars);
   }
 
   /**
@@ -378,22 +503,97 @@ class OrgController extends BaseController
    * 新建部门表单
    */
   #[Route('/admin/org/department/new', name: 'org_department_new')]
-  public function createDepartment(Request $request, EntityManagerInterface $em): Response
-  {
-    // 从 GET 请求中获取参数
+  public function createDepartment(
+    Request $request,
+    EntityManagerInterface $em,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer
+  ): Response {
     $parentId = $request->query->get('parent');
 
     $department = new Department();
 
-    // 如果获取到部门 ID，查找对应的上级部门
     if ($parentId) {
       $parentDepartment = $em->getRepository(Department::class)->find($parentId);
       if ($parentDepartment) {
         if ($parentDepartment->getType() === 'department') {
           $department->setParent($parentDepartment);
         }
-        // 预填表单中的上级部门和公司字段
         $department->setCompany($parentDepartment->getCompany());
+      }
+    }
+
+    // 查找视图设计器
+    $view = $em->getRepository(\App\Entity\Platform\View::class)
+      ->findOneBy(['name' => 'department_edit_form', 'builtIn' => true]);
+
+    $viewWithFields = $view && $view->getFormEntity()
+      && $em->getRepository(\App\Entity\Platform\ViewField::class)
+        ->count(['view' => $view]) > 0;
+
+    if ($viewWithFields) {
+      try {
+        $generalConfig = [];
+        $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+        if (file_exists($configFile)) {
+          $json = file_get_contents($configFile);
+          $generalConfig = json_decode($json, true) ?? [];
+        }
+        $result = $formFieldRenderer->render($view, $department, false, [
+          'action' => $this->generateUrl('org_department_new'),
+        ], $generalConfig);
+        $form = $result['form'];
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+          $departmentPost = $form->getData();
+          if ($departmentPost->getType() == 'department' && $departmentPost->getParent() == null) {
+            $company = $departmentPost->getCompany()->getName();
+            $repo = $em->getRepository(Department::class);
+            $parent = $repo->findOneBy(['name' => $company]);
+            $departmentPost->setParent($parent);
+          }
+
+          $pathComponents = [];
+          if ($departmentPost->getParent()) {
+            $pathComponents[] = $departmentPost->getParent()->getPath();
+          }
+          $pathComponents[] = $departmentPost->getName();
+          $departmentPost->setPath(implode('/', $pathComponents));
+
+          $em->persist($departmentPost);
+          $em->flush();
+
+          if ($request->isXmlHttpRequest()) {
+            $parentId = $departmentPost->getParent()
+              ? $departmentPost->getParent()->getId()
+              : ($departmentPost->getCompany() ? $departmentPost->getCompany()->getId() : null);
+
+            $html = $this->renderView('admin/org/department_node.html.twig', [
+              'name' => $departmentPost->getName(),
+              'path' => $departmentPost->getPath(),
+              'id' => $departmentPost->getId()
+            ]);
+
+            return ApiResponse::success([
+              'type' => 'new',
+              'parentId' => $parentId,
+              'html' => $html
+            ], 200, '部门创建成功');
+          }
+
+          $this->addFlash('org.singleDepartment', 'clear');
+          return $this->redirectToRoute('org_department');
+        }
+
+        return $this->render('admin/org/departmentEdit.html.twig', [
+          'form' => $result['formView'],
+          'dynamicFormHtml' => $result['html'],
+          'designerViewId' => $view->getId(),
+          'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+          'designerViewEntityId' => $view->getFormEntity()?->getId(),
+        ]);
+      } catch (\Exception $e) {
+        // fallback to default form below
       }
     }
 
@@ -405,8 +605,6 @@ class OrgController extends BaseController
 
     if ($form->isSubmitted() && $form->isValid()) {
       $departmentPost = $form->getData();
-      // 当新增部门里的类型为部门，并且上级部门为空时，将所属公司同名的部门找出作为上级部门
-      // 即这个部门是在个一级部门
       if ($departmentPost->getType() == 'department' && $departmentPost->getParent() == null) {
         $company = $departmentPost->getCompany()->getName();
         $repo = $em->getRepository(Department::class);
@@ -414,18 +612,11 @@ class OrgController extends BaseController
         $departmentPost->setParent($parent);
       }
 
-      // 设置 path 字段
       $pathComponents = [];
-
-      // 如果有上级部门，添加上级部门的路径
       if ($departmentPost->getParent()) {
         $pathComponents[] = $departmentPost->getParent()->getPath();
       }
-
-      // 添加当前部门的名称
       $pathComponents[] = $departmentPost->getName();
-
-      // 生成完整路径
       $departmentPost->setPath(implode('/', $pathComponents));
 
       $em->persist($departmentPost);
@@ -433,13 +624,13 @@ class OrgController extends BaseController
 
       if ($request->isXmlHttpRequest()) {
           $parentId = $departmentPost->getParent() ? $departmentPost->getParent()->getId() : ($departmentPost->getCompany() ? $departmentPost->getCompany()->getId() : null);
-          
+
           $html = $this->renderView('admin/org/department_node.html.twig', [
               'name' => $departmentPost->getName(),
               'path' => $departmentPost->getPath(),
               'id' => $departmentPost->getId()
           ]);
-          
+
           return ApiResponse::success([
               'type' => 'new',
               'parentId' => $parentId,
@@ -447,13 +638,15 @@ class OrgController extends BaseController
           ], 200, '部门创建成功');
       }
 
-      // 添加 flash 消息，通知前端缓存需要清理
       $this->addFlash('org.singleDepartment', 'clear');
       return $this->redirectToRoute('org_department');
     }
 
-    return $this->render('admin/org/departmentNew.html.twig', [
+    return $this->render('admin/org/departmentEdit.html.twig', [
       'form' => $form->createView(),
+      'designerViewName' => 'department_edit_form',
+      'designerViewLabel' => '部门表单',
+      'designerEntityFqn' => \App\Entity\Organization\Department::class,
     ]);
   }
 
@@ -461,8 +654,60 @@ class OrgController extends BaseController
    * 返回部门表单
    */
   #[Route('/admin/org/department/edit/{id}', name: 'org_department_edit')]
-  public function departmentForm(Request $request, EntityManagerInterface $em, Department $department): Response
-  {
+  public function departmentForm(
+    Request $request,
+    EntityManagerInterface $em,
+    Department $department,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer
+  ): Response {
+    // 查找 department_edit_form 内置视图
+    $view = $em->getRepository(\App\Entity\Platform\View::class)
+      ->findOneBy(['name' => 'department_edit_form', 'builtIn' => true]);
+
+    $viewWithFields = $view && $view->getFormEntity()
+      && $em->getRepository(\App\Entity\Platform\ViewField::class)
+        ->count(['view' => $view]) > 0;
+
+    if ($viewWithFields) {
+      try {
+        $generalConfig = [];
+        $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+        if (file_exists($configFile)) {
+          $json = file_get_contents($configFile);
+          $generalConfig = json_decode($json, true) ?? [];
+        }
+        $result = $formFieldRenderer->render($view, $department, false, [], $generalConfig);
+        $form = $result['form'];
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+          $submitDepartment = $form->getData();
+          $em->persist($submitDepartment);
+          $em->flush();
+
+          if ($request->isXmlHttpRequest()) {
+            return ApiResponse::success([
+              'type' => 'edit',
+              'id' => $submitDepartment->getId(),
+              'name' => $submitDepartment->getName()
+            ], 200, '部门修改成功');
+          }
+
+          return $this->redirectToRoute('org_department');
+        }
+
+        return $this->render('admin/org/departmentEdit.html.twig', [
+          'form' => $result['formView'],
+          'dynamicFormHtml' => $result['html'],
+          'designerViewId' => $view->getId(),
+          'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+          'designerViewEntityId' => $view->getFormEntity()?->getId(),
+        ]);
+      } catch (\Exception $e) {
+        // fallback to default form below
+      }
+    }
+
     $form = $this->createForm(OrgDepartmentType::class, $department, [
       'action' => $this->generateUrl('org_department_edit', ['id' => $department->getId()])
     ]);
@@ -484,9 +729,18 @@ class OrgController extends BaseController
       return $this->redirectToRoute('org_department');
     }
 
-    return $this->render('admin/org/departmentEdit.html.twig', [
-      'form' => $form->createView(),
-    ]);
+    return $this->render('admin/org/departmentEdit.html.twig', array_merge(
+      ['form' => $form->createView()],
+      $view ? [
+        'designerViewId' => $view->getId(),
+        'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+        'designerViewEntityId' => $view->getFormEntity()?->getId(),
+      ] : [
+        'designerViewName' => 'department_edit_form',
+        'designerViewLabel' => '部门表单',
+        'designerEntityFqn' => \App\Entity\Organization\Department::class,
+      ]
+    ));
   }
 
 
@@ -529,11 +783,14 @@ class OrgController extends BaseController
    * 新建岗位
    */
   #[Route('/admin/org/position/new', name: 'org_position_new')]
-  public function createPosition(Request $request, EntityManagerInterface $em, DataGridService $dataGridService): Response
-  {
+  public function createPosition(
+    Request $request,
+    EntityManagerInterface $em,
+    DataGridService $dataGridService,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer
+  ): Response {
     $position = new Position();
 
-    // 从请求中获取部门ID参数
     $departmentId = $request->query->get('department');
     if ($departmentId) {
       $department = $em->getRepository(Department::class)->find($departmentId);
@@ -542,16 +799,62 @@ class OrgController extends BaseController
       }
     }
 
-    // 从请求中获取上级岗位ID参数
     $parentId = $request->query->get('parent');
     if ($parentId) {
       $parent = $em->getRepository(Position::class)->find($parentId);
       if ($parent) {
         $position->setParent($parent);
-        // 如果有上级岗位，默认使用上级岗位的部门
         if (!$position->getDepartment() && $parent->getDepartment()) {
           $position->setDepartment($parent->getDepartment());
         }
+      }
+    }
+
+    // 查找视图设计器
+    $view = $em->getRepository(\App\Entity\Platform\View::class)
+      ->findOneBy(['name' => 'position_edit_form', 'builtIn' => true]);
+
+    $viewWithFields = $view && $view->getFormEntity()
+      && $em->getRepository(\App\Entity\Platform\ViewField::class)
+        ->count(['view' => $view]) > 0;
+
+    if ($viewWithFields) {
+      try {
+        $generalConfig = [];
+        $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+        if (file_exists($configFile)) {
+          $json = file_get_contents($configFile);
+          $generalConfig = json_decode($json, true) ?? [];
+        }
+        $result = $formFieldRenderer->render($view, $position, false, [
+          'action' => $this->generateUrl('org_position_new'),
+        ], $generalConfig);
+        $form = $result['form'];
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+          $position = $form->getData();
+          $em->persist($position);
+          $em->flush();
+          $dataGridService->clearEntityCache(Position::class);
+
+          if ($request->isXmlHttpRequest()) {
+            return ApiResponse::success([], 200, '岗位创建成功');
+          }
+
+          $this->addFlash('success', '岗位创建成功');
+          return $this->redirectToRoute('org_position');
+        }
+
+        return $this->render('admin/org/position/form.html.twig', [
+          'form' => $result['formView'],
+          'dynamicFormHtml' => $result['html'],
+          'designerViewId' => $view->getId(),
+          'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+          'title' => '新建岗位',
+        ]);
+      } catch (\Exception $e) {
+        // fallback to default form below
       }
     }
 
@@ -581,12 +884,65 @@ class OrgController extends BaseController
    * 编辑岗位
    */
   #[Route('/admin/org/position/edit/{id}', name: 'org_position_edit')]
-  public function editPosition(Request $request, EntityManagerInterface $em, string $id, DataGridService $dataGridService): Response
-  {
+  public function editPosition(
+    Request $request,
+    EntityManagerInterface $em,
+    string $id,
+    DataGridService $dataGridService,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer
+  ): Response {
     $position = $em->getRepository(Position::class)->find($id);
 
     if (!$position) {
       throw $this->createNotFoundException('岗位不存在');
+    }
+
+    // 查找视图设计器
+    $view = $em->getRepository(\App\Entity\Platform\View::class)
+      ->findOneBy(['name' => 'position_edit_form', 'builtIn' => true]);
+
+    $viewWithFields = $view && $view->getFormEntity()
+      && $em->getRepository(\App\Entity\Platform\ViewField::class)
+        ->count(['view' => $view]) > 0;
+
+    if ($viewWithFields) {
+      try {
+        $generalConfig = [];
+        $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+        if (file_exists($configFile)) {
+          $json = file_get_contents($configFile);
+          $generalConfig = json_decode($json, true) ?? [];
+        }
+        $result = $formFieldRenderer->render($view, $position, false, [
+          'action' => $this->generateUrl('org_position_edit', ['id' => $id]),
+        ], $generalConfig);
+        $form = $result['form'];
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+          $position = $form->getData();
+          $em->flush();
+          $dataGridService->clearEntityCache(Position::class);
+
+          if ($request->isXmlHttpRequest()) {
+            return ApiResponse::success([], 200, '岗位更新成功');
+          }
+
+          $this->addFlash('success', '岗位更新成功');
+          return $this->redirectToRoute('org_position');
+        }
+
+        return $this->render('admin/org/position/form.html.twig', [
+          'form' => $result['formView'],
+          'dynamicFormHtml' => $result['html'],
+          'designerViewId' => $view->getId(),
+          'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+          'title' => '编辑岗位',
+          'position' => $position,
+        ]);
+      } catch (\Exception $e) {
+        // fallback to default form below
+      }
     }
 
     $form = $this->createForm(PositionType::class, $position, [
@@ -770,9 +1126,62 @@ class OrgController extends BaseController
    * 新建岗位级别
    */
   #[Route('/admin/org/position/level/new', name: 'org_position_level_new')]
-  public function createPositionLevel(Request $request, EntityManagerInterface $em, DataGridService $dataGridService): Response
-  {
+  public function createPositionLevel(
+    Request $request,
+    EntityManagerInterface $em,
+    DataGridService $dataGridService,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer
+  ): Response {
     $positionLevel = new PositionLevel();
+
+    // 查找视图设计器
+    $view = $em->getRepository(\App\Entity\Platform\View::class)
+      ->findOneBy(['name' => 'position_level_edit_form', 'builtIn' => true]);
+
+    $viewWithFields = $view && $view->getFormEntity()
+      && $em->getRepository(\App\Entity\Platform\ViewField::class)
+        ->count(['view' => $view]) > 0;
+
+    if ($viewWithFields) {
+      try {
+        $generalConfig = [];
+        $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+        if (file_exists($configFile)) {
+          $json = file_get_contents($configFile);
+          $generalConfig = json_decode($json, true) ?? [];
+        }
+        $result = $formFieldRenderer->render($view, $positionLevel, false, [
+          'action' => $this->generateUrl('org_position_level_new'),
+        ], $generalConfig);
+        $form = $result['form'];
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+          $positionLevel = $form->getData();
+          $em->persist($positionLevel);
+          $em->flush();
+          $dataGridService->clearEntityCache(PositionLevel::class);
+
+          if ($request->isXmlHttpRequest()) {
+            return ApiResponse::success([], 200, '岗位级别创建成功');
+          }
+
+          $this->addFlash('success', '岗位级别创建成功');
+          return $this->redirectToRoute('org_position_level');
+        }
+
+        return $this->render('admin/org/position/level_form.html.twig', [
+          'form' => $result['formView'],
+          'dynamicFormHtml' => $result['html'],
+          'designerViewId' => $view->getId(),
+          'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+          'title' => '新建岗位级别',
+        ]);
+      } catch (\Exception $e) {
+        // fallback to default form below
+      }
+    }
+
     $form = $this->createForm(PositionLevelType::class, $positionLevel, [
       'action' => $this->generateUrl('org_position_level_new')
     ]);
@@ -788,7 +1197,7 @@ class OrgController extends BaseController
       $this->addFlash('success', '岗位级别创建成功');
       return $this->redirectToRoute('org_position_level');
     }
-    
+
     return $this->render('admin/org/position/level_form.html.twig', [
       'form' => $form->createView(),
       'title' => '新建岗位级别'
@@ -799,12 +1208,65 @@ class OrgController extends BaseController
    * 编辑岗位级别
    */
   #[Route('/admin/org/position/level/edit/{id}', name: 'org_position_level_edit')]
-  public function editPositionLevel(Request $request, EntityManagerInterface $em, string $id, DataGridService $dataGridService): Response
-  {
+  public function editPositionLevel(
+    Request $request,
+    EntityManagerInterface $em,
+    string $id,
+    DataGridService $dataGridService,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer
+  ): Response {
     $positionLevel = $em->getRepository(PositionLevel::class)->find($id);
 
     if (!$positionLevel) {
       throw $this->createNotFoundException('岗位级别不存在');
+    }
+
+    // 查找视图设计器
+    $view = $em->getRepository(\App\Entity\Platform\View::class)
+      ->findOneBy(['name' => 'position_level_edit_form', 'builtIn' => true]);
+
+    $viewWithFields = $view && $view->getFormEntity()
+      && $em->getRepository(\App\Entity\Platform\ViewField::class)
+        ->count(['view' => $view]) > 0;
+
+    if ($viewWithFields) {
+      try {
+        $generalConfig = [];
+        $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+        if (file_exists($configFile)) {
+          $json = file_get_contents($configFile);
+          $generalConfig = json_decode($json, true) ?? [];
+        }
+        $result = $formFieldRenderer->render($view, $positionLevel, false, [
+          'action' => $this->generateUrl('org_position_level_edit', ['id' => $id]),
+        ], $generalConfig);
+        $form = $result['form'];
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+          $positionLevel = $form->getData();
+          $em->flush();
+          $dataGridService->clearEntityCache(PositionLevel::class);
+
+          if ($request->isXmlHttpRequest()) {
+            return ApiResponse::success([], 200, '岗位级别更新成功');
+          }
+
+          $this->addFlash('success', '岗位级别更新成功');
+          return $this->redirectToRoute('org_position_level');
+        }
+
+        return $this->render('admin/org/position/level_form.html.twig', [
+          'form' => $result['formView'],
+          'dynamicFormHtml' => $result['html'],
+          'designerViewId' => $view->getId(),
+          'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+          'title' => '编辑岗位级别',
+          'positionLevel' => $positionLevel,
+        ]);
+      } catch (\Exception $e) {
+        // fallback to default form below
+      }
     }
 
     $form = $this->createForm(PositionLevelType::class, $positionLevel, [
@@ -830,48 +1292,123 @@ class OrgController extends BaseController
    * 返回岗位级别查看/编辑/新增的drawer HTML
    */
   #[Route('/admin/org/position/level/drawer', name: 'api_org_position_level_drawer', methods: ['POST'])]
-  public function positionLevelDrawer(Request $request, EntityManagerInterface $em): Response
-  {
+  public function positionLevelDrawer(
+    Request $request,
+    EntityManagerInterface $em,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer
+  ): Response {
     $payload = $request->toArray();
     $levelId = $payload['levelId'] ?? null;
     $action = $payload['action'] ?? 'view'; // view、edit 或 create
-    
+
+    // 查找视图设计器
+    $view = $em->getRepository(\App\Entity\Platform\View::class)
+      ->findOneBy(['name' => 'position_level_edit_form', 'builtIn' => true]);
+
+    $viewWithFields = $view && $view->getFormEntity()
+      && $em->getRepository(\App\Entity\Platform\ViewField::class)
+        ->count(['view' => $view]) > 0;
+
+    $designerVariables = [];
+    if ($view) {
+      $designerVariables = [
+        'designerViewId' => $view->getId(),
+        'designerViewName' => 'position_level_edit_form',
+        'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+        'designerViewEntityId' => $view->getFormEntity()?->getId(),
+        'designerEntityFqn' => \App\Entity\Organization\PositionLevel::class,
+      ];
+    } elseif ($this->isGranted('ROLE_SYS_ADMIN')) {
+      $designerVariables = [
+        'designerViewName' => 'position_level_edit_form',
+        'designerViewLabel' => '岗位级别表单',
+        'designerEntityFqn' => \App\Entity\Organization\PositionLevel::class,
+      ];
+    }
+
     // 如果是创建操作
     if ($action === 'create') {
       $positionLevel = new PositionLevel();
+
+      if ($viewWithFields) {
+        try {
+          $generalConfig = [];
+          $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+          if (file_exists($configFile)) {
+            $json = file_get_contents($configFile);
+            $generalConfig = json_decode($json, true) ?? [];
+          }
+          $result = $formFieldRenderer->render($view, $positionLevel, false, [
+            'action' => $this->generateUrl('org_position_level_new'),
+          ], $generalConfig);
+
+          return $this->render('admin/org/position/level_create_drawer.html.twig', array_merge([
+            'positionLevel' => $positionLevel,
+            'form' => $result['formView'],
+            'dynamicFormHtml' => $result['html'],
+            'drawerId' => 'position-level-drawer-new',
+          ], $designerVariables));
+        } catch (\Exception $e) {
+          // fallback to standard form below
+        }
+      }
+
       $form = $this->createForm(PositionLevelType::class, $positionLevel, [
         'action' => $this->generateUrl('org_position_level_new')
       ]);
-      
-      return $this->render('admin/org/position/level_create_drawer.html.twig', [
+
+      return $this->render('admin/org/position/level_create_drawer.html.twig', array_merge([
         'positionLevel' => $positionLevel,
         'form' => $form->createView(),
         'drawerId' => 'position-level-drawer-new'
-      ]);
+      ], $designerVariables));
     }
-    
+
     if (!$levelId) {
       throw $this->createNotFoundException('岗位级别ID不能为空');
     }
-    
+
     $positionLevel = $em->getRepository(PositionLevel::class)->find($levelId);
-    
+
     if (!$positionLevel) {
       throw $this->createNotFoundException('岗位级别不存在');
     }
-    
+
     if ($action === 'edit') {
+      if ($viewWithFields) {
+        try {
+          $generalConfig = [];
+          $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+          if (file_exists($configFile)) {
+            $json = file_get_contents($configFile);
+            $generalConfig = json_decode($json, true) ?? [];
+          }
+          $result = $formFieldRenderer->render($view, $positionLevel, false, [
+            'action' => $this->generateUrl('org_position_level_edit', ['id' => $levelId]),
+          ], $generalConfig);
+
+          return $this->render('admin/org/position/level_edit_drawer.html.twig', array_merge([
+            'positionLevel' => $positionLevel,
+            'form' => $result['formView'],
+            'dynamicFormHtml' => $result['html'],
+            'drawerId' => 'position-level-drawer-' . $levelId,
+          ], $designerVariables));
+        } catch (\Exception $e) {
+          // fallback to standard form below
+        }
+      }
+
       $form = $this->createForm(PositionLevelType::class, $positionLevel, [
         'action' => $this->generateUrl('org_position_level_edit', ['id' => $levelId])
       ]);
-      
-      return $this->render('admin/org/position/level_edit_drawer.html.twig', [
+
+      return $this->render('admin/org/position/level_edit_drawer.html.twig', array_merge([
         'positionLevel' => $positionLevel,
         'form' => $form->createView(),
         'drawerId' => 'position-level-drawer-' . $levelId
-      ]);
+      ], $designerVariables));
     }
-    
+
     return $this->render('admin/org/position/level_view_drawer.html.twig', [
       'positionLevel' => $positionLevel,
       'drawerId' => 'position-level-drawer-' . $levelId
@@ -924,57 +1461,201 @@ class OrgController extends BaseController
    * 返回岗位查看/编辑/新增的drawer HTML
    */
   #[Route('/admin/org/position/drawer', name: 'api_org_position_drawer', methods: ['POST'])]
-  public function positionDrawer(Request $request, EntityManagerInterface $em): Response
-  {
+  public function positionDrawer(
+    Request $request,
+    EntityManagerInterface $em,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer
+  ): Response {
     $payload = $request->toArray();
     $positionId = $payload['positionId'] ?? null;
     $action = $payload['action'] ?? 'view'; // view、edit 或 create
-    
+
+    // 查找视图设计器
+    $view = $em->getRepository(\App\Entity\Platform\View::class)
+      ->findOneBy(['name' => 'position_edit_form', 'builtIn' => true]);
+
+    $viewWithFields = $view && $view->getFormEntity()
+      && $em->getRepository(\App\Entity\Platform\ViewField::class)
+        ->count(['view' => $view]) > 0;
+
+    $designerVariables = [];
+    if ($view) {
+      $designerVariables = [
+        'designerViewId' => $view->getId(),
+        'designerViewName' => 'position_edit_form',
+        'designerViewLabel' => $view->getLabel() ?: $view->getName(),
+        'designerViewEntityId' => $view->getFormEntity()?->getId(),
+        'designerEntityFqn' => \App\Entity\Organization\Position::class,
+      ];
+    } elseif ($this->isGranted('ROLE_SYS_ADMIN')) {
+      $designerVariables = [
+        'designerViewName' => 'position_edit_form',
+        'designerViewLabel' => '岗位表单',
+        'designerEntityFqn' => \App\Entity\Organization\Position::class,
+      ];
+    }
+
     // 如果是创建操作，不需要positionId
     if ($action === 'create') {
       $position = new Position();
+
+      if ($viewWithFields) {
+        try {
+          $generalConfig = [];
+          $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+          if (file_exists($configFile)) {
+            $json = file_get_contents($configFile);
+            $generalConfig = json_decode($json, true) ?? [];
+          }
+          $result = $formFieldRenderer->render($view, $position, false, [
+            'action' => $this->generateUrl('org_position_new'),
+          ], $generalConfig);
+
+          return $this->render('admin/org/position/create_drawer.html.twig', array_merge([
+            'position' => $position,
+            'form' => $result['formView'],
+            'dynamicFormHtml' => $result['html'],
+            'drawerId' => 'position-drawer-new',
+          ], $designerVariables));
+        } catch (\Exception $e) {
+          // fallback to standard form below
+        }
+      }
+
       $form = $this->createForm(PositionType::class, $position, [
         'action' => $this->generateUrl('org_position_new')
       ]);
-      
-      return $this->render('admin/org/position/create_drawer.html.twig', [
+
+      return $this->render('admin/org/position/create_drawer.html.twig', array_merge([
         'position' => $position,
         'form' => $form->createView(),
         'drawerId' => 'position-drawer-new'
-      ]);
+      ], $designerVariables));
     }
-    
+
     if (!$positionId) {
       throw $this->createNotFoundException('岗位ID不能为空');
     }
-    
+
     $position = $em->getRepository(Position::class)->find($positionId);
-    
+
     if (!$position) {
       throw $this->createNotFoundException('岗位不存在');
     }
-    
+
     // 获取该岗位下的员工
     $employees = $em->getRepository('App\Entity\Organization\Employee')->findBy(['position' => $position]);
-    
+
     if ($action === 'edit') {
+      if ($viewWithFields) {
+        try {
+          $generalConfig = [];
+          $configFile = $this->getParameter('kernel.project_dir') . '/var/data/view_editor_config.json';
+          if (file_exists($configFile)) {
+            $json = file_get_contents($configFile);
+            $generalConfig = json_decode($json, true) ?? [];
+          }
+          $result = $formFieldRenderer->render($view, $position, false, [
+            'action' => $this->generateUrl('org_position_edit', ['id' => $positionId]),
+          ], $generalConfig);
+
+          return $this->render('admin/org/position/edit_drawer.html.twig', array_merge([
+            'position' => $position,
+            'employees' => $employees,
+            'form' => $result['formView'],
+            'dynamicFormHtml' => $result['html'],
+            'drawerId' => 'position-drawer-' . $positionId,
+          ], $designerVariables));
+        } catch (\Exception $e) {
+          // fallback to standard form below
+        }
+      }
+
       $form = $this->createForm(PositionType::class, $position, [
         'action' => $this->generateUrl('org_position_edit', ['id' => $positionId])
       ]);
-      
-      return $this->render('admin/org/position/edit_drawer.html.twig', [
+
+      return $this->render('admin/org/position/edit_drawer.html.twig', array_merge([
         'position' => $position,
         'form' => $form->createView(),
         'employees' => $employees,
         'drawerId' => 'position-drawer-' . $positionId
-      ]);
+      ], $designerVariables));
     }
-    
-    return $this->render('admin/org/position/view_drawer.html.twig', [
+
+    return $this->render('admin/org/position/view_drawer.html.twig', array_merge([
       'position' => $position,
       'employees' => $employees,
       'drawerId' => 'position-drawer-' . $positionId
-    ]);
+    ], $designerVariables));
+  }
+
+  #[Route('/admin/org/user/searchByKey', name: 'org_user_search_by_key', methods: ['POST'])]
+  public function searchUserByKey(Request $request, EntityManagerInterface $em): ApiResponse
+  {
+    $payload = $request->toArray();
+    $key = $payload['key'] ?? '';
+    $companyId = $payload['companyId'] ?? null;
+
+    if (empty($key)) {
+      return ApiResponse::success(json_encode([]), '200', 'success');
+    }
+
+    $repo = $em->getRepository('App\Entity\Organization\Employee');
+    $depRepo = $em->getRepository(Department::class);
+
+    $qb = $repo->createQueryBuilder('e')
+      ->leftJoin('e.department', 'd')
+      ->where('e.employmentStatus = :status')
+      ->andWhere('(e.isSystem = false OR e.isSystem IS NULL)')
+      ->setParameter('status', 'active');
+
+    if ($companyId) {
+      $qb->andWhere('e.company = :companyId')
+         ->setParameter('companyId', $companyId);
+    }
+
+    $qb->andWhere(
+      $qb->expr()->orX(
+        'e.name LIKE :key',
+        'e.employeeNo LIKE :key',
+        'e.englishName LIKE :key'
+      )
+    )->setParameter('key', '%' . $key . '%')
+     ->orderBy('e.name', 'ASC')
+     ->setMaxResults(20);
+
+    $employees = $qb->getQuery()->getResult();
+
+    $result = [];
+    foreach ($employees as $emp) {
+      $deptPath = '';
+      if ($emp->getDepartment()) {
+        $path = $depRepo->getPath($emp->getDepartment());
+        $pathNames = [];
+        foreach ($path as $pathItem) {
+          $itemType = $pathItem->getType();
+          if ($itemType === 'corperations') continue;
+          $pathNames[] = $itemType === 'company' ? ($pathItem->getAlias() ?: $pathItem->getName()) : $pathItem->getName();
+        }
+        $deptPath = implode('/', $pathNames);
+      }
+
+      $displayName = $emp->getName();
+      $extra = [];
+      if ($deptPath) $extra[] = $deptPath;
+      if ($emp->getEmployeeNo()) $extra[] = $emp->getEmployeeNo();
+      if (!empty($extra)) {
+        $displayName .= '（' . implode(' · ', $extra) . '）';
+      }
+
+      $result[] = [
+        'id' => (string) $emp->getId(),
+        'displayName' => $displayName,
+      ];
+    }
+
+    return ApiResponse::success(json_encode($result), '200', 'success');
   }
 
   /**

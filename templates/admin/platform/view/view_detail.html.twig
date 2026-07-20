@@ -1,0 +1,189 @@
+<div class="view-detail-container">
+  <div class="view-detail-header">
+    <div class="view-detail-title-row">
+      <div class="view-detail-icon"><i class="fa-regular fa-eye"></i></div>
+      <div class="view-detail-title">
+        <h2>{{ view.label|default(view.name) }}</h2>
+        <span class="view-detail-meta">{{ view.name }}</span>
+        {% if view.builtIn %}
+          <span class="ef-tag ef-tag-blue ef-tag-small" style="margin-left: 8px;">内置</span>
+        {% else %}
+          <span class="ef-tag ef-tag-default ef-tag-small" style="margin-left: 8px;">自定义</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="view-detail-info-cards">
+    <div class="view-detail-card">
+      <div class="view-detail-card-header">
+        <i class="fa-solid fa-info-circle"></i>
+        基本信息
+      </div>
+      <div class="view-detail-card-body">
+        <table class="view-detail-info-table">
+          <tr>
+            <td class="info-label">名称</td>
+            <td class="info-value"><code>{{ view.name }}</code></td>
+          </tr>
+          <tr>
+            <td class="info-label">标签</td>
+            <td class="info-value">{{ view.label|default('-') }}</td>
+          </tr>
+          <tr>
+            <td class="info-label">类型</td>
+            <td class="info-value">{{ view.type }}</td>
+          </tr>
+          <tr>
+            <td class="info-label">模板</td>
+            <td class="info-value">{{ view.template|default('-') }}</td>
+          </tr>
+          <tr>
+            <td class="info-label">路径</td>
+            <td class="info-value"><code>{{ view.path|default('-') }}</code></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    {% if view.formEntity %}
+    <div class="view-detail-card">
+      <div class="view-detail-card-header">
+        <i class="fa-solid fa-database"></i>
+        关联实体
+      </div>
+      <div class="view-detail-card-body">
+        <table class="view-detail-info-table">
+          <tr>
+            <td class="info-label">实体</td>
+            <td class="info-value">{{ view.formEntity.name }}</td>
+          </tr>
+          <tr>
+            <td class="info-label">FQN</td>
+            <td class="info-value"><code>{{ view.formEntity.fqn }}</code></td>
+          </tr>
+          <tr>
+            <td class="info-label">字段数</td>
+            <td class="info-value">{{ fields|length }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    {% set sc = view.sectionConfig %}
+    {% if sc is not empty %}
+    <div class="view-detail-card">
+      <div class="view-detail-card-header">
+        <i class="fa-solid fa-layout"></i>
+        布局配置
+      </div>
+      <div class="view-detail-card-body">
+        <table class="view-detail-info-table">
+          <tr>
+            <td class="info-label">内容宽度</td>
+            <td class="info-value">{{ sc.contentWidth|default('100%') }}</td>
+          </tr>
+          {% if sc.contentWidth is defined and sc.contentWidth == 'boxed' %}
+          <tr>
+            <td class="info-label">定宽</td>
+            <td class="info-value">{{ sc.width|default('auto') }}{{ sc.unit|default('px') }}</td>
+          </tr>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+
+  {% if fields is not empty %}
+  <div class="view-detail-section">
+    <div class="view-detail-section-header">
+      <i class="fa-solid fa-list"></i>
+      字段列表
+      <span class="view-detail-count">{{ fields|length }}</span>
+    </div>
+    <table class="ef-table view-field-table">
+      <thead>
+        <tr>
+          <th style="width: 40px;">#</th>
+          <th>字段名</th>
+          <th>类型</th>
+          <th>标签</th>
+          <th>必填</th>
+          <th style="width: 180px;">配置摘要</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for field in fields %}
+        {% set cfg = field.config %}
+        <tr>
+          <td class="text-muted">{{ loop.index }}</td>
+          <td><code>{{ field.fieldName }}</code></td>
+          <td>
+            {% set typeIcons = {
+              'string': 'fa-solid fa-font',
+              'text': 'fa-solid fa-paragraph',
+              'integer': 'fa-solid fa-hashtag',
+              'boolean': 'fa-solid fa-toggle-on',
+              'entity': 'fa-solid fa-link',
+              'department': 'fa-solid fa-sitemap',
+              'user': 'fa-solid fa-user',
+            } %}
+            <span class="field-type-badge">
+              <i class="{{ typeIcons[field.fieldType]|default('fa-solid fa-question') }}"></i>
+              {{ field.fieldType }}
+            </span>
+          </td>
+          <td>{{ cfg.label|default(field.fieldLabel)|default('-') }}</td>
+          <td>
+            {% if cfg.required|default(false) %}
+              <span class="ef-tag ef-tag-red ef-tag-small">必填</span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td>
+            {% set summary = [] %}
+            {% if cfg.height is defined %}
+              {% set summary = summary|merge([field.fieldType == 'text' ? cfg.height ~ '行' : cfg.height ~ 'px']) %}
+            {% endif %}
+            {% if cfg.rounded|default(true) == false %}
+              {% set summary = summary|merge(['方角']) %}
+            {% endif %}
+            {% if cfg.regularBg is defined and cfg.regularBg is not empty and cfg.regularBg|upper != '#FFFFFF' %}
+              {% set summary = summary|merge(['底色']) %}
+            {% endif %}
+            {% if cfg.placeholder is defined and cfg.placeholder is not empty %}
+              {% set summary = summary|merge(['占位']) %}
+            {% endif %}
+            <span class="config-summary">{{ summary|default(['默认'])|join(', ') }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="view-detail-empty">
+    <i class="fa-solid fa-inbox"></i>
+    <p>暂无字段配置</p>
+    {% if view.formEntity %}
+    <p class="text-muted">该视图已关联实体，但尚未绑定字段。请在视图中使用"绑定视图设计器"功能。</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="view-detail-actions">
+    <a href="{{ path('platform_view_editor', {id: view.id}) }}" target="_blank" class="btn primary medium">
+      <i class="fa-solid fa-pen-to-square"></i>
+      打开编辑器
+    </a>
+    {% if is_granted('ROLE_SYS_ADMIN') %}
+    <button type="button" class="btn secondary medium" onclick="loadEditView('{{ view.id }}')">
+      <i class="fa-solid fa-edit"></i>
+      编辑视图
+    </button>
+    {% endif %}
+  </div>
+</div>

@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('lib/prism/prism.css') }}">
     <link rel="stylesheet" href="{{ asset('link.css', 'ui') }}">
     <style>
         body {
@@ -323,7 +324,7 @@
                         <a href="#" class="ef-link">普通链接</a>
                         <a class="ef-link disabled">禁用链接</a>
                     </div>
-                    <div class="docs-code">&lt;a href="#" class="ef-link"&gt;普通链接&lt;/a&gt;</div>
+                    <pre class="docs-code"><code class="language-html">&lt;a href="#" class="ef-link"&gt;普通链接&lt;/a&gt;</code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -332,7 +333,7 @@
                         <a href="#" class="ef-link success">成功链接</a>
                         <a href="#" class="ef-link success disabled">成功禁用</a>
                     </div>
-                    <div class="docs-code">&lt;a href="#" class="ef-link success"&gt;成功链接&lt;/a&gt;</div>
+                    <pre class="docs-code"><code class="language-html">&lt;a href="#" class="ef-link success"&gt;成功链接&lt;/a&gt;</code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -341,7 +342,7 @@
                         <a href="#" class="ef-link warning">警告链接</a>
                         <a href="#" class="ef-link warning disabled">警告禁用</a>
                     </div>
-                    <div class="docs-code">&lt;a href="#" class="ef-link warning"&gt;警告链接&lt;/a&gt;</div>
+                    <pre class="docs-code"><code class="language-html">&lt;a href="#" class="ef-link warning"&gt;警告链接&lt;/a&gt;</code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -350,7 +351,7 @@
                         <a href="#" class="ef-link danger">危险链接</a>
                         <a href="#" class="ef-link danger disabled">危险禁用</a>
                     </div>
-                    <div class="docs-code">&lt;a href="#" class="ef-link danger"&gt;危险链接&lt;/a&gt;</div>
+                    <pre class="docs-code"><code class="language-html">&lt;a href="#" class="ef-link danger"&gt;危险链接&lt;/a&gt;</code></pre>
                 </div>
             </div>
         </div>
@@ -371,7 +372,7 @@
                     <a href="#" class="ef-link warning icon"><i class="fa-solid fa-exclamation-triangle"></i>警告</a>
                     <a href="#" class="ef-link danger icon"><i class="fa-solid fa-trash-can"></i>删除</a>
                 </div>
-                <div class="docs-code">&lt;a href="#" class="ef-link icon"&gt;&lt;i class="fa-solid fa-link"&gt;&lt;/i&gt;链接&lt;/a&gt;</div>
+                <pre class="docs-code"><code class="language-html">&lt;a href="#" class="ef-link icon"&gt;&lt;i class="fa-solid fa-link"&gt;&lt;/i&gt;链接&lt;/a&gt;</code></pre>
             </div>
         </div>
     </section>
@@ -417,4 +418,5 @@
         </div>
     </section>
 </div>
+<script src="{{ asset('lib/prism/prism.js') }}"></script>
 {% endblock %}

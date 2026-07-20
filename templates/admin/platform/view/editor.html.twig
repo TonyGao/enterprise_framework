@@ -33,7 +33,7 @@
 								<i class="fa fa-times" style="font-size: 1em;"></i>
 							</button>
 						</div>
-						<div class="section-content ui-droppable"></div>
+						<div class="section-content ui-droppable">{% if initialCanvasHtml is defined %}{{ initialCanvasHtml|raw }}{% endif %}</div>
 					</div>
 				</div>
 				
@@ -284,4 +284,14 @@
 			</div>
 		</div>
 	</div>
+{% if sectionConfig is defined %}
+<script>
+  window.__SECTION_CONFIG__ = {{ sectionConfig|json_encode|raw }};
+</script>
+{% endif %}
+{% if generalConfig is defined %}
+<script>
+  window.__GENERAL_CONFIG__ = {{ generalConfig|json_encode|raw }};
+</script>
+{% endif %}
 {% endblock %}

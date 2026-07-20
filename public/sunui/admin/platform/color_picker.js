@@ -17,15 +17,19 @@ class ColorPicker {
       : options.container;
     this.onChange = options.onChange || function() {};
     this.onClose = options.onClose || function() {};
+    this.themeColor = options.themeColor || '';
     this.defaultColor = options.defaultColor || '#000000';
     this.currentColor = this.defaultColor;
+    const parsed = this._parseColor(this.defaultColor);
+    this.currentRgb = parsed ? { r: parsed.r, g: parsed.g, b: parsed.b } : { r: 0, g: 0, b: 0 };
+    this.currentAlpha = parsed ? parsed.a : 1;
     this.isOpen = false;
     this.element = null;
     
     // 标准web颜色
     this.standardColors = [
       // 第一行：基础颜色
-      '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
+      '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3',
       // 第二行：红色系
       '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff',
       // 第三行：浅色系
@@ -41,6 +45,31 @@ class ColorPicker {
     ];
     
     this.init();
+  }
+
+  _hexToRgb(hex) {
+    const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+    if (!m) return { r: 0, g: 0, b: 0 };
+    return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+  }
+
+  _resolveColor() {
+    if (this.currentAlpha >= 1) {
+      const r = this.currentRgb.r.toString(16).padStart(2, '0');
+      const g = this.currentRgb.g.toString(16).padStart(2, '0');
+      const b = this.currentRgb.b.toString(16).padStart(2, '0');
+      return '#' + r + g + b;
+    }
+    return 'rgba(' + this.currentRgb.r + ',' + this.currentRgb.g + ',' + this.currentRgb.b + ',' + this.currentAlpha + ')';
+  }
+
+  _updatePreview() {
+    const color = this._resolveColor();
+    this.colorPreview.style.background = 'linear-gradient(' + color + ', ' + color + '), repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 10px 10px';
+    this.colorInput.value = '#' + this.currentRgb.r.toString(16).padStart(2, '0') + this.currentRgb.g.toString(16).padStart(2, '0') + this.currentRgb.b.toString(16).padStart(2, '0');
+    this.hexInput.value = color;
+    this.opacitySlider.value = Math.round(this.currentAlpha * 100);
+    this.opacityText.value = Math.round(this.currentAlpha * 100) + '%';
   }
   
   /**
@@ -75,6 +104,28 @@ class ColorPicker {
     title.textContent = '选择颜色';
     this.element.appendChild(title);
     
+    // 框架主题色快捷选择（置于最上方，独立区域）
+    if (this.themeColor) {
+      const themeSection = document.createElement('div');
+      themeSection.className = 'theme-color-section';
+      const themeBtn = document.createElement('div');
+      themeBtn.className = 'theme-color-btn';
+      themeBtn.style.backgroundColor = this.themeColor;
+      themeBtn.addEventListener('click', () => {
+        this.handleColorSelect(this.themeColor);
+      });
+      themeSection.appendChild(themeBtn);
+      const themeLabel = document.createElement('span');
+      themeLabel.className = 'theme-color-label';
+      themeLabel.textContent = '框架主题色';
+      themeSection.appendChild(themeLabel);
+      const themeValue = document.createElement('span');
+      themeValue.className = 'theme-color-value';
+      themeValue.textContent = this.themeColor;
+      themeSection.appendChild(themeValue);
+      this.element.appendChild(themeSection);
+    }
+    
     // 创建标准颜色区域
     const standardColorsContainer = document.createElement('div');
     standardColorsContainer.className = 'standard-colors';
@@ -95,12 +146,14 @@ class ColorPicker {
     const customColorContainer = document.createElement('div');
     customColorContainer.className = 'custom-color';
     
-    // 当前选中的颜色预览
+    // 当前选中的颜色预览（带棋盘格底纹）
+    const previewWrap = document.createElement('div');
+    previewWrap.className = 'color-preview-wrap';
     const colorPreview = document.createElement('div');
     colorPreview.className = 'color-preview';
-    colorPreview.style.backgroundColor = this.currentColor;
     this.colorPreview = colorPreview;
-    customColorContainer.appendChild(colorPreview);
+    previewWrap.appendChild(colorPreview);
+    customColorContainer.appendChild(previewWrap);
     
     // 自定义颜色输入
     const customColorInput = document.createElement('div');
@@ -119,16 +172,23 @@ class ColorPicker {
     hexInput.type = 'text';
     hexInput.className = 'hex-input';
     hexInput.value = this.currentColor;
-    hexInput.placeholder = '#000000';
+    hexInput.placeholder = '#RRGGBB / rgba()';
     hexInput.addEventListener('input', e => {
       const value = e.target.value;
       if (/^#[0-9A-F]{6}$/i.test(value)) {
         this.handleCustomColorChange({ target: { value } });
+      } else {
+        const rgba = this._parseColor(value);
+        if (rgba) {
+          this.currentRgb = { r: rgba.r, g: rgba.g, b: rgba.b };
+          this.currentAlpha = rgba.a;
+          this._updatePreview();
+        }
       }
     });
     hexInput.addEventListener('blur', () => {
-      if (!/^#[0-9A-F]{6}$/i.test(hexInput.value)) {
-        hexInput.value = this.currentColor;
+      if (!/^#[0-9A-F]{6}$/i.test(hexInput.value) && !this._parseColor(hexInput.value)) {
+        hexInput.value = this._resolveColor();
       }
     });
     this.hexInput = hexInput;
@@ -136,6 +196,33 @@ class ColorPicker {
     customColorInput.appendChild(colorInput);
     customColorInput.appendChild(hexInput);
     customColorContainer.appendChild(customColorInput);
+    
+    // 透明度滑块
+    const opacityRow = document.createElement('div');
+    opacityRow.className = 'opacity-row';
+    const opacityLabel = document.createElement('span');
+    opacityLabel.className = 'opacity-label';
+    opacityLabel.textContent = '透明';
+    const opacitySlider = document.createElement('input');
+    opacitySlider.type = 'range';
+    opacitySlider.className = 'opacity-slider';
+    opacitySlider.min = 0;
+    opacitySlider.max = 100;
+    opacitySlider.value = 100;
+    const opacityText = document.createElement('span');
+    opacityText.className = 'opacity-text';
+    opacityText.textContent = '100%';
+    this.opacitySlider = opacitySlider;
+    this.opacityText = opacityText;
+    opacitySlider.addEventListener('input', (e) => {
+      const alpha = parseInt(e.target.value) / 100;
+      this.currentAlpha = alpha;
+      this._updatePreview();
+    });
+    opacityRow.appendChild(opacityLabel);
+    opacityRow.appendChild(opacitySlider);
+    opacityRow.appendChild(opacityText);
+    customColorContainer.appendChild(opacityRow);
     
     // 按钮区域
     const buttonContainer = document.createElement('div');
@@ -146,7 +233,7 @@ class ColorPicker {
     applyButton.className = 'apply-button';
     applyButton.textContent = '确定';
     applyButton.addEventListener('click', () => {
-      this.onChange(this.currentColor);
+      this.onChange(this._resolveColor());
       this.close();
     });
     
@@ -164,6 +251,9 @@ class ColorPicker {
     
     // 添加到容器
     this.container.appendChild(this.element);
+    
+    // 初始化预览
+    this._updatePreview();
     
     // 添加样式
     this.addStyles();
@@ -184,7 +274,7 @@ class ColorPicker {
           border-radius: 8px;
           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
           padding: 15px;
-          z-index: 1000;
+          z-index: 2000;
           font-family: Arial, sans-serif;
         }
         
@@ -215,6 +305,41 @@ class ColorPicker {
         .color-picker .color-option:hover {
           transform: scale(1.1);
           box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .color-picker .theme-color-section {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 14px;
+          padding: 8px 10px;
+          background: #f5f7fa;
+          border-radius: 6px;
+          border: 1px solid #e8e8e8;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .color-picker .theme-color-section:hover {
+          background: #e8f0fe;
+          border-color: #165dff;
+        }
+        .color-picker .theme-color-btn {
+          width: 28px;
+          height: 28px;
+          border-radius: 6px;
+          border: 2px solid #d0d0d0;
+          flex-shrink: 0;
+        }
+        .color-picker .theme-color-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #333;
+          flex: 1;
+        }
+        .color-picker .theme-color-value {
+          font-size: 11px;
+          color: #999;
+          font-family: monospace;
         }
         
         .color-picker .custom-color {
@@ -259,10 +384,37 @@ class ColorPicker {
           font-size: 14px;
         }
         
+        .color-picker .opacity-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 10px;
+          padding-top: 10px;
+          border-top: 1px solid #eee;
+        }
+        .color-picker .opacity-label {
+          font-size: 12px;
+          color: #666;
+          white-space: nowrap;
+          min-width: 36px;
+        }
+        .color-picker .opacity-slider {
+          flex: 1;
+          height: 4px;
+          accent-color: #4a86e8;
+          cursor: pointer;
+        }
+        .color-picker .opacity-text {
+          font-size: 12px;
+          color: #666;
+          min-width: 36px;
+          text-align: right;
+          font-family: monospace;
+        }
         .color-picker .button-container {
           display: flex;
           justify-content: flex-end;
-          margin-top: 15px;
+          margin-top: 12px;
         }
         
         .color-picker button {
@@ -291,6 +443,25 @@ class ColorPicker {
         .color-picker .cancel-button:hover {
           background-color: #e1e1e1;
         }
+
+        .color-preview-wrap {
+          display: inline-block;
+          vertical-align: middle;
+          position: relative;
+          width: 30px;
+          height: 30px;
+          margin-right: 10px;
+          border-radius: 4px;
+          overflow: hidden;
+          background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 0 / 10px 10px;
+          border: 1px solid #ddd;
+        }
+        .color-preview-wrap .color-preview {
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          border: none;
+        }
       `;
       document.head.appendChild(style);
     }
@@ -302,9 +473,9 @@ class ColorPicker {
    */
   handleColorSelect(color) {
     this.currentColor = color;
-    this.colorPreview.style.backgroundColor = color;
-    this.colorInput.value = color;
-    this.hexInput.value = color;
+    this.currentRgb = this._hexToRgb(color);
+    this.currentAlpha = 1;
+    this._updatePreview();
   }
   
   /**
@@ -314,21 +485,8 @@ class ColorPicker {
   handleCustomColorChange(e) {
     const color = e.target.value;
     this.currentColor = color;
-    
-    // 添加检查确保 colorPreview 存在
-    if (this.colorPreview) {
-      this.colorPreview.style.backgroundColor = color;
-    }
-    
-    // 添加检查确保 hexInput 存在
-    if (this.hexInput) {
-      this.hexInput.value = color;
-    }
-    
-    // 添加检查确保 colorInput 存在
-    if (this.colorInput) {
-      this.colorInput.value = color;
-    }
+    this.currentRgb = this._hexToRgb(color);
+    this._updatePreview();
   }
   
   /**
@@ -399,21 +557,32 @@ class ColorPicker {
   
   /**
    * 设置当前颜色
-   * @param {string} color - 颜色值
+   * @param {string} color - 颜色值 (#RRGGBB 或 rgba)
    */
   setColor(color) {
     this.currentColor = color;
-    this.colorPreview.style.backgroundColor = color;
-    this.colorInput.value = color;
-    this.hexInput.value = color;
+    const rgba = this._parseColor(color);
+    if (rgba) {
+      this.currentRgb = { r: rgba.r, g: rgba.g, b: rgba.b };
+      this.currentAlpha = rgba.a;
+    }
+    this._updatePreview();
+  }
+
+  _parseColor(color) {
+    const hex = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color);
+    if (hex) return { r: parseInt(hex[1], 16), g: parseInt(hex[2], 16), b: parseInt(hex[3], 16), a: 1 };
+    const rgba = /^rgba?\((\d+),(\d+),(\d+)(?:,([\d.]+))?\)$/.exec(color);
+    if (rgba) return { r: parseInt(rgba[1]), g: parseInt(rgba[2]), b: parseInt(rgba[3]), a: rgba[4] !== undefined ? parseFloat(rgba[4]) : 1 };
+    return null;
   }
   
   /**
    * 获取当前颜色
-   * @returns {string} 当前颜色值
+   * @returns {string} 当前颜色值（alpha=100 返回 #RRGGBB，否则返回 rgba）
    */
   getColor() {
-    return this.currentColor;
+    return this._resolveColor();
   }
   
   /**

@@ -316,3 +316,61 @@ input:checked + .slider:before {
 .section-properties-panel .unit-option:hover {
     background-color: #f5f5f5;
 }
+
+/* ===== 紧凑属性面板（表单字段属性） ===== */
+.property-group.compact {
+    margin-bottom: 8px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 6px;
+}
+.property-group.compact > .property-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #666;
+}
+/* 行内排布：label 左、control 右 */
+.property-item.p-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+.property-item.p-row > .property-label {
+    flex: 0 0 65px;
+    margin-bottom: 0;
+    font-size: 12px;
+    white-space: nowrap;
+}
+.property-item.p-row > .property-control {
+    flex: 1;
+}
+/* 紧凑纵向排布 */
+.property-item.compact {
+    margin-bottom: 6px;
+}
+.property-item.compact > .property-label {
+    font-size: 12px;
+    margin-bottom: 3px;
+}
+.property-item.compact > .property-control {
+    width: 100%;
+}
+.property-item.compact input.ef-input,
+.property-item.compact select.ef-input {
+    height: 28px;
+    font-size: 12px;
+}
+/* 勾选框行内 */
+.checkbox-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    user-select: none;
+}
+.checkbox-inline input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+}

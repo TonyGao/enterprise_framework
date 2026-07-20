@@ -9,8 +9,10 @@ use App\Entity\Platform\Entity;
 use App\Entity\Platform\EntityProperty;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\DataTransformerInterface;
 
-class FormFieldBuilderService extends BaseService
+class FormFieldBuilderService extends BaseService implements DataTransformerInterface
 {
     private $em;
 
@@ -71,8 +73,30 @@ class FormFieldBuilderService extends BaseService
             }
 
             $property = $field->getPropertyName();
-            $builder->add($property, $classType, $options);
+
+            if ($field->getType() === 'user') {
+                $options['attr']['data-user-field'] = 'true';
+                $options['block_prefix'] = 'user';
+                $builder->add($property, TextType::class, $options);
+                $builder->get($property)->addViewTransformer($this);
+            } else {
+                $builder->add($property, $classType, $options);
+            }
         }
+    }
+
+    public function transform($value): mixed
+    {
+        return is_array($value) ? json_encode($value) : ($value ?: '[]');
+    }
+
+    public function reverseTransform($value): mixed
+    {
+        if (is_string($value) && !empty($value)) {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return [];
     }
 
     public function getEntityManager() {

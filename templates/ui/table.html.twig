@@ -34,13 +34,19 @@
 																						</div>
 																				</td>
 																		</tr>
-																{% else %}
+                                {% else %}
                                 {% for item in entities %}
                                     <tr class="ef-table-tr">
                                         {% for header in tableHeaders %}
                                             <td class="ef-table-td">
                                                 <span class="ef-table-cell ef-table-cell-align-left">
-                                                    {% if instanceof(attribute(item, header), 'DateTime') %}
+                                                    {% if header == 'action' %}
+                                                        <div style="display: flex; gap: 8px;">
+                                                            <button class="edit-field btn outline primary mini round" token="{{ item.token }}" title="编辑字段">
+                                                                <i class="fa-regular fa-pen-to-square"></i> 编辑
+                                                            </button>
+                                                        </div>
+                                                    {% elseif instanceof(attribute(item, header), 'DateTime') %}
                                                         <span class="ef-table-td-content">
                                                             {{ attribute(item, header).format('Y-m-d H:i:s') }}
                                                         </span>

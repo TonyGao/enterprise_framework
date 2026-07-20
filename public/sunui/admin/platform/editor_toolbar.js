@@ -103,6 +103,16 @@ $(document).ready(function() {
       // 获取canvas的HTML内容
       const canvasHtml = $('#canvas').html();
       
+      // 获取 section 配置
+      const contentWidth = $('#content-width').val();
+      const widthVal = $('#width-value').val();
+      const widthUnit = $('#width-value').closest('.input-with-unit').find('.unit-selector span').text();
+      const sectionConfig = {
+        contentWidth: contentWidth,
+        width: parseInt(widthVal) || 480,
+        unit: widthUnit || 'px'
+      };
+      
       // 发送AJAX请求到后端API
       ajax({
         url: '/api/admin/platform/view/save',
@@ -110,12 +120,13 @@ $(document).ready(function() {
         contentType: 'application/json',
         data: {
           viewId: viewId,
-          canvasHtml: canvasHtml
+          canvasHtml: canvasHtml,
+          sectionConfig: sectionConfig
         },
         success: function(response) {
           hideLoading();
           if (response.code === 200) {
-            alert.success('视图保存成功', { percent: '40%', title: "保存成功", closable: true });
+            alert.success('视图保存成功', { percent: '280px', title: "保存成功", closable: false });
           } else {
             alert.error('保存失败: ' + response.message, { percent: '40%', title: "保存失败", closable: true });
           }

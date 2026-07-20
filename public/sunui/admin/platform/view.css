@@ -1,64 +1,429 @@
-/* Wrapper and layout styling */
-.inside-wrapper {
-  display: flex;
-}
-
-.left-tree.no-data {
-  width: 250px;
-  background-color: #f7f7f7;
-  padding: 15px;
-  border-right: 1px solid #ddd;
-  position: relative;
-}
-
-/* Placeholder styling for when there is no data */
-.left-tree-wrapper.no-data {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-}
-
-.empty-tree-placeholder {
-  text-align: center;
-  color: #a1a1a1;
-  font-family: Arial, sans-serif;
-}
-
-.empty-tree-placeholder i {
-  font-size: 48px;
-  margin-bottom: 10px;
-}
-
-.empty-tree-placeholder p {
-  font-size: 16px;
-  color: #888;
-}
-
-/* Fold icon styling */
-.fold-icon-wrapper {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;  /* 将图标定位到右侧 */
-  cursor: pointer;
-}
-
-.fold-icon-wrapper i {
-  color: #333;
-}
-
-.right-content {
-  flex-grow: 1;
-  padding: 20px;
-}
-
-.empty-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-}
-
 .tree-text-content:hover {
   cursor: pointer;
 }
+
+/* 所有 sub-tree-content 容器 */
+.common-tree-wrapper .sub-tree-content {
+  display: inline-block;
+  vertical-align: top;
+}
+
+/* 拖拽时被 onStart reveal 的空容器放置区 */
+.common-tree-wrapper .sub-tree-content:empty {
+  min-height: 20px;
+  min-width: calc(100% - 16px);
+  background-color: transparent;
+}
+
+.common-tree-wrapper .sub-tree-content:empty::before {
+  content: "\00a0";
+  display: inline-block;
+  min-width: calc(100% - 16px);
+  height: 1px;
+}
+
+.common-tree-wrapper .sub-tree-content li {
+  min-width: 150px;
+}
+
+.common-tree-wrapper .tree-indent {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.sortable-ghost {
+  opacity: 0.4;
+  background-color: #f0f8ff;
+}
+
+.sortable-chosen {
+  opacity: 0.8;
+}
+
+/* ===== View Detail Panel ===== */
+.view-detail-container {
+  padding: 24px 32px;
+  min-height: 100%;
+}
+
+.view-detail-header {
+  margin-bottom: 24px;
+}
+
+.view-detail-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.view-detail-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--color-primary-light, #e8f4ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--color-primary, #165DFF);
+  flex-shrink: 0;
+}
+
+.view-detail-title h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-1, #1d2129);
+  line-height: 1.4;
+}
+
+.view-detail-meta {
+  font-size: 13px;
+  color: var(--color-text-3, #86909c);
+  font-family: monospace;
+}
+
+.view-detail-info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.view-detail-card {
+  border: 1px solid var(--color-border, #e5e6eb);
+  border-radius: 8px;
+  background: var(--color-bg-1, #fff);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.view-detail-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.view-detail-card-header {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-1, #1d2129);
+  border-bottom: 1px solid var(--color-border, #e5e6eb);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-fill-1, #f7f8fa);
+}
+
+.view-detail-card-header i {
+  color: var(--color-primary, #165DFF);
+  font-size: 14px;
+}
+
+.view-detail-card-body {
+  padding: 12px 16px;
+}
+
+.view-detail-info-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.view-detail-info-table tr + tr td {
+  padding-top: 8px;
+  border-top: 1px solid var(--color-fill-2, #f2f3f5);
+}
+
+.view-detail-info-table .info-label {
+  width: 80px;
+  font-size: 13px;
+  color: var(--color-text-3, #86909c);
+  white-space: nowrap;
+  vertical-align: top;
+  padding: 6px 0;
+}
+
+.view-detail-info-table .info-value {
+  font-size: 13px;
+  color: var(--color-text-1, #1d2129);
+  padding: 6px 0;
+  word-break: break-all;
+}
+
+.view-detail-info-table code {
+  font-size: 12px;
+  background: var(--color-fill-2, #f2f3f5);
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: var(--color-text-1, #1d2129);
+}
+
+/* Section (field list) */
+.view-detail-section {
+  border: 1px solid var(--color-border, #e5e6eb);
+  border-radius: 8px;
+  background: var(--color-bg-1, #fff);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.view-detail-section-header {
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-1, #1d2129);
+  border-bottom: 1px solid var(--color-border, #e5e6eb);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-fill-1, #f7f8fa);
+}
+
+.view-detail-section-header i {
+  color: var(--color-primary, #165DFF);
+}
+
+.view-detail-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--color-primary-light, #e8f4ff);
+  color: var(--color-primary, #165DFF);
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+/* Field table */
+.view-field-table {
+  margin: 0 !important;
+  border: none !important;
+}
+
+.view-field-table thead th {
+  background: var(--color-fill-1, #f7f8fa) !important;
+  font-size: 12px !important;
+  color: var(--color-text-3, #86909c) !important;
+  font-weight: 500 !important;
+  padding: 10px 16px !important;
+  border-bottom: 1px solid var(--color-border, #e5e6eb) !important;
+}
+
+.view-field-table tbody td {
+  padding: 10px 16px !important;
+  font-size: 13px;
+  border-bottom: 1px solid var(--color-fill-2, #f2f3f5);
+  vertical-align: middle;
+}
+
+.view-field-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.view-field-table tbody tr:hover {
+  background: var(--color-fill-1, #f7f8fa);
+}
+
+.view-field-table code {
+  font-size: 12px;
+  background: var(--color-fill-2, #f2f3f5);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.field-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-2, #4e5969);
+}
+
+.field-type-badge i {
+  font-size: 12px;
+  color: var(--color-text-3, #86909c);
+}
+
+.config-summary {
+  font-size: 12px;
+  color: var(--color-text-3, #86909c);
+}
+
+.text-muted {
+  color: var(--color-text-3, #86909c) !important;
+}
+
+/* Empty state */
+.view-detail-empty {
+  border: 1px dashed var(--color-border, #e5e6eb);
+  border-radius: 8px;
+  padding: 48px 32px;
+  text-align: center;
+  margin-bottom: 24px;
+  background: var(--color-fill-1, #f7f8fa);
+}
+
+.view-detail-empty i {
+  font-size: 36px;
+  color: var(--color-text-4, #c9cdd4);
+  margin-bottom: 12px;
+}
+
+.view-detail-empty p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: var(--color-text-2, #4e5969);
+}
+
+/* Actions */
+.view-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.view-detail-actions .btn i {
+  margin-right: 6px;
+}
+
+/* ef-tag overrides for inline use */
+.ef-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.ef-tag-small {
+  font-size: 11px !important;
+  padding: 0 6px !important;
+  height: 20px !important;
+  line-height: 20px !important;
+  border-radius: 3px;
+}
+
+.ef-tag-blue {
+  background: var(--color-primary-light, #e8f4ff) !important;
+  color: var(--color-primary, #165DFF) !important;
+  border: 1px solid var(--color-primary-light, #e8f4ff) !important;
+}
+
+.ef-tag-red {
+  background: #fff3f0 !important;
+  color: #f53f3f !important;
+  border: 1px solid #fff3f0 !important;
+}
+
+.ef-tag-default {
+  background: var(--color-fill-2, #f2f3f5) !important;
+  color: var(--color-text-2, #4e5969) !important;
+  border: 1px solid var(--color-fill-2, #f2f3f5) !important;
+}
+
+/* ===== Tree Node Context Menu ===== */
+.context-menu {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  z-index: 10000;
+  min-width: 180px;
+  padding: 4px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  backdrop-filter: blur(16px) saturate(180%);
+  animation: contextMenuSlideIn 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow: hidden;
+}
+
+@keyframes contextMenuSlideIn {
+  0% { opacity: 0; transform: scale(0.95) translateY(-5px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.context-menu::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.context-menu .menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+  margin: 1px 2px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.context-menu .menu-item::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.3s;
+}
+
+.context-menu .menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  transform: translateX(2px);
+}
+
+.context-menu .menu-item:hover::before {
+  left: 100%;
+}
+
+.context-menu .menu-item i {
+  width: 14px;
+  margin-right: 10px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+.context-menu .menu-item:hover i {
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.context-menu .menu-item span {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.context-menu .menu-separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 3px 8px;
+  border-radius: 0.5px;
+}
+
+.context-menu .menu-item:active {
+  transform: translateX(1px) scale(0.98);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+

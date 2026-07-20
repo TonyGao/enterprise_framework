@@ -48,7 +48,8 @@ scrollBtnDisplay = sideMenuState == 'shrunk' ? 'flex' : 'none' %}
             <div class="panel panel-htop" liid="{{ tabId2 }}" style="display: none; padding: 0;">
               <div class="panel-body panel-body-noheader panel-body-noborder">
                 <div class="datasource-content">
-                  <div class="model-status text-primary mb-3">暂未绑定模型</div>
+                  {% if formEntity is defined and formEntity %}
+                  <div class="model-status text-primary mb-3">已绑定模型：{{ formEntity.name|replace({'.php': ''}) }}</div>
                   <div class="model-properties">
                     <table class="table table-hover">
                       <thead>
@@ -58,57 +59,18 @@ scrollBtnDisplay = sideMenuState == 'shrunk' ? 'flex' : 'none' %}
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td>岗位名称</td>
-                          <td>name</td>
+                        {% for prop in entityProperties %}
+                        <tr{{ loop.index is odd ? '' : ' class="table-light"' }} data-field-name="{{ prop.propertyName }}" data-field-type="{{ prop.type }}" data-label="{{ prop.comment ?: prop.propertyName }}">
+                          <td>{{ prop.comment ?: prop.propertyName }}</td>
+                          <td>{{ prop.propertyName }}</td>
                         </tr>
-                        <tr class="table-light">
-                          <td>岗位编码</td>
-                          <td>code</td>
-                        </tr>
-                        <tr>
-                          <td>岗位职责</td>
-                          <td>responsibility</td>
-                        </tr>
-                        <tr class="table-light">
-                          <td>任职要求</td>
-                          <td>requirement</td>
-                        </tr>
-                        <tr>
-                          <td>编制人数</td>
-                          <td>headcount</td>
-                        </tr>
-                        <tr class="table-light">
-                          <td>状态（启用/停用）</td>
-                          <td>state</td>
-                        </tr>
-                        <tr>
-                          <td>排序号</td>
-                          <td>sortOrder</td>
-                        </tr>
-                        <tr class="table-light">
-                          <td>备注</td>
-                          <td>remark</td>
-                        </tr>
-                        <tr>
-                          <td>所属部门</td>
-                          <td>department</td>
-                        </tr>
-                        <tr class="table-light">
-                          <td>岗位类型</td>
-                          <td>type</td>
-                        </tr>
-                        <tr>
-                          <td>岗位级别</td>
-                          <td>level</td>
-                        </tr>
-                        <tr class="table-light">
-                          <td>上级岗位</td>
-                          <td>parent</td>
-                        </tr>
+                        {% endfor %}
                       </tbody>
                     </table>
                   </div>
+                  {% else %}
+                  <div class="model-status text-primary mb-3">暂未绑定模型</div>
+                  {% endif %}
                 </div>
               </div>
             </div>

@@ -2,6 +2,55 @@
  * Section属性面板的JavaScript功能
  */
 $(document).ready(function() {
+    // 页面加载时应用保存的 sectionConfig
+    if (window.__SECTION_CONFIG__) {
+        const config = window.__SECTION_CONFIG__;
+        const $sectionContent = $('.section.active .section-content');
+        if ($sectionContent.length) {
+            if (config.contentWidth === 'full-width') {
+                $sectionContent.css('width', '100%');
+            } else if (config.width && config.unit) {
+                $sectionContent.css('width', config.width + config.unit);
+            }
+        }
+        // 同步 UI 控件
+        if (config.contentWidth) {
+            $('#content-width').val(config.contentWidth);
+        }
+        if (config.width) {
+            const unit = config.unit || 'px';
+            $('#width-value').closest('.input-with-unit').find('.unit-selector span').text(unit);
+            $('#width-slider').val(config.width);
+            $('#width-value').val(config.width);
+        }
+    }
+    // 页面加载时同步已保存的控件样式到预览
+    $('.editor-field-row').each(function() {
+        const $row = $(this);
+        const $label = $row.find('.ef-form-label');
+        const $widget = $row.find('.ef-form-widget').children().first();
+        // 圆角
+        const rounded = $label.attr('data-rounded');
+        if (rounded === 'true') {
+            if ($widget.is('.ef-input-wrapper, .ef-select-view-single')) {
+                $widget.addClass('ef-input-rounded');
+            } else if ($widget.is('.ef-textarea-wrapper')) {
+                $widget.addClass('ef-textarea-rounded');
+            }
+        }
+        // 底色：编辑器无值概念，始终优先未填底色，降级到常规底色
+        const regularBg = $label.attr('data-regular-bg') || '';
+        const requiredBg = $label.attr('data-required-bg') || '';
+        const bg = requiredBg || regularBg || '';
+        if (bg) {
+            $widget.css('background-color', bg);
+            $widget.find('input, textarea').each(function() { this.style.setProperty('background-color', bg); });
+        } else {
+            $widget.css('background-color', '');
+            $widget.find('input, textarea').each(function() { this.style.removeProperty('background-color'); });
+        }
+    });
+
     // 属性组折叠/展开功能
     $('.property-group-header').on('click', function() {
         const $header = $(this);
@@ -190,8 +239,17 @@ $(document).ready(function() {
                 if (value === 'full-width') {
                     $sectionContent.css('width', '100%');
                 } else if (value === 'boxed') {
-                    // 使用boxed选项时应用默认宽度
-                    $sectionContent.css('width', '1140px');
+                    // 使用boxed选项时应用配置宽度或默认480px
+                    const boxedWidth = window.__SECTION_CONFIG__ && window.__SECTION_CONFIG__.width
+                        ? window.__SECTION_CONFIG__.width + (window.__SECTION_CONFIG__.unit || 'px')
+                        : '480px';
+                    $sectionContent.css('width', boxedWidth);
+                    // 同步滑块值
+                    const unit = window.__SECTION_CONFIG__ && window.__SECTION_CONFIG__.unit || 'px';
+                    const numWidth = parseInt(boxedWidth);
+                    $('#width-value').closest('.input-with-unit').find('.unit-selector span').text(unit);
+                    $('#width-slider').val(numWidth);
+                    $('#width-value').val(numWidth);
                 }
                 break;
                 
@@ -467,6 +525,17 @@ $(document).ready(function() {
             $('.justify-align-controls').last().find('.align-button')
                 .filter(`[data-value="${alignItems}"]`).addClass('active');
         }
+        
+        // 表单模式检测：如果 Section 包含 .editor-field-row，隐藏 Items 属性组（Grid Controls）
+        const hasFormFields = $content.find('.editor-field-row').length > 0;
+        const $itemsGroup = $('.section-properties-panel .property-group').filter(function() {
+            return $(this).find('.property-group-header span').text().trim() === 'Items';
+        });
+        if (hasFormFields) {
+            $itemsGroup.hide();
+        } else {
+            $itemsGroup.show();
+        }
     }
     
     // 页面宽度变更事件
@@ -691,30 +760,359 @@ $(document).ready(function() {
         }).join('');
     }
     
+    function clearComponentSelection() {
+        $('.ef-component').removeClass('selected');
+        // 清除 ef-component 子元素的选中样式（display:contents 元素无盒模型，样式需设在子元素上）
+        $('.selected-visual').removeClass('selected-visual').css({
+            outline: '',
+            outlineOffset: '',
+            position: ''
+        });
+        $('.ef-component-close-btn').remove();
+        // 清除按钮等非 ef-component 的选中样式
+        $('.item-block.selected').removeClass('selected').css({
+            outline: '',
+            outlineOffset: ''
+        });
+    }
+
+    function getSelectableChild($el) {
+        // display:contents 元素没有盒模型，选取第一个有盒模型且可见的子元素来显示选中样式
+        if ($el.css('display') === 'contents') {
+            const $first = $el.children().first();
+            // entity 类型的第一个子元素是 <input type="hidden">，无盒模型，跳过
+            if ($first.is('input[type="hidden"]')) {
+                return $first.next().length ? $first.next() : $first;
+            }
+            return $first;
+        }
+        return $el;
+    }
+
+    function markComponentSelected($el) {
+        const $target = getSelectableChild($el);
+        $el.addClass('selected');
+        $target.addClass('selected-visual').css({
+            outline: '3px solid #1890ff',
+            outlineOffset: '0'
+        });
+        // 在组件右上角添加关闭图标
+        if ($el.closest('.canvas, #canvas').length && !$el.find('.ef-component-close-btn').length) {
+            $target.css('position', 'relative');
+            const $btn = $('<div class="ef-component-close-btn" title="删除组件"><i class="fa fa-times"></i></div>');
+            $btn.on('mousedown', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                const $parent = $(this).closest('.ef-component');
+                $parent.remove();
+                clearComponentSelection();
+                $(document).trigger('componentDeselected');
+            });
+            // 关闭按钮需要相对于有盒模型的祖先定位，追加到 $target 上
+            $target.prepend($btn);
+        }
+    }
+
     // 监听组件选择变化
     $(document).on('click', '.ef-table', function() {
         const $this = $(this);
+        clearComponentSelection();
+        markComponentSelected($this);
         setTimeout(function() {
             checkTableSelection();
-            // 触发组件选择事件
             $(document).trigger('componentSelected', [$this[0]]);
         }, 100);
     });
     
     $(document).on('click', '.ef-text, .ef-image', function() {
         const $this = $(this);
+        clearComponentSelection();
+        markComponentSelected($this);
         setTimeout(function() {
             $('#table-properties').hide();
-            // 触发组件选择事件
             $(document).trigger('componentSelected', [$this[0]]);
         }, 100);
     });
-    
-    // 监听画布点击，取消组件选择
-    $(document).on('click', '.canvas', function(e) {
-        // 如果点击的不是组件，则取消选择
-        if (!$(e.target).closest('.ef-table, .ef-text, .ef-image').length) {
+
+    // 双击 label 编辑文案 — 在 <body> 层创建浮动 input，脱离组件层级
+    $(document).on('dblclick', '.ef-form-item-label', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const $label = $(this);
+        if ($label.data('ef-editing')) return;
+
+        const text = $label.text().trim();
+        const labelRect = $label[0].getBoundingClientRect();
+        const $container = $label.closest('.ef-form-item-label-col');
+        const containerRect = $container[0].getBoundingClientRect();
+
+        $label.css('visibility', 'hidden');
+        $label.data('ef-editing', true);
+
+        // label 右对齐，input 应固定在右边缘向左扩展
+        const minInputWidth = $label.outerWidth() + 10;          // 补偿 input padding+border
+        // 容器 content 宽度（去掉 padding+border，border-box 下 label 实际可用宽度）
+        const cs = getComputedStyle($container[0]);
+        const cntPadL = parseFloat(cs.paddingLeft) || 0;
+        const cntPadR = parseFloat(cs.paddingRight) || 0;
+        const cntBdrL = parseFloat(cs.borderLeftWidth) || 0;
+        const cntBdrR = parseFloat(cs.borderRightWidth) || 0;
+        const contentWidth = containerRect.width - cntPadL - cntPadR - cntBdrL - cntBdrR;
+        const rightDist = window.innerWidth - labelRect.right;    // label 右边缘离视口右边缘的距离
+
+        const $input = $('<textarea>', {
+            'data-ef-label-editor': 'true',
+            css: {
+                position: 'fixed',
+                right: rightDist + 'px',
+                top: labelRect.top + 'px',
+                width: minInputWidth + 'px',      // 初始 = label 宽度，输入时动态扩展
+                maxWidth: contentWidth + 'px',   // 不超过容器 content 宽度
+                // 初始高度与单行 label 一致
+                height: $label.outerHeight() + 'px',
+                zIndex: 99999,
+                border: '1px solid #1890ff',
+                outline: 'none',
+                padding: '0 4px',
+                margin: 0,
+                overflow: 'hidden',              // 隐藏滚动条，靠 scrollHeight 自动增高
+                resize: 'none',                  // 禁止手动拖拽
+                fontSize: $label.css('font-size'),
+                lineHeight: $label.css('line-height'),
+                fontFamily: $label.css('font-family'),
+                background: '#fff',
+                borderRadius: '2px',
+                boxSizing: 'border-box',
+                whiteSpace: 'pre-wrap',          // 保留换行、自动换行
+                wordBreak: 'break-word'
+            }
+        }).appendTo('body');
+
+        $input.val(text);
+        $label.data('ef-original-text', text);   // 保存原始文本供 Escape 恢复
+
+        // 输入时动态扩展宽度 + 自动增高
+        // 使用隐藏 mirror span 测量文本宽度（textarea wrap/scrollWidth 不可靠）
+        let $mirror;
+        $input.on('input', function() {
+            // 按需创建 mirror
+            if (!$mirror) {
+                $mirror = $('<span>').css({
+                    position: 'absolute', top: '-9999px', left: '-9999px',
+                    visibility: 'hidden', whiteSpace: 'nowrap',
+                    fontSize: this.style.fontSize,
+                    fontFamily: this.style.fontFamily,
+                    lineHeight: this.style.lineHeight,
+                    padding: '0 4px',
+                    borderLeft: '1px solid transparent',   // 模拟 border-box 宽度
+                    borderRight: '1px solid transparent',
+                    boxSizing: 'border-box'
+                }).appendTo('body');
+            }
+            $mirror.text(this.value + ' ');
+            const textWidth = $mirror[0].getBoundingClientRect().width;
+            this.style.width = Math.min(Math.max(textWidth, minInputWidth), contentWidth) + 'px';
+            // 高度：宽度变化后重新计算
+            this.style.height = '1px';
+            this.style.height = (this.scrollHeight + 2) + 'px';
+        });
+
+        $input.focus();
+        // 选中全部文字
+        $input[0].selectionStart = 0;
+        $input[0].selectionEnd = text.length;
+        // 初始内容自动适配尺寸
+        $input.trigger('input');
+
+        $input.on('blur', function() {
+            commitLabelEdit($label, $(this));
+        });
+        $input.on('keydown', function(ev) {
+            // Ctrl+Enter / Cmd+Enter 完成编辑
+            if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) {
+                ev.preventDefault();
+                $(this).blur();
+            }
+            // Escape 也完成编辑
+            if (ev.key === 'Escape') {
+                // 还原文本
+                $(this).val($label.data('ef-original-text') || '');
+                $(this).blur();
+            }
+        });
+    });
+
+    function commitLabelEdit($label, $input) {
+        const newText = $input.val().trim();
+        $input.remove();
+        $label.text(newText.length ? newText : '\u00A0');
+        $label.css({
+            visibility: 'visible',
+            whiteSpace: 'normal',   // 父级 white-space: nowrap 被 display:contents 阻断后无法继承
+            maxWidth: '100%'        // 相应 CSS 选择器 > 无法跨 display:contents 匹配
+        });
+        $label.data('ef-editing', false);
+        // 同步到 properties 面板
+        $('#form-label-text').val(newText);
+        // 同步到包装器 data-label（供 save 时提取）
+        const $wrapper = $label.closest('.ef-form-label');
+        if ($wrapper.length) {
+            $wrapper.attr('data-label', newText);
+        }
+    }
+
+    function clearEmptyColSelection() {
+        $('.editor-col.selected').removeClass('selected');
+        window.__selectedEmptyCol__ = null;
+    }
+
+    // 字段行 mousedown — 统一处理标签列和控件列的选中
+    $(document).on('mousedown', '.editor-field-row', function(e) {
+        if ($(e.target).closest('.drag-handle').length) return;
+        e.preventDefault();
+        clearEmptyColSelection();
+        const $row = $(this);
+        const $label = $row.find('.ef-form-label');
+        const $widget = $row.find('.ef-form-widget');
+        const inLabelCol = $(e.target).closest('.ef-form-item-label-col').length > 0;
+        const inWidgetCol = $(e.target).closest('.ef-form-item-wrapper-col').length > 0;
+        clearComponentSelection();
+        $('#table-properties').hide();
+        $('#text-properties').hide();
+        if (inWidgetCol && $widget.length) {
+            markComponentSelected($widget);
+            $(document).trigger('componentSelected', [$widget[0]]);
+        } else if (inLabelCol && $label.length) {
+            markComponentSelected($label);
+            $(document).trigger('componentSelected', [$label[0]]);
+        } else if (inWidgetCol) {
+            const $col = $row.find('.ef-form-item-wrapper-col.editor-col').first();
+            $col.addClass('selected');
+            window.__selectedEmptyCol__ = $col[0];
+            $(document).trigger('componentDeselected');
+        } else if (inLabelCol) {
+            const $col = $row.find('.ef-form-item-label-col.editor-col').first();
+            $col.addClass('selected');
+            window.__selectedEmptyCol__ = $col[0];
             $(document).trigger('componentDeselected');
         }
     });
+    // 阻止 label/控件/按钮的 click 默认行为（焦点传递、checkbox toggle、表单提交等），
+    // 用 #canvas 而非 document，因 view_editor_core.js 在 .section 上 stopPropagation
+    $('#canvas').on('click', '.ef-form-label, .ef-form-widget', function(e) {
+        e.preventDefault();
+    });
+    $('#canvas').on('click', '.item-block button.btn', function(e) {
+        e.preventDefault();
+    });
+
+    // 表单提交/返回按钮 — 可选中、不可删除
+    $(document).on('mousedown', '.item-block button.btn', function(e) {
+        e.preventDefault();
+        clearComponentSelection();
+        const $block = $(this).closest('.item-block');
+        $block.addClass('selected');
+        $block.css({
+            outline: '2px dashed #1890ff',
+            outlineOffset: '0'
+        });
+        $('#table-properties').hide();
+        $('#text-properties').hide();
+        $(document).trigger('componentSelected', [$block[0]]);
+    });
+    // 捕获阶段阻止内联 onclick（如 location.href）的执行，委托 click 处理器在冒泡阶段已被 stopPropagation 阻断
+    $('#canvas')[0].addEventListener('click', function(e) {
+        if ($(e.target).closest('.item-block button.btn').length) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+    }, true);
+    
+    // 监听画布 mousedown，取消组件选择（click 事件被 .section handler 的 stopPropagation 阻断）
+    $(document).on('mousedown', '.canvas, #canvas', function(e) {
+        // 浮动 label 编辑器（在 body 层）不属于画布组件，不触发反选
+        if ($(e.target).closest('[data-ef-label-editor]').length) return;
+        // 字段行的选择/反选由 .editor-field-row 自身 handler 管理
+        if (!$(e.target).closest('.ef-table, .ef-text, .ef-image, .ef-form-label, .ef-form-widget, .item-block.selected, .editor-field-row').length) {
+            clearComponentSelection();
+            $(document).trigger('componentDeselected');
+            clearEmptyColSelection();
+        }
+    });
+
+    // —— 字段行拖动排序 ——
+    let _dragSrcRow = null;
+
+    function addDragHandle($row) {
+        if ($row.find('> .drag-handle').length) return;
+        $row.prepend('<div class="drag-handle" draggable="true"><i class="fa fa-grip-vertical"></i></div>');
+    }
+
+    // 给已有行添加把手
+    $('.editor-field-row').each(function() { addDragHandle($(this)); });
+
+    $(document).on('dragstart', '.editor-field-row .drag-handle', function(e) {
+        _dragSrcRow = $(this).closest('.editor-field-row');
+        _dragSrcRow.addClass('dragging');
+        e.originalEvent.dataTransfer.effectAllowed = 'move';
+        e.originalEvent.dataTransfer.setData('text/plain', '');
+    });
+
+    $(document).on('dragend', function() {
+        if (_dragSrcRow) {
+            _dragSrcRow.removeClass('dragging');
+            _dragSrcRow = null;
+        }
+        $('.editor-field-row').removeClass('drop-target');
+    });
+
+    $(document).on('dragover', '.editor-field-row', function(e) {
+        e.preventDefault();
+        if (!_dragSrcRow || this === _dragSrcRow[0]) return;
+        e.originalEvent.dataTransfer.dropEffect = 'move';
+        // 标记插入位置（取目标的中点，鼠标在上半则插上面，下半插下面）
+        const rect = this.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const after = e.clientY > midY;
+        $(this).toggleClass('drop-target', !after);
+        // 存一个插入标识供 drop 用
+        this._dropAfter = after;
+    });
+
+    $(document).on('dragleave', '.editor-field-row', function(e) {
+        $(this).removeClass('drop-target');
+    });
+
+    $(document).on('drop', '.editor-field-row', function(e) {
+        e.preventDefault();
+        $(this).removeClass('drop-target');
+        if (!_dragSrcRow || this === _dragSrcRow[0]) return;
+
+        const $target = $(this);
+        const after = this._dropAfter;
+
+        if (after) {
+            $target.after(_dragSrcRow);
+        } else {
+            $target.before(_dragSrcRow);
+        }
+
+        _dragSrcRow.removeClass('dragging');
+        _dragSrcRow = null;
+    });
+
+    // 初始化 section 属性面板中的颜色选择器
+    if (window.ColorPicker && !window.sectionTableBorderColorPicker) {
+        window.sectionTableBorderColorPicker = new ColorPicker({
+            container: document.body,
+            defaultColor: '#d5d8dc',
+            onChange: function(color) {
+                $('#section-table-border-color-preview').css('background-color', color);
+            }
+        });
+        $(document).on('click', '#section-table-border-color-trigger', function(e) {
+            e.stopPropagation();
+            if (window.sectionTableBorderColorPicker) window.sectionTableBorderColorPicker.open(this);
+        });
+    }
 });

@@ -65,23 +65,64 @@
       font-weight: 500;
       color: #4b5563;
     }
-    .code-tag {
-      background: #f3f4f6;
-      border: 1px solid #e5e7eb;
-      padding: 2px 6px;
+    .color-trigger {
+      cursor: pointer;
+      display: inline-block;
+    }
+    .color-trigger:hover {
+      outline: 2px solid #4a86e8;
+      outline-offset: 1px;
       border-radius: 4px;
-      font-family: monospace;
-      font-size: 12px;
-      color: #ef4444;
     }
   </style>
+{% endblock %}
+
+{% block javascripts %}
+  {{ parent() }}
+  <script src="{{ asset('platform/color_picker.js', 'admin') }}"></script>
+  <script>
+    $(document).ready(function() {
+      function initDemoColorPicker(triggerId, previewId, defaultColor, onChange) {
+        if (!window.ColorPicker) return;
+        var picker = new ColorPicker({
+          container: document.body,
+          defaultColor: defaultColor,
+          onChange: onChange
+        });
+        $(document).on('click', '#' + triggerId, function(e) {
+          e.stopPropagation();
+          picker.open(this);
+        });
+        return picker;
+      }
+
+      initDemoColorPicker('demo-rounded-default-trigger', 'demo-rounded-default-preview', '#4CAF50', function(color) {
+        $('#demo-rounded-default-preview').css('background-color', color);
+      });
+      initDemoColorPicker('demo-rounded-disabled-trigger', 'demo-rounded-disabled-preview', '#4CAF50', function(color) {
+        $('#demo-rounded-disabled-preview').css('background-color', color);
+      });
+      initDemoColorPicker('demo-rounded-error-trigger', 'demo-rounded-error-preview', '#4CAF50', function(color) {
+        $('#demo-rounded-error-preview').css('background-color', color);
+      });
+      initDemoColorPicker('demo-square-default-trigger', 'demo-square-default-preview', '#4CAF50', function(color) {
+        $('#demo-square-default-preview').css('background-color', color);
+      });
+      initDemoColorPicker('demo-square-disabled-trigger', 'demo-square-disabled-preview', '#4CAF50', function(color) {
+        $('#demo-square-disabled-preview').css('background-color', color);
+      });
+      initDemoColorPicker('demo-square-error-trigger', 'demo-square-error-preview', '#4CAF50', function(color) {
+        $('#demo-square-error-preview').css('background-color', color);
+      });
+    });
+  </script>
 {% endblock %}
 
 {% block body %}
 <div class="demo-container">
   <div class="demo-header">
     <h1 class="demo-title">Color 颜色 Type</h1>
-    <p class="demo-desc">为动态 Symfony FormType (ColorType) 做准备的静态组件库演示。</p>
+    <p class="demo-desc">ColorPicker 组件演示 — 点击色块打开颜色选择器。</p>
   </div>
 
   <div class="demo-section">
@@ -92,15 +133,21 @@
     <div class="demo-grid">
       <div class="demo-item">
         <span class="demo-label">默认样式</span>
-        <span class="ef-input-wrapper ef-input-rounded" style="padding: 4px;"><input class="ef-input ef-input-size-medium" type="color" value="#4CAF50" style="padding: 0; cursor: pointer; border: none; background: transparent;"></span>
+        <span class="ef-input-wrapper ef-input-rounded color-trigger" id="demo-rounded-default-trigger" style="padding: 4px; width: 46px;">
+          <span id="demo-rounded-default-preview" style="display: block; width: 38px; height: 24px; background: #4CAF50; border-radius: 2px;"></span>
+        </span>
       </div>
       <div class="demo-item">
         <span class="demo-label">禁用状态</span>
-        <span class="ef-input-wrapper ef-input-rounded ef-input-disabled" style="padding: 4px;"><input class="ef-input ef-input-size-medium" type="color" value="#4CAF50" disabled style="padding: 0; cursor: not-allowed; border: none; background: transparent;"></span>
+        <span class="ef-input-wrapper ef-input-rounded ef-input-disabled" style="padding: 4px; width: 46px; cursor: not-allowed;">
+          <span style="display: block; width: 38px; height: 24px; background: #4CAF50; border-radius: 2px; opacity: 0.5;"></span>
+        </span>
       </div>
       <div class="demo-item">
         <span class="demo-label">错误状态</span>
-        <span class="ef-input-wrapper ef-input-rounded ef-input-error" style="padding: 4px;"><input class="ef-input ef-input-size-medium" type="color" value="#4CAF50" style="padding: 0; cursor: pointer; border: none; background: transparent;"></span>
+        <span class="ef-input-wrapper ef-input-rounded ef-input-error color-trigger" id="demo-rounded-error-trigger" style="padding: 4px; width: 46px;">
+          <span id="demo-rounded-error-preview" style="display: block; width: 38px; height: 24px; background: #4CAF50; border-radius: 2px;"></span>
+        </span>
       </div>
     </div>
   </div>
@@ -113,15 +160,21 @@
     <div class="demo-grid">
       <div class="demo-item">
         <span class="demo-label">默认样式</span>
-        <span class="ef-input-wrapper" style="padding: 4px;"><input class="ef-input ef-input-size-medium" type="color" value="#4CAF50" style="padding: 0; cursor: pointer; border: none; background: transparent;"></span>
+        <span class="ef-input-wrapper color-trigger" id="demo-square-default-trigger" style="padding: 4px; width: 46px;">
+          <span id="demo-square-default-preview" style="display: block; width: 38px; height: 24px; background: #4CAF50; border-radius: 2px;"></span>
+        </span>
       </div>
       <div class="demo-item">
         <span class="demo-label">禁用状态</span>
-        <span class="ef-input-wrapper ef-input-disabled" style="padding: 4px;"><input class="ef-input ef-input-size-medium" type="color" value="#4CAF50" disabled style="padding: 0; cursor: not-allowed; border: none; background: transparent;"></span>
+        <span class="ef-input-wrapper ef-input-disabled" style="padding: 4px; width: 46px; cursor: not-allowed;">
+          <span style="display: block; width: 38px; height: 24px; background: #4CAF50; border-radius: 2px; opacity: 0.5;"></span>
+        </span>
       </div>
       <div class="demo-item">
         <span class="demo-label">错误状态</span>
-        <span class="ef-input-wrapper ef-input-error" style="padding: 4px;"><input class="ef-input ef-input-size-medium" type="color" value="#4CAF50" style="padding: 0; cursor: pointer; border: none; background: transparent;"></span>
+        <span class="ef-input-wrapper ef-input-error color-trigger" id="demo-square-error-trigger" style="padding: 4px; width: 46px;">
+          <span id="demo-square-error-preview" style="display: block; width: 38px; height: 24px; background: #4CAF50; border-radius: 2px;"></span>
+        </span>
       </div>
     </div>
   </div>

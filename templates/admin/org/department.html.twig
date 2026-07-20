@@ -4,13 +4,44 @@
 {% block stylesheets %}
 	{{ parent() }}
 	<link rel="stylesheet" type="text/css" href="{{ asset('platform/treeLayout.css', 'admin') }}"/>
+	<link rel="stylesheet" type="text/css" href="{{ asset('platform/treeCollapse.css', 'admin') }}"/>
 {% endblock %}
 
 {% block javascripts %}
 	{{ parent() }}
+	<script src="{{ asset('platform/treeCollapse.js', 'admin') }}"></script>
   <script src=" {{ asset('organization/department.js', 'admin') }} "></script>
 
   <script>
+  function getQueryParam(name) {
+    var match = window.location.search.match(new RegExp('[?&]' + name + '=([^&]*)'));
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  function updateUrl(id) {
+    if (id) {
+      history.replaceState(null, '', '?id=' + encodeURIComponent(id));
+    } else {
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
+  function expandToNode(nodeId) {
+    var $node = $('.org-text-content[id="' + nodeId + '"]');
+    if (!$node.length) return;
+    $node.parents('li').each(function() {
+      var $subTree = $(this).children('ol.sub-tree-content');
+      if ($subTree.length && $subTree.is(':hidden')) {
+        $subTree.show();
+        $(this).children('.tree-indent').show();
+        var $arrow = $(this).find('> .item-content .arrow-icon i');
+        if ($arrow.length) {
+          $arrow.removeClass('fa-caret-right').addClass('fa-caret-down');
+        }
+      }
+    });
+  }
+
 	$(document).ready(function () {
     let payload = {
       parent: null,
@@ -26,8 +57,35 @@
       if (!thisChosen) {
         $(this).addClass("chosen");
         payload.parent = $(this).attr("id");
+        updateUrl($(this).attr("id"));
+      } else {
+        updateUrl(null);
       }
     })
+
+    // 页面恢复：如果 URL 有 ?id=xxx，展开路径并自动选中该节点
+    var restoreId = getQueryParam('id');
+    if (restoreId) {
+      // 如果左侧树被折叠，先展开
+      if ($('#leftTree').is(':hidden')) {
+        $('#collapseTree').trigger('click');
+      }
+      expandToNode(restoreId);
+      var $node = $('.org-text-content[id="' + restoreId + '"]');
+      if ($node.length) {
+        $('.org-text-content.chosen').removeClass('chosen');
+        $node.addClass('chosen');
+        payload.parent = restoreId;
+        // 滚动到可见区域
+        var scrollContainer = $node.closest('.left-tree-wrapper');
+        if (scrollContainer.length) {
+          scrollContainer.scrollTop($node.offset().top - scrollContainer.offset().top + scrollContainer.scrollTop() - 100);
+        }
+        if ($node.hasClass('department')) {
+          setTimeout(function() { $('#modify').trigger('click'); }, 50);
+        }
+      }
+    }
 
     $("#create").on("click", function (event) {
       $.ajax({
@@ -62,15 +120,16 @@
       });
     });
 
-    $("#collapseCompany").on("click", function () {
-      let leftTree = $(".left-tree");
-      if (leftTree.hasClass("visible")) {
-        let width = 0 - leftTree.outerWidth(true);
-        leftTree.animate({"left":+ width +"px"}, "slow").removeClass("visible");
-      } else {
-        leftTree.animate({"left":"0px"}, "slow").addClass('visible');
-      }
-    })
+    // "返回"按钮：清空右侧内容并清除 URL
+    $(document).on('click', '.right-content .back-btn', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('[DEBUG] 返回按钮点击', new Date().toISOString());
+      $('.right-content').empty();
+      console.log('[DEBUG] right-content cleared');
+      updateUrl(null);
+      console.log('[DEBUG] URL cleared, pathname:', window.location.pathname, 'search:', window.location.search);
+    });
 
     // Handle AJAX form submission for New/Edit Department
     $(document).on('submit', '.right-content form', function(e) {
@@ -111,7 +170,10 @@
                                   }
                               }
                          }
-                         $('.right-content').html('<div style="padding: 20px;" class="alert alert-success">' + (response.message || '操作成功') + '</div>');
+                          if (data.type === 'new' && data.id) {
+                            updateUrl(data.id);
+                          }
+                          $('.right-content').html('<div style="padding: 20px;" class="alert alert-success">' + (response.message || '操作成功') + '</div>');
                     } else {
                         alert(response.message || '操作失败');
                     }
@@ -146,7 +208,7 @@
           {'type':'disable', 'text': '停用', 'id':'disable'},
 			]) }}
 			<div class="inside-wrapper">
-				<div class="left-tree visible">
+				<div class="left-tree visible" id="leftTree">
 					<div class="left-tree-wrapper">
 						<div class="search-department-wrapper">
 							<span class="ef-input-wrapper">
@@ -160,10 +222,10 @@
               {{ departmentTree | raw }}
 						</div>
 					</div>
-          <div class="fold-icon-wrapper collapse" id="collapseCompany">
-            <i class="fa-solid fa-play"></i>
-          </div>
 				</div>
+        <div class="fold-icon-wrapper" id="collapseTree">
+          <i class="fa-solid fa-chevron-left"></i>
+        </div>
 				<div class="right-content">
 				</div>
 			</div>

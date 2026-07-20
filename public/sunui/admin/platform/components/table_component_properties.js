@@ -25,7 +25,9 @@
                     <div class="property-item">
                         <label class="property-label">边框颜色</label>
                         <div class="property-control">
-                            <input type="color" id="table-border-color" value="#cccccc" style="width: 50px; height: 30px; border: 1px solid #ddd; border-radius: 4px;">
+                            <span class="ef-input-wrapper ef-input-rounded" style="padding: 2px; width: auto; cursor: pointer;" id="table-border-color-trigger">
+                                <span id="table-border-color-preview" style="display: block; width: 50px; height: 30px; background: #cccccc; border-radius: 2px;"></span>
+                            </span>
                         </div>
                     </div>
                     
@@ -115,14 +117,11 @@
         $('.component-panel').show();
         
         // 切换到组件标签页
-        const $componentTab = $('.tabs-nav li').eq(1); // 组件标签页是第二个
+        const $componentTab = $('#property-tabs .tabs li').eq(1);
         if ($componentTab.length > 0) {
-            // 移除其他标签的active状态
-            $('.tabs-nav li').removeClass('tabs-active');
-            $('.panel').hide();
-            
-            // 激活组件标签页
-            $componentTab.addClass('tabs-active');
+            $('#property-tabs .tabs li').removeClass('tabs-selected');
+            $('#property-tabs .panel').hide();
+            $componentTab.addClass('tabs-selected');
             $('.component-panel').show();
         }
         
@@ -143,7 +142,8 @@
         
         // 边框颜色
         const borderColor = rgbToHex($table.css('border-color')) || '#cccccc';
-        $('#table-border-color').val(borderColor);
+        $('#table-border-color-preview').css('background-color', borderColor);
+        if (window.tableBorderColorPicker) window.tableBorderColorPicker.setColor(borderColor);
         
         // 边框样式
         const borderStyle = $table.css('border-style') || 'solid';
@@ -173,12 +173,23 @@
         });
         
         // 边框颜色
-        $(document).on('change', '#table-border-color', function() {
-            const selectedComponent = window.ComponentProperties?.getSelectedComponent();
-            if (selectedComponent) {
-                updateTableProperty('border-color', $(this).val());
-            }
-        });
+        if (!window.tableBorderColorPicker && window.ColorPicker) {
+            window.tableBorderColorPicker = new ColorPicker({
+                container: document.body,
+                defaultColor: '#cccccc',
+                onChange: function(color) {
+                    $('#table-border-color-preview').css('background-color', color);
+                    const selectedComponent = window.ComponentProperties?.getSelectedComponent();
+                    if (selectedComponent) {
+                        updateTableProperty('border-color', color);
+                    }
+                }
+            });
+            $(document).on('click', '#table-border-color-trigger', function(e) {
+                e.stopPropagation();
+                if (window.tableBorderColorPicker) window.tableBorderColorPicker.open(this);
+            });
+        }
         
         // 边框样式选择器
         initBorderStyleSelect();

@@ -4,13 +4,15 @@
 {% block stylesheets %}
 	{{ parent() }}
   <link rel="stylesheet" type="text/css" href="{{ asset('platform/treeLayout.css', 'admin') }}"/>
+	<link rel="stylesheet" type="text/css" href="{{ asset('platform/treeCollapse.css', 'admin') }}"/>
 	{# <link rel="stylesheet" type="text/css" href="{{ asset('platform/entity.css', 'admin') }}"/> #}
 	
 {% endblock %}
 
 {% block javascripts %}
-	{{ parent() }}
-	<script src=" {{ asset('platform/entity.js', 'admin') }} "></script>
+  {{ parent() }}
+  <script src="{{ asset('platform/treeCollapse.js', 'admin') }}"></script>
+  <script src=" {{ asset('platform/entity.js', 'admin') }} "></script>
 
 {% endblock %}
 
@@ -35,7 +37,7 @@
 					{'type': 'create', 'text': '新建文件夹', 'icon': 'fa-solid fa-folder-plus', 'id': 'createFolder'}
 			]) }}
 			<div class="inside-wrapper">
-				<div class="left-tree visible">
+				<div class="left-tree visible" id="leftTree">
 					<div class="left-tree-wrapper">
 						<div class="search-department-wrapper">
 							<span class="ef-input-wrapper">
@@ -49,9 +51,9 @@
 							{{ entity | raw }}
 						</div>
 					</div>
-					<div class="fold-icon-wrapper collapse" id="collapseCompany">
-						<i class="fa-solid fa-play"></i>
-					</div>
+				</div>
+				<div class="fold-icon-wrapper" id="collapseTree">
+					<i class="fa-solid fa-chevron-left"></i>
 				</div>
 				<div class="right-content">
 				  <div class="empty-content" id="platform-entity-empty">

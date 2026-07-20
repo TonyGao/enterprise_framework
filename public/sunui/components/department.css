@@ -469,29 +469,6 @@
   background-color: #f0f8ff;
 }
 
-.inside-wrapper .fold-icon-wrapper {
-  transform: rotate(180deg);
-  position: absolute;
-  top: 22px;
-  z-index: 1;
-  width: 19px;
-  height: 32px;
-  line-height: 28px;
-  text-align: center;
-  border: 1px solid #dee0e3;
-  border-radius: 4px;
-  background-color: White;
-  border-right: none;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  cursor: pointer;
-  font-size: 0.8em;
-  right: -20px;
-}
-
-.fold-icon-wrapper.collapse {
-  cursor: pointer;
-}
 
 .department-modal-body {
   display: flex;

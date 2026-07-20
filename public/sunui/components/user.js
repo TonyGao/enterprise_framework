@@ -182,6 +182,7 @@ $(document).ready(function () {
                     if (num === 1) {
                       $('#' + contentId).hide();
                     }
+                    updateMultiUserHiddenInput(userInput);
                   }
 
                   refreshSelectionHover();
@@ -228,12 +229,24 @@ $(document).ready(function () {
     });
   }
 
+  function updateMultiUserHiddenInput(userInput) {
+    var hiddenInput = userInput.closest('.ef-deparment-element').find('> input[type="hidden"]');
+    if (!hiddenInput.length) return;
+    var ids = [];
+    userInput.find('.ef-user-selection-span a').each(function () {
+      ids.push($(this).attr('id'));
+    });
+    hiddenInput.val(JSON.stringify(ids));
+  }
+
   refreshSelectionHover();
 
   // Delete selected item
   $('body').on('click', '.close-chose-user', function (event) {
     event.stopPropagation();
-    var mode = $(this).closest('.ef-user').find('.ef-user-view-input').attr('mode');
+    var $li = $(this).parents('.ef-user-selection-li');
+    var userInput = $(this).closest('.ef-user');
+    var mode = userInput.find('.ef-user-view-input').attr('mode');
     if (mode === 'single') {
       var input = $(this).parents('.ef-user-selection-container').find('input.ef-user-view-input');
       input.attr('chose', 'false');
@@ -241,7 +254,10 @@ $(document).ready(function () {
       input.focus();
       input.siblings('input[type="hidden"]').val('');
     }
-    $(this).parents('.ef-user-selection-li').remove();
+    $li.remove();
+    if (mode === 'multiple') {
+      updateMultiUserHiddenInput(userInput);
+    }
   });
 
   // Click on selected item to re-show input

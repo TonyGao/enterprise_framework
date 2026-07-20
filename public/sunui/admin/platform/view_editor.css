@@ -143,12 +143,13 @@
 .section {
   margin: 0;
   position: relative;
-  background-color: #f0f8ff;
+  background: transparent;
   overflow: visible; /* 修改为visible以允许section-content滚动 */
   padding: 0;
   /* 使section能够根据内容自适应宽度 */
   display: inline-block; /* 使元素宽度自适应内容 */
   max-width: 100%; /* 确保不超出父容器 */
+  left: 35px;
 }
 
 .section.active {
@@ -157,19 +158,24 @@
 
 .section-content {
   background-color: #f0f8ff;
-  min-height: 200px; /* 保证 Section 有一定的高度 */
+  min-height: 200px;
+  height: 100%; /* 确保占满父容器 */
   height: 100%; /* 确保占满父容器 */
   display: flex;
   justify-content: flex-start;
   flex-flow: column; /* 改为row wrap，支持水平排列和换行 */
   align-items: start;
-  width: 1140px; /* 默认宽度设置在section-content上 */
+  width: 480px; /* JS 通过 sectionConfig 控制；默认 480px 匹配典型表单 */
   min-width: 200px; /* 最小宽度 */
   overflow-y: auto; /* 启用垂直滚动条，当内容超出时可滚动查看 */
   overflow-x: visible; /* 确保水平方向内容可见，不被截断 */
   max-height: 100%; /* 确保不超出父容器高度 */
   scrollbar-width: none; /* 隐藏Firefox的默认滚动条 */
   position: relative; /* 确保定位正确 */
+}
+/* 有内容时去掉蓝色底色 */
+.section-content:has(> *) {
+  background-color: transparent;
 }
 
 /* 当align-items为center或end时，调整flex-direction为column以支持垂直对齐 */
@@ -441,6 +447,84 @@ h1, h2, h3 {
   outline: none;
 }
 
+/* 编辑器模式：字段行复用 ef-form-item 结构 + 虚线边框 */
+.editor-field-row .ef-form-item-label-col,
+.editor-field-row .ef-form-item-wrapper-col {
+  border: 1px dashed #d5d8dc;
+  min-height: 44px;
+}
+.editor-col.selected {
+  background: #f0f8ff;
+  outline: 3px solid #1890ff;
+  outline-offset: -1px;
+}
+
+/* 让 ef-component 包装器在布局上透明，原始 form 主题的 CSS 自然生效 */
+.ef-component.ef-form-label {
+  display: contents;
+}
+
+.ef-component.ef-form-widget {
+  display: contents;
+}
+
+/* display:contents 阻断 .ef-form-item-label-col > .ef-form-item-label 选择器，补一条 */
+.editor-field-row .ef-form-item-label {
+  max-width: 100%;
+  white-space: normal;
+}
+
+/* 字段行拖动把手 — 绝对定位不参与 flex 布局 */
+.editor-field-row {
+  position: relative;
+}
+.drag-handle {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  cursor: grab;
+  color: #bbb;
+  font-size: 14px;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: auto;
+  z-index: 5;
+}
+.drag-handle:hover {
+  color: #555;
+}
+.editor-field-row:hover .drag-handle {
+  opacity: 1;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+/* 拖拽中源行半透明 */
+.editor-field-row.dragging {
+  opacity: 0.35;
+}
+/* 放置指示线 — 插入在目标行上方 */
+.editor-field-row.drop-target {
+  position: relative;
+}
+.editor-field-row.drop-target::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -2px;
+  height: 3px;
+  background: #1890ff;
+  z-index: 10;
+  border-radius: 2px;
+}
+
 .item-block {
   position: relative;
 }
@@ -448,6 +532,16 @@ h1, h2, h3 {
 .item-block .ef-component {
   position: relative;
   border: none;
+}
+
+.ef-component.selected {
+  /* display:contents 元素无盒模型，选中样式由 .selected-visual 子元素显示 */
+}
+
+.selected-visual {
+  outline: 3px solid #1890ff !important;
+  outline-offset: 0 !important;
+  overflow: visible !important;
 }
 
 .ef-component-labels.label-top {
@@ -806,4 +900,68 @@ h1, h2, h3 {
   top: 0;
   bottom: 0;
   height: 100vh;
+}
+
+/* 编辑器画布内禁止 input focus 样式干扰 */
+#canvas input:focus,
+#canvas textarea:focus,
+#canvas button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 编辑器画布内禁用控件保持视觉正常（不灰显） */
+.editor-field-row input:disabled,
+.editor-field-row select:disabled,
+.editor-field-row textarea:disabled,
+.editor-field-row button:disabled {
+  opacity: 1 !important;
+  -webkit-text-fill-color: inherit !important;
+  color: inherit !important;
+  background-color: inherit !important;
+  cursor: default !important;
+}
+/* switch/checkbox disabled override */
+.editor-field-row .ef-switch input:disabled ~ .ef-switch-core {
+  opacity: 1 !important;
+  background: #d9d9d9 !important;
+}
+.editor-field-row input[type="checkbox"]:disabled,
+.editor-field-row input[type="radio"]:disabled {
+  opacity: 1 !important;
+  cursor: default !important;
+}
+
+/* 组件选中关闭按钮 */
+.ef-component-close-btn {
+  position: absolute !important;
+  top: -10px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  background: #ff4d4f;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.unbound-placeholder {
+  height: 36px;
+  line-height: 36px;
+  color: #bbb;
+  padding: 0 12px;
+  text-align: center;
+  font-size: 12px;
+  user-select: none;
+  border: 1px dashed #d5d8dc;
+  border-radius: 4px;
+  background: #fafafa;
+  cursor: default;
 }

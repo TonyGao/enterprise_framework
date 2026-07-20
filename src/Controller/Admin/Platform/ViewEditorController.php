@@ -4,10 +4,12 @@ namespace App\Controller\Admin\Platform;
 
 use App\Entity\Platform\View;
 use App\Controller\BaseController;
+use App\Form\Platform\ViewEditType;
 use App\Form\Platform\ViewFolderType;
 use App\Form\Platform\ViewType;
 use App\Lib\Str;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -24,86 +26,62 @@ class ViewEditorController extends BaseController
   public function index(EntityManagerInterface $em): Response
   {
     $repo = $em->getRepository(View::class);
-    $views = $repo->childrenHierarchy(null, false, [
-      'decorate' => true,
-      'rootOpen' => static function (array $tree): ?string {
-        if ([] !== $tree && 0 == $tree[0]['lvl']) {
-          return '<ol class="ol-left-tree">';
+    $treeData = $repo->childrenHierarchy(null, false, [], true);
+    $projectDir = $this->getParameter('kernel.project_dir');
+    $configFile = $projectDir . '/var/data/view_editor_config.json';
+    $generalConfig = [];
+    if (file_exists($configFile)) {
+        $configData = json_decode(file_get_contents($configFile), true);
+        if (!empty($configData)) {
+            $generalConfig = $configData;
         }
-
-        if ($tree[0]['type'] === 'view') {
-          return '<span class="tree-indent" style=""></span><ol class="sub-tree-content" style="">';
-        }
-
-        return '<span class="tree-indent"></span><ol class="sub-tree-content">';
-      },
-      'rootClose' => static function (array $child): ?string {
-        return '</ol>';
-      },
-      'childOpen' => '<li>',
-      'childClose' => '</li>',
-      'nodeDecorator' => static function (array $node): ?string {
-        if ($node['type'] === 'root') {
-          return '
-            <div class="item-content scroll-item">
-              <div class="arrow-icon">
-                <i class="fa-solid fa-caret-down"></i>
-              </div>
-              <div class="org-icon">
-                <i class="fa-solid fa-newspaper"></i>
-              </div>
-              <div class="node-name">
-                <div class="tree-text-content entity-root" type="root">视图</div>
-              </div>
-            </div>
-            ';
-        }
-
-        if ($node['type'] === 'folder') {
-          $arrayIcon = !empty($node['__children']) ? '<i class="fa-solid fa-caret-down"></i>' : '';
-
-          return '
-              <div class="item-content scroll-item">
-                <div class="arrow-icon">' . $arrayIcon . '</div>
-                <div class="org-icon">
-                  <i class="fa-regular fa-folder"></i>
-                </div>
-                <div class="node-name">
-                  <div class="tree-text-content branch folder" type="folder" id="' . $node['id'] . '">' .
-            $node['name']
-            . '</div>
-                </div>
-              </div>
-              ';
-        }
-
-        if ($node['type'] === 'view') {
-          $arrayIcon = !empty($node['__children']) ? '<i class="fa-solid fa-caret-right"></i>' : '';
-
-          $postscript = '';
-          if (!empty($node['label']) && $node['label'] !== $node['name']) {
-              $postscript = '<div class="postscript">'. $node['label'] .'</div>';
-          }
-
-          return '
-            <div class="item-content scroll-item">
-              <div class="arrow-icon">' . $arrayIcon . '</div>
-              <div class="org-icon">
-                <i class="fa-solid fa-o"></i>
-              </div>
-              <div class="node-name">
-                <div class="tree-text-content branch" type="view" id="' . $node['id'] . '">' . $node['name'] . '</div>
-                ' . $postscript . '
-              </div>
-            </div>
-            ';
-        }
-
-        return null;
-      }
-    ]);
+    }
     return $this->render('admin/platform/view/index.html.twig', [
-      'views' => $views
+      'treeData' => $treeData,
+      'generalConfig' => $generalConfig,
+    ]);
+  }
+
+  /**
+   * 视图详情预览
+   */
+  #[Route('/admin/platform/view/detail', name: 'platform_view_detail')]
+  public function viewDetail(Request $request, EntityManagerInterface $em): Response
+  {
+    $id = $request->query->get('id');
+    if (!$id) {
+      return new JsonResponse(['message' => '视图ID不能为空'], 400);
+    }
+
+    $view = $em->getRepository(View::class)->find($id);
+    if (!$view || $view->getType() !== 'view') {
+      return new JsonResponse(['message' => '视图不存在'], 404);
+    }
+
+    $fields = $em->getRepository(\App\Entity\Platform\ViewField::class)
+      ->findBy(['view' => $view], ['sortOrder' => 'ASC']);
+
+    $projectDir = $this->getParameter('kernel.project_dir');
+    $configFile = $projectDir . '/var/data/view_editor_config.json';
+    $generalConfig = [];
+    if (file_exists($configFile)) {
+      $configData = json_decode(file_get_contents($configFile), true);
+      if (!empty($configData)) {
+        $generalConfig = $configData;
+      }
+    }
+
+    // Build preview URL for entity-bound views
+    $previewUrl = null;
+    if ($view->getFormEntity()) {
+      $previewUrl = $this->generateUrl('platform_view_editor', ['id' => $view->getId()]);
+    }
+
+    return $this->render('admin/platform/view/view_detail.html.twig', [
+      'view' => $view,
+      'fields' => $fields,
+      'generalConfig' => $generalConfig,
+      'previewUrl' => $previewUrl,
     ]);
   }
 
@@ -235,8 +213,10 @@ class ViewEditorController extends BaseController
     }
 
     // 创建表单并处理请求
+    $showBuiltIn = $this->isGranted('ROLE_SYS_ADMIN');
     $form = $this->createForm(ViewType::class, $view, [
-      'action' => $this->generateUrl('platform_view_add_view')
+      'action' => $this->generateUrl('platform_view_add_view'),
+      'show_built_in' => $showBuiltIn,
     ]);
     $form->handleRequest($request);
 
@@ -253,56 +233,61 @@ class ViewEditorController extends BaseController
         return new JsonResponse(['message' => '同级目录下已存在同名视图'], 400);
       }
 
-      // 构建视图文件路径
-      $basePath = $this->getParameter('kernel.project_dir') . '/templates/views';
-      $relativePath = $this->buildRelativePath($parent, $view->getName());
-      
-      // 创建视图目录结构：视图名/1_0/
-      $name = $view->getName();
-      // 在原目录下创建以视图名命名的文件夹
-      $viewFolderPath = $basePath . '/' . $relativePath;
-      // 在视图名文件夹下创建版本控制目录 1_0 表示 v1.0
-      $versionFolderPath = $viewFolderPath . '/1_0';
-      
-      // 确保视图目录存在
-      if (!file_exists($viewFolderPath)) {
-        if (!mkdir($viewFolderPath, 0755, true)) {
-          return new JsonResponse(['message' => '创建视图目录失败，请检查权限'], 500);
+      if ($view->isBuiltIn()) {
+        // 系统内置视图：跳过文件创建，使用预设的模板
+        $view->setPath(null);
+      } else {
+        // 构建视图文件路径
+        $basePath = $this->getParameter('kernel.project_dir') . '/templates/views';
+        $relativePath = $this->buildRelativePath($parent, $view->getName());
+        
+        // 创建视图目录结构：视图名/1_0/
+        $name = $view->getName();
+        // 在原目录下创建以视图名命名的文件夹
+        $viewFolderPath = $basePath . '/' . $relativePath;
+        // 在视图名文件夹下创建版本控制目录 1_0 表示 v1.0
+        $versionFolderPath = $viewFolderPath . '/1_0';
+        
+        // 确保视图目录存在
+        if (!file_exists($viewFolderPath)) {
+          if (!mkdir($viewFolderPath, 0755, true)) {
+            return new JsonResponse(['message' => '创建视图目录失败，请检查权限'], 500);
+          }
         }
-      }
-      
-      // 创建版本目录
-      if (!file_exists($versionFolderPath)) {
-        if (!mkdir($versionFolderPath, 0755, true)) {
-          return new JsonResponse(['message' => '创建版本目录失败，请检查权限'], 500);
+        
+        // 创建版本目录
+        if (!file_exists($versionFolderPath)) {
+          if (!mkdir($versionFolderPath, 0755, true)) {
+            return new JsonResponse(['message' => '创建版本目录失败，请检查权限'], 500);
+          }
         }
-      }
-      
-      // 创建两个视图文件：1_0/name.html.twig 和 1_0/name.design.twig
-      $htmlTwigPath = $versionFolderPath . '/' . $name . '.html.twig';
-      $designTwigPath = $versionFolderPath . '/' . $name . '.design.twig';
-      
-      // 检查文件是否已存在
-      if (file_exists($htmlTwigPath) || file_exists($designTwigPath)) {
-        return new JsonResponse(['message' => '文件系统中已存在同名视图文件'], 400);
-      }
-      
-      // 创建视图文件
-      if (file_put_contents($htmlTwigPath, '{# ' . $view->getLabel() . ' 视图模板 #}\n{% extends "base.html.twig" %}\n\n{% block body %}\n  {# 视图内容 #}\n{% endblock %}') === false) {
-        return new JsonResponse(['message' => '创建视图HTML文件失败'], 500);
-      }
-      
-      if (file_put_contents($designTwigPath, '{# ' . $view->getLabel() . ' 设计文件 #}\n{# 此文件用于存储视图设计信息 #}') === false) {
-        // 如果设计文件创建失败，删除已创建的HTML文件
-        if (file_exists($htmlTwigPath)) {
-          unlink($htmlTwigPath);
+        
+        // 创建两个视图文件：1_0/name.html.twig 和 1_0/name.design.twig
+        $htmlTwigPath = $versionFolderPath . '/' . $name . '.html.twig';
+        $designTwigPath = $versionFolderPath . '/' . $name . '.design.twig';
+        
+        // 检查文件是否已存在
+        if (file_exists($htmlTwigPath) || file_exists($designTwigPath)) {
+          return new JsonResponse(['message' => '文件系统中已存在同名视图文件'], 400);
         }
-        return new JsonResponse(['message' => '创建视图设计文件失败'], 500);
+        
+        // 创建视图文件
+        if (file_put_contents($htmlTwigPath, '{# ' . $view->getLabel() . ' 视图模板 #}\n{% extends "base.html.twig" %}\n\n{% block body %}\n  {# 视图内容 #}\n{% endblock %}') === false) {
+          return new JsonResponse(['message' => '创建视图HTML文件失败'], 500);
+        }
+        
+        if (file_put_contents($designTwigPath, '{# ' . $view->getLabel() . ' 设计文件 #}\n{# 此文件用于存储视图设计信息 #}') === false) {
+          // 如果设计文件创建失败，删除已创建的HTML文件
+          if (file_exists($htmlTwigPath)) {
+            unlink($htmlTwigPath);
+          }
+          return new JsonResponse(['message' => '创建视图设计文件失败'], 500);
+        }
+        
+        // 设置相对路径到数据库（包含版本目录）
+        $relativePath = $relativePath . '/1_0';
+        $view->setPath($relativePath);
       }
-      
-      // 设置相对路径到数据库（包含版本目录）
-      $relativePath = $relativePath . '/1_0';
-      $view->setPath($relativePath);
       
       $em->persist($view);
       $em->flush();
@@ -312,6 +297,97 @@ class ViewEditorController extends BaseController
     }
 
     return $this->render('admin/platform/view/add_view.html.twig', [
+      'form' => $form->createView(),
+    ]);
+  }
+
+  /**
+   * 编辑视图的表单
+   */
+  #[Route('/admin/platform/view/editView', name: 'platform_view_edit_view')]
+  public function editView(Request $request, EntityManagerInterface $em): Response
+  {
+    $viewId = $request->query->get('id');
+    if (!$viewId) {
+      return new JsonResponse(['message' => '视图ID不能为空'], 400);
+    }
+
+    $view = $em->getRepository(View::class)->find($viewId);
+    if (!$view) {
+      return new JsonResponse(['message' => '视图不存在'], 404);
+    }
+
+    $showBuiltIn = $this->isGranted('ROLE_SYS_ADMIN');
+    $form = $this->createForm(ViewEditType::class, $view, [
+      'action' => $this->generateUrl('platform_view_edit_view', ['id' => $viewId]),
+      'show_built_in' => $showBuiltIn,
+    ]);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+      $em->flush();
+      $this->addFlash('success', '视图更新成功');
+      return $this->redirectToRoute('platform_view');
+    }
+
+    return $this->render('admin/platform/view/edit_view.html.twig', [
+      'view' => $view,
+      'form' => $form->createView(),
+    ]);
+  }
+
+  /**
+   * 重命名文件夹的表单
+   */
+  #[Route('/admin/platform/view/renameFolder', name: 'platform_view_rename_folder')]
+  public function renameFolder(Request $request, EntityManagerInterface $em): Response
+  {
+    $folderId = $request->query->get('id');
+    if (!$folderId) {
+      return new JsonResponse(['message' => '文件夹ID不能为空'], 400);
+    }
+
+    $folder = $em->getRepository(View::class)->find($folderId);
+    if (!$folder || $folder->getType() !== 'folder') {
+      return new JsonResponse(['message' => '文件夹不存在'], 404);
+    }
+
+    $form = $this->createForm(\App\Form\Platform\ViewFolderRenameType::class, $folder, [
+      'action' => $this->generateUrl('platform_view_rename_folder', ['id' => $folderId]),
+    ]);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+      // 检查同级目录下是否有同名文件夹
+      $existing = $em->getRepository(View::class)->findOneBy([
+        'parent' => $folder->getParent(),
+        'name' => $folder->getName(),
+        'type' => 'folder',
+      ]);
+      if ($existing && $existing->getId() !== $folder->getId()) {
+        return new JsonResponse(['message' => '同级目录下已存在同名文件夹'], 400);
+      }
+
+      $em->flush();
+      $this->addFlash('success', '文件夹重命名成功');
+
+      if ($request->isXmlHttpRequest()) {
+        return new JsonResponse(['success' => true]);
+      }
+      return $this->redirectToRoute('platform_view');
+    }
+
+    // 表单未提交或验证失败 — POST AJAX 返回 JSON，GET 直接返回 HTML
+    if ($request->isMethod('POST') && $request->isXmlHttpRequest()) {
+      $html = $this->renderView('admin/platform/view/rename_folder.html.twig', [
+        'folder' => $folder,
+        'form' => $form->createView(),
+      ]);
+      return new JsonResponse(['html' => $html]);
+    }
+
+    return $this->render('admin/platform/view/rename_folder.html.twig', [
+      'folder' => $folder,
       'form' => $form->createView(),
     ]);
   }
@@ -353,8 +429,12 @@ class ViewEditorController extends BaseController
     '/admin/platform/view/editor/{id}',
     name: 'platform_view_editor'
   )]
-  public function editor(string $id): Response
-  {
+  public function editor(
+    string $id,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer,
+    \Doctrine\ORM\EntityManagerInterface $em,
+    #[Autowire('%kernel.project_dir%')] string $projectDir
+  ): Response {
     $components = [
       ['icon' => 'fa-solid fa-border-none', 'name' => '布局', 'componentType' => 'layout'],
       ['icon' => 'fa-solid fa-table', 'name' => '表格', 'componentType' => 'table'],
@@ -369,10 +449,41 @@ class ViewEditorController extends BaseController
       ['icon' => 'fa-solid fa-map', 'name' => 'Icon', 'componentType' => 'icon'],
       ['icon' => 'fa-solid fa-map', 'name' => '相册', 'componentType' => 'gallery'],
     ];
+
+    $tplVars = ['components' => $components];
+
+    $configFile = $projectDir . '/var/data/view_editor_config.json';
+    if (file_exists($configFile)) {
+        $configData = json_decode(file_get_contents($configFile), true);
+        if (!empty($configData)) {
+            $tplVars['generalConfig'] = $configData;
+        }
+    }
+
+    $view = $em->getRepository(\App\Entity\Platform\View::class)->find($id);
+    if ($view) {
+      $tplVars['sectionConfig'] = $view->getSectionConfig();
+    }
+    if ($view && $view->getFormEntity() && $view->isBuiltIn()) {
+      $tplVars['formEntity'] = $view->getFormEntity();
+      $tplVars['entityProperties'] = $em->getRepository(\App\Entity\Platform\EntityProperty::class)
+        ->findBy(['entity' => $view->getFormEntity()], ['orderNum' => 'ASC']);
+
+      $fields = $em->getRepository(\App\Entity\Platform\ViewField::class)
+        ->findBy(['view' => $view], ['sortOrder' => 'ASC']);
+      if (!empty($fields)) {
+        try {
+          $entityClass = $view->getFormEntity()->getFqn();
+          $data = new $entityClass();
+          $result = $formFieldRenderer->render($view, $data, true, [], $tplVars['generalConfig'] ?? []);
+          $tplVars['initialCanvasHtml'] = $result['html'];
+        } catch (\Exception $e) {
+          // fallback to empty canvas
+        }
+      }
+    }
   
-    return $this->render('admin/platform/view/editor.html.twig', [
-      'components' => $components,
-    ]);
+    return $this->render('admin/platform/view/editor.html.twig', $tplVars);
   }
   
   #[Route(

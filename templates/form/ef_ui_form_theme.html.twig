@@ -56,10 +56,10 @@
             {%- set class_attr = class_attr ~ ' ef-input-color' -%}
         {%- endif -%}
         <span class="ef-input-wrapper {{ wrapper_class }} {% if isReadonly %} ef-input-disabled {% endif %}" style="{{ wrapper_style }}">
-            <input component="input" class="ef-input ef-input-size-medium {{ class_attr }}" 
+            <input component="input" class="ef-input ef-input-size-medium {{ class_attr }}"
                    {% if type != 'color' %}clearable="true"{% endif %}
-                   type="{{ type }}" 
-                   {{ block('widget_attributes') }} 
+                   type="{{ type }}"
+                   {{ block('widget_attributes') }}
                    {% if value is not empty %}value="{{ value }}" {% endif %}
                    {% if isReadonly %} readonly="readonly" {% endif %}
                    {% if disabled %} disabled="disabled" {% endif %}
@@ -94,19 +94,24 @@
   {%- if attr.rounded|default(false) -%}
       {%- set wrapper_class = wrapper_class ~ ' ef-textarea-rounded' -%}
   {%- endif -%}
-  {%- set wrapper_style = '' -%}
   {%- set min_rows = 3 -%}
+  {%- set is_autosize = false -%}
   {%- if attr.rows is defined and attr.rows > 0 -%}
       {%- set min_rows = attr.rows -%}
+  {%- elseif attr.height|default(false) -%}
+      {%- set min_rows = attr.height -%}
   {%- endif -%}
-  {%- set min_rows = max(min_rows, 3) -%}
-  {%- set is_autosize = false -%}
-  {%- if attr.autosize is defined and attr.autosize -%}
+  {%- set min_rows = max(min_rows, 1) -%}
+  {%- if attr.autosize is defined and attr.autosize and not attr.rows|default(false) and not attr.height|default(false) -%}
       {%- set is_autosize = true -%}
   {%- endif -%}
+  {%- set max_rows = min_rows -%}
+  {%- if not attr.rows|default(false) and not attr.height|default(false) -%}
+      {%- set max_rows = 10 -%}
+  {%- endif -%}
   {%- set attr = attr|merge({'wrapper_class': false, 'rounded': false, 'height': false, 'autosize': false}) -%}
-  <div class="ef-textarea-wrapper {{ wrapper_class }} {% if isReadonly %} ef-textarea-disabled {% endif %}" style="{{ wrapper_style }}">
-    <textarea component="textarea" {{ block('widget_attributes') }} class="ef-textarea {% if is_autosize %}resizeable{% endif %} {{ class_attr }}" min-rows="{{ min_rows }}" max-rows="10" clearable="true" placeholder="Please enter something">{{ value }}</textarea>
+  <div class="ef-textarea-wrapper {{ wrapper_class }} {% if isReadonly %} ef-textarea-disabled {% endif %}">
+    <textarea component="textarea" {{ block('widget_attributes') }} class="ef-textarea {% if is_autosize %}resizeable{% endif %} {{ class_attr }}" min-rows="{{ min_rows }}" max-rows="{{ max_rows }}" rows="{{ min_rows }}" clearable="true" placeholder="{{ attr.placeholder is defined and attr.placeholder ? attr.placeholder : 'Please enter something' }}">{{ value }}</textarea>
   </div>
 {%- endblock textarea_widget -%}
 
@@ -263,7 +268,9 @@
 {%- block switch_widget -%}
 {% set real_id = id %}
 {% set id = id ~ '_hidden' %}
-<button id="{{ real_id }}" type="button" role="switch" aria-checked="{% if checked %}true{% else %}false{% endif %}" class="ef-switch ef-switch-type-circle{% if checked %} ef-switch-checked{% endif %}">
+{% set _switch_required_bg = attr['data-required-bg']|default(false) %}
+{% set attr = attr|merge({'data-required-bg': false}) %}
+<button id="{{ real_id }}" type="button" role="switch" aria-checked="{% if checked %}true{% else %}false{% endif %}" class="ef-switch ef-switch-type-circle{% if checked %} ef-switch-checked{% endif %}"{% if _switch_required_bg %} data-required-bg="{{ _switch_required_bg }}"{% endif %}>
   <input type="hidden" {{ block('widget_attributes') }} {% if value is not empty %}value="{{ value }}" {% endif %}/>
   <span class="ef-switch-handle">
     <span class="ef-switch-handle-icon"></span>
@@ -281,7 +288,8 @@
         {%- set wrapper_class = wrapper_class ~ ' ef-input-h' ~ attr.height -%}
         {%- set wrapper_style = 'height: ' ~ attr.height ~ 'px;' -%}
     {%- endif -%}
-    {%- set attr = attr|merge({'wrapper_class': false, 'rounded': false, 'height': false}) -%}
+    {%- set input_class = (attr.class|default('') ~ ' ef-input ef-input-size-medium number')|trim -%}
+    {%- set attr = attr|merge({'wrapper_class': false, 'rounded': false, 'height': false, 'class': input_class}) -%}
 	<span class="ef-input-wrapper ef-input-number ef-input-number-mode-embed ef-input-number-size-medium {{ wrapper_class }}" style="{{ wrapper_style }}">
     <input role="spinbutton"
       {{ block('widget_attributes') }}
@@ -296,9 +304,8 @@
         step="{{ attr.step }}"
       {% endif %}
       precision="0"
-      class="ef-input ef-input-size-medium number"
       type="text"
-      placeholder="Please Enter"
+      placeholder="{{ attr.placeholder is defined and attr.placeholder ? attr.placeholder : 'Please Enter' }}"
       {% if value is not empty %}value="{{ value }}" {% endif %}
     >
     <span class="ef-input-suffix">
@@ -410,7 +417,7 @@
       id="{{ selectInputId }}"
       contentId="{{ selectContentId }}"
       >
-      <input id="{{ real_id }}" class="ef-select-view-input {% if isDefault %} ef-select-view-input-hidden {% endif %}" placeholder="Please select ...">
+      <input id="{{ real_id }}" class="ef-select-view-input {% if isDefault %} ef-select-view-input-hidden {% endif %}" placeholder="{{ attr.placeholder is defined and attr.placeholder ? attr.placeholder : 'Please select ...' }}">
       {% set defaultLabel = '' %}
       {% set defaultTranslationParams = {} %}
       {%- for key, choice_attr in preferred_choices -%}

@@ -1,0 +1,181 @@
+{% if form.template is defined %}
+<style>
+.template-tree .ol-left-tree {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+.template-tree .sub-tree-content {
+    display: inline-block;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+.template-tree .tree-indent {
+    display: inline-block;
+    width: 16px;
+    height: 18px;
+    margin: 4px 0;
+    vertical-align: middle;
+    overflow: hidden;
+}
+.template-tree .hidden {
+    display: none !important;
+}
+</style>
+<div class="template-selector-field" style="margin-bottom: 16px;">
+    <div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
+        <div class="ef-col ef-col-8 ef-form-item-label-col">
+            <label class="ef-form-item-label">模板文件</label>
+        </div>
+        <div class="ef-col ef-col-16 ef-form-item-wrapper-col">
+            <div class="ef-form-item-content-wrapper">
+                <div class="ef-form-item-content ef-form-item-content-flex">
+                    <span class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium template-tree-trigger" style="height: 36px; line-height: 36px; cursor: pointer;">
+                        <span class="ef-input" style="border:none; width: 100%; height: 100%; outline: none; background: transparent; padding: 0 12px; display: flex; align-items: center; justify-content: space-between;">
+                            <span class="template-display-text" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;{% if not form.template.vars.value %}color: #999;{% endif %}">{% if form.template.vars.value %}{{ form.template.vars.value }}{% else %}请选择模板{% endif %}</span>
+                            <i class="fa-solid fa-chevron-down" style="color: #999; flex-shrink: 0; margin-left: 4px;"></i>
+                        </span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var templateTreeData = null;
+var templateSelectedPath = '{{ form.template.vars.value }}';
+
+function openTemplateTreeModal() {
+    var modalId = 'template-tree-modal-' + Date.now();
+    var modal = [
+        '<div class="ef-modal-container" id="' + modalId + '" style="z-index: 2000; display: none;">',
+            '<div class="ef-modal-mask" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;"></div>',
+            '<div class="ef-modal-wrapper ef-modal-wrapper-align-center" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 2001;">',
+                '<div class="ef-modal" style="width: 500px; max-height: 80vh; background: #fff; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; flex-direction: column;">',
+                    '<div class="ef-modal-header" style="padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between;">',
+                        '<div class="ef-modal-title"><i class="fa-solid fa-file-code"></i> 选择模板文件</div>',
+                        '<div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" style="cursor: pointer;" onclick="closeTemplateTreeModal(\'' + modalId + '\')">',
+                            '<span class="ef-icon-hover"><svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter" style="width: 16px; height: 16px;"><path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path></svg></span>',
+                        '</div>',
+                    '</div>',
+                    '<div class="ef-modal-body" style="flex: 1; overflow-y: auto; padding: 16px 20px; min-height: 100px;">',
+                        '<div class="common-tree-wrapper template-tree" style="min-height: 60px;"></div>',
+                    '</div>',
+                    '<div class="ef-modal-footer" style="padding: 12px 20px; border-top: 1px solid #eee; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">',
+                        '<button class="btn secondary small" type="button" onclick="closeTemplateTreeModal(\'' + modalId + '\')">取消</button>',
+                        '<button class="btn primary small" type="button" onclick="confirmTemplateSelection(\'' + modalId + '\')">确定</button>',
+                    '</div>',
+                '</div>',
+            '</div>',
+        '</div>'
+    ].join('\n');
+
+    $('body').append(modal);
+    $('#' + modalId).show();
+    loadTemplateTree(modalId);
+}
+
+function loadTemplateTree(modalId) {
+    var $tree = $('#' + modalId + ' .template-tree');
+    $tree.html('<div style="text-align: center; padding: 20px; color: #999;"><i class="fa-solid fa-spinner fa-spin"></i> 加载模板列表...</div>');
+
+    $.ajax({
+        url: '{{ path("api_platform_templates_tree") }}',
+        method: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            templateTreeData = data;
+            renderTemplateTree(data, modalId);
+        },
+        error: function() {
+            $tree.html('<div style="text-align: center; padding: 20px; color: #ff4d4f;">加载模板列表失败</div>');
+        }
+    });
+}
+
+function renderTemplateTree(entries, modalId) {
+    var $tree = $('#' + modalId + ' .template-tree');
+    if (!entries || entries.length === 0) {
+        $tree.html('<div style="text-align: center; padding: 20px; color: #999;">没有可用的模板文件</div>');
+        return;
+    }
+    var html = renderTemplateTreeNodes(entries);
+    $tree.html('<ol class="ol-left-tree" style="padding: 0; margin: 0; list-style: none;">' + html + '</ol>');
+    $tree.off('click.templateTree').on('click.templateTree', '.arrow-icon', function(e) {
+        e.stopPropagation();
+        var $li = $(this).closest('li');
+        var $sub = $li.children('ol').first();
+        var $indent = $li.children('.tree-indent');
+        if ($sub.length) {
+            $indent.toggleClass('hidden');
+            $sub.toggleClass('hidden');
+        }
+        var $icon = $(this).find('i');
+        if ($icon.hasClass('fa-caret-down')) {
+            $icon.removeClass('fa-caret-down').addClass('fa-caret-right');
+        } else {
+            $icon.removeClass('fa-caret-right').addClass('fa-caret-down');
+        }
+    });
+    $tree.on('click.templateTree', '.template-file', function() {
+        $tree.find('.template-file.chosen').removeClass('chosen');
+        $(this).addClass('chosen');
+    });
+}
+
+function renderTemplateTreeNodes(entries) {
+    var html = '';
+    for (var i = 0; i < entries.length; i++) {
+        var entry = entries[i];
+        if (entry.type === 'directory') {
+            html += '<li>';
+            html += '<div class="item-content scroll-item" style="display: flex; align-items: center; padding: 4px 0;">';
+            html += '<span class="arrow-icon" style="cursor: pointer; display: flex; margin-right: 6px; width: 8px;"><i class="fa-solid fa-caret-right"></i></span>';
+            html += '<span class="tree-text-content branch" style="font-weight: 500; cursor: default;"><i class="fa-solid fa-folder" style="margin-right: 4px; color: #faad14;"></i> ' + escapeHtml(entry.name) + '</span>';
+            html += '</div>';
+            html += '<span class="tree-indent hidden"></span>';
+            html += '<ol class="sub-tree-content hidden">';
+            html += renderTemplateTreeNodes(entry.children);
+            html += '</ol>';
+            html += '</li>';
+        } else {
+            var selected = templateSelectedPath === entry.path;
+            html += '<li>';
+            html += '<div class="item-content scroll-item" style="display: flex; align-items: center; padding: 4px 0;">';
+            html += '<span class="arrow-icon" style="display: flex; margin-right: 6px; width: 8px; visibility: hidden;"><i class="fa-solid fa-caret-right"></i></span>';
+            html += '<span class="tree-text-content template-file' + (selected ? ' chosen' : '') + '" data-path="' + escapeHtml(entry.path) + '" style="cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><i class="fa-solid fa-file-code" style="margin-right: 4px; color: #1890ff;"></i> ' + escapeHtml(entry.name) + '</span>';
+            html += '</div>';
+            html += '</li>';
+        }
+    }
+    return html;
+}
+
+function closeTemplateTreeModal(modalId) {
+    $('#' + modalId).remove();
+}
+
+function confirmTemplateSelection(modalId) {
+    var selected = $('#' + modalId + ' .template-file.chosen');
+    if (selected.length) {
+        var path = selected.data('path');
+        templateSelectedPath = path;
+        $('.template-display-text').text(path).css('color', '');
+        $('#{{ form.template.vars.id }}').val(path);
+    }
+    $('#' + modalId).remove();
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+$(function() {
+    $('.template-tree-trigger').on('click', function() {
+        openTemplateTreeModal();
+    });
+});
+</script>
+{% endif %}

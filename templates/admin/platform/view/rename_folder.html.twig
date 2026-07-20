@@ -1,0 +1,18 @@
+<form name="view_folder_rename" method="post" action="{{ form.vars.action }}" style="width: 100%;">
+    <div style="margin-bottom: 16px;">
+        <label for="{{ form.name.vars.id }}" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #1d2129;">文件夹名</label>
+        {{ form_widget(form.name) }}
+        {% if form.name.vars.errors|length > 0 %}
+            <div style="color: #ff4d4f; font-size: 12px; margin-top: 4px;">
+                {% for error in form.name.vars.errors %}
+                    {{ error.message }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    {{ form_widget(form._token) }}
+    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+        <button class="btn secondary small" type="button" onclick="closeModal('renameFolderModal')">取消</button>
+        <button class="btn primary small" type="submit">确定</button>
+    </div>
+</form>

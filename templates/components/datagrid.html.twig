@@ -162,8 +162,9 @@
                                                 <div class="ef-button-group">
                                                     {% for button in options.actionButtons %}
                                                     <a href="{% if button.type == 'view' %}{{ viewUrlPrefix }}{{ rowId }}{% elseif button.type == 'edit' %}{{ editUrlPrefix }}{{ rowId }}{% elseif button.type == 'delete' %}{{ deleteUrlPrefix }}{{ rowId }}{% else %}#{% endif %}" 
-                                                       class="ef-button ef-button-small ef-button-{{ button.type }} {{ button.classes|default('') }}" 
+                                                       class="ef-button ef-button-small ef-button-{{ button.type }} {{ button.type }}-button {{ button.classes|default('') }}" 
                                                        title="{{ button.text }}"
+                                                       data-id="{{ rowId }}"
                                                        {% if button.type == 'delete' %}onclick="if(confirm('确定要删除吗？')){ var f = document.createElement('form'); f.style.display='none'; this.parentNode.appendChild(f); f.method='POST'; f.action=this.href; var t=document.createElement('input');t.type='hidden';t.name='_token';t.value='{{ csrf_token('delete' ~ rowId) }}';f.appendChild(t);f.submit(); };return false;"{% endif %}>
                                                         <i class="{{ button.icon }}"></i> {{ button.text }}
                                                     </a>

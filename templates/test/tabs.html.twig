@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('lib/prism/prism.css') }}">
     <link rel="stylesheet" href="{{ asset('tabs.css', 'ui') }}">
     <style>
         body {
@@ -253,7 +254,7 @@
                 </div>
             </div>
             
-            <div class="docs-code">
+            <pre class="docs-code"><code class="language-html">
 &lt;div class="ef-tabs tabs-container"&gt;
     &lt;div class="tabs-header tabs-header-plain"&gt;
         &lt;div class="tabs-wrap"&gt;
@@ -283,7 +284,7 @@
         &lt;div class="panel panel-htop" style="display: none;" liid="tab3"&gt;内容3&lt;/div&gt;
     &lt;/div&gt;
 &lt;/div&gt;
-            </div>
+            </code></pre>
         </div>
     </section>
     
@@ -329,4 +330,5 @@
         </div>
     </section>
 </div>
+<script src="{{ asset('lib/prism/prism.js') }}"></script>
 {% endblock %}

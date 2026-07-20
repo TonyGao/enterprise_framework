@@ -119,10 +119,6 @@
   margin: 0 auto;
 }
 
-.ef-textarea-wrapper {
-  max-width: 320px;
-}
-
 .ef-row-align-start {
   align-items: flex-start;
 }

@@ -48,7 +48,7 @@ class EntityApiController extends AbstractController
 
       foreach($fields as $field) {
         // 如果是 string 类型的字段，这里是临时的判断，为了逐渐增加不同类型的Service
-        if ($field['type']['value'] == 'string' || $field['type']['value'] == 'text') {
+        if ($field['type']['value'] == 'string' || $field['type']['value'] == 'text' || $field['type']['value'] == 'user') {
           try {
             $et->addProperty($field);
           } catch (\Exception $e) {
@@ -74,5 +74,25 @@ class EntityApiController extends AbstractController
   {
     $payload = $request->getPayload();
     return ApiResponse::success();
+  }
+
+  #[Route(
+    '/api/admin/platform/entity/updateField',
+    name: 'api_platform_entity_updateField',
+    methods: ['POST']
+  )]
+  public function updateField(Request $request, EntityService $eS): ApiResponse
+  {
+    try {
+      $payload = $request->toArray();
+      $propertyToken = $payload['propertyToken'];
+      $fields = $payload['fields'];
+
+      $eS->updateProperty($propertyToken, $fields);
+    } catch (\Exception $e) {
+      return ApiResponse::error('', '500', $e->getMessage());
+    }
+
+    return ApiResponse::success('', 'success', 'Field updated');
   }
 }

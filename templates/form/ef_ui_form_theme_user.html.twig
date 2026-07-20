@@ -1,0 +1,50 @@
+{%- block user_widget -%}
+  {% set mode = attr.mode|default('multiple') %}
+  {% set userInputId = id ~ '_input' %}
+  {% set userContentId = id ~ '_popup' %}
+  {% set valueJson = value is iterable ? value|json_encode : (value ?: '[]') %}
+  <div class="ef-deparment-element">
+    <span class="ef-user-view-single ef-user ef-user-view ef-user-view-size-medium ef-user-view-search{% if attr.rounded|default(false) %} ef-input-rounded{% endif %}"
+          chosen="false"
+          id="{{ userInputId }}"
+          contentid="{{ userContentId }}"
+          data-search-url="{{ path('org_user_search_by_key') }}"
+          data-modal-url="{{ path('org_user_single_select') }}">
+      <div class="ef-user-selection-container">
+        <div class="ef-user-selection">
+          <span class="ef-user-selection-span">
+            <ul></ul>
+          </span>
+        </div>
+        <input class="ef-user-view-input" placeholder="{{ attr.placeholder is defined and attr.placeholder ? attr.placeholder : '搜索用户...' }}" mode="{{ mode }}" chose="false">
+      </div>
+      <span class="ef-user-view-value ef-user-view-value-hidden"></span>
+      <span class="ef-user-view-suffix show-user-modal">
+        <span class="ef-user-view-icon">
+          <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-search" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+            <path d="M33.072 33.071c6.248-6.248 6.248-16.379 0-22.627-6.249-6.249-16.38-6.249-22.628 0-6.248 6.248-6.248 16.379 0 22.627 6.248 6.248 16.38 6.248 22.628 0Zm0 0 8.485 8.485"></path>
+          </svg>
+        </span>
+      </span>
+    </span>
+    <input type="hidden" {{ block('widget_attributes') }} value="{{ valueJson }}">
+    <div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" style="z-index: 1001; pointer-events: auto; min-width: 300px;" id="{{ userContentId }}" parentid="{{ userInputId }}">
+      <div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
+        <div class="ef-trigger-content">
+          <div class="ef-user-dropdown">
+            <div class="ef-scrollbar ef-scrollbar-type-embed">
+              <div class="ef-scrollbar-container ef-user-dropdown-list-wrapper">
+                <ul class="ef-user-dropdown-list"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ef-trigger-popup-close-button">
+        <button class="btn primary medium icon circle">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+{%- endblock user_widget -%}

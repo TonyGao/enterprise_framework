@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('lib/prism/prism.css') }}">
     <link rel="stylesheet" href="{{ asset('switch.css', 'ui') }}">
     <style>
         body {
@@ -318,13 +319,13 @@
                             <span class="ef-switch-handle-icon"></span>
                         </span>
                     </button>
-                    <div class="docs-code">
+                    <pre class="docs-code"><code class="language-html">
 &lt;button type="button" role="switch" aria-checked="false" class="ef-switch ef-switch-type-circle"&gt;
     &lt;span class="ef-switch-handle"&gt;
         &lt;span class="ef-switch-handle-icon"&gt;&lt;/span&gt;
     &lt;/span&gt;
 &lt;/button&gt;
-                    </div>
+                    </code></pre>
                 </div>
                 
                 <div class="docs-demo-box">
@@ -334,13 +335,13 @@
                             <span class="ef-switch-handle-icon"></span>
                         </span>
                     </button>
-                    <div class="docs-code">
+                    <pre class="docs-code"><code class="language-html">
 &lt;button type="button" role="switch" aria-checked="true" class="ef-switch ef-switch-type-circle ef-switch-on"&gt;
     &lt;span class="ef-switch-handle"&gt;
         &lt;span class="ef-switch-handle-icon"&gt;&lt;/span&gt;
     &lt;/span&gt;
 &lt;/button&gt;
-                    </div>
+                    </code></pre>
                 </div>
             </div>
         </div>
@@ -367,13 +368,13 @@
                         </span>
                     </button>
                 </div>
-                <div class="docs-code">
+                <pre class="docs-code"><code class="language-html">
 &lt;!-- 标准尺寸 --&gt;
 &lt;button class="ef-switch ef-switch-type-circle"&gt;...&lt;/button&gt;
 
 &lt;!-- 小型尺寸 --&gt;
 &lt;button class="ef-switch ef-switch-type-circle ef-switch-small"&gt;...&lt;/button&gt;
-                </div>
+                </code></pre>
             </div>
         </div>
     </section>
@@ -433,4 +434,5 @@
         </div>
     </div>
 </div>
+<script src="{{ asset('lib/prism/prism.js') }}"></script>
 {% endblock %}

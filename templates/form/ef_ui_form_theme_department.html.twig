@@ -37,7 +37,7 @@
                 id="{{ real_id }}"
                 
                 class="ef-department-view-input"
-                placeholder="请输入部门名称 ..."
+                placeholder="{{ attr.placeholder is defined and attr.placeholder ? attr.placeholder : '请输入部门名称 ...' }}"
                 mode="single"
                 chose="{{ department is not empty ? 'true' : 'false' }}"
                 style="display: {{ department is not empty ? 'none' : 'block' }};"

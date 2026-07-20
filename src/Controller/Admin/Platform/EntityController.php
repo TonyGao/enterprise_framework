@@ -22,6 +22,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 
+
 /**
  * 实体控制器
  */
@@ -162,7 +163,7 @@ html;
     );
 
     // 初始化表头（列名称）
-    $tableHeaders = ['name', 'comment', 'type', 'length', 'entity', 'group'];
+    $tableHeaders = ['name', 'comment', 'type', 'length', 'entity', 'group', 'action'];
 
     $arr = array();
     foreach ($entityProperties as $entity) {
@@ -173,6 +174,7 @@ html;
       $et->length = $entity->getLength();
       $et->entity = $entity->getEntity();
       $et->group = $entity->getGroup()->getLabel();
+      $et->token = $entity->getToken();
       $arr[] = $et;
     }
 
@@ -214,6 +216,28 @@ html
       'drawerContent' => $form['form'],
       'drawerTitleAddon' => $form['additional'],
       //'drawerTitleAddonTwig' => $this->_getDrawTitleAddon(),
+    ]);
+  }
+
+  #[Route(
+    '/admin/platform/entity/editFieldDrawer',
+    name: 'platform_entity_editFieldDrawer',
+    methods: ['POST']
+  )]
+  public function editFieldDrawer(Request $request, EntityFormService $formService): Response
+  {
+    $payload = $request->toArray();
+    $epgToken = $payload['token'];
+    $propertyToken = $payload['propertyToken'];
+
+    $form = $formService->getEditFieldForm($epgToken, $propertyToken);
+
+    return $this->render('ui/drawer/drawer.html.twig', [
+      'id' => $epgToken . '_edit_' . $propertyToken,
+      'drawerTitle' => '编辑字段',
+      'width' => '840',
+      'drawerContent' => $form,
+      'propertyToken' => $propertyToken,
     ]);
   }
 

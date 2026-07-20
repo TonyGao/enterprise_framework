@@ -77,11 +77,11 @@ class PositionType extends AbstractType
                 'placeholder' => '-- 请选择上级岗位 --',
             ])
             ->add('responsibility', TextareaType::class, [
-                'label' => '岗位职责', 'attr' => ['rounded' => $rounded, 'height' => $height],
+                'label' => '岗位职责', 'attr' => ['rounded' => $rounded, 'height' => 10],
                 'required' => false,
             ])
             ->add('requirement', TextareaType::class, [
-                'label' => '任职要求', 'attr' => ['rounded' => $rounded, 'height' => $height],
+                'label' => '任职要求', 'attr' => ['rounded' => $rounded, 'height' => 10],
                 'required' => false,
             ])
             ->add('headcount', IntegerType::class, [
@@ -97,7 +97,7 @@ class PositionType extends AbstractType
                 'required' => false,
             ])
             ->add('remark', TextareaType::class, [
-                'label' => '备注', 'attr' => ['rounded' => $rounded, 'height' => $height],
+                'label' => '备注', 'attr' => ['rounded' => $rounded, 'height' => 10],
                 'required' => false,
             ])
         ;
