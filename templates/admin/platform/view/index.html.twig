@@ -213,35 +213,32 @@
 	</div>
 
 	{# 删除确认弹窗 #}
-	<div id="delete-confirm-modal" class="ef-modal-overlay" style="display: none;">
-		<div class="ef-modal" style="width: 420px;">
-			<div class="ef-modal-header">
-				<span class="ef-modal-title"><i class="fa-solid fa-triangle-exclamation" style="color: #ff4d4f; margin-right: 8px;"></i>确认删除</span>
-			</div>
-			<div class="ef-modal-body">
-				<p style="margin: 0 0 16px 0; font-size: 14px; color: #1e293b; line-height: 1.6;">
-					<strong style="color: #ff4d4f;">此操作不可撤回。</strong>一旦删除将无法挽回。<br>
-					请输入 <strong style="color: #ff4d4f;">确认删除</strong> 以继续：
-				</p>
-				<input type="text" id="delete-confirm-input" class="ef-input" placeholder="请输入“确认删除”" style="width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; outline: none; box-sizing: border-box;">
-				<div id="delete-confirm-error" style="color: #ff4d4f; font-size: 12px; margin-top: 6px; display: none;">请输入"确认删除"以继续</div>
-			</div>
-			<div class="ef-modal-footer" style="display: flex; justify-content: flex-end; gap: 8px; padding: 12px 24px 20px;">
-				<button type="button" class="btn secondary medium" id="delete-confirm-cancel">取消</button>
-				<button type="button" class="btn primary medium" id="delete-confirm-submit" disabled style="background: #ff4d4f; border-color: #ff4d4f; opacity: 0.5;">确认删除</button>
+	<div class="ef-modal-container" id="deleteConfirmModal" style="z-index: 2000; display: none;">
+		<div class="ef-modal-mask" onclick="closeModal('deleteConfirmModal')"></div>
+		<div class="ef-modal-wrapper ef-modal-wrapper-align-center">
+			<div class="ef-modal" style="width: 460px;">
+				<div class="ef-modal-header">
+					<div class="ef-modal-title ef-modal-title-align-left">
+						<i class="fa-solid fa-triangle-exclamation" style="color: #ff4d4f; margin-right: 8px;"></i>确认删除
+					</div>
+					<div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="closeModal('deleteConfirmModal')">
+						<span class="ef-icon-hover">
+							<svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
+								<path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path>
+							</svg>
+						</span>
+					</div>
+				</div>
+				<div class="ef-modal-body">
+					<p id="delete-confirm-message" style="margin: 0 0 16px 0; font-size: 14px; color: #1e293b; line-height: 1.6;"></p>
+					<input type="text" id="delete-confirm-input" class="ef-input" placeholder="请输入“确认删除”" style="width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; outline: none; box-sizing: border-box;">
+					<div id="delete-confirm-error" style="color: #ff4d4f; font-size: 12px; margin-top: 6px; display: none;"></div>
+				</div>
+				<div class="ef-modal-footer">
+					<button type="button" class="btn secondary medium" onclick="closeModal('deleteConfirmModal')">取消</button>
+					<button type="button" class="btn primary medium" id="delete-confirm-submit" disabled style="background: #ff4d4f; border-color: #ff4d4f; opacity: 0.5;">确认删除</button>
+				</div>
 			</div>
 		</div>
 	</div>
-
-	<style>
-	.ef-modal-overlay {
-		position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-		background: rgba(0,0,0,0.45); z-index: 10000;
-		display: flex; align-items: center; justify-content: center;
-	}
-	.ef-modal { background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
-	.ef-modal-header { padding: 20px 24px 0; font-size: 16px; font-weight: 600; color: #1e293b; }
-	.ef-modal-body { padding: 16px 24px; }
-	.ef-modal-footer { padding: 0 24px 20px; display: flex; justify-content: flex-end; gap: 8px; }
-	</style>
 {% endblock %}

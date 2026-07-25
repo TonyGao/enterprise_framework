@@ -1,0 +1,65 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block app_content_container %}
+<div class="org-structure-container llm-config-page">
+  <div class="outside-wrapper" style="padding: 40px 48px; max-width: 1280px; margin: 0; background: #fff; min-height: calc(100vh - 60px);">
+
+    <div class="page-title-row" style="margin-bottom: 12px;">
+      <h1>编辑角色：{{ role.label }}</h1>
+      <a href="{{ path('admin_llm_config_index') }}" class="back-link">
+        <i class="fa-solid fa-arrow-left"></i> 返回
+      </a>
+    </div>
+
+    {% set capabilityDescs = {
+      'vision': '分配具有图片识别、图文理解能力的多模态模型（如 GPT-4o、Claude 3.5 Sonnet、Qwen-VL）',
+      'reasoning': '分配擅长逻辑推理、数学和代码生成的高智商模型（如 o1、DeepSeek R1、Claude Opus）',
+      'general': '分配性能均衡的通用对话模型（如 GPT-4o mini、Claude 3 Haiku、Qwen Plus）',
+      'lightweight': '分配参数小、速度快、性价比高的轻量模型（如 GPT-4o mini、Claude 3 Haiku、GLM-4 Flash）',
+      'embedding': '分配文本向量化模型（如 text-embedding-3-small），不用于对话',
+    } %}
+
+    <div class="form-card">
+      <div class="role-meta">
+        <div class="role-meta-item"><strong>编码：</strong><span class="llm-code">{{ role.code }}</span></div>
+        <div class="role-meta-item"><strong>名称：</strong>{{ role.label }}</div>
+        <div class="role-meta-item" style="margin-top: 8px; padding: 12px; background: #f5f5f7; border-radius: 8px; font-size: 13px; color: #555; line-height: 1.5;">
+          <i class="fa-solid fa-lightbulb" style="color: #f59e0b; margin-right: 6px;"></i>
+          {{ capabilityDescs[role.code]|default('请分配适用于此角色的模型') }}
+        </div>
+      </div>
+
+      {{ form_start(form, {attr: {class: 'llm-role-form'}}) }}
+
+        <div class="form-row">
+          <div class="form-label">{{ form_label(form.provider) }}</div>
+          <div class="form-control">{{ form_widget(form.provider) }}{{ form_errors(form.provider) }}</div>
+        </div>
+
+        <div class="form-row" style="align-items: flex-start;">
+          <div class="form-label" style="margin-top: 4px;">{{ form_label(form.systemPrompt) }}</div>
+          <div class="form-control">{{ form_widget(form.systemPrompt) }}{{ form_errors(form.systemPrompt) }}</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-label">{{ form_label(form.isEnabled) }}</div>
+          <div class="form-control">{{ form_widget(form.isEnabled) }}{{ form_errors(form.isEnabled) }}</div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn primary medium">
+            <i class="fa-solid fa-save"></i> 保存
+          </button>
+          <a href="{{ path('admin_llm_config_index') }}" class="btn medium">取消</a>
+        </div>
+      {{ form_end(form) }}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+  {{ parent() }}
+  <link rel="stylesheet" href="/sunui/admin/platform/llm_config.css">
+{% endblock %}

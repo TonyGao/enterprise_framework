@@ -5,12 +5,18 @@ $(document).ready(function() {
     // 页面加载时应用保存的 sectionConfig
     if (window.__SECTION_CONFIG__) {
         const config = window.__SECTION_CONFIG__;
-        const $sectionContent = $('.section.active .section-content');
+        const $section = $('.section.active');
+        const $sectionContent = $section.find('.section-content');
         if ($sectionContent.length) {
             if (config.contentWidth === 'full-width') {
+                const pct = config.width > 0 && config.width <= 100 ? config.width : 100;
                 $sectionContent.css('width', '100%');
+                $section.css({width: pct + '%', left: 0});
+                $section.find('.section-controls').css('left', 5);
             } else if (config.width && config.unit) {
                 $sectionContent.css('width', config.width + config.unit);
+                $section.css({width: '', left: ''});
+                $section.find('.section-controls').css('left', '');
             }
         }
         // 同步 UI 控件
@@ -19,7 +25,12 @@ $(document).ready(function() {
         }
         if (config.width) {
             const unit = config.unit || 'px';
-            $('#width-value').closest('.input-with-unit').find('.unit-selector span').text(unit);
+            const $unitSelector = $('#width-value').closest('.input-with-unit').find('.unit-selector');
+            $unitSelector.find('span').text(unit);
+            // Full Width 模式下隐藏下拉菜单
+            if (config.contentWidth === 'full-width') {
+                $unitSelector.find('.unit-dropdown').hide();
+            }
             $('#width-slider').val(config.width);
             $('#width-value').val(config.width);
         }
@@ -119,8 +130,17 @@ $(document).ready(function() {
         const $span = $selector.find('span');
         const $widthInput = $('#width-value');
         
-        // 更新单位文本
         const newUnit = $option.data('unit');
+        
+        // Full Width 模式下只允许 %
+        const contentWidth = $('#content-width').val();
+        if (contentWidth === 'full-width') {
+            $span.text('%');
+            $selector.removeClass('active');
+            return;
+        }
+        
+        // 更新单位文本
         $span.text(newUnit);
         $selector.removeClass('active');
         
@@ -130,26 +150,28 @@ $(document).ready(function() {
             const currentValue = parseInt($widthInput.val());
             
             if (newUnit === 'px') {
-                // 获取页面最大宽度
                 const pageMaxWidth = parseInt($('#page-width-value').val()) || 1200;
-                
-                // 如果当前值超过最大宽度，则设置为最大宽度
                 if (currentValue > pageMaxWidth) {
                     $widthInput.val(pageMaxWidth);
                     $slider.val(pageMaxWidth);
                 }
-                
-                // 更新滑块最大值
+                $slider.attr('min', 200);
                 $slider.attr('max', pageMaxWidth);
+                showSliderForUnit(true);
             } else if (newUnit === '%') {
-                // 恢复百分比的最大值
+                $slider.attr('min', 10);
                 $slider.attr('max', 100);
-                
-                // 如果当前值超过100%，则设置为100%
                 if (currentValue > 100) {
                     $widthInput.val(100);
                     $slider.val(100);
+                } else if (currentValue < 10) {
+                    $widthInput.val(10);
+                    $slider.val(10);
                 }
+                showSliderForUnit(true);
+            } else {
+                // em / rem / vw：隐藏滑块
+                showSliderForUnit(false);
             }
             
             // 更新section属性
@@ -217,6 +239,18 @@ $(document).ready(function() {
         updateSectionProperty('grid-outline', isChecked);
     });
     
+    function showSliderForUnit(show) {
+        const $container = $('#width-slider').closest('.slider-container');
+        const $propertyItem = $container.closest('.property-item');
+        if (show) {
+            $container.show();
+            $propertyItem.find('.input-with-unit').css('flex', '');
+        } else {
+            $container.hide();
+            $propertyItem.find('.input-with-unit').css('flex', '1');
+        }
+    }
+
     // 更新Section属性的函数
     function updateSectionProperty(property, value) {
         // 获取当前激活的section元素
@@ -234,22 +268,41 @@ $(document).ready(function() {
                 // 设置内容宽度作为DOM属性而不是内联样式
                 $sectionContent = $activeSection.find('.section-content');
                 $sectionContent.attr('data-content-width', value);
+                const $unitSelector = $('#width-value').closest('.input-with-unit').find('.unit-selector');
+                const $widthSlider = $('#width-slider');
+                const $widthInput = $('#width-value');
                 
                 // 根据内容宽度类型应用相应的样式
                 if (value === 'full-width') {
+                    // Full Width：锁定单位为 %，隐藏下拉菜单
+                    $unitSelector.find('span').text('%');
+                    $unitSelector.find('.unit-dropdown').hide();
+                    $widthSlider.attr('min', 10);
+                    $widthSlider.attr('max', 100);
+                    showSliderForUnit(true);
+                    if (parseInt($widthInput.val()) > 100) {
+                        $widthInput.val(100);
+                        $widthSlider.val(100);
+                    }
+                    const fullWidthVal = $widthInput.val();
                     $sectionContent.css('width', '100%');
+                    $activeSection.css({width: fullWidthVal + '%', left: 0});
+                    $activeSection.find('.section-controls').css('left', 5);
                 } else if (value === 'boxed') {
-                    // 使用boxed选项时应用配置宽度或默认480px
-                    const boxedWidth = window.__SECTION_CONFIG__ && window.__SECTION_CONFIG__.width
-                        ? window.__SECTION_CONFIG__.width + (window.__SECTION_CONFIG__.unit || 'px')
-                        : '480px';
-                    $sectionContent.css('width', boxedWidth);
-                    // 同步滑块值
-                    const unit = window.__SECTION_CONFIG__ && window.__SECTION_CONFIG__.unit || 'px';
-                    const numWidth = parseInt(boxedWidth);
-                    $('#width-value').closest('.input-with-unit').find('.unit-selector span').text(unit);
-                    $('#width-slider').val(numWidth);
-                    $('#width-value').val(numWidth);
+                    // Boxed：默认单位为 px，显示下拉菜单
+                    $unitSelector.find('span').text('px');
+                    $unitSelector.find('.unit-dropdown').show();
+                    const pageMaxWidth = parseInt($('#page-width-value').val()) || 1200;
+                    $widthSlider.attr('min', 200);
+                    $widthSlider.attr('max', pageMaxWidth);
+                    showSliderForUnit(true);
+                    const prevWidth = parseInt($widthInput.val());
+                    const boxedWidth = (!isNaN(prevWidth) && prevWidth >= 50 && prevWidth <= pageMaxWidth) ? prevWidth : 480;
+                    $widthInput.val(boxedWidth);
+                    $widthSlider.val(boxedWidth);
+                    $sectionContent.css('width', boxedWidth + 'px');
+                    $activeSection.css({width: '', left: ''});
+                    $activeSection.find('.section-controls').css('left', '');
                 }
                 break;
                 
@@ -268,13 +321,21 @@ $(document).ready(function() {
                     }
                 }
                 
-                // 将宽度应用到section-content元素
-                const widthValue = value + unit;
-                $sectionContent.css('width', widthValue);
+                // 当 width 单位为 %（Full Width 模式）时，宽度应用到 section，section-content 始终 100%
+                if (unit === '%') {
+                    $sectionContent.css('width', '100%');
+                    $activeSection.css({width: value + '%', left: 0});
+                    $activeSection.find('.section-controls').css('left', 5);
+                } else {
+                    $sectionContent.css('width', value + unit);
+                    $activeSection.css({width: '', left: ''});
+                    $activeSection.find('.section-controls').css('left', '');
+                }
                 
                 // 确保section元素能够适应section-content的宽度变化
                 // 使用setTimeout确保在DOM更新后获取正确的宽度
                 setTimeout(function() {
+                    if (unit === '%') return; // full-width 模式下无需重新计算
                     const contentWidth = $sectionContent.outerWidth();
                     if (contentWidth) {
                         // 更新section元素的宽度，使其比section-content宽度大10px
@@ -455,29 +516,54 @@ $(document).ready(function() {
         $('#content-width').val(contentWidth);
         
         // 宽度
-        const width = $content.css('width');
+        const contentWidthVal = $('#content-width').val();
+        const $widthUnitSelector = $('#width-value').closest('.input-with-unit').find('.unit-selector');
         let widthValue = 100;
         let widthUnit = '%';
         
-        if (width) {
-            if (width.endsWith('px')) {
-                widthValue = parseInt(width);
-                widthUnit = 'px';
-            } else if (width.endsWith('%')) {
-                widthValue = parseInt(width);
-                widthUnit = '%';
+        if (contentWidthVal === 'full-width') {
+            // Full Width 模式：读 section 行内百分比，section-content 保持 100%
+            const sectionWidth = $section.css('width');
+            if (sectionWidth && sectionWidth.endsWith('%')) {
+                widthValue = parseInt(sectionWidth);
             }
+            widthUnit = '%';
+            $sectionContent.css('width', '100%');
+            $section.css({width: widthValue + '%', left: 0});
+            $section.find('.section-controls').css('left', 5);
+            $widthUnitSelector.find('.unit-dropdown').hide();
+        } else {
+            // Boxed 模式：读 section-content 宽度
+            const width = $content.css('width');
+            if (width) {
+                if (width.endsWith('px')) {
+                    widthValue = parseInt(width);
+                    widthUnit = 'px';
+                } else if (width.endsWith('%')) {
+                    widthValue = parseInt(width);
+                    widthUnit = '%';
+                }
+            }
+            $section.css({width: '', left: ''});
+            $section.find('.section-controls').css('left', '');
+            $widthUnitSelector.find('.unit-dropdown').show();
         }
         
-        // 先设置单位和最大值
-        $('#width-value').closest('.input-with-unit').find('.unit-selector span').text(widthUnit);
+        // 先设置单位文本
+        $widthUnitSelector.find('span').text(widthUnit);
         
-        // 根据单位设置滑块最大值
+        // 根据单位设置滑块范围和可见性
         if (widthUnit === 'px') {
             const pageMaxWidth = parseInt($('#page-width-value').val()) || 1200;
+            $('#width-slider').attr('min', 200);
             $('#width-slider').attr('max', pageMaxWidth);
-        } else {
+            showSliderForUnit(true);
+        } else if (widthUnit === '%') {
+            $('#width-slider').attr('min', 10);
             $('#width-slider').attr('max', 100);
+            showSliderForUnit(true);
+        } else {
+            showSliderForUnit(false);
         }
         
         // 最后设置值
@@ -548,6 +634,7 @@ $(document).ready(function() {
         if ($activeSection.length > 0) {
             const widthUnit = $('#width-value').closest('.input-with-unit').find('.unit-selector span').text();
             if (widthUnit === 'px') {
+                $('#width-slider').attr('min', 200);
                 $('#width-slider').attr('max', pageWidth);
                 
                 // 如果当前值超过新的最大值，则更新
@@ -774,6 +861,9 @@ $(document).ready(function() {
             outline: '',
             outlineOffset: ''
         });
+        // 清除 ef-row 选中
+        $('.ef-row.selected').removeClass('selected').css({outline: ''});
+        $('.ef-row-close-btn').remove();
     }
 
     function getSelectableChild($el) {
@@ -814,7 +904,7 @@ $(document).ready(function() {
     }
 
     // 监听组件选择变化
-    $(document).on('click', '.ef-table', function() {
+    $('#canvas').on('click', '.ef-table', function() {
         const $this = $(this);
         clearComponentSelection();
         markComponentSelected($this);
@@ -824,7 +914,45 @@ $(document).ready(function() {
         }, 100);
     });
     
-    $(document).on('click', '.ef-text, .ef-image', function() {
+    // 选中 ef-row（结构行）
+    $('#canvas').on('click', '.section-content > .ef-row', function(e) {
+        // 点击到组件内部时不选中行
+        if ($(e.target).closest('.ef-component').length) return;
+        // 点击到有内容（非空）的 item-block 时不选中行
+        const $itemBlock = $(e.target).closest('.item-block');
+        if ($itemBlock.length && $itemBlock.find('.ef-component').length) return;
+        e.stopPropagation();
+        clearComponentSelection();
+        const $row = $(this);
+        $row.addClass('selected').css({outline: '2px solid #1890ff'});
+        // 添加关闭按钮
+        if (!$row.find('.ef-row-close-btn').length) {
+            const $btn = $('<div class="ef-row-close-btn" title="删除行"><i class="fa fa-times"></i></div>');
+            $btn.on('mousedown', function(ev) {
+                ev.stopPropagation();
+                ev.preventDefault();
+                $row.remove();
+                clearComponentSelection();
+            });
+            $row.css('position', 'relative');
+            $row.append($btn);
+        }
+    });
+
+    // Delete/Backspace 键删除选中的 ef-row
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            const $row = $('.ef-row.selected');
+            if ($row.length && !$(e.target).is('input, textarea, [contenteditable]')) {
+                e.preventDefault();
+                $row.remove();
+                clearComponentSelection();
+                $(document).trigger('componentDeselected');
+            }
+        }
+    });
+
+    $('#canvas').on('click', '.ef-text, .ef-image', function() {
         const $this = $(this);
         clearComponentSelection();
         markComponentSelected($this);
@@ -1033,7 +1161,7 @@ $(document).ready(function() {
         // 浮动 label 编辑器（在 body 层）不属于画布组件，不触发反选
         if ($(e.target).closest('[data-ef-label-editor]').length) return;
         // 字段行的选择/反选由 .editor-field-row 自身 handler 管理
-        if (!$(e.target).closest('.ef-table, .ef-text, .ef-image, .ef-form-label, .ef-form-widget, .item-block.selected, .editor-field-row').length) {
+        if (!$(e.target).closest('.ef-table, .ef-text, .ef-image, .ef-form-label, .ef-form-widget, .item-block.selected, .ef-row.selected, .editor-field-row').length) {
             clearComponentSelection();
             $(document).trigger('componentDeselected');
             clearEmptyColSelection();

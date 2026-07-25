@@ -7,82 +7,59 @@
     // 生成文本属性面板HTML
     function generateTextPropertiesHTML() {
         return `
-            <!-- 文本组件属性面板 -->
             <div id="text-properties" style="display: none;">
-                <div class="property-group">
-                    <div class="property-group-title">文本样式</div>
-                    
-                    <!-- 字体大小 -->
-                    <div class="property-item">
-                        <label class="property-label">字体大小</label>
-                        <div class="property-control">
-                            <input type="number" id="text-font-size" class="ef-input text" min="8" max="72" value="14" style="width: 80px;">
-                            <span style="margin-left: 5px;">px</span>
-                        </div>
-                    </div>
-                    
-                    <!-- 字体颜色 -->
-                    <div class="property-item">
-                        <label class="property-label">字体颜色</label>
-                        <div class="property-control">
-                            <span class="ef-input-wrapper ef-input-rounded" style="padding: 2px; width: auto; cursor: pointer;" id="text-color-trigger">
-                                <span id="text-color-preview" style="display: block; width: 50px; height: 30px; background: #000000; border-radius: 2px;"></span>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <!-- 字体粗细 -->
-                    <div class="property-item">
-                        <label class="property-label">字体粗细</label>
-                        <div class="property-control">
-                            <span class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium" style="width: 120px;" id="text-font-weight-select">
-                                <input class="ef-select-view-input" placeholder="选择粗细" readonly>
-                                <span class="ef-select-view-value ef-select-view-value-hidden">normal</span>
-                                <span class="ef-select-view-suffix">
-                                    <span class="ef-select-view-icon">
-                                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-expand" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter" style="transform: rotate(-45deg);">
-                                            <path d="M7 26v14c0 .552.444 1 .996 1H22m19-19V8c0-.552-.444-1-.996-1H26"></path>
-                                        </svg>
-                                    </span>
-                                </span>
-                            </span>
-                            <div class="ef-select-content" style="display: none; position: absolute; z-index: 1000; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 120px;">
-                                <div class="ef-select-option" data-value="normal">正常</div>
-                                <div class="ef-select-option" data-value="bold">粗体</div>
-                                <div class="ef-select-option" data-value="lighter">细体</div>
+                <div class="tp-section">
+                    <div class="tp-section-title">文字排版</div>
+                    <div class="tp-grid tp-grid-2">
+                        <div class="tp-field">
+                            <label class="tp-label">字号</label>
+                            <div class="tp-input-group">
+                                <input type="number" id="text-font-size" class="tp-input" min="8" max="72" value="14">
+                                <span class="tp-unit">px</span>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- 文本对齐 -->
-                    <div class="property-item">
-                        <label class="property-label">文本对齐</label>
-                        <div class="property-control">
-                            <span class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium" style="width: 120px;" id="text-align-select">
-                                <input class="ef-select-view-input" placeholder="选择对齐" readonly>
-                                <span class="ef-select-view-value ef-select-view-value-hidden">left</span>
-                                <span class="ef-select-view-suffix">
-                                    <span class="ef-select-view-icon">
-                                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-expand" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter" style="transform: rotate(-45deg);">
-                                            <path d="M7 26v14c0 .552.444 1 .996 1H22m19-19V8c0-.552-.444-1-.996-1H26"></path>
-                                        </svg>
-                                    </span>
-                                </span>
-                            </span>
-                            <div class="ef-select-content" style="display: none; position: absolute; z-index: 1000; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 120px;">
-                                <div class="ef-select-option" data-value="left">左对齐</div>
-                                <div class="ef-select-option" data-value="center">居中</div>
-                                <div class="ef-select-option" data-value="right">右对齐</div>
-                                <div class="ef-select-option" data-value="justify">两端对齐</div>
+                        <div class="tp-field">
+                            <label class="tp-label">字重</label>
+                            <div class="tp-btn-group" id="text-font-weight-select">
+                                <button class="tp-btn" data-value="lighter">细</button>
+                                <button class="tp-btn tp-btn-active" data-value="400">标准</button>
+                                <button class="tp-btn" data-value="bold">粗</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- 删除组件按钮 -->
-                <div class="property-group" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-                    <button class="btn red medium long" id="delete-component-btn">
-                        <i class="fa-solid fa-trash-can"></i> 删除组件
+
+                <div class="tp-section">
+                    <div class="tp-section-title">颜色与对齐</div>
+                    <div class="tp-field">
+                        <label class="tp-label">颜色</label>
+                        <span class="tp-color-swatch" id="text-color-trigger">
+                            <span id="text-color-preview" style="background:#000000"></span>
+                        </span>
+                    </div>
+                    <div class="tp-field tp-align-row">
+                        <label class="tp-label">对齐</label>
+                        <div class="tp-align-row-group">
+                            <div class="tp-align-group" id="text-align-select-h">
+                                <button class="tp-btn tp-btn-icon" data-value="left" title="左对齐"><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm0 3.5h8v1.5H1V5.5zM1 9h12v1.5H1V9zm0 3.5h8V14H1v-1.5z"/></svg></button>
+                                <button class="tp-btn tp-btn-icon" data-value="center" title="居中"><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm3 3.5h8v1.5H4V5.5zM1 9h12v1.5H1V9zm3 3.5h8V14H4v-1.5z"/></svg></button>
+                                <button class="tp-btn tp-btn-icon" data-value="right" title="右对齐"><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm4 3.5h8v1.5H5V5.5zM1 9h12v1.5H1V9zm4 3.5h8V14H5v-1.5z"/></svg></button>
+                                <button class="tp-btn tp-btn-icon" data-value="justify" title="两端对齐"><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm0 3.5h12v1.5H1V5.5zM1 9h12v1.5H1V9zm0 3.5h12V14H1v-1.5z"/></svg></button>
+                            </div>
+                            <span class="tp-align-divider"></span>
+                            <div class="tp-align-group" id="text-v-align-select">
+                                <button class="tp-btn tp-btn-icon" data-value="top" title="顶部对齐"><i class="fa-solid fa-align-left fa-rotate-90"></i></button>
+                                <button class="tp-btn tp-btn-icon" data-value="middle" title="垂直居中"><i class="fa-solid fa-align-center fa-rotate-90"></i></button>
+                                <button class="tp-btn tp-btn-icon" data-value="bottom" title="底部对齐"><i class="fa-solid fa-align-right fa-rotate-90"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tp-section tp-section-danger">
+                    <button class="tp-delete-btn" id="delete-component-btn">
+                        <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M5.5 1a.5.5 0 0 0-.5.5V2H2.5a.5.5 0 0 0 0 1h.257l.547 9.846A1.5 1.5 0 0 0 4.8 14.5h6.4a1.5 1.5 0 0 0 1.497-1.654l.546-9.846h.257a.5.5 0 0 0 0-1H11v-.5a.5.5 0 0 0-.5-.5h-5zM6 2h4v1H6V2zM4.05 4h7.9l-.535 9.634a.5.5 0 0 1-.5.466H5.085a.5.5 0 0 1-.5-.466L4.05 4z"/></svg>
+                        删除组件
                     </button>
                 </div>
             </div>
@@ -126,26 +103,57 @@
     
     // 加载文本属性值
     function loadTextProperties($text) {
-        // 字体大小
-        const fontSize = parseInt($text.css('font-size')) || 14;
+        // 字体大小 — 优先选区，其次整行
+        const selFontSize = window.getSelectedStyle ? window.getSelectedStyle('font-size') : null;
+        const fontSize = parseInt(selFontSize || $text.css('font-size')) || 14;
         $('#text-font-size').val(fontSize);
         
-        // 字体颜色
-        const color = rgbToHex($text.css('color')) || '#000000';
+        // 字体颜色 — 优先选区，其次整行
+        const selColor = window.getSelectedStyle ? window.getSelectedStyle('color') : null;
+        const color = rgbToHex(selColor || $text.css('color')) || '#000000';
         $('#text-color-preview').css('background-color', color);
         if (window.textColorPicker) window.textColorPicker.setColor(color);
         
-        // 字体粗细
-        const fontWeight = $text.css('font-weight') || 'normal';
-        updateSelectValue('#text-font-weight-select', fontWeight);
+        // 字体粗细 — 优先选区，其次整行
+        const selWeight = window.getSelectedStyle ? window.getSelectedStyle('font-weight') : null;
+        const fontWeight = selWeight || $text.css('font-weight') || '400';
+        updateBtnGroup('text-font-weight-select', fontWeight === 'bold' || fontWeight === '700' ? 'bold' : fontWeight === 'lighter' || fontWeight === '100' ? 'lighter' : '400');
         
         // 文本对齐
         const textAlign = $text.css('text-align') || 'left';
-        updateSelectValue('#text-align-select', textAlign);
+        updateBtnGroup('text-align-select-h', textAlign);
+        
+        // 纵向对齐
+        const vAlign = $text.css('vertical-align') || 'baseline';
+        updateBtnGroup('text-v-align-select', vAlign);
+    }
+
+    // 选区变化时同步属性面板
+    function initSelectionSync() {
+        var syncTimer = null;
+        $(document).on('selectionchange', function() {
+            var $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+            if (!$rich.length || $('#text-properties').is(':hidden')) return;
+            var sel = window.getSelection();
+            if (!sel || !sel.rangeCount) return;
+            if (!$rich[0].contains(sel.getRangeAt(0).commonAncestorContainer)) return;
+            clearTimeout(syncTimer);
+            syncTimer = setTimeout(function() {
+                loadTextProperties($rich);
+            }, 100);
+        });
     }
     
     // 初始化文本属性控件事件
     function initTextPropertyEvents() {
+        // 与 toolbar 一致：mousedown 时保存选区（click 时焦点可能已丢失）
+        $(document).on('mousedown', '#text-properties', function() {
+            var $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+            if (!$rich.length) return;
+            var sel = window.getSelection();
+            window._savedRange = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
+        });
+
         // 字体大小
         $(document).on('input', '#text-font-size', function() {
             const selectedComponent = window.ComponentProperties?.getSelectedComponent();
@@ -161,10 +169,7 @@
                 defaultColor: '#000000',
                 onChange: function(color) {
                     $('#text-color-preview').css('background-color', color);
-                    const selectedComponent = window.ComponentProperties?.getSelectedComponent();
-                    if (selectedComponent) {
-                        updateTextProperty('color', color);
-                    }
+                    updateTextProperty('color', color);
                 }
             });
             $(document).on('click', '#text-color-trigger', function(e) {
@@ -179,6 +184,9 @@
         // 文本对齐选择器
         initTextAlignSelect();
         
+        // 纵向对齐选择器
+        initVAlignSelect();
+        
         // 删除组件按钮
         $(document).on('click', '#delete-component-btn', function() {
             if (window.ComponentProperties?.getSelectedComponent()) {
@@ -187,78 +195,78 @@
         });
     }
     
+    // 按钮组通用点击处理
+    function initBtnGroup(containerId, property) {
+        $(document).on('click', `#${containerId} .tp-btn`, function(e) {
+            e.stopPropagation();
+            const $btn = $(this);
+            if ($btn.hasClass('tp-btn-active')) return;
+            $btn.addClass('tp-btn-active').siblings().removeClass('tp-btn-active');
+            const value = $btn.data('value');
+            const selectedComponent = window.ComponentProperties?.getSelectedComponent();
+            if (selectedComponent) updateTextProperty(property, value);
+        });
+    }
+
+    function initBtnGroupIcon(containerId, property) {
+        $(document).on('click', `#${containerId} .tp-btn-icon`, function(e) {
+            e.stopPropagation();
+            const $btn = $(this);
+            if ($btn.hasClass('tp-btn-active')) return;
+            $btn.addClass('tp-btn-active').siblings().removeClass('tp-btn-active');
+            const value = $btn.data('value');
+            const selectedComponent = window.ComponentProperties?.getSelectedComponent();
+            if (selectedComponent) updateTextProperty(property, value);
+        });
+    }
+    
     // 初始化字体粗细选择器
     function initFontWeightSelect() {
-        $(document).on('click', '#text-font-weight-select', function(e) {
-            e.stopPropagation();
-            $(this).next('.ef-select-content').toggle();
-        });
-        
-        $(document).on('click', '#text-font-weight-select + .ef-select-content .ef-select-option', function(e) {
-            e.stopPropagation();
-            const value = $(this).data('value');
-            const text = $(this).text();
-            
-            // 更新选择器显示
-            const $select = $('#text-font-weight-select');
-            $select.find('.ef-select-view-input').val(text);
-            $select.find('.ef-select-view-value').text(value);
-            
-            // 隐藏选项列表
-            $(this).parent().hide();
-            
-            // 更新文本样式
-            const selectedComponent = window.ComponentProperties?.getSelectedComponent();
-            if (selectedComponent) {
-                updateTextProperty('font-weight', value);
-            }
-        });
+        initBtnGroup('text-font-weight-select', 'font-weight');
     }
     
-    // 初始化文本对齐选择器
+    // 初始化文本对齐选择器（text-align 为块级属性，直接作用于整行）
     function initTextAlignSelect() {
-        $(document).on('click', '#text-align-select', function(e) {
+        $(document).on('click', '#text-align-select-h .tp-btn-icon', function(e) {
             e.stopPropagation();
-            $(this).next('.ef-select-content').toggle();
-        });
-        
-        $(document).on('click', '#text-align-select + .ef-select-content .ef-select-option', function(e) {
-            e.stopPropagation();
-            const value = $(this).data('value');
-            const text = $(this).text();
-            
-            // 更新选择器显示
-            const $select = $('#text-align-select');
-            $select.find('.ef-select-view-input').val(text);
-            $select.find('.ef-select-view-value').text(value);
-            
-            // 隐藏选项列表
-            $(this).parent().hide();
-            
-            // 更新文本样式
-            const selectedComponent = window.ComponentProperties?.getSelectedComponent();
-            if (selectedComponent) {
-                updateTextProperty('text-align', value);
+            const $btn = $(this);
+            if ($btn.hasClass('tp-btn-active')) return;
+            $btn.addClass('tp-btn-active').siblings().removeClass('tp-btn-active');
+            const value = $btn.data('value');
+            const $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+            if ($rich.length) {
+                $rich.css('text-align', value);
+                $(document).trigger('selectionchange');
             }
         });
     }
     
-    // 更新选择器值
-    function updateSelectValue(selector, value) {
-        const $select = $(selector);
-        const $option = $select.next('.ef-select-content').find(`[data-value="${value}"]`);
-        if ($option.length > 0) {
-            $select.find('.ef-select-view-input').val($option.text());
-            $select.find('.ef-select-view-value').text(value);
-        }
+    // 初始化纵向对齐选择器
+    function initVAlignSelect() {
+        $(document).on('click', '#text-v-align-select .tp-btn-icon', function(e) {
+            e.stopPropagation();
+            const $btn = $(this);
+            if ($btn.hasClass('tp-btn-active')) return;
+            $btn.addClass('tp-btn-active').siblings().removeClass('tp-btn-active');
+            const value = $btn.data('value');
+            const $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+            if ($rich.length) {
+                $rich.css('vertical-align', value);
+                $(document).trigger('selectionchange');
+            }
+        });
     }
     
-    // 更新文本属性
+    // 更新按钮组值
+    function updateBtnGroup(containerId, value) {
+        $(`#${containerId} .tp-btn, #${containerId} .tp-btn-icon`).removeClass('tp-btn-active');
+        $(`#${containerId} .tp-btn[data-value="${value}"], #${containerId} .tp-btn-icon[data-value="${value}"]`).addClass('tp-btn-active');
+    }
+    
+    // 更新文本属性（优先选区格式化，无选区则全元素）
     function updateTextProperty(property, value) {
-        const selectedComponent = window.ComponentProperties?.getSelectedComponent();
-        if (selectedComponent) {
-            const $text = $(selectedComponent).hasClass('ef-text') ? $(selectedComponent) : $(selectedComponent).find('.ef-text').first();
-            $text.css(property, value);
+        if (typeof window.applyStyleToSelection === 'function') {
+            window.applyStyleToSelection(property, value);
         }
     }
     
@@ -292,6 +300,7 @@
     $(document).ready(function() {
         initTextProperties();
         initTextPropertyEvents();
+        initSelectionSync();
     });
     
 })();

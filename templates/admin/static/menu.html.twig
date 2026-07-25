@@ -323,6 +323,20 @@ scrollBtnDisplay = sideMenuState == 'shrunk' ? 'flex' : 'none' %}
               </a>
 
               <a
+                class=" link item-menu-content {{'/admin/platform/llm-config' in app.request.requestUri ? 'current' : '' }}"
+                href="/admin/platform/llm-config"
+              >
+                <div class="link-icon">
+                  <i class="fa-solid fa-brain"></i>
+                </div>
+                <div class="link-text">
+                  <div class="link-text-content" style="max-width: 83%">
+                    LLM 配置
+                  </div>
+                </div>
+              </a>
+
+              <a
                 class=" link item-menu-content {{'/admin/system-admin'== app.request.requestUri ? 'current' : '' }}"
                 href="/admin/system-admin"
               >

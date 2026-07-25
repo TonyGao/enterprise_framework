@@ -14,7 +14,7 @@ $(document).ready(function () {
 
   function autoFitDropdownWidth(panel) {
     if (!panel || !panel[0]) return;
-    panel.css({ width: '', minWidth: '' });
+    panel.css({ width: '' });
     requestAnimationFrame(function () {
       var panelEl = panel[0];
       var rect = panelEl.getBoundingClientRect();

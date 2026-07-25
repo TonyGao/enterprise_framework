@@ -144,11 +144,13 @@
   margin: 0;
   position: relative;
   background: transparent;
-  overflow: visible; /* 修改为visible以允许section-content滚动 */
+  overflow: visible;
   padding: 0;
-  /* 使section能够根据内容自适应宽度 */
-  display: inline-block; /* 使元素宽度自适应内容 */
-  max-width: 100%; /* 确保不超出父容器 */
+  display: inline-block;
+  max-width: 100%;
+}
+
+.canvas > .section {
   left: 35px;
 }
 
@@ -159,13 +161,11 @@
 .section-content {
   background-color: #f0f8ff;
   min-height: 200px;
-  height: 100%; /* 确保占满父容器 */
-  height: 100%; /* 确保占满父容器 */
+  width: 480px; /* 默认值，JS 行内样式会覆盖 */
   display: flex;
   justify-content: flex-start;
   flex-flow: column; /* 改为row wrap，支持水平排列和换行 */
   align-items: start;
-  width: 480px; /* JS 通过 sectionConfig 控制；默认 480px 匹配典型表单 */
   min-width: 200px; /* 最小宽度 */
   overflow-y: auto; /* 启用垂直滚动条，当内容超出时可滚动查看 */
   overflow-x: visible; /* 确保水平方向内容可见，不被截断 */
@@ -935,8 +935,9 @@ h1, h2, h3 {
 /* 组件选中关闭按钮 */
 .ef-component-close-btn {
   position: absolute !important;
-  top: -10px;
-  right: -10px;
+  z-index: 100;
+  top: 2px;
+  right: 2px;
   width: 20px;
   height: 20px;
   line-height: 20px;
@@ -946,10 +947,26 @@ h1, h2, h3 {
   border-radius: 50%;
   font-size: 12px;
   cursor: pointer;
-  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.ef-row-close-btn {
+  position: absolute !important;
+  z-index: 100;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ff4d4f;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  cursor: pointer;
 }
 
 .unbound-placeholder {

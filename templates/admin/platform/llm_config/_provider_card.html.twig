@@ -1,0 +1,61 @@
+{% set iconMap = {
+  'openai': 'fa-brain',
+  'anthropic': 'fa-robot',
+  'ollama': 'fa-server',
+  'lmstudio': 'fa-laptop-code',
+  'azure': 'fa-cloud',
+  'custom': 'fa-puzzle-piece',
+} %}
+{% set icon = iconMap[provider.provider]|default('fa-cube') %}
+
+<div class="llm-provider-card" data-provider-id="{{ provider.id }}">
+  <div class="card-top">
+    <div class="card-info">
+      <div class="provider-icon {{ provider.provider }}">
+        <i class="fa-solid {{ icon }}"></i>
+      </div>
+      <div style="min-width: 0;">
+        <div class="provider-name">{{ provider.name }}</div>
+        <div class="provider-model">
+          {{ provider.provider }} / <code>{{ provider.model }}</code>
+        </div>
+      </div>
+    </div>
+    <label class="toggle-switch" title="{{ provider.isEnabled ? '点击停用' : '点击启用' }}">
+      <input type="checkbox" class="provider-toggle" {{ provider.isEnabled ? 'checked' : '' }}>
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  {% set boundRoles = roles|filter(r => r.provider and r.provider.id == provider.id) %}
+  {% if boundRoles|length > 0 %}
+    <div class="card-badges">
+      {% for role in boundRoles %}
+        {% include 'admin/platform/llm_config/_role_badge.html.twig' %}
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if provider.apiEndpoint %}
+    <div class="provider-endpoint">
+      <i class="fa-solid fa-link"></i> {{ provider.apiEndpoint }}
+    </div>
+  {% endif %}
+
+  <div class="card-bottom">
+    <div class="card-actions">
+      <a href="{{ path('admin_llm_provider_edit', {id: provider.id}) }}" class="btn outline small icon" style="border-radius: 8px;">
+        <i class="fa-solid fa-pen"></i> 编辑
+      </a>
+      <button type="button" class="btn outline small icon btn-test-connection" data-provider-id="{{ provider.id }}" style="border-radius: 8px;">
+        <i class="fa-solid fa-plug"></i> 测试
+      </button>
+      <form method="post" action="{{ path('admin_llm_provider_delete', {id: provider.id}) }}" style="display:inline" onsubmit="return confirm('确定删除该服务商？')">
+        <button class="btn outline small icon btn-delete" style="border-radius: 8px;">
+          <i class="fa-solid fa-trash"></i> 删除
+        </button>
+      </form>
+    </div>
+    <span class="test-status"></span>
+  </div>
+</div>

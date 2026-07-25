@@ -374,3 +374,232 @@ input:checked + .slider:before {
     height: 14px;
     margin: 0;
 }
+
+/* ===== 文本组件属性面板（重新设计） ===== */
+#text-properties {
+    padding: 12px;
+}
+
+.tp-section {
+    margin-bottom: 20px;
+}
+
+.tp-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8c8c8c;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tp-grid {
+    display: flex;
+    gap: 12px;
+}
+
+.tp-grid-2 > * {
+    flex: 1;
+    min-width: 0;
+}
+
+.tp-field {
+    margin-bottom: 12px;
+}
+
+.tp-label {
+    display: block;
+    font-size: 13px;
+    color: #595959;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.tp-input-group {
+    display: flex;
+    align-items: center;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color .2s;
+    background: #fff;
+}
+
+.tp-input-group:focus-within {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24,144,255,.15);
+}
+
+.tp-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 6px 10px;
+    font-size: 13px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent;
+}
+
+.tp-input::-webkit-inner-spin-button,
+.tp-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.tp-unit {
+    padding: 6px 10px;
+    font-size: 12px;
+    color: #8c8c8c;
+    background: #fafafa;
+    border-left: 1px solid #d9d9d9;
+    user-select: none;
+}
+
+/* 按钮组 */
+.tp-btn-group {
+    display: flex;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.tp-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 6px 4px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #595959;
+    transition: all .2s;
+    position: relative;
+}
+
+.tp-btn + .tp-btn {
+    border-left: 1px solid #f0f0f0;
+}
+
+.tp-btn:hover {
+    background: #f5f5f5;
+}
+
+.tp-btn-active {
+    background: #e6f7ff;
+    color: #1890ff;
+    font-weight: 600;
+}
+
+.tp-btn-active:hover {
+    background: #bae7ff;
+}
+
+.tp-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 8px;
+}
+
+.tp-btn-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* 颜色与对齐行 */
+.tp-color-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tp-color-swatch {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid #e8e8e8;
+    cursor: pointer;
+    overflow: hidden;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .2s;
+    background: #fff;
+}
+
+.tp-color-swatch:hover {
+    border-color: #1890ff;
+}
+
+.tp-color-swatch span {
+    display: block;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+}
+
+.tp-align-group {
+    display: flex;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.tp-align-group .tp-btn-icon {
+    flex: 1;
+}
+
+.tp-align-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tp-align-row-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tp-align-divider {
+    width: 1px;
+    height: 24px;
+    background: #e0e0e0;
+    flex: 0 0 1px;
+}
+
+/* 删除按钮 */
+.tp-section-danger {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 16px;
+    margin-bottom: 0;
+}
+
+.tp-delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 16px;
+    border: 1px solid #ffccc7;
+    border-radius: 6px;
+    background: #fff2f0;
+    color: #ff4d4f;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.tp-delete-btn:hover {
+    background: #ffccc7;
+    color: #cf1322;
+    border-color: #ffa39e;
+}

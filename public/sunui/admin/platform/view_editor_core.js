@@ -285,6 +285,15 @@ $(document).ready(function () {
     activateSection($newSection);
     reinitializeDroppables();
 
+    // 对新section应用默认 Full Width 样式
+    const config = window.__SECTION_CONFIG__ || {};
+    if (config.contentWidth === 'full-width') {
+      const pct = (config.width > 0 && config.width <= 100) ? config.width : 100;
+      $newSection.find('.section-content').css('width', '100%');
+      $newSection.css({width: pct + '%', left: 0});
+      $newSection.find('.section-controls').css('left', 5);
+    }
+
     // 为新section绑定控制按钮事件
     bindSectionControlEvents($newSection);
   });
@@ -407,9 +416,11 @@ $(document).ready(function () {
     });
   }
 
-  // 为现有的section绑定控制按钮事件
+  // 为顶层section绑定控制按钮事件（排除嵌套在内容区的子 section）
   $('.section').each(function() {
     const $section = $(this);
+    // 跳过嵌套在另一个 section-content 内的子 section
+    if ($section.closest('.section-content').length) return;
     // 如果section没有控制按钮，添加它们
     if ($section.find('.section-controls').length === 0) {
       const controlsHtml = `

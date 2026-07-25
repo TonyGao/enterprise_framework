@@ -67,13 +67,18 @@ class ViewEditorApiController extends AbstractController
             $filesystem = new Filesystem();
             $basePath = $this->getParameter('kernel.project_dir') . '/templates/views/';
 
+            // 去掉动态添加的 section-controls，避免污染设计文件
+            $domManipulator->load($canvasHtml);
+            $domManipulator->remove('.section-controls');
+            $cleanHtml = $domManipulator->getHtml();
+
             if ($view->isBuiltIn() && $view->getTemplate()) {
                 // 内置视图：只保存设计文件，不覆盖生产模板
                 $viewPath = $view->getPath();
                 $viewName = $view->getName();
                 $designDir = $basePath . ($viewPath ? $viewPath . '/' : 'builtin/');
                 $filesystem->mkdir($designDir, 0755);
-                $filesystem->dumpFile($designDir . $viewName . '.design.twig', $canvasHtml);
+                $filesystem->dumpFile($designDir . $viewName . '.design.twig', $cleanHtml);
                 return ApiResponse::success(json_encode(['message' => '保存成功（字段配置已更新）']));
             }
 
@@ -89,9 +94,8 @@ class ViewEditorApiController extends AbstractController
                 $filesystem->mkdir($directory, 0755);
             }
 
-            $filesystem->dumpFile($designFilePath, $canvasHtml);
+            $filesystem->dumpFile($designFilePath, $cleanHtml);
 
-            $domManipulator->load($canvasHtml);
             $domManipulator->remove('.add-section-button');
             $domManipulator->remove('.section-header');
             $domManipulator->removeClass('.section.active', 'active');

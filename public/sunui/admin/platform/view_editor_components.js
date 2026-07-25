@@ -40,14 +40,14 @@ $(document).ready(function () {
   });
 
   let full24 = `
-  	<div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px">
+  	<div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%">
       <div class="ef-col-24 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center;border: 1px dashed #d5d8dc">
       </div>
 	  </div>
   `;
 
   let halfAndHalf = `
-    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px">
+    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%">
       <div class="ef-col-12 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc">
       </div>
       <div class="ef-col-12 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc">
@@ -56,7 +56,7 @@ $(document).ready(function () {
   `;
 
   let trisect = `
-    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px">
+    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%">
       <div class="ef-col-8 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc">
       </div>
       <div class="ef-col-8 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc">
@@ -67,7 +67,7 @@ $(document).ready(function () {
   `;
 
   let fourEqualParts = `
-    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px">
+    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%">
       <div class="ef-col-6 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc"></div>
       <div class="ef-col-6 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc"></div>
       <div class="ef-col-6 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc"></div>  
@@ -76,21 +76,21 @@ $(document).ready(function () {
   `;
 
   let eightSixteen = `
-    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px">
+    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%">
       <div class="ef-col-8 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col-16 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
     </div>
   `;
 
   let sixteenEight = `
-    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px">
+    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%">
       <div class="ef-col-16 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col-8 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
     </div>
 `;
 
   let sixSixTwelve = `
-    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px">
+    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%">
       <div class="ef-col-6 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col-6 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col-12 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
@@ -98,7 +98,7 @@ $(document).ready(function () {
   `;
 
   let twelveSixSix = `
-    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px">
+    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%">
       <div class="ef-col-12 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col-6 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col-6 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
@@ -106,7 +106,7 @@ $(document).ready(function () {
   `;
 
   let sixTwelveSix = `
-    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px">
+    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%">
       <div class="ef-col-6 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col-12 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col-6 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
@@ -114,7 +114,7 @@ $(document).ready(function () {
   `;
 
   let fiveEqualParts = `
-    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px; --columns: 5;">
+    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%; --columns: 5;">
       <div class="ef-col ef-col-auto item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col ef-col-auto item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col ef-col-auto item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
@@ -124,7 +124,7 @@ $(document).ready(function () {
   `;
 
   let sixEqualParts = `
-    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px;">
+    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%;">
       <div class="ef-col-4 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc"></div>
       <div class="ef-col-4 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc"></div>
       <div class="ef-col-4 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc"></div>
@@ -135,7 +135,7 @@ $(document).ready(function () {
   `;
 
   let fourSixteenFour = `
-    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 1140px">
+    <div class="ef-row ef-row-align-start ef-row-justify-start" style="width: 100%">
       <div class="ef-col-4 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col-16 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
       <div class="ef-col-4 item-block" style="min-height: 68px; line-height: 68px; color: white; text-align: center; border: 1px dashed #d5d8dc""></div>
@@ -205,13 +205,13 @@ $(document).ready(function () {
   const componentTemplates = {
     text: {
       template: `
-      <div id="ef-text-comp-{uniqueId}" class="ef-component ef-text-component ef-text-comp-{uniqueId}">
+      <div id="ef-text-comp-{uniqueId}" class="ef-component ef-text-component ef-text ef-text-comp-{uniqueId}" style="width:100%">
         <span class="ef-component-labels ef-label-small label-above-line label-top" style="left: 0px">
           <span class="ef-label-comp-type draggable">
             <span>Text</span>
           </span>
         </span>
-        <h2 class="font_2 ef-rich-text" style="font-size:64px;" contenteditable="true" data-placeholder="请输入文本">${textPlaceHolder}</h2>
+        <div class="font_2 ef-rich-text" style="font-size:64px;color:#000;" contenteditable="true" data-placeholder="请输入文本">${textPlaceHolder}</div>
       </div>`,
       width: 512, // 模板的预期宽度
       height: 68 // 模板的预期高度

@@ -284,11 +284,9 @@
 			</div>
 		</div>
 	</div>
-{% if sectionConfig is defined %}
 <script>
-  window.__SECTION_CONFIG__ = {{ sectionConfig|json_encode|raw }};
+  window.__SECTION_CONFIG__ = {{ sectionConfig is defined and sectionConfig ? sectionConfig|json_encode|raw : {contentWidth: 'full-width', width: 100, unit: '%'}|json_encode|raw }};
 </script>
-{% endif %}
 {% if generalConfig is defined %}
 <script>
   window.__GENERAL_CONFIG__ = {{ generalConfig|json_encode|raw }};

@@ -1,3 +1,8 @@
+> ⚠️ **本文档是 Symfony AI 官方能力的分析/学习笔记**，不是 DoggyOA 的设计规范。
+> 实际 DoggyOA 使用了两套 AI 系统：1) Symfony AI Bundle（`config/packages/ai.yaml` 配置的 Generic Platform），
+> 2) 自研 `LlmGatewayInterface` + `LlmRouter`（数据库驱动，角色路由，管理后台 UI）。
+> 详细设计请参考 `documents/conceptions/AI RFC/` 系列文档。
+
 这个 [Symfony AI Mate Component 官方文档](https://symfony.com/doc/current/ai/components/mate.html?utm_source=chatgpt.com) 本质上是 Symfony 官方推出的一套 **MCP（Model Context Protocol）服务器框架**，目标是让 AI 助手“真正理解你的 Symfony/PHP 项目”。
 
 它不是普通 AI SDK，而是：

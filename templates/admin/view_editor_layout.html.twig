@@ -3,7 +3,7 @@
 {% block stylesheets %}
 	{{ parent() }}
 	<link rel="stylesheet" type="text/css" href="{{ asset('view_editor_layout.css', 'admin') }}">
-  <link rel="stylesheet" type="text/css" href="{{ asset('platform/view_editor.css', 'admin') }}">
+  <link rel="stylesheet" type="text/css" href="{{ asset('platform/view_editor.css', 'admin') }}?v=2">
   <link rel="stylesheet" type="text/css" href="{{ asset('platform/editor_toolbar.css', 'admin') }}">
 	<link rel="stylesheet" type="text/css" href="{{ asset('platform/view_editor_properties.css', 'admin') }}">
 	<link rel="stylesheet" type="text/css" href="{{ asset('platform/view_editor_table_context_menu.css', 'admin') }}">
@@ -20,7 +20,7 @@
   <script src="{{ asset('platform/editor_toolbar.js', 'admin') }}"></script>
 	<script src="{{ asset('platform/color_picker.js', 'admin') }}"></script>
 	<script src="{{ asset('platform/border_style_picker.js', 'admin') }}"></script>
-	<script src="{{ asset('platform/view_editor_section_properties.js', 'admin') }}"></script>
+	<script src="{{ asset('platform/view_editor_section_properties.js', 'admin') }}?v=2"></script>
 	<script src="{{ asset('platform/view_table.js', 'admin') }}"></script>
 	<script src="{{ asset('platform/view_editor_table_context_menu.js', 'admin') }}"></script>
 	<script src="{{ asset('platform/view_editor_field_row_context_menu.js', 'admin') }}"></script>

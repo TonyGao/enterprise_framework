@@ -36,6 +36,7 @@ services:
       - '../src/Entity/'
       - '../src/Lib'
       - '../src/Kernel.php'
+      - '../src/Service/Platform/Llm/Gateway/'
 
   # Register Generic ModelCatalog with specific models
   Symfony\AI\Platform\Bridge\Generic\ModelCatalog:

@@ -463,8 +463,29 @@ class ViewEditorController extends BaseController
     $view = $em->getRepository(\App\Entity\Platform\View::class)->find($id);
     if ($view) {
       $tplVars['sectionConfig'] = $view->getSectionConfig();
+
+      // 尝试加载之前保存的设计文件（.design.twig），编辑状态以设计文件为准
+      $viewPath = $view->getPath();
+      $viewName = $view->getName();
+      $baseViewPath = $projectDir . '/templates/views/';
+      $designFilePath = null;
+
+      if ($view->isBuiltIn() && !$viewPath) {
+        $designFilePath = $baseViewPath . 'builtin/' . $viewName . '.design.twig';
+      } elseif ($viewPath && $viewName) {
+        $designFilePath = $baseViewPath . $viewPath . '/' . $viewName . '.design.twig';
+      }
+
+      if ($designFilePath && file_exists($designFilePath)) {
+        $content = file_get_contents($designFilePath);
+        if ($content !== false && trim($content) !== '') {
+          // 剥离保存时固化的 section-controls（由 JS 动态添加，不应固化在 design 中）
+          $content = preg_replace('/<div\s+class="[^"]*section-controls[^"]*"[^>]*>.*?<\/div>\s*/s', '', $content);
+          $tplVars['initialCanvasHtml'] = $content;
+        }
+      }
     }
-    if ($view && $view->getFormEntity() && $view->isBuiltIn()) {
+    if ($view && $view->getFormEntity() && $view->isBuiltIn() && !isset($tplVars['initialCanvasHtml'])) {
       $tplVars['formEntity'] = $view->getFormEntity();
       $tplVars['entityProperties'] = $em->getRepository(\App\Entity\Platform\EntityProperty::class)
         ->findBy(['entity' => $view->getFormEntity()], ['orderNum' => 'ASC']);

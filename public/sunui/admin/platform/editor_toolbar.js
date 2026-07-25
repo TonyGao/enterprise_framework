@@ -6,78 +6,276 @@ $(document).ready(function() {
   // 初始化Alert组件
   let alert = window.$.alert;
   
+  // 按文字内容恢复选中高亮
+  window._restoreByText = function($rich, text) {
+    if (!text) return;
+    setTimeout(function() {
+      if (!$rich.length) return;
+      $rich[0].focus();
+      var walker = document.createTreeWalker($rich[0], NodeFilter.SHOW_TEXT, null, false);
+      var n;
+      while (n = walker.nextNode()) {
+        var idx = n.textContent.indexOf(text);
+        if (idx !== -1) {
+          try {
+            var r = document.createRange();
+            r.setStart(n, idx);
+            r.setEnd(n, idx + text.length);
+            var s = window.getSelection();
+            s.removeAllRanges();
+            s.addRange(r);
+          } catch(e) {}
+          break;
+        }
+      }
+    }, 0);
+  };
+
+  // ===== 选区格式化工具函数 =====
+  // 用法: applyStyleToSelection('color', '#f00') 或 applyStyleToSelection({color:'#f00','font-weight':'bold'})
+  // 通过文本节点分割实现选区包裹，完全避免 surroundContents 的 range 副作用
+  // 格式化后自动恢复选区（保持选中高亮）
+  window.applyStyleToSelection = function(property, value) {
+    const $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+    if (!$rich.length) return;
+    const isMap = arguments.length === 1 && typeof property === 'object';
+    const styles = isMap ? property : (function(o){o[property]=value;return o})({});
+    // 获取选区
+    var range = window._savedRange || null;
+    if (!range) {
+      var sel = window.getSelection();
+      range = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
+    }
+    if (!range || !range.toString().trim() || !$rich[0] || !$rich[0].contains(range.commonAncestorContainer)) {
+      // 无选区或选区不在 rich text 内 → 全元素应用
+      $rich.css(styles);
+      $rich.find('span:not([id]):not(.font-format)').each(function() {
+        if (!this.style.length || !this.style.cssText) $(this).contents().unwrap();
+      });
+      window._savedRange = null;
+      $(document).trigger('selectionchange');
+      return;
+    }
+
+    // 展平嵌套
+    window._flattenNestedSpans($rich);
+
+    // 如果选区完全覆盖一个现有 span，直接改样式
+    var $existing = $(range.commonAncestorContainer).closest('span');
+    if ($existing.length && range.toString() === $existing.text()) {
+      $existing.css(styles);
+      window._savedRange = null;
+      // 恢复选中（CSS 改样式不改 DOM，直接 restore）
+      window._restoreByText($rich, range.toString());
+      $(document).trigger('selectionchange');
+      return;
+    }
+
+    // 手动包裹：分割文本节点并将选中部分放入 span
+    try {
+      var startNode = range.startContainer;
+      var endNode = range.endContainer;
+      var startOff = range.startOffset;
+      var endOff = range.endOffset;
+      var selectedText = range.toString();
+
+      var $wrap = $('<span style="display:inline">').css(styles);
+      var wrapEl = $wrap[0];
+
+      if (startNode === endNode && startNode.nodeType === 3) {
+        var text = startNode.textContent;
+        var before = text.substring(0, startOff);
+        var middle = text.substring(startOff, endOff);
+        var after = text.substring(endOff);
+        var parent = startNode.parentNode;
+        var frag = document.createDocumentFragment();
+        if (before) frag.appendChild(document.createTextNode(before));
+        wrapEl.textContent = middle;
+        frag.appendChild(wrapEl);
+        if (after) frag.appendChild(document.createTextNode(after));
+        parent.replaceChild(frag, startNode);
+      } else {
+        range.surroundContents(wrapEl);
+        var $p = $wrap.parent();
+        while ($p[0] && $p.is('span') && $p[0].childNodes.length === 1 && !$p[0].id) {
+          $wrap.insertAfter($p);
+          $p.remove();
+          $p = $wrap.parent();
+        }
+      }
+
+      // 清理空 span
+      $rich.find('span:not([id]):not(.font-format)').each(function() {
+        if (!this.style.length || !this.style.cssText) $(this).contents().unwrap();
+      });
+
+      // 恢复选区
+      window._restoreByText($rich, selectedText);
+    } catch(e) {
+      $rich.css(styles);
+    }
+    window._savedRange = null;
+    $(document).trigger('selectionchange');
+  };
+
+  // 展平 .ef-rich-text 内深层嵌套的冗余 span（重复执行直到完全展开）
+  window._flattenNestedSpans = function($root) {
+    var changed = true;
+    while (changed) {
+      changed = false;
+      $root.find('span:not([id]):not(.font-format)').each(function() {
+        var $s = $(this);
+        if ($s[0].childNodes.length === 1 && $s.children().length === 1 && $s.children().first().is('span')) {
+          $s.children().first().insertAfter($s);
+          $s.remove();
+          changed = true;
+        }
+      });
+    }
+  };
+  
+  // 获取选中文字所在的最内层 span 的某个样式值（优先用 _savedRange）
+  function getSelectedStyle(prop) {
+    var range = window._savedRange || null;
+    if (!range) {
+      var sel = window.getSelection();
+      range = (sel && sel.rangeCount) ? sel.getRangeAt(0) : null;
+    }
+    if (!range) return null;
+    var $span = $(range.commonAncestorContainer).closest('span, .ef-rich-text').first();
+    return $span.length ? $span.css(prop) : null;
+  }
+
+  // 全局接口：获取选中文字的某个样式值（给 text_component_properties 等外部使用）
+  window.getSelectedStyle = function(prop) {
+    return getSelectedStyle(prop);
+  };
+
+  // 工具栏按钮 mousedown 时保存选区（click 时焦点已丢失）
+  $('.editor-toolbar').on('mousedown', function() {
+    var $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+    if (!$rich.length) return;
+    var sel = window.getSelection();
+    window._savedRange = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
+  });
+
   // 获取所有工具栏按钮并添加点击事件
   $('.toolbar-btn').on('click', function() {
-    // 对于需要切换状态的按钮（如粗体、斜体等）
-    if (['fa-bold', 'fa-italic', 'fa-underline', 'fa-align-left', 'fa-align-center',
-         'fa-align-right', 'fa-border-all'].some(cls => $(this).find('i').hasClass(cls))) {
+    const iconClass = $(this).find('i').attr('class') || '';
+    
+    // 粗体/斜体/下划线 → 选区格式化
+    if (iconClass.includes('fa-bold')) {
+      const $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+      if ($rich.length) {
+        const currentWeight = getSelectedStyle('font-weight') || $rich.css('font-weight');
+        const newWeight = (currentWeight === '700' || currentWeight === 'bold') ? '400' : 'bold';
+        window.applyStyleToSelection('font-weight', newWeight);
+        $(this).toggleClass('active', newWeight === 'bold');
+      }
+    } else if (iconClass.includes('fa-italic')) {
+      const $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+      if ($rich.length) {
+        const currentStyle = getSelectedStyle('font-style') || $rich.css('font-style');
+        const newStyle = (currentStyle === 'italic') ? 'normal' : 'italic';
+        window.applyStyleToSelection('font-style', newStyle);
+        $(this).toggleClass('active', newStyle === 'italic');
+      }
+    } else if (iconClass.includes('fa-underline')) {
+      const $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+      if ($rich.length) {
+        const currentDeco = getSelectedStyle('text-decoration') || $rich.css('text-decoration');
+        const isUnderlined = currentDeco && (currentDeco.includes('underline'));
+        window.applyStyleToSelection('text-decoration', isUnderlined ? 'none' : 'underline');
+        $(this).toggleClass('active', !isUnderlined);
+      }
+    } else {
       $(this).toggleClass('active');
     }
     
-    // 在这里可以添加按钮的具体功能实现
     const buttonTitle = $(this).attr('title');
     console.log(`点击了 ${buttonTitle} 按钮`);
     
-    // 示例：根据按钮类型执行不同操作
-    const iconClass = $(this).find('i').attr('class');
-    
     if (iconClass.includes('fa-rotate-left')) {
-      // 撤销操作
       console.log('执行撤销操作');
     } else if (iconClass.includes('fa-rotate-right')) {
-      // 重做操作
       console.log('执行重做操作');
     }
-    // 其他按钮功能可以在这里继续实现...
   });
   
   // 处理下拉选择框变化
   $('.toolbar-select[title="字体选择"]').on('change', function() {
     console.log(`选择了字体: ${$(this).val()}`);
-    // 实现字体更改逻辑
+    // 实现字体更改逻辑 — 使用 applyStyleToSelection
+    window.applyStyleToSelection('font-family', $(this).val());
   });
   
   $('.toolbar-select[title="字号选择"]').on('change', function() {
     console.log(`选择了字号: ${$(this).val()}px`);
-    // 实现字号更改逻辑
+    window.applyStyleToSelection('font-size', $(this).val() + 'px');
+  });
+  
+  // 自定义字号输入框
+  $(document).on('change', '.custom-font-size-input', function() {
+    const val = parseInt($(this).val());
+    if (val >= 6 && val <= 200) {
+      window.applyStyleToSelection('font-size', val + 'px');
+    }
   });
   
   // 字体选择器按钮点击事件 - Feature 3
   $('#fontSelectorTrigger').on('click', function() {
     if (window.fontSelectorModal) {
-      // 获取当前选中单元格的字体信息
       const activeSection = $('#canvas .section.active');
       const activeCells = activeSection.find('td[data-cell-active="true"]');
+      const selectedComponent = window.ComponentProperties?.getSelectedComponent?.();
+      const $comp = selectedComponent ? $(selectedComponent) : $();
       let currentFont = null;
+
+      // 保存当前选区（contenteditable 内的文字选中）
+      const sel = window.getSelection();
+      window._savedRange = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
       
-      if (activeCells.length > 0) {
+      if (activeCells.length) {
         const firstCell = activeCells.first();
-        const fontFamily = firstCell.css('font-family');
-        const fontWeight = firstCell.css('font-weight');
-        
         currentFont = {
-          family: fontFamily ? fontFamily.split(',')[0].replace(/["']/g, '').trim() : null,
-          weight: fontWeight === 'bold' || fontWeight === '700' ? 700 : parseInt(fontWeight) || 400
+          family: (firstCell.css('font-family') || '').split(',')[0].replace(/["']/g, '').trim() || null,
+          weight: parseInt(firstCell.css('font-weight')) || 400
+        };
+      } else if ($comp.length && ($comp.hasClass('ef-text-component') || $comp.find('.ef-rich-text').length)) {
+        const $rich = $comp.hasClass('ef-rich-text') ? $comp : $comp.find('.ef-rich-text').first();
+        currentFont = {
+          family: ($rich.css('font-family') || '').split(',')[0].replace(/["']/g, '').trim() || null,
+          weight: parseInt($rich.css('font-weight')) || 400
         };
       }
       
       window.fontSelectorModal.show(function(selectedFont) {
-        // 应用选中的字体到当前选中的单元格或文本
-        if (activeCells.length > 0) {
-          // 应用字体到选中的单元格
+        if (activeCells.length) {
           activeCells.css('font-family', selectedFont.family);
           activeCells.css('font-weight', selectedFont.weight);
-          
-          // 更新按钮显示的字体名称
-          $('#fontSelectorTrigger .font-selector-text').text(selectedFont.name);
-          
-          // 同步工具栏按钮状态
           window.viewEditor.toolbar.syncToolbarButtonStates(activeCells.first());
-          
-          console.log('应用字体:', selectedFont.name, '到', activeCells.length, '个单元格');
+        } else if ($comp.length && ($comp.hasClass('ef-text-component') || $comp.find('.ef-rich-text').length)) {
+          const $rich = $comp.hasClass('ef-rich-text') ? $comp : $comp.find('.ef-rich-text').first();
+          // 使用共享工具函数，优先选区格式化
+          window.applyStyleToSelection({'font-family': selectedFont.family, 'font-weight': selectedFont.weight});
+          // 全元素模式下清理冗余 font-format
+          const sel = window.getSelection();
+          const range = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
+          if (!range || !range.toString().trim()) {
+            $rich.find('.font-format').each(function() {
+              this.style.fontFamily = '';
+              this.style.fontWeight = '';
+              if (!this.style.length) $(this).contents().unwrap();
+            });
+          }
+          window.viewEditor.toolbar.syncToolbarButtonStates($rich);
         } else {
-          alert.warning('请先选择要应用字体的单元格');
+          alert.warning('请先选择要应用字体的内容');
+          return;
         }
+        
+        $('#fontSelectorTrigger .font-selector-text').text(selectedFont.name);
+        console.log('应用字体:', selectedFont.name);
       }, currentFont);
     }
   });
@@ -100,8 +298,10 @@ $(document).ready(function() {
       const url = window.location.pathname;
       const viewId = url.substring(url.lastIndexOf('/') + 1);
       
-      // 获取canvas的HTML内容
-      const canvasHtml = $('#canvas').html();
+      // 获取canvas的HTML内容（排除动态添加的 section-controls）
+      const $canvasClone = $('#canvas').clone();
+      $canvasClone.find('.section-controls').remove();
+      const canvasHtml = $canvasClone.html();
       
       // 获取 section 配置
       const contentWidth = $('#content-width').val();
@@ -299,6 +499,13 @@ $(document).ready(function() {
           buttonClass: 'font-align-right',
           fallbackStyle: 'text-align',
           fallbackValues: ['right']
+        },
+        {
+          style: 'justify-content',
+          values: [''],
+          buttonClass: 'font-align-justify',
+          fallbackStyle: 'text-align',
+          fallbackValues: ['justify']
         }
       ],
       // 垂直对齐按钮组（互斥）
@@ -348,7 +555,13 @@ $(document).ready(function() {
           }
         }
 
-        const currentStyle = targetElement.css(mapping.style);
+        // 对文字样式（font-weight/font-style/text-decoration），优先读取选中文字的 span 样式
+        let currentStyle;
+        if (groupName === 'standalone' && typeof getSelectedStyle === 'function') {
+          currentStyle = getSelectedStyle(mapping.style) || targetElement.css(mapping.style);
+        } else {
+          currentStyle = targetElement.css(mapping.style);
+        }
         let shouldBeActive = false;
 
         if (typeof mapping.values === 'function') {
@@ -383,35 +596,45 @@ $(document).ready(function() {
       });
     });
     
-    // 处理字体颜色按钮
+    // 处理字体颜色按钮（添加颜色指示器，优先选中文字的颜色）
     const $fontColorBtn = $('.toolbar-btn.font-palette');
     if ($fontColorBtn.length) {
-      const currentColor = element.css('color');
+      const selColor = typeof getSelectedStyle === 'function' ? getSelectedStyle('color') : null;
+      const currentColor = selColor || element.css('color');
+      if (currentColor && currentColor !== 'rgba(0, 0, 0, 0)' && currentColor !== 'transparent') {
+        const $indicator = $fontColorBtn.find('.color-indicator');
+        if ($indicator.length === 0) {
+          const $newInd = $('<span class="color-indicator" style="display:block;width:14px;height:3px;margin:2px auto 0;border-radius:1px;"></span>');
+          $newInd.css('background-color', currentColor);
+          $fontColorBtn.append($newInd);
+        } else {
+          $indicator.css('background-color', currentColor);
+        }
+      }
     }
     
-    // 处理字体选择器
+    // 处理字体选择器（优先选中文字的 span 字体）
     const $fontSelector = $('#fontSelectorTrigger .font-selector-text');
     if ($fontSelector.length) {
-      const currentFontFamily = element.css('font-family');
+      const selFont = typeof getSelectedStyle === 'function' ? getSelectedStyle('font-family') : null;
+      const currentFontFamily = selFont || element.css('font-family');
       if (currentFontFamily) {
-        // 从字体族中提取主要字体名称
         const fontName = currentFontFamily.split(',')[0].replace(/["']/g, '').trim();
         $fontSelector.text(fontName);
       }
     }
     
-    // 处理字号选择器
+    // 处理字号选择器（优先选中文字的 span 字号）
     const $fontSizeSelect = $('.font-size-select');
     if ($fontSizeSelect.length) {
-      const currentFontSize = element.css('font-size');
+      const selSize = typeof getSelectedStyle === 'function' ? getSelectedStyle('font-size') : null;
+      const currentFontSize = selSize || element.css('font-size');
       if (currentFontSize) {
         const fontSize = parseInt(currentFontSize);
-        // 检查是否有对应的选项
         const $option = $fontSizeSelect.find(`option[value="${fontSize}"]`);
         if ($option.length > 0) {
           $fontSizeSelect.val(fontSize);
         } else {
-          // 如果没有对应选项，添加一个自定义选项
           const customOption = `<option value="${fontSize}">${fontSize}px</option>`;
           $fontSizeSelect.find('option[value="custom"]').before(customOption);
           $fontSizeSelect.val(fontSize);
@@ -446,8 +669,38 @@ $(document).ready(function() {
 
   // 定义工具栏模块
   Object.assign(window.viewEditor.toolbar, {
-    // 同步工具栏按钮状态方法
     syncToolbarButtonStates: syncToolbarButtonStates,
+  });
+
+  // 组件选中时同步工具栏状态（字号、字体、粗体等）
+  $(document).on('componentSelected', function(e, component) {
+    var $comp = $(component);
+    var $el = null;
+    if ($comp.hasClass('ef-text-component') || $comp.hasClass('ef-text')) {
+      $el = $comp.find('.ef-rich-text').first();
+      if (!$el.length && $comp.hasClass('ef-rich-text')) $el = $comp;
+    } else if ($comp.is('td') || $comp.closest('td').length) {
+      return; // 表格相关由其他逻辑处理
+    }
+    if ($el && $el.length && typeof syncToolbarButtonStates === 'function') {
+      syncToolbarButtonStates($el);
+    }
+  });
+
+  // 选区变化时同步工具栏状态（选中不同文字时更新工具栏按钮）
+  var _syncToolbarTimer = null;
+  $(document).on('selectionchange', function() {
+    var $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+    if (!$rich.length) return;
+    var sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    if (!$rich[0].contains(sel.getRangeAt(0).commonAncestorContainer)) return;
+    clearTimeout(_syncToolbarTimer);
+    _syncToolbarTimer = setTimeout(function() {
+      if (typeof syncToolbarButtonStates === 'function') {
+        syncToolbarButtonStates($rich);
+      }
+    }, 60);
   });
   
   // 修改原有的粗体按钮点击事件处理
@@ -765,194 +1018,134 @@ $(document).ready(function() {
   // 初始化字体颜色选择器
   let fontColorPicker = null;
   
-  // 字体颜色按钮点击事件
+  // 字体颜色按钮点击事件（支持表格单元格 + 文本选区）
   $('.toolbar-btn.font-palette').on('click', function() {
     const activeSection = $('#canvas .section.active');
     const activeCells = activeSection.find('td[data-cell-active="true"]');
+    const $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
     
-    if (activeCells.length === 0) return;
+    if (activeCells.length === 0 && !$rich.length) return;
     
-    // 获取第一个选中单元格的当前颜色
-    const firstCellColor = activeCells.first().css('color');
-    let hexColor = rgbToHex(firstCellColor) || '#000000';
+    // 保存选区，弹窗后会丢失
+    if ($rich.length) {
+      const sel = window.getSelection();
+      window._savedRange = (sel && sel.rangeCount) ? sel.getRangeAt(0).cloneRange() : null;
+    }
     
-    // 如果颜色选择器不存在，则创建
+    let hexColor = '#000000';
+    if (activeCells.length) {
+      hexColor = rgbToHex(activeCells.first().css('color')) || '#000000';
+    } else if ($rich.length) {
+      // 优先选区文字的颜色
+      const selColor = getSelectedStyle('color');
+      hexColor = rgbToHex(selColor || $rich.css('color')) || '#000000';
+    }
+    
     if (!fontColorPicker) {
       fontColorPicker = new ColorPicker({
         container: 'body',
         defaultColor: hexColor,
         onChange: function(color) {
-          // 重新获取当前激活的单元格
-          const activeSection = $('#canvas .section.active');
-          const currentActiveCells = activeSection.find('td[data-cell-active="true"]');
+          const currentActiveCells = $('#canvas .section.active').find('td[data-cell-active="true"]');
+          const $r = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
           
-          // 为所有选中的单元格应用相同的颜色
-          currentActiveCells.each(function() {
-            $(this).css('color', color);
-          });
-          
-          // 更新按钮状态
-          if (currentActiveCells.length > 0) {
+          if (currentActiveCells.length) {
+            currentActiveCells.each(function() {
+              $(this).css('color', color);
+            });
             window.viewEditor.toolbar.syncToolbarButtonStates(currentActiveCells.first());
+          } else if ($r.length) {
+            window.applyStyleToSelection('color', color);
+            window.viewEditor.toolbar.syncToolbarButtonStates($r);
           }
-        },
-        onClose: function() {
-          // 可以在这里添加关闭时的处理逻辑
         }
       });
     } else {
-      // 更新颜色选择器的当前颜色
       fontColorPicker.setColor(hexColor);
     }
     
-    // 打开颜色选择器
     fontColorPicker.open(this);
   });
   
   // 水平对齐按钮事件处理
-  $('.toolbar-btn.font-align-left').on('click', function() {
-    const activeSection = $('#canvas .section.active');
-    const activeCells = activeSection.find('td[data-cell-active="true"]');
-    
-    if (activeCells.length > 0) {
-      // 移除其他对齐按钮的active状态
-      $('.toolbar-btn.font-align-center, .toolbar-btn.font-align-right').removeClass('active');
-      $(this).addClass('active');
-      
-      activeCells.each(function() {
-        const $cell = $(this);
-        const $cellContent = $cell.find('.cell-content');
-        if ($cellContent.length) {
-          $cellContent.css({
-            'display': 'flex',
-            'justify-content': 'flex-start'
-          });
-        } else {
-          $cell.css('text-align', 'left');
-        }
+  // 对齐辅助：设置后触发双向同步
+  function _setAlign($el, align, isCell) {
+    if (isCell) {
+      $('.toolbar-btn.font-align-left, .toolbar-btn.font-align-center, .toolbar-btn.font-align-right, .toolbar-btn.font-align-justify').removeClass('active');
+      $('.toolbar-btn.font-align-'+align).addClass('active');
+      if (align === 'justify') return;
+      $el.each(function() {
+        var $c = $(this).find('.cell-content');
+        if ($c.length) $c.css({display:'flex','justify-content':align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center'});
+        else $(this).css('text-align', align);
       });
-      
-      window.viewEditor.toolbar.syncToolbarButtonStates(activeCells.first());
+    } else {
+      $el.css('text-align', align);
     }
+    window.viewEditor.toolbar.syncToolbarButtonStates(isCell ? $el.first() : $el);
+    $(document).trigger('selectionchange');
+  }
+
+  $('.toolbar-btn.font-align-left').on('click', function() {
+    var ac = $('#canvas .section.active').find('td[data-cell-active="true"]');
+    var $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+    if (ac.length) _setAlign(ac, 'left', true);
+    else if ($rich.length) _setAlign($rich, 'left', false);
   });
   
   $('.toolbar-btn.font-align-center').on('click', function() {
-    const activeSection = $('#canvas .section.active');
-    const activeCells = activeSection.find('td[data-cell-active="true"]');
-    
-    if (activeCells.length > 0) {
-      // 移除其他对齐按钮的active状态
-      $('.toolbar-btn.font-align-left, .toolbar-btn.font-align-right').removeClass('active');
-      $(this).addClass('active');
-      
-      activeCells.each(function() {
-        const $cell = $(this);
-        const $cellContent = $cell.find('.cell-content');
-        if ($cellContent.length) {
-          $cellContent.css({
-            'display': 'flex',
-            'justify-content': 'center'
-          });
-        } else {
-          $cell.css('text-align', 'center');
-        }
-      });
-      
-      window.viewEditor.toolbar.syncToolbarButtonStates(activeCells.first());
-    }
+    var ac = $('#canvas .section.active').find('td[data-cell-active="true"]');
+    var $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+    if (ac.length) _setAlign(ac, 'center', true);
+    else if ($rich.length) _setAlign($rich, 'center', false);
   });
   
   $('.toolbar-btn.font-align-right').on('click', function() {
-    const activeSection = $('#canvas .section.active');
-    const activeCells = activeSection.find('td[data-cell-active="true"]');
-    
-    if (activeCells.length > 0) {
-      // 移除其他对齐按钮的active状态
-      $('.toolbar-btn.font-align-left, .toolbar-btn.font-align-center').removeClass('active');
-      $(this).addClass('active');
-      
-      activeCells.each(function() {
-        const $cell = $(this);
-        const $cellContent = $cell.find('.cell-content');
-        if ($cellContent.length) {
-          $cellContent.css({
-            'display': 'flex',
-            'justify-content': 'flex-end'
-          });
-        } else {
-          $cell.css('text-align', 'right');
-        }
-      });
-      
-      window.viewEditor.toolbar.syncToolbarButtonStates(activeCells.first());
-    }
+    var ac = $('#canvas .section.active').find('td[data-cell-active="true"]');
+    var $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+    if (ac.length) _setAlign(ac, 'right', true);
+    else if ($rich.length) _setAlign($rich, 'right', false);
+  });
+  
+  $('.toolbar-btn.font-align-justify').on('click', function() {
+    var $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+    if ($rich.length) _setAlign($rich, 'justify', false);
   });
   
   // 垂直对齐按钮事件处理
-  $('.toolbar-btn.font-align-vertical-top').on('click', function() {
-    const activeSection = $('#canvas .section.active');
-    const activeCells = activeSection.find('td[data-cell-active="true"]');
-    
-    if (activeCells.length > 0) {
-      activeCells.each(function() {
-        const $cell = $(this);
-        const $cellContent = $cell.find('.cell-content');
-        if ($cellContent.length) {
-          $cellContent.css({
-            'display': 'flex',
-            'align-items': 'flex-start'
-          });
-        } else {
-          $cell.css('vertical-align', 'top');
-        }
+  function _setVAlign($el, align, isCell) {
+    if (isCell) {
+      $el.each(function() {
+        var $c = $(this).find('.cell-content');
+        if ($c.length) $c.css({display:'flex','align-items':align === 'top' ? 'flex-start' : align === 'bottom' ? 'flex-end' : 'center'});
+        else $(this).css('vertical-align', align);
       });
-      
-      window.viewEditor.toolbar.syncToolbarButtonStates(activeCells.first());
+    } else {
+      $el.css('vertical-align', align);
     }
+    window.viewEditor.toolbar.syncToolbarButtonStates(isCell ? $el.first() : $el);
+    $(document).trigger('selectionchange');
+  }
+
+  $('.toolbar-btn.font-align-vertical-top').on('click', function() {
+    var ac = $('#canvas .section.active').find('td[data-cell-active="true"]');
+    var $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+    if (ac.length) _setVAlign(ac, 'top', true);
+    else if ($rich.length) _setVAlign($rich, 'top', false);
   });
   
   $('.toolbar-btn.font-align-vertical-center').on('click', function() {
-    const activeSection = $('#canvas .section.active');
-    const activeCells = activeSection.find('td[data-cell-active="true"]');
-    
-    if (activeCells.length > 0) {
-      activeCells.each(function() {
-        const $cell = $(this);
-        const $cellContent = $cell.find('.cell-content');
-        if ($cellContent.length) {
-          $cellContent.css({
-            'display': 'flex',
-            'align-items': 'center'
-          });
-        } else {
-          $cell.css('vertical-align', 'middle');
-        }
-      });
-      
-      window.viewEditor.toolbar.syncToolbarButtonStates(activeCells.first());
-    }
+    var ac = $('#canvas .section.active').find('td[data-cell-active="true"]');
+    var $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+    if (ac.length) _setVAlign(ac, 'middle', true);
+    else if ($rich.length) _setVAlign($rich, 'middle', false);
   });
   
   $('.toolbar-btn.font-align-vertical-bottom').on('click', function() {
-    const activeSection = $('#canvas .section.active');
-    const activeCells = activeSection.find('td[data-cell-active="true"]');
-    
-    if (activeCells.length > 0) {
-      activeCells.each(function() {
-        const $cell = $(this);
-        const $cellContent = $cell.find('.cell-content');
-        if ($cellContent.length) {
-          $cellContent.css({
-            'display': 'flex',
-            'align-items': 'flex-end'
-          });
-        } else {
-          $cell.css('vertical-align', 'bottom');
-        }
-      });
-      
-      window.viewEditor.toolbar.syncToolbarButtonStates(activeCells.first());
-    }
+    var ac = $('#canvas .section.active').find('td[data-cell-active="true"]');
+    var $rich = $('.ef-text-component.selected .ef-rich-text, .ef-text.selected .ef-rich-text');
+    if (ac.length) _setVAlign(ac, 'bottom', true);
+    else if ($rich.length) _setVAlign($rich, 'bottom', false);
   });
   
   // 单元格合并功能

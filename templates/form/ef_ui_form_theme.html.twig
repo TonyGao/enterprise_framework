@@ -421,13 +421,27 @@
       {% set defaultLabel = '' %}
       {% set defaultTranslationParams = {} %}
       {%- for key, choice_attr in preferred_choices -%}
-        {%- if choice_attr.value == value -%}
+        {%- if choice_attr is iterable -%}
+          {%- for child in choice_attr -%}
+            {%- if child.value == value -%}
+              {%- set defaultLabel = child.label -%}
+              {%- set defaultTranslationParams = child.labelTranslationParameters|default({}) -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- elseif choice_attr.value == value -%}
           {%- set defaultLabel = choice_attr.label -%}
           {%- set defaultTranslationParams = choice_attr.labelTranslationParameters|default({}) -%}
         {%- endif -%}
       {%- endfor -%}
       {%- for key, choice_attr in choices -%}
-        {%- if choice_attr.value == value -%} {# 如果选项值等于默认值 #}
+        {%- if choice_attr is iterable -%}
+          {%- for child in choice_attr -%}
+            {%- if child.value == value -%}
+              {%- set defaultLabel = child.label -%}
+              {%- set defaultTranslationParams = child.labelTranslationParameters|default({}) -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- elseif choice_attr.value == value -%}
           {%- set defaultLabel = choice_attr.label -%}
           {%- set defaultTranslationParams = choice_attr.labelTranslationParameters|default({}) -%}
         {%- endif -%}
@@ -450,7 +464,7 @@
     <div class="ef-trigger-popup ef-trigger-position-bl"
          trigger-placement="bl"
          for="{{ label }}"
-         style="z-index: 1001; pointer-events: auto; min-width: 200px;"
+         style="z-index: 1001; pointer-events: auto; min-width: 360px; max-width: 520px;"
          id="{{ selectContentId }}"
          parentId="{{ selectInputId }}"
         >
@@ -481,14 +495,17 @@
 {%- endblock choice_widget_collapsed -%}
 
 {%- block choice_widget_options -%}
-    {% for group_label, choice in options %}
+    {% for choice in options %}
         {%- if choice is iterable -%}
-            <optgroup label="{{ choice_translation_domain is same as(false) ? group_label : group_label|trans({}, choice_translation_domain) }}">
-                {% set options = choice %}
-                {{- block('choice_widget_options') -}}
-            </optgroup>
+            {%- if choice.label is defined -%}
+                <li class="ef-select-option ef-select-option-disabled" style="cursor: default; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #86868b; padding: 4px 12px 2px;">
+                    <span class="ef-select-option-content">{{ choice_translation_domain is same as(false) ? choice.label : choice.label|trans({}, choice_translation_domain) }}</span>
+                </li>
+            {%- endif -%}
+            {% for child in choice %}
+                <li id="{{ random() }}" value="{{ child.value }}" class="ef-select-option {% if not render_preferred_choices|default(false) and child is selectedchoice(value) %} ef-select-option-active {% endif %}"><span class="ef-select-option-content">{{ choice_translation_domain is same as(false) ? child.label : child.label|trans(child.labelTranslationParameters, choice_translation_domain) }}</span></li>
+            {% endfor %}
         {%- else -%}
-            {# <option value="{{ choice.value }}"{% if choice.attr %}{% with { attr: choice.attr } %}{{ block('attributes') }}{% endwith %}{% endif %}{% if not render_preferred_choices|default(false) and choice is selectedchoice(value) %} selected="selected"{% endif %}>{{ choice_translation_domain is same as(false) ? choice.label : choice.label|trans(choice.labelTranslationParameters, choice_translation_domain) }}</option> #}
             <li id="{{ random() }}" value="{{ choice.value }}" class="ef-select-option {% if not render_preferred_choices|default(false) and choice is selectedchoice(value) %} ef-select-option-active {% endif %}"><span class="ef-select-option-content">{{ choice_translation_domain is same as(false) ? choice.label : choice.label|trans(choice.labelTranslationParameters, choice_translation_domain) }}</span></li>
         {%- endif -%}
     {% endfor %}
@@ -584,11 +601,12 @@
 {%- endblock timezone_widget -%}
 
 {%- block timezone_widget_options -%}
-    {% for group_label, choice in options %}
+    {% for choice in options %}
         {%- if choice is iterable -%}
-            <optgroup label="{{ choice_translation_domain is same as(false) ? group_label : group_label|trans({}, choice_translation_domain) }}">
-                {% set options = choice %}
-                {{- block('timezone_widget_options') -}}
+            <optgroup label="{{ choice_translation_domain is same as(false) ? choice.label : choice.label|trans({}, choice_translation_domain) }}">
+                {% for child in choice %}
+                    <option value="{{ child.value }}"{% if child.attr %}{% with {attr: child.attr} %}{{ block('attributes') }}{% endwith %}{% endif %}{% if (not render_preferred_choices|default(false) or not (duplicate_preferred_choices ?? true)) and child is selectedchoice(value) %} selected="selected"{% endif %}>{{ choice_translation_domain is same as(false) ? child.label : child.label|trans(child.labelTranslationParameters, choice_translation_domain) }}</option>
+                {% endfor %}
             </optgroup>
         {%- else -%}
             <option value="{{ choice.value }}"{% if choice.attr %}{% with {attr: choice.attr} %}{{ block('attributes') }}{% endwith %}{% endif %}{% if (not render_preferred_choices|default(false) or not (duplicate_preferred_choices ?? true)) and choice is selectedchoice(value) %} selected="selected"{% endif %}>{{ choice_translation_domain is same as(false) ? choice.label : choice.label|trans(choice.labelTranslationParameters, choice_translation_domain) }}</option>

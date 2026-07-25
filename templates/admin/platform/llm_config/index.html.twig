@@ -1,0 +1,255 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'components/datagrid.html.twig' as grid %}
+
+{% block app_content_container %}
+<div class="org-structure-container llm-config-page">
+  <div class="outside-wrapper" style="padding: 40px 48px; max-width: 1280px; margin: 0; background: #fff; min-height: calc(100vh - 60px);">
+
+    {# Page header #}
+    <div class="llm-config-header">
+      <h1>LLM 配置</h1>
+      <div class="header-actions">
+        <a href="{{ path('admin_llm_provider_create') }}" class="btn primary medium">
+          <i class="fa-solid fa-plus"></i> 新增服务商
+        </a>
+      </div>
+    </div>
+
+    {# Flash messages #}
+    {% for message in app.flashes('success') %}
+      <div role="alert" class="ef-alert ef-alert-success" style="margin-bottom: 32px; border-radius: 12px; padding: 20px; background-color: #f0fdf4; color: #166534;">
+        <div class="ef-alert-icon" style="color: #16a34a;"><i class="fa-solid fa-circle-check" style="font-size: 18px;"></i></div>
+        <div class="ef-alert-body">
+          <div class="ef-alert-content" style="font-size: 14px;">{{ message }}</div>
+        </div>
+      </div>
+    {% endfor %}
+
+    {# Stats row #}
+    {% set enabledCount = providers|filter(p => p.isEnabled)|length %}
+    {% set boundRoles = roles|filter(r => r.provider is not null) %}
+    <div class="llm-stats">
+      <div class="llm-stat-card">
+        <div class="llm-stat-icon blue"><i class="fa-solid fa-cubes"></i></div>
+        <div>
+          <div class="llm-stat-number">{{ providers|length }}</div>
+          <div class="llm-stat-label">服务商总数</div>
+        </div>
+      </div>
+      <div class="llm-stat-card">
+        <div class="llm-stat-icon green"><i class="fa-solid fa-toggle-on"></i></div>
+        <div>
+          <div class="llm-stat-number">{{ enabledCount }}</div>
+          <div class="llm-stat-label">已启用</div>
+        </div>
+      </div>
+      <div class="llm-stat-card">
+        <div class="llm-stat-icon purple"><i class="fa-solid fa-tag"></i></div>
+        <div>
+          <div class="llm-stat-number">{{ roles|length }}</div>
+          <div class="llm-stat-label">角色定义</div>
+        </div>
+      </div>
+      <div class="llm-stat-card">
+        <div class="llm-stat-icon orange"><i class="fa-solid fa-link"></i></div>
+        <div>
+          <div class="llm-stat-number">{{ boundRoles|length }}</div>
+          <div class="llm-stat-label">已绑定服务商</div>
+        </div>
+      </div>
+    </div>
+
+    {# Provider cards #}
+    <div class="llm-section-header">
+      <div>
+        <div class="section-title">服务商配置</div>
+        <div class="section-subtitle">管理 LLM 模型接入信息</div>
+      </div>
+    </div>
+
+    <div class="llm-provider-list">
+      {% for provider in providers %}
+        {% include 'admin/platform/llm_config/_provider_card.html.twig' %}
+      {% else %}
+        <div class="llm-empty-state">
+          <div class="empty-icon"><i class="fa-solid fa-robot"></i></div>
+          <p>尚未添加任何服务商配置</p>
+          <a href="{{ path('admin_llm_provider_create') }}" class="btn primary medium">
+            <i class="fa-solid fa-plus"></i> 立即添加
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+
+    {# Role binding table #}
+    <div class="llm-role-section">
+      <div class="llm-section-header">
+        <div>
+          <div class="section-title">模型分配</div>
+          <div class="section-subtitle">按能力类型为不同任务分配对应的模型</div>
+        </div>
+        <button type="button" class="btn outline small icon" id="btn-batch-bind" disabled>
+          <i class="fa-solid fa-layer-group"></i> 批量修改
+        </button>
+      </div>
+
+      {# Batch panel (hidden by default) #}
+      <div class="llm-batch-panel" id="batch-panel" style="display: none;">
+        <div class="batch-panel-left">
+          <i class="fa-solid fa-check-circle" style="color: #0066cc;"></i>
+          <span>已选择 <strong><span id="batch-count">0</span></strong> 个模型功能</span>
+        </div>
+        <div class="batch-panel-right">
+          <div class="batch-select-wrapper">
+            <select id="batch-provider">
+              <option value="">— 解除绑定 —</option>
+              {% for p in providers %}
+                <option value="{{ p.id }}">{{ p.name }}（{{ p.provider }}）</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="button" class="btn primary small icon" id="btn-batch-confirm">
+            <i class="fa-solid fa-check"></i> 应用
+          </button>
+          <button type="button" class="btn secondary small icon" id="btn-batch-cancel">
+            <i class="fa-solid fa-xmark"></i> 取消
+          </button>
+        </div>
+      </div>
+
+      {% set roleRows = [] %}
+      {% for role in roles %}
+        {% if role.provider %}
+          {% set providerHtml = '<span class="llm-tag llm-tag-bound">' ~ role.provider.name ~ '</span>' %}
+        {% else %}
+          {% set providerHtml = '<span class="llm-tag llm-tag-unbound">未配置</span>' %}
+        {% endif %}
+
+        {% if role.isEnabled %}
+          {% set statusHtml = '<span class="llm-tag llm-tag-enabled">启用</span>' %}
+        {% else %}
+          {% set statusHtml = '<span class="llm-tag llm-tag-disabled">停用</span>' %}
+        {% endif %}
+
+        {% set editBtn = '<a href="' ~ path('admin_llm_role_edit', {code: role.code}) ~ '" class="ef-link" style="font-size: 15px;" title="编辑"><i class="fa-solid fa-pen"></i></a>' %}
+
+        {% set roleRows = roleRows|merge([{
+          id: role.code,
+          code: '<span class="llm-code">' ~ role.code ~ '</span>',
+          label: '<span style="font-weight: 500;">' ~ role.label ~ '</span>',
+          provider: providerHtml,
+          status: statusHtml,
+          actions: editBtn,
+        }]) %}
+      {% endfor %}
+
+      {{ grid.dataGrid(
+        roleRows,
+        [
+          {field: 'code', label: '编码', align: 'left', raw: true},
+          {field: 'label', label: '模型功能', align: 'left', raw: true},
+          {field: 'provider', label: '绑定服务商', align: 'left', raw: true},
+          {field: 'status', label: '状态', align: 'center', raw: true},
+          {field: 'actions', label: '操作', align: 'center', raw: true, width: '80px'},
+        ],
+        {
+          emptyText: '暂无角色定义',
+          gridId: 'llm-role-grid',
+          pagination: false,
+          serverSide: false,
+          showCheckbox: true,
+          showRowNumber: true,
+          sortable: false,
+          autoFitContent: true,
+          maxWidth: '100%',
+          minHeight: 'auto',
+        }
+      ) }}
+    </div>
+
+    {# Info cards row #}
+    <div class="llm-info-cards">
+      <div class="side-card">
+        <div class="side-card-title"><i class="fa-solid fa-info-circle" style="color: #0066cc;"></i> 什么是 LLM 配置？</div>
+        <div class="side-card-text">
+          在这里配置您的 AI 模型接入信息，包括 API Key、模型名称和接口地址。
+          配置完成后，可在视图设计器等场景中使用 AI 辅助功能。
+        </div>
+      </div>
+
+      <div class="side-card">
+        <div class="side-card-title"><i class="fa-solid fa-shield-halved" style="color: #16a34a;"></i> 安全提醒</div>
+        <div class="side-card-text">
+          API Key 将使用 AES-256-GCM 加密存储，编辑时仅显示掩码。
+          所有 AI 调用经服务端代理，前端不接触密钥。
+        </div>
+      </div>
+
+      <div class="side-card" style="background: #f5f3ff;">
+        <div class="side-card-title" style="color: #7c3aed;"><i class="fa-solid fa-wand-magic-sparkles"></i> 模型分配</div>
+        <div class="side-card-text">
+          每个能力分类可绑定不同的模型：多模态模型处理图片识别，
+          轻量模型处理快速对话，向量模型处理 RAG 知识库检索等。
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+  {{ parent() }}
+  <script src="/sunui/admin/platform/llm_config.js"></script>
+  <script>
+    $(document).ready(function () {
+      function updateBatchBtn() {
+        var ids = window.efDataGrid ? window.efDataGrid.getSelectedIds('llm-role-grid') : [];
+        $('#btn-batch-bind').prop('disabled', ids.length === 0);
+      }
+
+      $(document).on('change', '#llm-role-grid .ef-checkbox input', updateBatchBtn);
+      $(document).on('change', '#llm-role-grid .check-all input', updateBatchBtn);
+
+      $('#btn-batch-bind').on('click', function () {
+        var ids = window.efDataGrid.getSelectedIds('llm-role-grid');
+        if (ids.length === 0) return;
+        $('#batch-count').text(ids.length);
+        $('#batch-provider').val('');
+        $('#batch-panel').show();
+      });
+
+      $('#btn-batch-cancel').on('click', function () {
+        $('#batch-panel').hide();
+      });
+
+      $('#btn-batch-confirm').on('click', function () {
+        var ids = window.efDataGrid.getSelectedIds('llm-role-grid');
+        var providerId = $('#batch-provider').val();
+        var $btn = $(this).prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 处理中...');
+
+        $.post('/admin/platform/llm-config/role/batch-bind', {
+          role_codes: ids,
+          provider_id: providerId,
+        }).done(function (res) {
+          if (res.success) {
+            location.reload();
+          } else {
+            alert(res.error || '操作失败');
+          }
+        }).fail(function (xhr) {
+          var err = (xhr.responseJSON && xhr.responseJSON.error) || '操作失败';
+          alert(err);
+        }).always(function () {
+          $btn.prop('disabled', false).html('<i class="fa-solid fa-check"></i> 应用');
+        });
+      });
+    });
+  </script>
+{% endblock %}
+
+{% block stylesheets %}
+  {{ parent() }}
+  <link rel="stylesheet" href="{{ asset('sunui/components/datagrid.css') }}">
+  <link rel="stylesheet" href="/sunui/admin/platform/llm_config.css">
+{% endblock %}

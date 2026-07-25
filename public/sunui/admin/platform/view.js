@@ -541,18 +541,22 @@ $(document).ready(function () {
     var chosen = $('.tree-text-content.chosen');
     if (!chosen.length) return;
     _deleteNodeId = chosen.attr('id');
-    var nodeName = chosen.find('.tree-text').text().trim() || '未命名';
+    // 节点主名称 + 副名称（postscript/label）
+    var nodeName = chosen.text().trim() || '未命名';
+    var $postscript = chosen.siblings('.postscript');
+    if ($postscript.length) {
+      nodeName += ' (' + $postscript.text().trim() + ')';
+    }
 
     $('#delete-confirm-input').val('').trigger('input');
     $('#delete-confirm-error').hide();
     $('#delete-confirm-submit').prop('disabled', true).css('opacity', '0.5');
-    // 更新提示中的节点名称
-    $('#delete-confirm-modal .ef-modal-body p').html(
+    $('#delete-confirm-message').html(
       '<strong style="color: #ff4d4f;">此操作不可撤回。</strong>一旦删除将无法挽回。<br>' +
       '将删除：<strong>' + $('<span>').text(nodeName).html() + '</strong><br><br>' +
       '请输入 <strong style="color: #ff4d4f;">确认删除</strong> 以继续：'
     );
-    $('#delete-confirm-modal').show();
+    openModal('deleteConfirmModal');
   }
 
   // 输入监听：只有输入"确认删除"才启用按钮
@@ -578,8 +582,8 @@ $(document).ready(function () {
       url: '/api/admin/platform/view/' + _deleteNodeId + '/delete',
       method: 'POST',
       success: function(resp) {
-        $('#delete-confirm-modal').hide();
-        // 刷新页面以更新树
+        closeModal('deleteConfirmModal');
+        _deleteNodeId = null;
         location.reload();
       },
       error: function(xhr) {
@@ -594,19 +598,9 @@ $(document).ready(function () {
     });
   });
 
-  // 取消删除
-  $(document).on('click', '#delete-confirm-cancel, #delete-confirm-modal .ef-modal-overlay', function(e) {
-    if (e.target === this || $(e.target).closest('#delete-confirm-cancel').length) {
-      $('#delete-confirm-modal').hide();
-      _deleteNodeId = null;
-    }
-  });
-  // 点击背景关闭
-  $(document).on('click', '#delete-confirm-modal', function(e) {
-    if (e.target === this) {
-      $('#delete-confirm-modal').hide();
-      _deleteNodeId = null;
-    }
+  // 弹窗关闭时清除状态
+  $(document).on('ef:modalClose', '#deleteConfirmModal', function() {
+    _deleteNodeId = null;
   });
 
   // ===== End 删除确认弹窗 =====
