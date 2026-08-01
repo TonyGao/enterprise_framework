@@ -60,6 +60,24 @@ class LlmProviderType extends BaseFormType
                 'label' => '接口地址（可选）',
                 'required' => false,
             ])
+            ->add('thinkingEnabled', CheckboxType::class, [
+                'label' => '开启 Thinking 深度思考模式',
+                'mapped' => false,
+                'required' => false,
+                'help' => 'DeepSeek V4 默认开启深度思考，关闭后响应更快',
+            ])
+            ->add('reasoningEffort', ChoiceType::class, [
+                'label' => '推理强度',
+                'mapped' => false,
+                'required' => false,
+                'placeholder' => 'medium（默认）',
+                'choices' => [
+                    '低（low）' => 'low',
+                    '中（medium）' => 'medium',
+                    '高（high）' => 'high',
+                ],
+                'help' => '思考模式下的推理强度',
+            ])
             ->add('isEnabled', CheckboxType::class, [
                 'label' => '启用',
                 'required' => false,

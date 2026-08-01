@@ -67,7 +67,7 @@
 .canvas-wrapper {
     position: relative;
     background-color: #fff;
-    overflow: auto;
+    overflow: hidden;
     height: 100%;
 }
 

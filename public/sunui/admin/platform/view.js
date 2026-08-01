@@ -1,3 +1,32 @@
+// jQuery Form Plugin 未随项目加载，提供兼容的 ajaxSubmit 实现
+if (typeof $.fn.ajaxSubmit !== "function") {
+  $.fn.ajaxSubmit = function (options) {
+    options = options || {};
+    var $form = this;
+    var validator = $form.data("validator");
+    if (validator && !validator.form()) {
+      return this;
+    }
+    $.ajax({
+      url: $form.attr("action") || window.location.href,
+      type: ($form.attr("method") || "POST").toUpperCase(),
+      data: $form.serialize(),
+      dataType: "text",
+      success: function (response) {
+        if (typeof options.success === "function") {
+          options.success(response);
+        }
+      },
+      error: function (xhr) {
+        if (typeof options.error === "function") {
+          options.error(xhr);
+        }
+      }
+    });
+    return this;
+  };
+}
+
 $(document).ready(function () {
   let alert = new Alert($('.app-content-container'));
   let createPayload = {
@@ -147,6 +176,39 @@ $(document).ready(function () {
       dataType: 'html',
       success: function(html) {
         $('.right-content').html(html);
+        // 删除视图按钮
+        $('.right-content').off('click', '[data-delete-view]').on('click', '[data-delete-view]', function() {
+          var viewId = $(this).data('view-id');
+          $('.right-content').off('click', '[data-confirm-delete-view]').on('click', '[data-confirm-delete-view]', function() {
+            var btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 删除中...';
+            fetch('/api/admin/platform/view/' + viewId + '/delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(json) {
+              if (json.code === 200) {
+                $('#deleteViewModal').hide();
+                window.location.reload();
+              } else {
+                alert('删除失败: ' + (json.message || '未知错误'));
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> 确认删除';
+              }
+            })
+            .catch(function(err) {
+              alert('网络错误: ' + err.message);
+              btn.disabled = false;
+              btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> 确认删除';
+            });
+          });
+          $('#deleteViewModal').show();
+        });
+        $('.right-content').off('click', '[data-close-delete-modal]').on('click', '[data-close-delete-modal]', function() {
+          $('#deleteViewModal').hide();
+        });
       },
       error: function() {
         alert.error('加载视图详情失败', { percent: '280px', title: '操作提示', closable: true });
@@ -213,6 +275,16 @@ $(document).ready(function () {
   $("#createFolder").on("click", async function (event) {
     event.preventDefault();
 
+    // 获取当前选中的树节点作为父目录
+    const selectedNode = $(".tree-text-content.chosen");
+    if (selectedNode.length) {
+      const nodeType = selectedNode.attr("type");
+      if (nodeType === "folder" || nodeType === "root") {
+        createPayload.parent = selectedNode.attr("id");
+        createPayload.type = nodeType;
+      }
+    }
+
     let route = new Route();
     let uri = await route.generate("platform_view_add_folder");
     ajax({
@@ -221,11 +293,18 @@ $(document).ready(function () {
       data: createPayload,
       async: false,
       dataType: "html",
-      success: function (data) {
+            success: function (data) {
         $(".right-content").html(data);
         
+        // 在 form action 中带上 parent 参数，确保 POST 提交时也能识别父目录
+        const form = $(".right-content form");
+        if (createPayload.parent) {
+          const action = form.attr("action") || "";
+          const sep = action.includes("?") ? "&" : "?";
+          form.attr("action", action + sep + "parent=" + encodeURIComponent(createPayload.parent));
+        }
         // 监听表单提交
-        $(".right-content form").on("submit", function(e) {
+        form.on("submit", function(e) {
           $(this).ajaxSubmit({
             success: function(response) {
               if (response.includes('视图管理')) {
@@ -256,10 +335,21 @@ $(document).ready(function () {
         alert.error(errorMsg, { percent: '40%', title: "请求错误", closable: true });
       }
     });
-  });
+  })
+;
 
   $("#createView").on("click", async function (event) {
     event.preventDefault();
+
+    // 获取当前选中的树节点作为父目录
+    const selectedNode = $(".tree-text-content.chosen");
+    if (selectedNode.length) {
+      const nodeType = selectedNode.attr("type");
+      if (nodeType === "folder" || nodeType === "root") {
+        createPayload.parent = selectedNode.attr("id");
+        createPayload.type = nodeType;
+      }
+    }
 
     let route = new Route();
     let uri = await route.generate("platform_view_add_view");
@@ -272,10 +362,27 @@ $(document).ready(function () {
       success: function (data) {
         $(".right-content").html(data);
         
+        // 在 form action 中带上 parent 参数，确保 POST 提交时也能识别父目录
+        const form = $(".right-content form");
+        if (createPayload.parent) {
+          const action = form.attr("action") || "";
+          const sep = action.includes("?") ? "&" : "?";
+          form.attr("action", action + sep + "parent=" + encodeURIComponent(createPayload.parent));
+        }
         // 监听表单提交
-        $(".right-content form").on("submit", function(e) {
+        form.on("submit", function(e) {
           $(this).ajaxSubmit({
             success: function(response) {
+              // AI 二次加工：控制器返回 JSON {code:200, data:{viewId, taskId}}
+              try {
+                var parsed = JSON.parse(response);
+                if (parsed && parsed.code === 200 && parsed.data && parsed.data.taskId) {
+                  if (window.EFViewAi && typeof window.EFViewAi.start === "function") {
+                    window.EFViewAi.start(parsed.data.taskId, parsed.data.viewId);
+                    return;
+                  }
+                }
+              } catch (err) { /* 非 JSON 响应，走原有逻辑 */ }
               if (response.includes('视图管理')) {
                 // 成功提交后刷新页面
                 window.location.reload();

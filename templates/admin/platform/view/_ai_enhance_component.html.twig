@@ -1,0 +1,657 @@
+{# AI 二次加工组件：表单内为按钮形态，点击弹出大尺寸模态框输入需求 #}
+<style>
+  .ef-ai-component {
+    margin-bottom: 18px;
+  }
+  .ef-ai-label {
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+  .ef-ai-label .ef-ai-label-tag {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6366f1;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    padding: 1px 8px;
+    border-radius: 20px;
+    vertical-align: 1px;
+  }
+  .ef-ai-box {
+    position: relative;
+    border-radius: 14px;
+    padding: 2px;
+    overflow: hidden;
+    background: #f1f5f9;
+  }
+  .ef-ai-box::before {
+    content: '';
+    position: absolute;
+    left: -50%;
+    top: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+      from 0deg,
+      #6366f1,
+      #ec4899,
+      #22d3ee,
+      #f59e0b,
+      #4ade80,
+      #6366f1
+    );
+    animation: ef-ai-border-spin 6s linear infinite;
+    z-index: 0;
+  }
+  @keyframes ef-ai-border-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  .ef-ai-box-inner {
+    position: relative;
+    z-index: 1;
+    border-radius: 12px;
+    background: #fff;
+    padding: 14px 16px;
+    min-height: 52px;
+    box-sizing: border-box;
+  }
+  .ef-ai-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: box-shadow .2s, transform .1s;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, .35);
+  }
+  .ef-ai-toggle-btn:hover {
+    box-shadow: 0 6px 20px rgba(99, 102, 241, .5);
+    transform: translateY(-1px);
+  }
+  .ef-ai-toggle-btn .ef-ai-spark {
+    font-size: 16px;
+  }
+  .ef-ai-hint {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+  }
+  .ef-ai-reset {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #6366f1;
+    font-size: 12px;
+    cursor: pointer;
+    margin-left: 8px;
+    text-decoration: underline;
+    padding: 0;
+  }
+  .ef-ai-reset:hover {
+    color: #4f46e5;
+  }
+  .ef-ai-editor-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6366f1;
+    background: #fff;
+    border: 1px solid #c7d2fe;
+    padding: 1px 9px;
+    border-radius: 20px;
+    margin-left: 2px;
+  }
+  .ef-ai-textarea-wrap {
+    position: relative;
+  }
+  .ef-ai-input {
+    position: relative;
+    padding: 2px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #a5b4fc, #f9a8d4, #7dd3fc, #a5b4fc);
+    background-size: 300% 300%;
+    transition: background .3s ease;
+  }
+  .ef-ai-input:focus-within {
+    background: linear-gradient(135deg, #6366f1, #ec4899, #22d3ee, #6366f1);
+    background-size: 300% 300%;
+    animation: ef-ai-input-shift 4s ease infinite;
+    box-shadow: 0 8px 26px rgba(99, 102, 241, .18);
+  }
+  @keyframes ef-ai-input-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  .ef-ai-input textarea {
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+    min-height: 300px;
+    max-height: 58vh;
+    padding: 18px 20px;
+    border: none;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 15px;
+    line-height: 1.9;
+    color: #0f172a;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+    transition: background .2s;
+  }
+  .ef-ai-input textarea::placeholder {
+    color: #94a3b8;
+  }
+  .ef-ai-input .ef-ai-input-icon {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    font-size: 14px;
+    opacity: .45;
+    pointer-events: none;
+    user-select: none;
+  }
+  .ef-ai-counter {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .ef-ai-counter strong {
+    color: #64748b;
+    font-weight: 600;
+  }
+  .ef-ai-tools-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ef-ai-clear {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+  }
+  .ef-ai-clear:hover {
+    color: #ef4444;
+    background: #fef2f2;
+  }
+  .ef-ai-cancel {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    border-radius: 8px;
+    padding: 7px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .ef-ai-cancel:hover {
+    color: #0f172a;
+    border-color: #cbd5e1;
+    background: #f8fafc;
+  }
+  .ef-ai-confirm {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 24px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, .35);
+    transition: box-shadow .2s, transform .1s;
+  }
+  .ef-ai-confirm:hover {
+    box-shadow: 0 6px 18px rgba(99, 102, 241, .5);
+    transform: translateY(-1px);
+  }
+  .ef-ai-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ef-ai-modal-mask {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, .45);
+  }
+  .ef-ai-modal-dialog {
+    position: relative;
+    width: 680px;
+    max-width: 92vw;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, .28);
+    overflow: hidden;
+  }
+  .ef-ai-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: linear-gradient(90deg, #eef2ff 0%, #faf5ff 100%);
+    border-bottom: 1px solid #e4e7f9;
+  }
+  .ef-ai-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .ef-ai-modal-title .ef-ai-modal-icon {
+    font-size: 16px;
+  }
+  .ef-ai-modal-close {
+    background: none;
+    border: none;
+    font-size: 15px;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    line-height: 1;
+  }
+  .ef-ai-modal-close:hover {
+    color: #0f172a;
+    background: rgba(100, 116, 139, .12);
+  }
+  .ef-ai-modal-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+  }
+  .ef-ai-modal-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-top: 1px solid #eef2f7;
+    background: #fcfdff;
+  }
+  .ef-ai-progress-status {
+    font-size: 13px;
+    color: #0f172a;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ef-ai-progress-status .ef-ai-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #6366f1;
+    animation: ef-ai-blink 1s ease-in-out infinite;
+  }
+  .ef-ai-progress-status.is-error .ef-ai-status-dot {
+    background: #ef4444;
+    animation: none;
+  }
+  .ef-ai-progress-status.is-success .ef-ai-status-dot {
+    background: #22c55e;
+    animation: none;
+  }
+  @keyframes ef-ai-blink {
+    0%, 100% { opacity: .3; }
+    50% { opacity: 1; }
+  }
+  .ef-ai-progress-bar {
+    height: 6px;
+    border-radius: 4px;
+    background: #eef2f7;
+    overflow: hidden;
+  }
+  .ef-ai-progress-bar-inner {
+    height: 100%;
+    width: 0;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    transition: width .4s;
+  }
+  .ef-ai-progress-bar-inner.is-running {
+    width: 55%;
+    animation: ef-ai-indeterminate 1.4s ease-in-out infinite;
+  }
+  .ef-ai-progress-bar-inner.is-success { width: 100%; background: #22c55e; }
+  .ef-ai-progress-bar-inner.is-error   { width: 100%; background: #ef4444; }
+  @keyframes ef-ai-indeterminate {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(250%); }
+  }
+  .ef-ai-progress-actions {
+    margin-top: 14px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .ef-ai-progress-actions .btn {
+    font-size: 12px;
+  }
+  .ef-ai-progress-actions .ef-ai-error-msg {
+    font-size: 12px;
+    color: #ef4444;
+    margin-left: 4px;
+  }
+</style>
+
+<div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal ef-ai-component">
+  <div class="ef-col ef-col-8 ef-form-item-label-col">
+    <label class="ef-form-item-label ef-ai-label">AI 加工<span class="ef-ai-label-tag">可选</span></label>
+  </div>
+  <div class="ef-col ef-col-16 ef-form-item-wrapper-col">
+    <div class="ef-form-item-content-wrapper">
+      <div class="ef-form-item-content ef-form-item-content-flex">
+
+        {# 表单内形态：按钮 + 已填写摘要 #}
+        <input type="hidden" name="ai_requirement" id="ai_requirement_value">
+        <div class="ef-ai-box" id="ef-ai-trigger-box">
+          <div class="ef-ai-box-inner">
+            <button type="button" class="ef-ai-toggle-btn" id="ef-ai-toggle">
+              <span class="ef-ai-spark">✨</span>
+              <span id="ef-ai-toggle-text">AI 二次加工</span>
+            </button>
+            <div class="ef-ai-hint">
+              <span id="ef-ai-hint-text">创建视图后，由 AI 助手按你的要求自动美化页面</span>
+              <button type="button" class="ef-ai-reset" id="ef-ai-reset" style="display:none">移除</button>
+            </div>
+          </div>
+        </div>
+
+        {# 进度面板 #}
+        <div id="ef-ai-progress" style="display:none">
+          <div class="ef-ai-progress-status" id="ef-ai-progress-status">
+            <span class="ef-ai-status-dot"></span>
+            <span id="ef-ai-progress-text">AI 加工中…</span>
+          </div>
+          <div class="ef-ai-progress-bar">
+            <div class="ef-ai-progress-bar-inner is-running" id="ef-ai-progress-bar"></div>
+          </div>
+          <div class="ef-ai-progress-actions" id="ef-ai-progress-actions" style="display:none">
+            <a class="btn primary medium" id="ef-ai-open-editor" href="#" target="_blank">在编辑器中查看</a>
+            <button type="button" class="btn outline primary medium" id="ef-ai-retry" style="display:none">重试</button>
+            <button type="button" class="btn outline primary medium" id="ef-ai-reload">刷新视图管理</button>
+            <span class="ef-ai-error-msg" id="ef-ai-error-msg"></span>
+          </div>
+        </div>
+
+        {# 模态弹窗：大尺寸输入 #}
+        <div class="ef-ai-modal" id="ef-ai-modal" style="display:none">
+          <div class="ef-ai-modal-mask" id="ef-ai-modal-mask"></div>
+          <div class="ef-ai-modal-dialog" role="dialog" aria-modal="true">
+            <div class="ef-ai-modal-head">
+              <div class="ef-ai-modal-title">
+                <span class="ef-ai-modal-icon">✨</span>
+                <span>AI 二次加工需求</span>
+                <span class="ef-ai-editor-badge">可选</span>
+              </div>
+              <button type="button" class="ef-ai-modal-close" id="ef-ai-modal-close" aria-label="关闭">✕</button>
+            </div>
+            <div class="ef-ai-modal-body">
+              <div class="ef-ai-textarea-wrap">
+                <div class="ef-ai-input">
+                  <textarea id="ai_requirement" rows="6"
+                    placeholder="在这里描述你对视图的期望，描述越具体，生成效果越好。例如：
+· 期望的页面结构（卡片 / 表格 / 左右分栏…）
+· 期望的配色与整体风格
+· 需要突出展示的字段或信息"></textarea>
+                  <span class="ef-ai-input-icon">✨</span>
+                </div>
+              </div>
+            </div>
+            <div class="ef-ai-modal-foot">
+              <div class="ef-ai-counter"><strong id="ef-ai-count">0</strong> 字</div>
+              <div class="ef-ai-tools-right">
+                <button type="button" class="ef-ai-clear" id="ef-ai-clear">清空</button>
+                <button type="button" class="ef-ai-cancel" id="ef-ai-cancel">取消</button>
+                <button type="button" class="ef-ai-confirm" id="ef-ai-confirm">确定</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var $progress = $("#ef-ai-progress");
+  var $modal = $("#ef-ai-modal");
+  var $requirement = $("#ai_requirement");
+  var $requirementValue = $("#ai_requirement_value");
+
+  $modal.detach().appendTo(document.body);
+
+  function syncValue() {
+    $requirementValue.val($requirement.val());
+  }
+
+  function resizeTextarea() {
+    $requirement.css("height", "auto");
+    var h = $requirement.prop("scrollHeight");
+    $requirement.css("height", Math.max(300, h) + "px");
+  }
+
+  function updateCount() {
+    $("#ef-ai-count").text($requirement.val().length);
+  }
+
+  function openModal() {
+    $modal.show();
+    resizeTextarea();
+    updateCount();
+    $requirement.focus();
+  }
+
+  function closeModal() {
+    $modal.hide();
+  }
+
+  function applyFilledState() {
+    var val = $.trim($requirement.val());
+    if (val) {
+      $("#ef-ai-toggle-text").text("重新编辑需求");
+      var snippet = val.length > 42 ? val.substring(0, 42) + "…" : val;
+      $("#ef-ai-hint-text").text("已填写：" + snippet);
+      $("#ef-ai-reset").show();
+    } else {
+      $("#ef-ai-toggle-text").text("AI 二次加工");
+      $("#ef-ai-hint-text").text("创建视图后，由 AI 助手按你的要求自动美化页面");
+      $("#ef-ai-reset").hide();
+    }
+  }
+
+  $("#ef-ai-toggle").on("click", openModal);
+  $("#ef-ai-modal-close").on("click", closeModal);
+  $("#ef-ai-modal-mask").on("click", closeModal);
+  $("#ef-ai-cancel").on("click", closeModal);
+  $("#ef-ai-confirm").on("click", function () {
+    syncValue();
+    closeModal();
+    applyFilledState();
+  });
+  $("#ef-ai-reset").on("click", function () {
+    $requirement.val("");
+    syncValue();
+    applyFilledState();
+  });
+  $("#ef-ai-clear").on("click", function () {
+    $requirement.val("");
+    syncValue();
+    resizeTextarea();
+    updateCount();
+    $requirement.focus();
+  });
+
+  $(document).on("keydown", function (e) {
+    if (e.key === "Escape" && $modal.is(":visible")) {
+      closeModal();
+    }
+  });
+
+  $requirement.on("input", function () {
+    syncValue();
+    resizeTextarea();
+    updateCount();
+  });
+
+  var currentTaskId = null;
+  var currentViewId = null;
+  var pollTimer = null;
+  var handlerRegistered = false;
+
+  function setStatus(text, state) {
+    var $status = $("#ef-ai-progress-status");
+    var $bar = $("#ef-ai-progress-bar");
+    var $text = $("#ef-ai-progress-text");
+    $status.removeClass("is-error is-success");
+    $bar.removeClass("is-running is-success is-error");
+    $text.text(text);
+    if (state === "running") {
+      $status.addClass("is-running");
+      $bar.addClass("is-running");
+    } else if (state === "success") {
+      $status.addClass("is-success");
+      $bar.addClass("is-success");
+    } else if (state === "error") {
+      $status.addClass("is-error");
+      $bar.addClass("is-error");
+    }
+  }
+
+  function showActions(taskId, viewId) {
+    var $actions = $("#ef-ai-progress-actions");
+    $actions.show();
+    $("#ef-ai-open-editor").attr("href", "/admin/platform/view/editor/" + viewId);
+    $("#ef-ai-retry").css("display", taskId ? "inline-block" : "none");
+    $("#ef-ai-error-msg").text("");
+  }
+
+  function handleUpdate(data) {
+    if (!currentTaskId || String(data.taskId) !== String(currentTaskId)) {
+      return;
+    }
+    if (data.status === "success") {
+      setStatus("AI 加工完成", "success");
+      showActions(currentTaskId, currentViewId);
+      $("#ef-ai-retry").hide();
+      stopPolling();
+      setTimeout(function () {
+        window.location.reload();
+      }, 1200);
+    } else if (data.status === "error") {
+      setStatus("AI 加工失败", "error");
+      showActions(currentTaskId, currentViewId);
+      $("#ef-ai-error-msg").text(data.error || "");
+      stopPolling();
+    } else if (data.status === "running") {
+      setStatus(data.progress || "AI 加工中…", "running");
+      $("#ef-ai-progress-actions").hide();
+    }
+  }
+
+  function fetchStatus() {
+    if (!currentTaskId) {
+      return;
+    }
+    $.ajax({
+      url: "/api/admin/platform/view/ai-task/" + encodeURIComponent(currentTaskId),
+      method: "GET",
+      dataType: "json",
+      success: function (json) {
+        if (json && json.code === 200 && json.data) {
+          handleUpdate(json.data);
+        }
+      }
+    });
+  }
+
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(fetchStatus, 3000);
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
+  function start(taskId, viewId) {
+    currentTaskId = taskId;
+    currentViewId = viewId;
+    $modal.hide();
+    $("#ef-ai-trigger-box").hide();
+    $progress.show();
+    $("#ef-ai-progress-actions").hide();
+    setStatus("AI 加工中…", "running");
+
+    if (window.EF && window.EF.Mercure && window.EF.Mercure.subscribe) {
+      if (!handlerRegistered) {
+        handlerRegistered = true;
+        window.EF.Mercure.on("view_ai_task_update", handleUpdate);
+      }
+      try {
+        window.EF.Mercure.subscribe("https://enterprise.local/ai/view-task/" + taskId);
+      } catch (e) {
+        // Mercure 不可用时退回轮询
+      }
+    }
+    startPolling();
+  }
+
+  $("#ef-ai-retry").on("click", function () {
+    if (!currentTaskId) {
+      return;
+    }
+    var taskId = currentTaskId;
+    $("#ef-ai-progress-actions").hide();
+    setStatus("正在重新执行…", "running");
+    $.ajax({
+      url: "/api/admin/platform/view/ai-task/" + encodeURIComponent(taskId) + "/retry",
+      method: "POST",
+      dataType: "json",
+      success: function (json) {
+        if (json && json.code === 200) {
+          startPolling();
+        }
+      },
+      error: function () {
+        setStatus("重试失败，请稍后再试", "error");
+        showActions(currentTaskId, currentViewId);
+      }
+    });
+  });
+
+  $("#ef-ai-reload").on("click", function () {
+    window.location.reload();
+  });
+
+  window.EFViewAi = { start: start };
+})();
+</script>

@@ -45,6 +45,22 @@
           </div>
         </div>
 
+        <div class="form-section-title" id="thinking-section-title">模型能力</div>
+
+        <div class="form-row thinking-option">
+          <div class="form-label">{{ form_label(form.thinkingEnabled) }}</div>
+          <div class="form-control">
+            {{ form_widget(form.thinkingEnabled) }}
+            <div style="font-size: 12px; color: #86868b; margin-top: 4px;">DeepSeek V4 默认开启深度思考，关闭后响应更快</div>
+            {{ form_errors(form.thinkingEnabled) }}
+          </div>
+        </div>
+
+        <div class="form-row thinking-option" id="reasoning-effort-row">
+          <div class="form-label">{{ form_label(form.reasoningEffort) }}</div>
+          <div class="form-control">{{ form_widget(form.reasoningEffort) }}{{ form_errors(form.reasoningEffort) }}</div>
+        </div>
+
         <div class="form-row">
           <div class="form-label">{{ form_label(form.isEnabled) }}</div>
           <div class="form-control">{{ form_widget(form.isEnabled) }}{{ form_errors(form.isEnabled) }}</div>

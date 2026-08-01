@@ -319,9 +319,11 @@
 /* 属性面板 */
 .properties-panel {
   width: 300px;
-  height: 100%; /* 占满容器高度 */
+  height: 100%;
   background-color: #f8f9fa;
   right: 0;
+  z-index: 500;
+  flex: none;
   transition: transform 0.3s ease;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
 }
@@ -347,6 +349,7 @@
   clip-path: polygon(0 0, 100% 15%, 100% 85%, 0 100%);
   cursor: pointer;
   transition: all 0.3s ease;
+  z-index: 500;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -982,3 +985,5 @@ h1, h2, h3 {
   background: #fafafa;
   cursor: default;
 }
+
+

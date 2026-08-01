@@ -4,6 +4,7 @@
     {% if form.template is defined %}
         {% include 'admin/platform/view/_template_selector.html.twig' %}
     {% endif %}
+    {% include 'admin/platform/view/_ai_enhance_component.html.twig' %}
     {{ ui.formSubmitButton() }}
 {{ form_end(form) }}
 {{ ui.formValid() }}

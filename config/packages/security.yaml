@@ -55,6 +55,7 @@ security:
     - { path: ^/login, roles: PUBLIC_ACCESS }
     - { path: ^/reset-password, roles: PUBLIC_ACCESS }
     - { path: ^/test, roles: PUBLIC_ACCESS }
+    - { path: ^/api/admin/ai/chat, roles: PUBLIC_ACCESS }
     - { path: ^/api/admin, roles: ROLE_ADMIN }
     - { path: ^/admin, roles: ROLE_ADMIN }
     - { path: ^/api/storage, roles: ROLE_USER }

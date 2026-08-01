@@ -56,7 +56,7 @@ $(document).ready(function() {
             'grid-column': '2',
             'grid-row': '2',
             'position': 'relative',
-            'overflow': 'auto'
+            'overflow': 'hidden'
         });
         
         // 设置辅助线容器

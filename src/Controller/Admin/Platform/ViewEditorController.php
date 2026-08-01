@@ -2,16 +2,20 @@
 
 namespace App\Controller\Admin\Platform;
 
+use App\Entity\Platform\AiViewEnhanceTask;
 use App\Entity\Platform\View;
 use App\Controller\BaseController;
 use App\Form\Platform\ViewEditType;
 use App\Form\Platform\ViewFolderType;
 use App\Form\Platform\ViewType;
 use App\Lib\Str;
+use App\Message\EnhanceViewMessage;
 use Doctrine\ORM\EntityManagerInterface;
+use DOMXPath;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -96,6 +100,17 @@ class ViewEditorController extends BaseController
   public function addFolder(Request $request, EntityManagerInterface $em): Response
   {
     $parentId = $request->query->get('parent');
+
+    if (!$parentId && $request->isMethod('POST')) {
+      $all = $request->request->all();
+      foreach ($all as $data) {
+        if (is_array($data) && isset($data['parent'])) {
+          $parentId = $data['parent'];
+          break;
+        }
+      }
+    }
+
     $view = new View();
     $view->setType('folder'); // 新建的类型为文件夹
 
@@ -182,9 +197,21 @@ class ViewEditorController extends BaseController
    * @return Response
    */
   #[Route('/admin/platform/view/addView', name: 'platform_view_add_view')]
-  public function addView(Request $request, EntityManagerInterface $em): Response
+  public function addView(Request $request, EntityManagerInterface $em, MessageBusInterface $bus): Response
   {
     $parentId = $request->query->get('parent');
+
+    // For POST requests (form submission), also look for parent in request body (form prefix nesting)
+    if (!$parentId && $request->isMethod('POST')) {
+      $all = $request->request->all();
+      foreach ($all as $data) {
+        if (is_array($data) && isset($data['parent'])) {
+          $parentId = $data['parent'];
+          break;
+        }
+      }
+    }
+
     $view = new View();
     $view->setType('view'); // 新建的类型为视图
 
@@ -239,10 +266,14 @@ class ViewEditorController extends BaseController
       } else {
         // 构建视图文件路径
         $basePath = $this->getParameter('kernel.project_dir') . '/templates/views';
-        $relativePath = $this->buildRelativePath($parent, $view->getName());
-        
-        // 创建视图目录结构：视图名/1_0/
         $name = $view->getName();
+
+        // 磁盘文件夹名追加随机后缀，避免软删重建后同名视图的磁盘文件冲突。
+        // 路径整体入库，运行时渲染仍以 DB 中的 name 定位 {path}/{name}.html.twig，故兼容所有调用方。
+        $diskName = $name . '_' . substr(bin2hex(random_bytes(4)), 0, 6);
+        $relativePath = $this->buildRelativePath($parent, $diskName);
+
+        // 创建视图目录结构：视图名/1_0/
         // 在原目录下创建以视图名命名的文件夹
         $viewFolderPath = $basePath . '/' . $relativePath;
         // 在视图名文件夹下创建版本控制目录 1_0 表示 v1.0
@@ -266,7 +297,7 @@ class ViewEditorController extends BaseController
         $htmlTwigPath = $versionFolderPath . '/' . $name . '.html.twig';
         $designTwigPath = $versionFolderPath . '/' . $name . '.design.twig';
         
-        // 检查文件是否已存在
+        // 随机后缀已规避同名冲突，此处仅作兜底
         if (file_exists($htmlTwigPath) || file_exists($designTwigPath)) {
           return new JsonResponse(['message' => '文件系统中已存在同名视图文件'], 400);
         }
@@ -276,7 +307,7 @@ class ViewEditorController extends BaseController
           return new JsonResponse(['message' => '创建视图HTML文件失败'], 500);
         }
         
-        if (file_put_contents($designTwigPath, '{# ' . $view->getLabel() . ' 设计文件 #}\n{# 此文件用于存储视图设计信息 #}') === false) {
+        if (file_put_contents($designTwigPath, '') === false) {
           // 如果设计文件创建失败，删除已创建的HTML文件
           if (file_exists($htmlTwigPath)) {
             unlink($htmlTwigPath);
@@ -291,6 +322,31 @@ class ViewEditorController extends BaseController
       
       $em->persist($view);
       $em->flush();
+
+      // AI 二次加工：若填写了 AI 组件需求，创建异步任务并派发消息
+      $aiRequirement = trim((string) ($request->request->get('ai_requirement') ?? ''));
+      if ($aiRequirement !== '') {
+        $task = new AiViewEnhanceTask();
+        $task->setView($view);
+        $task->setRequirement($aiRequirement);
+        $task->setCreatedBy($this->getUser()?->getUserIdentifier());
+        $em->persist($task);
+        $em->flush();
+
+        $bus->dispatch(new EnhanceViewMessage(
+          (string) $view->getId(),
+          (string) $task->getId(),
+          $aiRequirement,
+        ));
+
+        return new JsonResponse([
+          'code' => 200,
+          'data' => [
+            'viewId' => (string) $view->getId(),
+            'taskId' => (string) $task->getId(),
+          ],
+        ]);
+      }
 
       $this->addFlash('success', '视图创建成功');
       return $this->redirectToRoute('platform_view'); // 重定向到视图管理页面
@@ -450,7 +506,7 @@ class ViewEditorController extends BaseController
       ['icon' => 'fa-solid fa-map', 'name' => '相册', 'componentType' => 'gallery'],
     ];
 
-    $tplVars = ['components' => $components];
+    $tplVars = ['components' => $components, 'id' => $id];
 
     $configFile = $projectDir . '/var/data/view_editor_config.json';
     if (file_exists($configFile)) {
@@ -463,6 +519,8 @@ class ViewEditorController extends BaseController
     $view = $em->getRepository(\App\Entity\Platform\View::class)->find($id);
     if ($view) {
       $tplVars['sectionConfig'] = $view->getSectionConfig();
+      $tplVars['viewName'] = $view->getName();
+      $tplVars['viewPath'] = $view->getPath();
 
       // 尝试加载之前保存的设计文件（.design.twig），编辑状态以设计文件为准
       $viewPath = $view->getPath();
@@ -481,9 +539,16 @@ class ViewEditorController extends BaseController
         if ($content !== false && trim($content) !== '') {
           // 剥离保存时固化的 section-controls（由 JS 动态添加，不应固化在 design 中）
           $content = preg_replace('/<div\s+class="[^"]*section-controls[^"]*"[^>]*>.*?<\/div>\s*/s', '', $content);
+          // 剥离外层 section 结构（设计文件包含完整的 canvas HTML: add-section-button + section 包裹器），
+          // 只取 .section-content 内部的内容；编辑器模板自身已生成 section 包裹，避免层层嵌套
+          $content = $this->extractSectionContentInnerHtml($content);
           $tplVars['initialCanvasHtml'] = $content;
         }
       }
+
+      // 供 AI 助手使用的视图文件信息
+      $tplVars['designFilePath'] = $designFilePath;
+      $tplVars['viewDesignPath'] = $designFilePath ? str_replace($projectDir . '/templates/', '', $designFilePath) : null;
     }
     if ($view && $view->getFormEntity() && $view->isBuiltIn() && !isset($tplVars['initialCanvasHtml'])) {
       $tplVars['formEntity'] = $view->getFormEntity();
@@ -505,6 +570,29 @@ class ViewEditorController extends BaseController
     }
   
     return $this->render('admin/platform/view/editor.html.twig', $tplVars);
+  }
+
+  /**
+   * 从包含完整 canvas 结构的 HTML 中提取 .section-content 的内部内容。
+   * 设计文件保存的是完整 canvas HTML（含 add-section-button、section 包裹器等），
+   * 但编辑器模板自身已生成 section 包裹，此处剥离外层只保留实际内容，避免层层嵌套。
+   */
+  private function extractSectionContentInnerHtml(string $html): string
+  {
+    $dom = new \DOMDocument();
+    $useErrors = libxml_use_internal_errors(true);
+    $dom->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_NOWARNING | LIBXML_NOERROR);
+    libxml_use_internal_errors($useErrors);
+    $xpath = new \DOMXPath($dom);
+    $nodes = $xpath->query("//*[contains(@class, 'section-content')]");
+    if ($nodes && $nodes->length > 0) {
+      $inner = '';
+      foreach ($nodes->item(0)->childNodes as $child) {
+        $inner .= $dom->saveHTML($child);
+      }
+      return $inner;
+    }
+    return $html;
   }
   
   #[Route(
@@ -530,6 +618,7 @@ class ViewEditorController extends BaseController
   
     return $this->render('admin/platform/view/editor.html.twig', [
       'components' => $components,
+      'id' => $id,
     ]);
   }
 }

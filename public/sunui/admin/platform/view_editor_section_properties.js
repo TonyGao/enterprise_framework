@@ -27,10 +27,17 @@ $(document).ready(function() {
             const unit = config.unit || 'px';
             const $unitSelector = $('#width-value').closest('.input-with-unit').find('.unit-selector');
             $unitSelector.find('span').text(unit);
-            // Full Width 模式下隐藏下拉菜单
             if (config.contentWidth === 'full-width') {
                 $unitSelector.find('.unit-dropdown').hide();
+                $('#width-slider').attr('min', 10).attr('max', 100);
+            } else {
+                if (unit === 'px') {
+                    $('#width-slider').attr('min', 200).attr('max', 1500);
+                } else if (unit === '%') {
+                    $('#width-slider').attr('min', 10).attr('max', 100);
+                }
             }
+            expandSliderMax('width-slider', config.width);
             $('#width-slider').val(config.width);
             $('#width-value').val(config.width);
         }
@@ -75,17 +82,28 @@ $(document).ready(function() {
         }
     });
     
+    function expandSliderMax(sliderId, value) {
+        const $slider = $('#' + sliderId);
+        const currentMax = parseInt($slider.attr('max'));
+        const val = parseInt(value);
+        if (!isNaN(val) && !isNaN(currentMax) && val >= currentMax - 50) {
+            $slider.attr('max', Math.max(currentMax + 500, val + 500));
+        }
+    }
+
     // 滑块与输入框同步
     function syncSliderAndInput(sliderId, inputId) {
         const $slider = $('#' + sliderId);
         const $input = $('#' + inputId);
         
         $slider.on('input', function() {
+            expandSliderMax(sliderId, $slider.val());
             $input.val($slider.val());
             updateSectionProperty(sliderId, $slider.val());
         });
         
         $input.on('input', function() {
+            expandSliderMax(sliderId, $input.val());
             $slider.val($input.val());
             updateSectionProperty(sliderId, $input.val());
         });
@@ -150,13 +168,9 @@ $(document).ready(function() {
             const currentValue = parseInt($widthInput.val());
             
             if (newUnit === 'px') {
-                const pageMaxWidth = parseInt($('#page-width-value').val()) || 1200;
-                if (currentValue > pageMaxWidth) {
-                    $widthInput.val(pageMaxWidth);
-                    $slider.val(pageMaxWidth);
-                }
                 $slider.attr('min', 200);
-                $slider.attr('max', pageMaxWidth);
+                $slider.attr('max', 1500);
+                expandSliderMax('width-slider', currentValue);
                 showSliderForUnit(true);
             } else if (newUnit === '%') {
                 $slider.attr('min', 10);
@@ -292,12 +306,12 @@ $(document).ready(function() {
                     // Boxed：默认单位为 px，显示下拉菜单
                     $unitSelector.find('span').text('px');
                     $unitSelector.find('.unit-dropdown').show();
-                    const pageMaxWidth = parseInt($('#page-width-value').val()) || 1200;
                     $widthSlider.attr('min', 200);
-                    $widthSlider.attr('max', pageMaxWidth);
+                    $widthSlider.attr('max', 1500);
                     showSliderForUnit(true);
                     const prevWidth = parseInt($widthInput.val());
-                    const boxedWidth = (!isNaN(prevWidth) && prevWidth >= 50 && prevWidth <= pageMaxWidth) ? prevWidth : 480;
+                    const boxedWidth = (!isNaN(prevWidth) && prevWidth >= 50) ? prevWidth : 480;
+                    expandSliderMax('width-slider', boxedWidth);
                     $widthInput.val(boxedWidth);
                     $widthSlider.val(boxedWidth);
                     $sectionContent.css('width', boxedWidth + 'px');
@@ -310,16 +324,6 @@ $(document).ready(function() {
                 // 设置宽度
                 $sectionContent = $activeSection.find('.section-content');
                 const unit = $('#width-value').closest('.input-with-unit').find('.unit-selector span').text();
-                
-                // 如果是px单位，确保不超过页面最大宽度
-                if (unit === 'px') {
-                    const pageMaxWidth = parseInt($('#page-width-value').val()) || 1200;
-                    if (parseInt(value) > pageMaxWidth) {
-                        value = pageMaxWidth;
-                        $('#width-value').val(value);
-                        $('#width-slider').val(value);
-                    }
-                }
                 
                 // 当 width 单位为 %（Full Width 模式）时，宽度应用到 section，section-content 始终 100%
                 if (unit === '%') {
@@ -450,21 +454,6 @@ $(document).ready(function() {
             case 'page-width':
                 // 设置页面最大宽度
                 $('#canvas').css('max-width', value + 'px');
-                
-                // 更新所有使用px单位的section宽度
-                $('.section').each(function() {
-                    const $section = $(this);
-                    const $content = $section.find('.section-content');
-                    const widthStyle = $content.css('width');
-                    
-                    // 检查是否使用px单位
-                    if (widthStyle && widthStyle.endsWith('px')) {
-                        const currentWidth = parseInt(widthStyle);
-                        if (currentWidth > value) {
-                            $content.css('width', value + 'px');
-                        }
-                    }
-                });
                 break;
         }
         
@@ -554,9 +543,8 @@ $(document).ready(function() {
         
         // 根据单位设置滑块范围和可见性
         if (widthUnit === 'px') {
-            const pageMaxWidth = parseInt($('#page-width-value').val()) || 1200;
             $('#width-slider').attr('min', 200);
-            $('#width-slider').attr('max', pageMaxWidth);
+            $('#width-slider').attr('max', 1500);
             showSliderForUnit(true);
         } else if (widthUnit === '%') {
             $('#width-slider').attr('min', 10);
@@ -567,6 +555,7 @@ $(document).ready(function() {
         }
         
         // 最后设置值
+        expandSliderMax('width-slider', widthValue);
         $('#width-slider').val(widthValue);
         $('#width-value').val(widthValue);
         
@@ -628,24 +617,6 @@ $(document).ready(function() {
     $('#page-width-value').on('input', function() {
         const pageWidth = $(this).val();
         updateSectionProperty('page-width', pageWidth);
-        
-        // 如果当前选中的section宽度单位是px，更新滑块最大值
-        const $activeSection = $('.section.active');
-        if ($activeSection.length > 0) {
-            const widthUnit = $('#width-value').closest('.input-with-unit').find('.unit-selector span').text();
-            if (widthUnit === 'px') {
-                $('#width-slider').attr('min', 200);
-                $('#width-slider').attr('max', pageWidth);
-                
-                // 如果当前值超过新的最大值，则更新
-                const currentWidth = parseInt($('#width-value').val());
-                if (currentWidth > pageWidth) {
-                    $('#width-value').val(pageWidth);
-                    $('#width-slider').val(pageWidth);
-                    updateSectionProperty('width-slider', pageWidth);
-                }
-            }
-        }
     });
     
     // 表格属性事件处理

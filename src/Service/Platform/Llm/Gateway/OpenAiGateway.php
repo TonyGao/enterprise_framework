@@ -14,6 +14,7 @@ class OpenAiGateway implements LlmGatewayInterface
     protected string $apiKey;
     protected string $model;
     protected string $endpoint;
+    protected string $providerType;
     protected array $defaultOptions;
     protected HttpClientInterface $httpClient;
 
@@ -29,6 +30,7 @@ class OpenAiGateway implements LlmGatewayInterface
         $this->apiKey = $decrypted;
         $this->model = $provider->getModel();
         $this->endpoint = rtrim($provider->getApiEndpoint() ?: 'https://api.openai.com/v1', '/');
+        $this->providerType = $provider->getProvider();
         $this->defaultOptions = $provider->getOptions() ?? [];
         $this->httpClient = $httpClient;
     }
@@ -48,6 +50,12 @@ class OpenAiGateway implements LlmGatewayInterface
         if (isset($opts['topP'])) {
             $payload['top_p'] = $opts['topP'];
         }
+
+        if (isset($opts['tools'])) {
+            $payload['tools'] = $opts['tools'];
+        }
+
+        $payload = $this->applyThinkingParams($payload, $opts);
 
         $response = $this->httpClient->request('POST', $this->endpoint . '/chat/completions', [
             'headers' => $this->getAuthHeaders(),
@@ -88,6 +96,12 @@ class OpenAiGateway implements LlmGatewayInterface
             'max_tokens' => $opts['maxTokens'] ?? 4096,
         ];
 
+        if (isset($opts['topP'])) {
+            $payload['top_p'] = $opts['topP'];
+        }
+
+        $payload = $this->applyThinkingParams($payload, $opts);
+
         $response = $this->httpClient->request('POST', $this->endpoint . '/chat/completions', [
             'headers' => $this->getAuthHeaders(),
             'json' => $payload,
@@ -122,6 +136,23 @@ class OpenAiGateway implements LlmGatewayInterface
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . $this->apiKey,
         ];
+    }
+
+    protected function applyThinkingParams(array $payload, array $opts): array
+    {
+        if ($this->providerType !== 'deepseek') {
+            return $payload;
+        }
+
+        if (isset($opts['thinking'])) {
+            $payload['thinking'] = $opts['thinking'];
+        }
+
+        if (isset($opts['reasoning_effort'])) {
+            $payload['reasoning_effort'] = $opts['reasoning_effort'];
+        }
+
+        return $payload;
     }
 
     public function getProviderName(): string

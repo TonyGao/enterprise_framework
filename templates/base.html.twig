@@ -122,15 +122,26 @@
 			{{ encore_entry_script_tags('app') }}
 		{% endblock %}
 		{% block css %}
-		    <style>
+		<style>
         .error {
             color: red;
         }
+        /* 将 Profiler toggle 移到左下角，避免挡住 AI 助手按钮 */
+        .sf-toolbarreset .sf-toolbar-toggle-button {
+            right: auto !important;
+            left: 0 !important;
+        }
+        .sf-toolbarreset {
+            padding: 0 0 0 36px !important;
+        }
     </style>
+    <link rel="stylesheet" type="text/css" href="{{ asset('ai_chat.css', 'admin') }}">
 		{% endblock %}
 	</head>
 	<body>
 		{% block body %}{% endblock %}
+		{% include 'admin/ai_chat.html.twig' %}
+	</body>
 	</body>
 
 {% block end_javascripts %}

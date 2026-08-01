@@ -49,7 +49,7 @@
   z-index: 1000;
   position: inherit;
   width: 280px;
-  overflow: hidden;
+  overflow-y: auto;
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.3s ease;

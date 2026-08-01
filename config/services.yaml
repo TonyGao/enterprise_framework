@@ -38,6 +38,15 @@ services:
       - '../src/Kernel.php'
       - '../src/Service/Platform/Llm/Gateway/'
 
+  # 视图 Sub Agent 自动打标签，供编排器收集
+  _instanceof:
+    App\Service\AI\Orchestrator\SubAgent\ViewSubAgentInterface:
+      tags: ['app.view_sub_agent']
+
+  App\Service\AI\Orchestrator\ViewEnhanceAgentOrchestrator:
+    arguments:
+      $subAgents: !tagged_iterator app.view_sub_agent
+
   # Register Generic ModelCatalog with specific models
   Symfony\AI\Platform\Bridge\Generic\ModelCatalog:
     arguments:
@@ -104,6 +113,16 @@ services:
   App\EventSubscriber\Init\HeaderStateSubscriber:
     tags:
       - { name: kernel.event_subscriber }
+  App\Service\AI\Runtime\AiContextRegistry:
+    arguments:
+      $contextProviders: !tagged_iterator app.ai_context
+
+  App\Service\AI\Tool\ChromeDevToolsToolProvider: ~
+
+  App\Service\AI\Context\ViewEditorAiContext:
+    tags:
+      - { name: 'app.ai_context' }
+
   App\Service\Platform\MenuStaticGenerator:
     arguments:
       $em: '@doctrine.orm.entity_manager'

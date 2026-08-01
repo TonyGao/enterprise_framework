@@ -44,12 +44,14 @@ class LlmConfigController extends BaseController
         $form = $this->createForm(LlmProviderType::class, $provider, [
             'is_new' => true,
         ]);
+        $this->prefillThinkingOptions($form, $provider);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             if ($apiKey = $form->get('apiKey')->getData()) {
                 $provider->setApiKeyEncrypted($encryptor->encrypt($apiKey));
             }
+            $provider->setOptions($this->buildOptions($form));
             $em->persist($provider);
             $em->flush();
             $this->addFlash('success', '服务商创建成功');
@@ -81,6 +83,8 @@ class LlmConfigController extends BaseController
             }
         }
 
+        $this->prefillThinkingOptions($form, $provider);
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -89,7 +93,7 @@ class LlmConfigController extends BaseController
                     $provider->setApiKeyEncrypted($encryptor->encrypt($apiKey));
                 }
             }
-            $provider->setOptions(null);
+            $provider->setOptions($this->buildOptions($form));
             $em->flush();
             $this->addFlash('success', '服务商编辑成功');
             return $this->redirectToRoute('admin_llm_config_index');
@@ -222,5 +226,29 @@ class LlmConfigController extends BaseController
                 'error' => $e->getMessage(),
             ], 422);
         }
+    }
+
+    private function buildOptions(\Symfony\Component\Form\FormInterface $form): array
+    {
+        $options = [];
+        $thinkingEnabled = (bool) $form->get('thinkingEnabled')->getData();
+
+        $options['thinking'] = [
+            'type' => $thinkingEnabled ? 'enabled' : 'disabled',
+        ];
+
+        if ($thinkingEnabled && ($effort = $form->get('reasoningEffort')->getData())) {
+            $options['reasoning_effort'] = $effort;
+        }
+
+        return $options;
+    }
+
+    private function prefillThinkingOptions(\Symfony\Component\Form\FormInterface $form, LlmProvider $provider): void
+    {
+        $opts = $provider->getOptions() ?? [];
+        $thinking = $opts['thinking']['type'] ?? 'enabled';
+        $form->get('thinkingEnabled')->setData($thinking !== 'disabled');
+        $form->get('reasoningEffort')->setData($opts['reasoning_effort'] ?? null);
     }
 }

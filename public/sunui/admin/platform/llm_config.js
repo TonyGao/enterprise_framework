@@ -27,7 +27,7 @@ $(document).ready(function () {
     'ollama': 'qwen2.5-coder',
     'lmstudio': 'QuantFactory/Qwen2.5-7B-Instruct-GGUF',
     'azure': 'gpt-4o',
-    'deepseek': 'deepseek-chat',
+    'deepseek': 'deepseek-v4-flash',
     'moonshot': 'moonshot-v1-8k',
     'qwen': 'qwen-plus',
     'glm': 'glm-4-plus',
@@ -61,6 +61,26 @@ $(document).ready(function () {
   var $endpointInput = $('#llm_provider_apiEndpoint');
   var $modelInput = $('#llm_provider_model');
   var $nameInput = $('#llm_provider_name');
+
+  // ============================================================
+  // Thinking mode options (DeepSeek only)
+  // ============================================================
+  var $thinkingSectionTitle = $('#thinking-section-title');
+  var $thinkingOptions = $('.thinking-option');
+  var $thinkingEnabled = $('#llm_provider_thinkingEnabled');
+  var $reasoningEffortRow = $('#reasoning-effort-row');
+
+  function updateThinkingVisibility(provider) {
+    var show = provider === 'deepseek';
+    $thinkingSectionTitle.toggle(show);
+    $thinkingOptions.toggle(show);
+  }
+
+  function updateReasoningEffortVisibility() {
+    $reasoningEffortRow.toggle(!!($thinkingEnabled.is(':checked')));
+  }
+
+  $thinkingEnabled.on('change', updateReasoningEffortVisibility);
 
   if ($providerSelect.length) {
     // Store original endpoint value on page load (for edit mode)
@@ -106,12 +126,16 @@ $(document).ready(function () {
       if (label && !originalName) {
         $nameInput.val(label);
       }
+
+      updateThinkingVisibility(val);
     });
 
     // Trigger on page load to set initial state
     if ($providerSelect.val()) {
       $providerSelect.trigger('change');
     }
+
+    updateReasoningEffortVisibility();
   }
 
   // ============================================================

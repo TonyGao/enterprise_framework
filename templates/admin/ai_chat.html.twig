@@ -1,0 +1,349 @@
+<div id="ai-chat-panel" class="ai-chat-panel" style="display: none;">
+    <div class="ai-chat-resize-handle" id="ai-chat-resize-handle"></div>
+    <div class="ai-chat-header">
+        <span>AI 助手</span>
+        <button class="ai-chat-close" id="ai-chat-close" type="button">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    <div class="ai-chat-messages" id="ai-chat-messages">
+        <div class="ai-message ai-assistant">
+            <div class="ai-message-content">你好！我是你的 AI 助手，可以帮你完成当前页面的操作。随时向我提问！</div>
+        </div>
+    </div>
+    <div class="ai-chat-input-area">
+        <textarea class="ai-chat-input" id="ai-chat-input" placeholder="输入你的问题..." rows="2"></textarea>
+        <button class="ai-chat-send" id="ai-chat-send" type="button" disabled>
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<button class="toggle-ai-chat" id="toggle-ai-chat" type="button" title="AI 助手">
+    <i class="fa-solid fa-robot"></i>
+</button>
+
+<script src="{{ asset('lib/marked/marked.min.js') }}"></script>
+<script>
+(function() {
+    var panel = document.getElementById('ai-chat-panel');
+    var toggleBtn = document.getElementById('toggle-ai-chat');
+    var closeBtn = document.getElementById('ai-chat-close');
+    var messagesEl = document.getElementById('ai-chat-messages');
+    var inputEl = document.getElementById('ai-chat-input');
+    var sendBtn = document.getElementById('ai-chat-send');
+
+    var isSending = false;
+    var currentSessionId = null;
+
+    function getContext() {
+        return window.__AI_CONTEXT__ || null;
+    }
+
+    function getContextId() {
+        var ctx = getContext();
+        if (!ctx) return null;
+        return ctx.pageId || window.location.pathname;
+    }
+
+    function getSessionContextId() {
+        return window.location.pathname;
+    }
+
+    function getSessionStorageKey() {
+        var ctx = getContext();
+        if (!ctx) return null;
+        return 'ai_chat_session:' + ctx.name + ':' + getSessionContextId();
+    }
+
+    function saveSessionId(sessionId) {
+        var key = getSessionStorageKey();
+        if (!key) return;
+        try {
+            localStorage.setItem(key, sessionId);
+        } catch(e) {}
+    }
+
+    function loadSessionId() {
+        var key = getSessionStorageKey();
+        if (!key) return null;
+        try {
+            return localStorage.getItem(key);
+        } catch(e) {
+            return null;
+        }
+    }
+
+    function togglePanel() {
+        if (panel.style.display === 'none') {
+            panel.style.display = 'flex';
+            toggleBtn.style.display = 'none';
+            inputEl.focus();
+            loadHistoryFromBackend();
+        }
+    }
+
+    function closePanel() {
+        panel.style.display = 'none';
+        toggleBtn.style.display = 'flex';
+    }
+
+    function renderMarkdown(text) {
+        if (typeof marked !== 'undefined') {
+            if (!window._twRenderer) {
+                marked.use({
+                    renderer: {
+                        table(header, body) {
+                            return '<table class="w-full border-collapse text-sm mb-2">' + header + body + '</table>';
+                        },
+                        tablerow(content) {
+                            return '<tr>' + content + '</tr>';
+                        },
+                        tablecell(content, flags) {
+                            var tag = flags.header ? 'th' : 'td';
+                            var cls = flags.header ? 'text-left px-2 py-1.5 bg-gray-50 font-semibold text-gray-700 border border-gray-200' : 'px-2 py-1.5 border border-gray-200';
+                            return '<' + tag + ' class="' + cls + '">' + content + '</' + tag + '>';
+                        },
+                        heading(text, level) {
+                            var sizes = ['', 'text-lg font-bold mt-4 mb-2 text-gray-900', 'text-base font-semibold mt-3 mb-1.5 text-gray-800', 'text-sm font-semibold mt-2 mb-1 text-gray-700', 'text-xs font-semibold mt-2 mb-1 text-gray-600'];
+                            return '<h' + level + ' class="' + (sizes[level] || '') + '">' + text + '</h' + level + '>';
+                        },
+                        paragraph(text) {
+                            return '<p class="mb-2 leading-relaxed text-sm">' + text + '</p>';
+                        },
+                        list(body, ordered) {
+                            var tag = ordered ? 'ol' : 'ul';
+                            var cls = ordered ? 'list-decimal pl-5 mb-2 space-y-0.5' : 'list-disc pl-5 mb-2 space-y-0.5';
+                            return '<' + tag + ' class="' + cls + '">' + body + '</' + tag + '>';
+                        },
+                        listitem(text) {
+                            return '<li class="text-sm leading-relaxed">' + text + '</li>';
+                        },
+                        codespan(text) {
+                            return '<code class="bg-gray-100 text-rose-600 px-1 rounded text-xs font-mono">' + text + '</code>';
+                        },
+                        code(text) {
+                            return '<pre class="bg-gray-900 text-gray-100 rounded-lg p-3 mb-2 text-xs overflow-x-auto"><code>' + text + '</code></pre>';
+                        },
+                        blockquote(text) {
+                            return '<blockquote class="border-l-4 border-gray-300 pl-3 italic text-gray-500 mb-2 text-sm">' + text + '</blockquote>';
+                        },
+                        hr() {
+                            return '<hr class="my-3 border-t border-gray-200">';
+                        },
+                        link(href, title, text) {
+                            return '<a class="text-blue-600 underline" href="' + href + '"' + (title ? ' title="' + title + '"' : '') + '>' + text + '</a>';
+                        },
+                        strong(text) {
+                            return '<strong class="font-semibold">' + text + '</strong>';
+                        },
+                        em(text) {
+                            return '<em class="italic">' + text + '</em>';
+                        },
+                    }
+                });
+                window._twRenderer = true;
+            }
+            return marked.parse(text);
+        }
+        return text;
+    }
+
+    function addMessage(role, content) {
+        var div = document.createElement('div');
+        div.className = 'ai-message ' + (role === 'user' ? 'ai-user' : 'ai-assistant');
+        var contentDiv = document.createElement('div');
+        contentDiv.className = 'ai-message-content' + (role === 'user' ? ' bg-blue-500 text-white' : ' rounded-lg');
+        if (role === 'assistant') {
+            contentDiv.innerHTML = renderMarkdown(content);
+        } else {
+            contentDiv.textContent = content;
+        }
+        div.appendChild(contentDiv);
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function addLoading() {
+        var div = document.createElement('div');
+        div.className = 'ai-message ai-assistant ai-loading';
+        var contentDiv = document.createElement('div');
+        contentDiv.className = 'ai-message-content rounded-lg text-gray-400';
+        contentDiv.textContent = '思考中...';
+        div.appendChild(contentDiv);
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        return div;
+    }
+
+    function removeLoading(el) {
+        if (el && el.parentNode) {
+            el.parentNode.removeChild(el);
+        }
+    }
+
+    function loadHistoryFromBackend() {
+        var ctx = getContext();
+        if (!ctx) return;
+
+        var contextId = getSessionContextId();
+        var sessionId = loadSessionId();
+
+        var body = {
+            context: ctx.name,
+            context_id: contextId,
+        };
+        if (sessionId) {
+            body.session_id = sessionId;
+        }
+
+        fetch('/api/admin/ai/chat/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(json) {
+            if (json.code === 200 && json.data) {
+                if (json.data.session_id) {
+                    currentSessionId = json.data.session_id;
+                    saveSessionId(currentSessionId);
+                }
+                if (json.data.messages && json.data.messages.length > 0) {
+                    // Clear welcome message
+                    var welcome = messagesEl.querySelector('.ai-message');
+                    if (welcome) welcome.remove();
+                    // Render history
+                    for (var i = 0; i < json.data.messages.length; i++) {
+                        var msg = json.data.messages[i];
+                        addMessage(msg.role, msg.content);
+                    }
+                }
+            }
+        })
+        .catch(function(err) {
+            console.warn('Failed to load history:', err);
+        });
+    }
+
+    function getSelectedElementContext() {
+        var ctx = getContext();
+        if (ctx && ctx._selectedElement) {
+            var sel = ctx._selectedElement;
+            return '[当前选中元素: ' + sel.summary + ']\n[内联样式: ' + (sel.style || '(无)') + ']\n\n';
+        }
+        return '';
+    }
+
+    function sendMessage() {
+        var text = inputEl.value.trim();
+        if (!text || isSending) return;
+
+        var ctx = getContext();
+        if (!ctx) {
+            addMessage('user', text);
+            inputEl.value = '';
+            addMessage('assistant', '当前页面未注册 AI 上下文，无法提供服务。');
+            return;
+        }
+
+        var selContext = getSelectedElementContext();
+        var fullMessage = selContext + text;
+
+        addMessage('user', text);
+        inputEl.value = '';
+        sendBtn.disabled = true;
+        inputEl.disabled = true;
+        isSending = true;
+
+        var loadingEl = addLoading();
+
+        var contextId = getSessionContextId();
+
+        fetch('/api/admin/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                context: ctx.name,
+                context_id: contextId,
+                message: fullMessage,
+                session_id: currentSessionId,
+            }),
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(json) {
+            removeLoading(loadingEl);
+            if (json.code === 200) {
+                var reply = (json.data && json.data.reply) ? json.data.reply : '抱歉，我没有理解你的意思。';
+                addMessage('assistant', reply);
+                if (json.data && json.data.sessionId) {
+                    currentSessionId = json.data.sessionId;
+                    saveSessionId(currentSessionId);
+                }
+            } else {
+                addMessage('assistant', '出错了: ' + (json.message || '未知错误'));
+            }
+        })
+        .catch(function(err) {
+            removeLoading(loadingEl);
+            addMessage('assistant', '网络错误: ' + err.message);
+        })
+        .finally(function() {
+            isSending = false;
+            sendBtn.disabled = false;
+            inputEl.disabled = false;
+            inputEl.focus();
+        });
+    }
+
+    toggleBtn.addEventListener('click', togglePanel);
+    closeBtn.addEventListener('click', closePanel);
+    sendBtn.addEventListener('click', sendMessage);
+    inputEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+    inputEl.addEventListener('input', function() {
+        sendBtn.disabled = !this.value.trim() || isSending;
+    });
+
+    // Restore saved panel width
+    try {
+        var savedWidth = localStorage.getItem('ai_chat_panel_width');
+        if (savedWidth) {
+            panel.style.width = savedWidth;
+        }
+    } catch(e) {}
+
+    // Resize handle
+    var resizeHandle = document.getElementById('ai-chat-resize-handle');
+    var isResizing = false;
+
+    resizeHandle.addEventListener('mousedown', function(e) {
+        isResizing = true;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!isResizing) return;
+        var newWidth = window.innerWidth - e.clientX;
+        if (newWidth < 280) newWidth = 280;
+        if (newWidth > window.innerWidth * 0.8) newWidth = window.innerWidth * 0.8;
+        panel.style.width = newWidth + 'px';
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (!isResizing) return;
+        isResizing = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        try {
+            localStorage.setItem('ai_chat_panel_width', panel.style.width);
+        } catch(e) {}
+    });
+})();
+</script>

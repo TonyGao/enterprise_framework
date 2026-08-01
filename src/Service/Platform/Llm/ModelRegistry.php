@@ -30,9 +30,10 @@ class ModelRegistry
             'gpt-4-turbo' => 'GPT-4 Turbo',
         ],
         'deepseek' => [
-            'deepseek-chat' => 'DeepSeek V3',
-            'deepseek-reasoner' => 'DeepSeek R1',
-            'deepseek-coder' => 'DeepSeek Coder V2',
+            'deepseek-v4-flash' => 'DeepSeek V4 Flash',
+            'deepseek-v4-pro' => 'DeepSeek V4 Pro',
+            'deepseek-chat' => 'DeepSeek V3 (deepseek-chat)',
+            'deepseek-reasoner' => 'DeepSeek R1 (deepseek-reasoner)',
         ],
         'moonshot' => [
             'moonshot-v1-8k' => 'Moonshot v1 8K',

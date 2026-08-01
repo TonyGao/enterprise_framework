@@ -40,18 +40,21 @@ class EntitySyncListener
 
     private function handleSync(LifecycleEventArgs $args, string $action): void
     {
-        $entity = $args->getObject();
-        $className = (new \ReflectionClass($entity))->getShortName();
-        
-        // 获取实体 ID
-        $id = null;
-        if (method_exists($entity, 'getId')) {
-            $id = $entity->getId();
-        }
+        try {
+            $entity = $args->getObject();
+            $className = (new \ReflectionClass($entity))->getShortName();
+            
+            // 获取实体 ID
+            $id = null;
+            if (method_exists($entity, 'getId')) {
+                $id = $entity->getId();
+            }
 
-        if ($id) {
-            // 推送同步消息
-            $this->mercureService->publishEntitySync($className, (string)$id, $action);
+            if ($id) {
+                $this->mercureService->publishEntitySync($className, (string)$id, $action);
+            }
+        } catch (\Throwable) {
+            // Mercure 不可用时静默失败
         }
     }
 }

@@ -204,6 +204,7 @@
 			{% set propTabId1 = random() %}
 			{% set propTabId2 = random() %}
 			{% set propTabId3 = random() %}
+			{% set propTabId4 = random() %}
 			
 			<div id="property-tabs" class="ef-tabs tabs-container">
 				<div class="tabs-header tabs-header-plain">
@@ -221,9 +222,14 @@
 									<span class="tabs-title">组件</span>
 								</span>
 							</li>
-							<li class="tabs-last" id="{{ propTabId3 }}">
+							<li class="" id="{{ propTabId3 }}">
 								<span class="tabs-inner">
 									<span class="tabs-title">高级</span>
+								</span>
+							</li>
+							<li class="tabs-last" id="{{ propTabId4 }}">
+								<span class="tabs-inner">
+									<span class="tabs-title">CSS</span>
 								</span>
 							</li>
 						</ul>
@@ -247,6 +253,31 @@
 					<div class="panel panel-htop advanced-panel" style="display: none;" liid="{{ propTabId3 }}">
 						<div class="panel-body panel-body-noheader panel-body-noborder" style="padding: 10px;">
 							<p>高级属性配置</p>
+						</div>
+					</div>
+					<div class="panel panel-htop css-panel" style="display: none;" liid="{{ propTabId4 }}">
+						<div class="panel-body panel-body-noheader panel-body-noborder" style="padding: 10px;">
+							<div id="css-properties-placeholder">
+								<p style="color:#94a3b8;font-size:12px;text-align:center;padding:20px 0">点击画布中的元素查看和编辑 CSS 属性</p>
+							</div>
+							<div id="css-properties-content" style="display:none">
+								<div id="css-selected-info" style="font-size:11px;color:#64748b;margin-bottom:8px;padding:4px 8px;background:#f8fafc;border-radius:4px;word-break:break-all;border:1px solid #e2e8f0"></div>
+								<div id="css-inline-editor" style="margin-bottom:8px">
+									<label style="font-size:11px;color:#475569;font-weight:600;display:block;margin-bottom:4px">内联样式 (inline style)</label>
+									<textarea id="css-inline-textarea" rows="4" style="width:100%;font-family:monospace;font-size:11px;padding:6px 8px;border:1px solid #e2e8f0;border-radius:4px;resize:vertical;outline:none" placeholder="property: value; property: value;"></textarea>
+									<button id="css-apply-btn" style="margin-top:4px;padding:3px 12px;background:#2563eb;color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer">应用</button>
+									<button id="css-clear-btn" style="margin-top:4px;padding:3px 12px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:4px;font-size:11px;cursor:pointer;margin-left:4px">清除</button>
+								</div>
+								<div id="css-property-list" style="max-height:400px;overflow-y:auto"></div>
+								<div id="css-add-property" style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9">
+									<button id="css-add-prop-btn" style="font-size:11px;padding:3px 10px;background:#fff;color:#2563eb;border:1px solid #2563eb;border-radius:4px;cursor:pointer">+ 添加属性</button>
+								</div>
+								<div id="css-selection-actions" style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0">
+									<div style="font-size:11px;color:#475569;font-weight:600;margin-bottom:6px">选择操作</div>
+									<button id="css-select-parent" style="font-size:11px;padding:3px 10px;background:#fff;color:#475569;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;margin-right:4px">← 选中父元素</button>
+									<button id="css-select-children" style="font-size:11px;padding:3px 10px;background:#fff;color:#475569;border:1px solid #d1d5db;border-radius:4px;cursor:pointer">→ 选中子元素</button>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -285,7 +316,30 @@
 		</div>
 	</div>
 <script>
-  window.__SECTION_CONFIG__ = {{ sectionConfig is defined and sectionConfig ? sectionConfig|json_encode|raw : {contentWidth: 'full-width', width: 100, unit: '%'}|json_encode|raw }};
+  window.__VIEW_ID__ = {{ id is defined ? id|json_encode|raw : 'null' }};
+  window.__VIEW_NAME__ = {{ viewName is defined ? viewName|json_encode|raw : 'null' }};
+  window.__VIEW_PATH__ = {{ viewPath is defined ? viewPath|json_encode|raw : 'null' }};
+  window.__VIEW_DESIGN_PATH__ = {{ viewDesignPath is defined ? viewDesignPath|json_encode|raw : 'null' }};
+  window.__SECTION_CONFIG__ = {{ sectionConfig is defined and sectionConfig ? sectionConfig|json_encode|raw : {contentWidth: '', width: 100, unit: '%'}|json_encode|raw }};
+  window.__AI_CONTEXT__ = {
+      name: 'view_editor',
+      pageId: {{ id is defined ? id|json_encode|raw : 'null' }},
+  };
+  document.addEventListener('cssElementSelected', function(e) {
+      var el = e.detail && e.detail.element;
+      if (el) {
+          var info = '<' + el.tagName.toLowerCase();
+          if (el.id) info += '#' + el.id;
+          var cls = (el.className || '').split(' ').filter(Boolean);
+          if (cls.length) info += '.' + cls.join('.');
+          info += '>';
+          var style = el.getAttribute('style') || '';
+          window.__AI_CONTEXT__._selectedElement = { tag: el.tagName.toLowerCase(), id: el.id || '', classes: cls, style: style, summary: info };
+      }
+  });
+  document.addEventListener('cssElementDeselected', function() {
+      delete window.__AI_CONTEXT__._selectedElement;
+  });
 </script>
 {% if generalConfig is defined %}
 <script>

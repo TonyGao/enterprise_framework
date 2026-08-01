@@ -38,6 +38,7 @@ PID_FILE="$PROJECT_ROOT/var/frankenphp.pid"
 WORKER_PID_FILE="$PROJECT_ROOT/var/messenger_worker.pid"
 SCHEDULER_PID_FILE="$PROJECT_ROOT/var/task_scheduler.pid"
 MCP_PID_FILE="$PROJECT_ROOT/var/mate_mcp.pid"
+CDP_PROXY_PID_FILE="$PROJECT_ROOT/var/cdp_proxy.pid"
 WATCHER_PID_FILE="$PROJECT_ROOT/var/watcher.pid"
 WATCHER_LOCK_DIR="$PROJECT_ROOT/var/watcher.lock"
 STATE_FILE="$PROJECT_ROOT/var/frankenphp.state"
@@ -45,6 +46,7 @@ LOG_FILE="$PROJECT_ROOT/var/log/server.log"
 WORKER_LOG_FILE="$PROJECT_ROOT/var/log/messenger_worker.log"
 SCHEDULER_LOG_FILE="$PROJECT_ROOT/var/log/task_scheduler.log"
 MCP_LOG_FILE="$PROJECT_ROOT/var/log/mate_mcp.log"
+CDP_PROXY_LOG_FILE="$PROJECT_ROOT/var/log/cdp_proxy.log"
 STOP_REASON_FILE="$PROJECT_ROOT/var/log/stop_reason.log"
 
 mkdir -p "$PROJECT_ROOT/var/log"
@@ -93,6 +95,16 @@ is_mcp_running() {
     if [ -f "$MCP_PID_FILE" ]; then
         MPID=$(cat "$MCP_PID_FILE")
         if [ -n "$MPID" ] && kill -0 "$MPID" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+is_cdp_proxy_running() {
+    if [ -f "$CDP_PROXY_PID_FILE" ]; then
+        CDP_PID=$(cat "$CDP_PROXY_PID_FILE")
+        if [ -n "$CDP_PID" ] && kill -0 "$CDP_PID" 2>/dev/null; then
             return 0
         fi
     fi
@@ -173,6 +185,18 @@ stop_server() {
     fi
 
     pkill -f "vendor/bin/mate serve" 2>/dev/null || true
+
+    # Stop CDP proxy via PID file
+    if [ -f "$CDP_PROXY_PID_FILE" ]; then
+        CDP_PID=$(cat "$CDP_PROXY_PID_FILE")
+        if [ -n "$CDP_PID" ] && kill -0 "$CDP_PID" 2>/dev/null; then
+            kill -TERM "$CDP_PID" 2>/dev/null || true
+            sleep 1
+            kill -9 "$CDP_PID" 2>/dev/null || true
+            echo "  ✓ CDP 代理服务器 (Chrome DevTools Proxy) 已停止"
+        fi
+        rm -f "$CDP_PROXY_PID_FILE"
+    fi
     
     # Stop FrankenPHP via PID file
     if [ -f "$PID_FILE" ]; then
@@ -207,14 +231,7 @@ start_frankenphp() {
 }
 
 start_worker() {
-    local mode="$1"
-    local extra_args="-vv"
-    
-    if [ "$mode" = "prod" ]; then
-        extra_args=""
-    fi
-    
-    nohup php bin/console messenger:consume async $extra_args >> "$WORKER_LOG_FILE" 2>&1 &
+    nohup php -d memory_limit=1G bin/console messenger:consume async --time-limit=3600 >> "$WORKER_LOG_FILE" 2>&1 &
     WPID=$!
     echo $WPID > "$WORKER_PID_FILE"
     echo "  ✓ 消息队列消费者 (Messenger Worker) PID: $WPID"
@@ -256,6 +273,29 @@ start_mcp_server() {
     echo "  ✓ Symfony Mate AI 助手 (在 VS Code MCP 面板中管理)"
 }
 
+start_cdp_proxy() {
+    local node_bin
+    node_bin=$(command -v node 2>/dev/null)
+    if [ -z "$node_bin" ]; then
+        echo "  ! Node.js 未安装，CDP 代理无法启动"
+        return 1
+    fi
+
+    # Kill any existing process on port 9223
+    local existing_pid
+    existing_pid=$(lsof -ti :9223 2>/dev/null || true)
+    if [ -n "$existing_pid" ]; then
+        kill -9 "$existing_pid" 2>/dev/null || true
+        sleep 1
+    fi
+
+    export NODE_ENV="${APP_ENV:-development}"
+    nohup node "$PROJECT_ROOT/bin/chrome-cdp-server.mjs" > "$CDP_PROXY_LOG_FILE" 2>&1 &
+    CDP_PID=$!
+    echo $CDP_PID > "$CDP_PROXY_PID_FILE"
+    echo "  ✓ CDP 代理服务器 (Chrome DevTools Proxy) PID: $CDP_PID"
+}
+
 wait_for_server() {
     local count=0
     local max_wait=10
@@ -288,6 +328,7 @@ start_dev() {
     start_worker "dev"
     start_frankenphp "dev"
     start_mcp_server
+    start_cdp_proxy
     
     sleep 2
     
@@ -331,6 +372,7 @@ start_prod() {
     
     start_worker "prod"
     start_frankenphp "prod"
+    start_cdp_proxy
     
     sleep 2
     
@@ -502,6 +544,12 @@ show_status() {
         echo "  ✓ 定时任务调度器: 运行中 PID: $(cat "$SCHEDULER_PID_FILE")"
     else
         echo "  ✗ 定时任务调度器: 已停止"
+    fi
+
+    if is_cdp_proxy_running; then
+        echo "  ✓ CDP 代理服务器: 运行中 PID: $(cat "$CDP_PROXY_PID_FILE")"
+    else
+        echo "  ✗ CDP 代理服务器: 已停止"
     fi
 
     echo "  ✓ Symfony Mate AI 助手: 在 VS Code MCP 面板中管理"
