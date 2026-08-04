@@ -157,6 +157,17 @@ class EfDocsScreenshotCommand extends Command
                 continue;
             }
 
+            // 检测异常页 / 404 页（Symfony 异常页 / 未找到页面）
+            $exceptionHint = (string) ($this->cdpEval(
+                'document.querySelector(".exception-message, .text-exception, h1:has(.status-code), .symfony-error, .status-404")?.innerText?.trim() ?? ""',
+                true
+            ) ?? '');
+            if (str_contains($currentPath, '/error') || str_contains((string) $exceptionHint, '404') || str_contains((string) $exceptionHint, 'An error occurred')) {
+                $io->warning("[{$key}] 页面异常或 404（{$currentPath}）: ".mb_substr($exceptionHint, 0, 80));
+                $io->text('请检查路由是否正确（php bin/console debug:router）后重试');
+                continue;
+            }
+
             $filename = ($t['filename'] ?? $key).'.png';
             $savePath = $outDir.'/'.$filename;
             $shot = $this->screenshotToFile($savePath, $t['selector'] ?? null, $t['fullPage'] ?? false);
@@ -378,6 +389,7 @@ class EfDocsScreenshotCommand extends Command
 
     /**
      * 内置截图页面清单。key = 页面标识；filename = 保存文件名（不含扩展名）。
+     * url 必须为真实的 Symfony 路由（可通过 `php bin/console debug:router` 确认）。
      */
     private function targets(): array
     {
@@ -388,7 +400,7 @@ class EfDocsScreenshotCommand extends Command
                 'desc' => '登录页',
             ],
             'dashboard' => [
-                'url' => '/admin',
+                'url' => '/admin/index',
                 'filename' => 'dashboard',
                 'desc' => '管理后台首页',
             ],
@@ -397,25 +409,40 @@ class EfDocsScreenshotCommand extends Command
                 'filename' => 'organization-tree',
                 'desc' => '组织架构 - 部门树',
             ],
+            'position' => [
+                'url' => '/admin/org/position',
+                'filename' => 'organization-position',
+                'desc' => '组织架构 - 岗位管理',
+            ],
+            'position-level' => [
+                'url' => '/admin/org/position/level',
+                'filename' => 'organization-position-level',
+                'desc' => '组织架构 - 职级管理',
+            ],
             'employee' => [
-                'url' => '/admin/employees',
+                'url' => '/employee/list',
                 'filename' => 'employee-roster',
                 'desc' => '员工花名册',
             ],
             'entity' => [
-                'url' => '/admin/platform/entity',
+                'url' => '/admin/platform/entity/index',
                 'filename' => 'dynamic-model-entity-list',
                 'desc' => '动态模型 - 实体管理',
             ],
             'view' => [
-                'url' => '/admin/platform/view',
+                'url' => '/admin/platform/view/index',
                 'filename' => 'view-designer',
                 'desc' => '视图设计器',
             ],
             'datagrid' => [
-                'url' => '/admin/platform/view',
+                'url' => '/admin/platform/view/index',
                 'filename' => 'datagrid',
                 'desc' => 'DataGrid（视图管理页面）',
+            ],
+            'menu' => [
+                'url' => '/admin/platform/menu/index',
+                'filename' => 'menu-management',
+                'desc' => '菜单管理',
             ],
             'llm-config' => [
                 'url' => '/admin/platform/llm-config',
@@ -423,32 +450,37 @@ class EfDocsScreenshotCommand extends Command
                 'desc' => 'LLM 配置列表',
             ],
             'scheduler' => [
-                'url' => '/admin/task',
+                'url' => '/admin/task/',
                 'filename' => 'scheduler-list',
                 'desc' => '定时任务',
             ],
+            'calendar' => [
+                'url' => '/admin/calendar',
+                'filename' => 'system-calendar',
+                'desc' => '系统日历',
+            ],
             'storage' => [
-                'url' => '/admin/storage',
+                'url' => '/admin/storage/',
                 'filename' => 'storage-config',
                 'desc' => '文件存储配置',
             ],
             'email' => [
-                'url' => '/admin/email',
-                'filename' => 'email-template-editor',
-                'desc' => '邮件模板',
+                'url' => '/admin/email/',
+                'filename' => 'email-config',
+                'desc' => '邮件配置',
             ],
-            'audit' => [
-                'url' => '/admin/audit',
-                'filename' => 'audit-list',
-                'desc' => '审计日志',
+            'security' => [
+                'url' => '/admin/security/',
+                'filename' => 'security-config',
+                'desc' => '安全配置',
             ],
-            'webauthn' => [
-                'url' => '/user/webauthn',
-                'filename' => 'webauthn-devices',
-                'desc' => 'WebAuthn 设备管理',
+            'password-policy' => [
+                'url' => '/admin/security/password-policy',
+                'filename' => 'password-policy',
+                'desc' => '密码策略',
             ],
             'ai-chat' => [
-                'url' => '/admin/platform/view',
+                'url' => '/admin/platform/view/index',
                 'filename' => 'ai-assistant-panel',
                 'desc' => 'AI 助手面板（视图页右下角）',
             ],
