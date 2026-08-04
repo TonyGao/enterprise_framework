@@ -136,7 +136,7 @@ class AnthropicGateway implements LlmGatewayInterface
                 'anthropic-version' => '2023-06-01',
             ],
             'json' => $payload,
-            'timeout' => $opts['timeout'] ?? 120,
+            'timeout' => $opts['timeout'] ?? 300,
         ]);
 
         $stream = $response->toStream();

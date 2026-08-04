@@ -41,6 +41,8 @@ MCP_PID_FILE="$PROJECT_ROOT/var/mate_mcp.pid"
 CDP_PROXY_PID_FILE="$PROJECT_ROOT/var/cdp_proxy.pid"
 WATCHER_PID_FILE="$PROJECT_ROOT/var/watcher.pid"
 WATCHER_LOCK_DIR="$PROJECT_ROOT/var/watcher.lock"
+CYCLER_PID_FILE="$PROJECT_ROOT/var/frankenphp_cycler.pid"
+CYCLER_OWNER_FILE="$PROJECT_ROOT/var/frankenphp_cycler.owner"
 STATE_FILE="$PROJECT_ROOT/var/frankenphp.state"
 LOG_FILE="$PROJECT_ROOT/var/log/server.log"
 WORKER_LOG_FILE="$PROJECT_ROOT/var/log/messenger_worker.log"
@@ -48,6 +50,7 @@ SCHEDULER_LOG_FILE="$PROJECT_ROOT/var/log/task_scheduler.log"
 MCP_LOG_FILE="$PROJECT_ROOT/var/log/mate_mcp.log"
 CDP_PROXY_LOG_FILE="$PROJECT_ROOT/var/log/cdp_proxy.log"
 STOP_REASON_FILE="$PROJECT_ROOT/var/log/stop_reason.log"
+SERVE_LOCK_FILE="$PROJECT_ROOT/var/serve.lock"
 
 mkdir -p "$PROJECT_ROOT/var/log"
 
@@ -69,6 +72,25 @@ is_running() {
         return 0
     fi
     return 1
+}
+
+# 单实例锁：防止多个 serve 进程同时运行、互相 stop/start 干扰（曾导致 FrankenPHP 在 AI 任务中被误杀）
+acquire_serve_lock() {
+    if [ -f "$SERVE_LOCK_FILE" ]; then
+        local old_pid
+        old_pid=$(cat "$SERVE_LOCK_FILE" 2>/dev/null)
+        if [ -n "$old_pid" ] && [ "$old_pid" != "$$" ] && kill -0 "$old_pid" 2>/dev/null; then
+            echo "另一个 serve 实例正在运行 (PID: $old_pid)。请先 ./serve stop，或使用该实例操作。"
+            exit 1
+        fi
+    fi
+    echo $$ > "$SERVE_LOCK_FILE"
+}
+
+release_serve_lock() {
+    if [ -f "$SERVE_LOCK_FILE" ] && [ "$(cat "$SERVE_LOCK_FILE" 2>/dev/null)" = "$$" ]; then
+        rm -f "$SERVE_LOCK_FILE"
+    fi
 }
 
 get_http_code() {
@@ -159,6 +181,17 @@ stop_server() {
     
     pkill -f "messenger:consume async" 2>/dev/null || true
 
+    # Stop FrankenPHP periodic restart cycler
+    if [ -f "$CYCLER_PID_FILE" ]; then
+        CPID=$(cat "$CYCLER_PID_FILE")
+        if [ -n "$CPID" ] && kill -0 "$CPID" 2>/dev/null; then
+            kill -9 "$CPID" 2>/dev/null || true
+            echo "  ✓ FrankenPHP 周期重启已停止"
+        fi
+        rm -f "$CYCLER_PID_FILE"
+    fi
+    rm -f "$CYCLER_OWNER_FILE"
+
     # Stop task scheduler trigger loop
     if [ -f "$SCHEDULER_PID_FILE" ]; then
         SPID=$(cat "$SCHEDULER_PID_FILE")
@@ -228,6 +261,37 @@ start_frankenphp() {
     FPID=$!
     echo $FPID > "$PID_FILE"
     echo "  ✓ FrankenPHP (HTTP 服务器) PID: $FPID"
+}
+
+# FrankenPHP 周期重启循环：定期优雅重启 HTTP 服务器，甩掉累积的线程/连接/锁。
+# 通过 APP_SERVER_RESTART_HOURS 环境变量控制间隔（默认 6 小时）。
+# 用 owner（serve 自身 PID）做自检：若 owner 已死（孤儿）或 CYCLER_OWNER_FILE 已被
+# 新 serve 覆盖（被取代），cycler 立即退出，防止多个残留 cycler 轮流误杀服务。
+start_frankenphp_cycler() {
+    local hours="${APP_SERVER_RESTART_HOURS:-6}"
+    local seconds=$((hours * 3600))
+    local owner_pid=$$
+    echo "$owner_pid" > "$CYCLER_OWNER_FILE"
+    (
+        trap '' HUP INT TERM
+        while true; do
+            if [ "$(cat "$CYCLER_OWNER_FILE" 2>/dev/null)" != "$owner_pid" ] || ! kill -0 "$owner_pid" 2>/dev/null; then
+                exit 0
+            fi
+            sleep "$seconds"
+            if ! is_running; then
+                continue
+            fi
+            log "FrankenPHP 周期重启（每 ${hours}h），甩掉累积状态"
+            pkill -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
+            sleep 2
+            nohup ./frankenphp run --config Caddyfile >> "$LOG_FILE" 2>&1 &
+            echo $! > "$PID_FILE"
+            log "FrankenPHP 已由周期重启拉起 (PID: $(cat "$PID_FILE"))"
+        done
+    ) &
+    echo $! > "$CYCLER_PID_FILE"
+    log "FrankenPHP 周期重启循环已启动（每 ${hours}h）"
 }
 
 start_worker() {
@@ -329,6 +393,7 @@ start_dev() {
     start_frankenphp "dev"
     start_mcp_server
     start_cdp_proxy
+    # 周期重启已移除：孤儿 cycler 曾误杀服务；如需周期重启请使用 ./serve watch
     
     sleep 2
     
@@ -373,6 +438,7 @@ start_prod() {
     start_worker "prod"
     start_frankenphp "prod"
     start_cdp_proxy
+    # 周期重启已移除：孤儿 cycler 曾误杀服务；如需周期重启请使用 ./serve watch
     
     sleep 2
     
@@ -461,8 +527,19 @@ watch_mode() {
             log "Server started, monitoring for crashes..."
             
             # Monitor server - simple loop that checks if server is still running
+            cycle_count=0
+            cycle_interval=$(( ${APP_SERVER_RESTART_HOURS:-6} * 3600 / 5 ))  # 5s 每次
             while true; do
                 sleep 5
+                
+                # 周期重启：甩掉累积的线程/连接/锁（默认每 6 小时）
+                cycle_count=$((cycle_count + 1))
+                if [ $cycle_count -ge $cycle_interval ]; then
+                    cycle_count=0
+                    log "Periodic restart (watch mode): restarting FrankenPHP"
+                    pkill -f "[f]rankenphp.*Caddyfile" 2>/dev/null || true
+                    break
+                fi
                 
                 # Check if server process is still alive
                 if ! pgrep -f "[f]rankenphp.*Caddyfile" > /dev/null 2>&1; then
@@ -577,31 +654,39 @@ setup_traps() {
 
 case "$MODE" in
     dev)
+        acquire_serve_lock
         setup_traps
         stop_server "mode_switch"
         start_dev
         wait
+        release_serve_lock
         ;;
     prod)
+        acquire_serve_lock
         setup_traps
         stop_server "mode_switch"
         start_prod
         wait
+        release_serve_lock
         ;;
     stop)
         stop_server "manual_stop"
+        release_serve_lock
         ;;
     status)
         show_status
         ;;
     watch)
+        acquire_serve_lock
         stop_server "watch_mode"
         watch_mode
         echo "Watch mode started in background. Use './serve status' to check."
         echo "To stop: ./serve stop"
+        release_serve_lock
         exit 0
         ;;
     restart)
+        acquire_serve_lock
         PREV_MODE=$(cat "$STATE_FILE" 2>/dev/null || echo "dev")
         echo "Restarting in $PREV_MODE mode..."
         stop_server "restart"
@@ -611,6 +696,7 @@ case "$MODE" in
         else
             start_dev
         fi
+        release_serve_lock
         ;;
     refresh)
         echo ""

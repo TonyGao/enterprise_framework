@@ -14,6 +14,7 @@ use Symfony\Component\Uid\Uuid;
  * 树状中包含文件夹和视图文件，这里的视图将统一放到框架 /templates/views 目录中
  * 即物理路径都将以此为基础加上用户定义的相对路径。
  */
+#[Gedmo\SoftDeleteable]
 #[Gedmo\Tree(type: 'nested')]
 #[ORM\Table(name: "platform_view")]
 #[ORM\Index(name: 'platform_view_idx', columns: ["type"])]
@@ -47,6 +48,12 @@ class View implements GedmoNode
 
   #[ORM\Column(type: 'string', length: 200, nullable: true)]
   private $path;
+
+  /**
+   * 当前激活版本号（如 1_0）。文件定位 = path + '/' + currentVersion + '/' + name
+   */
+  #[ORM\Column(name: 'current_version', type: 'string', length: 32, nullable: true)]
+  private $currentVersion = '1_0';
 
   /**
    * 是否系统内置 (true=系统预置, false=用户自定义)
@@ -100,6 +107,13 @@ class View implements GedmoNode
   #[ORM\OrderBy(["lft" => "ASC"])]
   private $children;
 
+  /**
+   * @var \Doctrine\Common\Collections\Collection<int, ViewVersion>
+   */
+  #[ORM\OneToMany(targetEntity: ViewVersion::class, mappedBy: "view", cascade: ["persist", "remove"])]
+  #[ORM\OrderBy(["version" => "ASC"])]
+  private \Doctrine\Common\Collections\Collection $versions;
+
   public function __toString()
   {
     return $this->label ? $this->label : $this->name;
@@ -109,6 +123,7 @@ class View implements GedmoNode
   {
     // 自动生成 UUID
     $this->id = Uuid::v4();
+    $this->versions = new \Doctrine\Common\Collections\ArrayCollection();
   }
 
     // Getters and Setters
@@ -159,6 +174,17 @@ class View implements GedmoNode
     public function setPath(?string $path): self
     {
         $this->path = $path;
+        return $this;
+    }
+
+    public function getCurrentVersion(): ?string
+    {
+        return $this->currentVersion;
+    }
+
+    public function setCurrentVersion(?string $currentVersion): self
+    {
+        $this->currentVersion = $currentVersion;
         return $this;
     }
 
@@ -285,6 +311,31 @@ class View implements GedmoNode
             if ($child->getParent() === $this) {
                 $child->setParent(null);
             }
+        }
+        return $this;
+    }
+
+    /**
+     * @return \Doctrine\Common\Collections\Collection<int, ViewVersion>
+     */
+    public function getVersions(): \Doctrine\Common\Collections\Collection
+    {
+        return $this->versions;
+    }
+
+    public function addVersion(ViewVersion $version): self
+    {
+        if (!$this->versions->contains($version)) {
+            $this->versions->add($version);
+            $version->setView($this);
+        }
+        return $this;
+    }
+
+    public function removeVersion(ViewVersion $version): self
+    {
+        if ($this->versions->removeElement($version)) {
+            // 版本实体由 cascade remove 处理，这里仅从集合移除
         }
         return $this;
     }

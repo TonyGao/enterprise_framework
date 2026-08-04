@@ -2,6 +2,283 @@
 <link rel="stylesheet" href="{{ asset('sunui/admin/platform/font_selector.css') }}">
 <link rel="stylesheet" href="{{ asset('sunui/admin/platform/toolbar_button_states.css') }}">
 <script src="{{ asset('sunui/admin/platform/font_selector.js') }}"></script>
+<script>
+$(function () {
+  var $switch = $('#editor-version-switch');
+  var $menu = $('#editor-version-menu');
+  var versions = window.__VIEW_VERSIONS__ || [];
+  var current = String(window.__ACTIVE_VERSION__ || '1_0');
+
+  if (versions.length) {
+    var html = '';
+    versions.forEach(function (v) {
+      var isCur = String(v.version) === current;
+      html += '<div class="editor-version-menu-item' + (isCur ? ' is-current' : '') + '" data-version="' + v.version + '">' +
+                '<i class="fa-solid fa-code-branch"></i> v' + v.version +
+                (isCur ? '<i class="fa-solid fa-check editor-version-menu-check"></i>' : '') +
+              '</div>';
+    });
+    // 底部：平铺视图 + 新建版本（悬停右侧弹出二级菜单）
+    html += '<div class="editor-version-menu-sep"></div>';
+    html += '<div class="editor-version-menu-item editor-version-tiles-item" id="editor-version-tiles">' +
+              '<i class="fa-solid fa-table-cells-large"></i> 平铺视图' +
+            '</div>';
+    html += '<div class="editor-version-menu-sep"></div>';
+    html += '<div class="editor-version-new" id="editor-version-new">' +
+              '<i class="fa-solid fa-plus"></i> 新建' +
+              '<i class="fa-solid fa-chevron-right editor-version-new-arrow"></i>' +
+            '</div>';
+    $menu.html(html);
+  }
+
+  // 二级菜单（悬停右侧弹出），挂到 body 用 fixed 定位避免被裁剪
+  var $newToggle = $('#editor-version-new');
+  var $flyout = $('<div class="editor-version-flyout" id="editor-version-new-flyout" style="display:none;">' +
+    '<div class="editor-version-menu-item editor-version-new-option" data-new="copy"><i class="fa-solid fa-copy"></i> 从当前活跃版本复制</div>' +
+    '<div class="editor-version-menu-item editor-version-new-option" data-new="blank"><i class="fa-solid fa-file-circle-plus"></i> 新建空白视图</div>' +
+  '</div>').appendTo(document.body);
+
+  function positionNewFlyout() {
+    var o = $newToggle.offset();
+    if (!o) return;
+    $flyout.css({
+      position: 'fixed',
+      top: o.top + 'px',
+      left: (o.left + $newToggle.outerWidth() + 2) + 'px',
+      zIndex: 100001
+    });
+  }
+
+  var flyoutHideTimer = null;
+  $newToggle.on('mouseenter', function () {
+    clearTimeout(flyoutHideTimer);
+    positionNewFlyout();
+    $flyout.show();
+  });
+  $newToggle.on('mouseleave', function () {
+    flyoutHideTimer = setTimeout(function () { if (!$flyout.is(':hover')) $flyout.hide(); }, 120);
+  });
+  $flyout.on('mouseenter', function () { clearTimeout(flyoutHideTimer); $flyout.show(); });
+  $flyout.on('mouseleave', function () { $flyout.hide(); });
+
+  // 创建新版本并跳转
+  function createVersion(fromVersion) {
+    var viewId = window.__VIEW_ID__;
+    if (!viewId) return;
+    var label = fromVersion === 'blank' ? '新版本' : '从 v' + fromVersion + ' 复制';
+    $menu.hide();
+    $flyout.hide();
+    fetch('/api/admin/platform/view/' + viewId + '/versions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fromVersion: fromVersion, version: '', label: label })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (json) {
+      if (json.code === 200 && json.data && json.data.version) {
+        var newVersion = json.data.version.version;
+        var params = new URLSearchParams(window.location.search);
+        params.set('version', newVersion);
+        window.location.href = window.location.pathname + '?' + params.toString();
+      } else {
+        alert('创建版本失败: ' + (json.message || '未知错误'));
+      }
+    })
+    .catch(function () { alert('创建版本失败，网络错误'); });
+  }
+
+  $flyout.on('click', '.editor-version-new-option', function (e) {
+    e.stopPropagation();
+    var kind = $(this).data('new');
+    if (kind === 'blank') {
+      createVersion('blank');
+    } else {
+      createVersion(String(window.__CURRENT_VERSION__ || current));
+    }
+  });
+
+  $switch.on('click', function (e) {
+    e.stopPropagation();
+    if ($menu.is(':visible')) {
+      $menu.hide();
+      return;
+    }
+    // 用 fixed 定位浮在工具栏/画布之上，避免被祖先堆叠上下文或裁剪遮挡
+    var o = $switch.offset();
+    var h = $switch.outerHeight();
+    var right = window.innerWidth - (o.left + $switch.outerWidth());
+    $menu.css({
+      position: 'fixed',
+      top: (o.top + h + 6) + 'px',
+      right: right + 'px',
+      left: 'auto',
+      zIndex: 100000
+    }).show();
+  });
+
+  $menu.on('click', '.editor-version-menu-item', function (e) {
+    e.stopPropagation();
+    var v = String($(this).data('version'));
+    if (!v || v === 'undefined') return; // 非版本项（如新建子项）跳过
+    if (v === current) {
+      $menu.hide();
+      return;
+    }
+    // 重新加载编辑器并携带目标版本，服务端按该版本的 design 文件初始化画布
+    var params = new URLSearchParams(window.location.search);
+    params.set('version', v);
+    window.location.href = window.location.pathname + '?' + params.toString();
+  });
+
+  // 平铺视图：打开全屏网格展示所有版本预览，点击某个版本 = 选中（跳转到其编辑器）
+  $menu.on('click', '#editor-version-tiles', function (e) {
+    e.stopPropagation();
+    $menu.hide();
+    openVersionTiles(window.__VIEW_ID__, window.__VIEW_VERSIONS__ || [], window.__ACTIVE_VERSION__);
+  });
+
+  $(document).on('click', function () { $menu.hide(); $flyout.hide(); });
+
+  // 表单形态切换（page 独立整页 / fragment 可复用片段）：仅表单视图显示
+  if (window.__FORM_VIEW__) {
+    var modeLabel = { page: '整页', fragment: '片段' };
+    var curMode = window.__RENDER_MODE__ || 'page';
+    $('#editor-render-mode').show().css('display', 'inline-flex');
+    $('#editor-render-mode-divider').show();
+    $('#editor-render-mode-label').text(modeLabel[curMode] || curMode);
+    $('#editor-render-mode').on('click', function () {
+      var next = curMode === 'fragment' ? 'page' : 'fragment';
+      var viewId = window.__VIEW_ID__;
+      if (!viewId) return;
+      fetch('/api/admin/platform/view/' + viewId + '/render-mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: next })
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (json) {
+        if (json && json.ok) {
+          window.location.reload();
+        } else {
+          alert('切换形态失败: ' + ((json && json.error) || '未知错误'));
+        }
+      })
+      .catch(function () { alert('切换形态失败，网络错误'); });
+    });
+  }
+
+  // 统一文件级撤销/重做：与 AI 命令「回退」共用同一回滚机制（快照恢复 + 刷新编辑器）
+  function callVersionHistory(action) {
+    var viewId = window.__VIEW_ID__;
+    var version = window.__ACTIVE_VERSION__;
+    if (!viewId || !version) return;
+    var btn = action === 'undo' ? $('.toolbar-btn.previous-step') : $('.toolbar-btn.next-step');
+    btn.prop('disabled', true);
+    fetch('/api/admin/platform/view/' + viewId + '/versions/' + version + '/' + action, {
+      method: 'POST'
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (json) {
+      if (json.code === 200) {
+        window.location.reload();
+      } else {
+        alert((action === 'undo' ? '撤销' : '重做') + '失败: ' + (json.message || ''));
+        btn.prop('disabled', false);
+      }
+    })
+    .catch(function () { btn.prop('disabled', false); });
+  }
+
+  // 覆盖画布级 undo/redo 管理器对这两个按钮的绑定，改为文件级回滚
+  $('.toolbar-btn.previous-step').off('click').on('click', function () { callVersionHistory('undo'); });
+  $('.toolbar-btn.next-step').off('click').on('click', function () { callVersionHistory('redo'); });
+
+  // 初始化按钮可用状态
+  (function initHistoryButtons() {
+    var viewId = window.__VIEW_ID__;
+    var version = window.__ACTIVE_VERSION__;
+    if (!viewId || !version) return;
+    fetch('/api/admin/platform/view/' + viewId + '/versions/' + version + '/history')
+      .then(function (r) { return r.json(); })
+      .then(function (json) {
+        if (json.code === 200 && json.data) {
+          $('.toolbar-btn.previous-step').prop('disabled', !json.data.canUndo);
+          $('.toolbar-btn.next-step').prop('disabled', !json.data.canRedo);
+        }
+      });
+  })();
+});
+</script>
+<style>
+  .editor-version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6366f1;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 20px;
+    padding: 4px 12px;
+    white-space: nowrap;
+  }
+  .editor-version-switch { position: relative; cursor: pointer; transition: background .15s; }
+  .editor-version-switch:hover { background: #e0e7ff; }
+  .editor-version-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 999;
+    min-width: 180px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+    padding: 6px;
+  }
+  .editor-version-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #334155;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .editor-version-menu-item:hover { background: #f1f5f9; }
+  .editor-version-menu-item.is-current { color: #4f46e5; font-weight: 600; }
+  .editor-version-menu-item .editor-version-menu-check { margin-left: auto; color: #6366f1; }
+  .editor-version-menu-sep {
+    height: 1px;
+    background: #eef2f7;
+    margin: 6px 4px;
+  }
+  .editor-version-new {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6366f1;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .editor-version-new:hover { background: #eef2ff; }
+  .editor-version-new-arrow { margin-left: auto; font-size: 10px; }
+  .editor-version-flyout {
+    min-width: 190px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+    padding: 6px;
+  }
+  .editor-version-new-option { color: #475569; }
+  .editor-version-new-option:hover { color: #4f46e5; }
+</style>
 
 <section class="app-toolbar">
 	<div class="editor-toolbar">
@@ -9,6 +286,21 @@
 		  <button class="toolbar-btn" title="保存" id="save-view-button">
 			  <i class="fa-solid fa-floppy-disk"></i>
 		  </button>
+	  <!-- 当前编辑版本（点击切换） -->
+	  <div class="toolbar-divider"></div>
+	  <div class="editor-version-badge editor-version-switch" id="editor-version-switch" title="点击切换版本">
+		  <i class="fa-solid fa-code-branch"></i>
+		  <span id="editor-version-current-label">版本 {{ activeVersion|default('1_0') }}</span>
+		  <i class="fa-solid fa-chevron-down" style="font-size: 10px; margin-left: 2px;"></i>
+		  <div class="editor-version-menu" id="editor-version-menu" style="display: none;"></div>
+	  </div>
+	  <div class="toolbar-divider"></div>
+	  <!-- 表单形态切换（仅表单视图显示） -->
+	  <button class="toolbar-btn" id="editor-render-mode" title="切换表单形态（独立成页 / 可复用片段）" style="display:none;">
+		  <i class="fa-solid fa-layer-group"></i>
+		  <span id="editor-render-mode-label">页面</span>
+	  </button>
+	  <div class="toolbar-divider" id="editor-render-mode-divider" style="display:none;"></div>
 		  <!-- 预览按钮 -->
 		  <button class="toolbar-btn" title="预览">
 			  <i class="fa-solid fa-eye"></i>
@@ -146,3 +438,5 @@
 		</div>
 	</div>
 </section>
+
+{% include 'admin/platform/view/version_tiles.html.twig' %}

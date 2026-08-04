@@ -16,6 +16,13 @@ framework:
     cookie_httponly: true
     storage_factory_id: session.storage.factory.native
 
+  # 全局 HTTP 客户端默认超时：避免外部调用（LLM/代理等）长时间挂起拖垮 worker 线程。
+  # timeout 为含连接的总时限（LLM 网关显式指定的 60/120s 会覆盖默认值，仍受各自上限约束）。
+  http_client:
+    default_options:
+      timeout: 30
+      max_redirects: 3
+
   #esi: true
   #fragments: true
   php_errors:

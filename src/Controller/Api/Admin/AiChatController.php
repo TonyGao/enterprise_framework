@@ -9,8 +9,14 @@ use App\Entity\Platform\AiOperationLog;
 use App\Service\AI\Orchestrator\ViewSubAgentChatRouter;
 use App\Service\AI\Runtime\AiAssistant;
 use App\Service\AI\Runtime\AiContextRegistry;
+use App\Service\Platform\View\VersionNumber;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\AI\Agent\Toolbox\Event\ToolCallFailed;
+use Symfony\AI\Agent\Toolbox\Event\ToolCallSucceeded;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -23,6 +29,7 @@ class AiChatController extends AbstractController
         private readonly AiAssistant $assistant,
         private readonly EntityManagerInterface $em,
         private readonly ViewSubAgentChatRouter $subAgentChatRouter,
+        private readonly HubInterface $hub,
     ) {}
 
     #[Route(
@@ -60,26 +67,123 @@ class AiChatController extends AbstractController
             $roleCode = $provider->getRoleCode();
             $aiPrompt = $provider->buildPrompt($message, $contextId);
 
-            // 视图编辑器统一走 main/sub agent：按会话意图选 Sub Agent 的 CDP 提示词
+            // 视图编辑器统一走 main/sub agent：每条消息由 IntentAgent（LLM）判定意图/模式/澄清
             $systemPrompt = $provider->getSystemPrompt();
+            $tools = $provider->getToolProviders();
+            $redesignApplied = false;
             if ($context === 'view_editor') {
-                try {
-                    $systemPrompt = $this->subAgentChatRouter->resolveSystemPrompt($message, $contextId, $session);
+                $turn = $this->subAgentChatRouter->classifyTurn($message, $contextId, $session);
+                if ($turn['needsClarification']) {
+                    // 持久化澄清问答（用户原始消息 + 澄清问题/选项），保证聊天历史完整
+                    $optionsText = implode("\n", array_map(
+                        fn(string $o) => '- ' . $o,
+                        $turn['clarificationOptions']
+                    ));
+                    $clarificationReply = $turn['clarificationQuestion'] . ($optionsText !== '' ? "\n\n" . $optionsText : '');
+                    $assistantMsgId = $this->saveMessages(
+                        $session,
+                        $message,
+                        $clarificationReply,
+                        [
+                            'type' => 'clarification',
+                            'question' => $turn['clarificationQuestion'],
+                            'options' => $turn['clarificationOptions'],
+                        ]
+                    );
                     $this->em->flush();
-                } catch (\Throwable $e) {
-                    // 意图路由失败时回退到默认提示词，保证对话不中断
+
+                    return ApiResponse::success(json_encode([
+                        'type' => 'clarification',
+                        'question' => $turn['clarificationQuestion'],
+                        'options' => $turn['clarificationOptions'],
+                        'assistantMessageId' => $assistantMsgId,
+                    ]));
                 }
+                $systemPrompt = $turn['systemPrompt'];
+                $tools = $turn['tools'];
+                $redesignApplied = $turn['redesignApplied'];
+                $this->em->flush();
             }
+
+            // 文件工具写入用户当前查看的版本（contextId 中的 ?version=），而非视图 current_version
+            $request->attributes->set('ai_view_version', $this->versionFromContext($contextId));
+
+            // 释放 PHP session 文件锁（长 LLM 调用期间不能让同会话其它请求阻塞）
+            $request->getSession()?->save();
+
+            // 进度推送 + 执行日志：为本次请求建独立分发器，记录 AI 实际调用的工具
+            $topic = $this->chatProgressTopic($contextId);
+            $dispatcher = new EventDispatcher();
+            $executedTools = [];
+            $dispatcher->addListener(ToolCallSucceeded::class, function ($event) use ($topic, &$executedTools): void {
+                $tool = '工具操作';
+                $args = [];
+                try {
+                    $tool = (string) $event->getMetadata()->getName();
+                    $args = $event->getArguments();
+                } catch (\Throwable) {
+                }
+                $executedTools[] = [
+                    'tool' => $tool,
+                    'args' => $this->normalizeToolArgs($args),
+                    'status' => 'ok',
+                ];
+                $this->publishProgress($topic, ['status' => 'tool', 'tool' => $tool]);
+            });
+            $dispatcher->addListener(ToolCallFailed::class, function ($event) use ($topic, &$executedTools): void {
+                $tool = '工具操作';
+                $args = [];
+                $error = '';
+                try {
+                    $tool = (string) $event->getMetadata()->getName();
+                    $args = $event->getArguments();
+                    $error = $event->getThrowable()->getMessage();
+                } catch (\Throwable) {
+                }
+                $executedTools[] = [
+                    'tool' => $tool,
+                    'args' => $this->normalizeToolArgs($args),
+                    'status' => 'error',
+                    'error' => $error,
+                ];
+                $this->publishProgress($topic, ['status' => 'tool_error', 'tool' => $tool]);
+            });
+            $this->publishProgress($topic, ['status' => 'started']);
 
             $result = $this->assistant->chat(
                 roleCode: $roleCode,
                 systemPrompt: $systemPrompt,
-                toolProviders: $provider->getToolProviders(),
+                toolProviders: $tools,
                 userMessage: $aiPrompt,
                 history: $history,
+                eventDispatcher: $dispatcher,
             );
 
-            $this->saveMessages($session, $message, $result['reply']);
+            // 记录 AI 实际执行的工具调用，便于诊断"描述但不执行"
+            $this->logExecutedTools($context, $contextId, $executedTools);
+
+            // 表单布局/页面壳已由服务器端落盘：编辑器 DOM 不会自动同步，强制前端刷新以展示新布局
+            $layoutTools = ['form_applyLayout', 'page_applyShell'];
+            if (!$redesignApplied && !empty($executedTools)) {
+                $redesignApplied = (bool) array_filter(
+                    $executedTools,
+                    fn (array $t) => in_array($t['tool'] ?? '', $layoutTools, true) && ($t['status'] ?? '') === 'ok'
+                );
+            }
+
+            $this->publishProgress($topic, ['status' => 'done']);
+
+            $elapsedMs = (int) ((microtime(true) - $startTime) * 1000);
+            $assistantMessageId = $this->saveMessages(
+                $session,
+                $message,
+                $result['reply'],
+                [
+                    'elapsedMs' => $elapsedMs,
+                    'toolCount' => count($executedTools),
+                    'redesignApplied' => $redesignApplied,
+                ]
+            );
 
             // Fix history: replace augmented prompt with original text
             $history = $result['history'];
@@ -88,13 +192,16 @@ class AiChatController extends AbstractController
                 $history[$lastIdx]['content'] = $message;
             }
 
-            $elapsedMs = (int) ((microtime(true) - $startTime) * 1000);
             $this->logOperation($context, $roleCode, $message, $result['reply'], null, 'success', null, $elapsedMs);
 
             return ApiResponse::success(json_encode([
                 'reply' => $result['reply'],
                 'history' => $history,
                 'sessionId' => (string) $session->getId(),
+                'assistantMessageId' => $assistantMessageId,
+                'redesignApplied' => $redesignApplied,
+                'elapsedMs' => $elapsedMs,
+                'toolCount' => count($executedTools),
             ]));
         } catch (\Exception $e) {
             $elapsedMs = (int) ((microtime(true) - $startTime) * 1000);
@@ -146,7 +253,7 @@ class AiChatController extends AbstractController
         return $history;
     }
 
-    private function saveMessages(AiChatSession $session, string $userMessage, string $assistantReply): void
+    private function saveMessages(AiChatSession $session, string $userMessage, string $assistantReply, ?array $assistantMeta = null): string
     {
         $userMsg = new AiChatMessage();
         $userMsg->setSession($session);
@@ -158,9 +265,14 @@ class AiChatController extends AbstractController
         $assistantMsg->setSession($session);
         $assistantMsg->setRole('assistant');
         $assistantMsg->setContent($assistantReply);
+        if ($assistantMeta !== null) {
+            $assistantMsg->setMeta($assistantMeta);
+        }
         $this->em->persist($assistantMsg);
 
         $this->em->flush();
+
+        return (string) $assistantMsg->getId();
     }
 
     private function logOperation(
@@ -188,6 +300,91 @@ class AiChatController extends AbstractController
             $this->em->flush();
         } catch (\Throwable) {
             // 静默失败，不影响主流程
+        }
+    }
+
+    private function chatProgressTopic(string $contextId): string
+    {
+        return 'https://enterprise.local/ai/chat/' . rawurlencode($contextId);
+    }
+
+    /**
+     * 归一化工具参数供日志记录：字符串值超长（如 writeDesign 的整页 html）时截断并标注长度，
+     * 避免大字符串在请求内存中堆积导致 OOM。
+     */
+    private function normalizeToolArgs(mixed $args): mixed
+    {
+        if (is_array($args)) {
+            $out = [];
+            foreach ($args as $k => $v) {
+                $out[$k] = is_string($v) ? $this->truncateArg($v) : $v;
+            }
+            return $out;
+        }
+        return is_string($args) ? $this->truncateArg($args) : $args;
+    }
+
+    private function truncateArg(string $s, int $max = 300): string
+    {
+        $len = mb_strlen($s);
+        if ($len <= $max) {
+            return $s;
+        }
+        return mb_substr($s, 0, $max) . '…(截断, 总长 ' . $len . ')';
+    }
+
+    private function versionFromContext(string $contextId): ?string
+    {
+        $parsed = parse_url($contextId);
+        if (!isset($parsed['query'])) {
+            return null;
+        }
+        parse_str($parsed['query'], $query);
+        $v = $query['version'] ?? null;
+        return ($v && VersionNumber::isValid((string) $v)) ? (string) $v : null;
+    }
+
+    private function filterToolNames(array $toolProviders, array $blocked): ?array
+    {
+        try {
+            $toolbox = new \Symfony\AI\Agent\Toolbox\Toolbox($toolProviders);
+            $names = array_map(fn (\Symfony\AI\Platform\Tool\Tool $t) => $t->getName(), $toolbox->getTools());
+            $filtered = array_values(array_diff($names, $blocked));
+            return count($filtered) === count($names) ? null : $filtered;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function logExecutedTools(string $context, string $contextId, array $tools): void
+    {
+        if (empty($tools)) {
+            return;
+        }
+        try {
+            $logFile = $this->getParameter('kernel.project_dir') . '/var/log/ai_tool_calls.log';
+            $line = json_encode([
+                'time' => date('Y-m-d H:i:s'),
+                'context' => $context,
+                'contextId' => mb_substr($contextId, 0, 120),
+                'tools' => $tools,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            file_put_contents($logFile, $line . "\n", FILE_APPEND);
+        } catch (\Throwable) {
+            // 日志失败不影响主流程
+        }
+    }
+
+    private function publishProgress(string $topic, array $data): void
+    {
+        try {
+            $this->hub->publish(new Update(
+                $topic,
+                json_encode(array_merge(['type' => 'ai_chat_progress'], $data), JSON_UNESCAPED_UNICODE),
+                true
+            ));
+        } catch (\Throwable) {
+            // Mercure 推送失败不影响主流程
         }
     }
 
@@ -232,8 +429,10 @@ class AiChatController extends AbstractController
             $messages = [];
             foreach ($session->getMessages() as $msg) {
                 $messages[] = [
+                    'id' => (string) $msg->getId(),
                     'role' => $msg->getRole(),
                     'content' => $msg->getContent(),
+                    'meta' => $msg->getMeta(),
                 ];
             }
 

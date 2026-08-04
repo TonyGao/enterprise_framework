@@ -16,7 +16,8 @@ class DomManipulator
     {
         $this->dom = new DOMDocument();
         libxml_use_internal_errors(true);
-        $this->dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
+        // 用 UTF-8 声明前缀加载，避免 mb_convert_encoding(HTML-ENTITIES) 丢弃补充平面字符（如 🏮 灯笼等 emoji）
+        $this->dom->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_NOWARNING | LIBXML_NOERROR);
         libxml_clear_errors();
         $this->crawler = new Crawler($this->dom);
         return $this;

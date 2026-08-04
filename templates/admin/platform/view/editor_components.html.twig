@@ -3,6 +3,37 @@ scrollBtnDisplay = sideMenuState == 'shrunk' ? 'flex' : 'none' %}
 
 {% set tabId1 = 'tab1' ~ random() %}
 {% set tabId2 = 'tab2' ~ random() %}
+
+<style>
+  /* 左侧栏右缘拖拽调宽手柄：拖拽改变 tabs-panels/侧栏宽度，宽度缓存于 localStorage */
+  .app-side-menu { position: relative; }
+  .side-menu-resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 100%;
+    cursor: ew-resize;
+    z-index: 1002;
+    background: transparent;
+    transition: background 0.15s;
+  }
+  .side-menu-resizer:hover,
+  .side-menu-resizer.dragging { background: rgba(59, 130, 246, 0.3); }
+  .side-menu-resizer::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 3px;
+    width: 2px;
+    height: 44px;
+    transform: translateY(-50%);
+    background: rgba(100, 116, 139, 0.45);
+    border-radius: 2px;
+  }
+  .app-side-menu.resizing .admin-aside-outer,
+  .app-side-menu.resizing .side-menu-two { transition: none !important; }
+</style>
 <section class="app-side-menu">
   <div class="app-side-menu-scroll-btn" style="display: {{ scrollBtnDisplay }}">
     <i class="fa-solid fa-angle-right"></i>
@@ -49,27 +80,27 @@ scrollBtnDisplay = sideMenuState == 'shrunk' ? 'flex' : 'none' %}
               <div class="panel-body panel-body-noheader panel-body-noborder">
                 <div class="datasource-content">
                   {% if formEntity is defined and formEntity %}
-                  <div class="model-status text-primary mb-3">已绑定模型：{{ formEntity.name|replace({'.php': ''}) }}</div>
+                  <div style="font-size:15px;font-weight:500;color:#3370ff;text-align:center;padding:8px;background:rgba(51,112,255,0.1);border-radius:6px;margin-bottom:16px;">已绑定模型：{{ formEntity.name|replace({'.php': ''}) }}</div>
                   <div class="model-properties">
-                    <table class="table table-hover">
+                    <table style="width:100%;border-collapse:collapse;font-size:13px;color:#495057;">
                       <thead>
                         <tr>
-                          <th>标签</th>
-                          <th>值</th>
+                          <th style="background:#f8f9fa;color:#495057;font-weight:600;padding:6px 8px;border-bottom:2px solid #dee2e6;text-align:left;">标签</th>
+                          <th style="background:#f8f9fa;color:#495057;font-weight:600;padding:6px 8px;border-bottom:2px solid #dee2e6;text-align:left;">值</th>
                         </tr>
                       </thead>
                       <tbody>
                         {% for prop in entityProperties %}
-                        <tr{{ loop.index is odd ? '' : ' class="table-light"' }} data-field-name="{{ prop.propertyName }}" data-field-type="{{ prop.type }}" data-label="{{ prop.comment ?: prop.propertyName }}">
-                          <td>{{ prop.comment ?: prop.propertyName }}</td>
-                          <td>{{ prop.propertyName }}</td>
+                        <tr data-field-name="{{ prop.propertyName }}" data-field-type="{{ prop.type }}" data-label="{{ prop.comment ?: prop.propertyName }}"{% if not loop.index is odd %} style="background:#f8f9fa;"{% endif %}>
+                          <td style="padding:8px 8px;border-bottom:1px solid #e9ecef;cursor:pointer;">{{ prop.comment ?: prop.propertyName }}</td>
+                          <td style="padding:8px 8px;border-bottom:1px solid #e9ecef;cursor:pointer;">{{ prop.propertyName }}</td>
                         </tr>
                         {% endfor %}
                       </tbody>
                     </table>
                   </div>
                   {% else %}
-                  <div class="model-status text-primary mb-3">暂未绑定模型</div>
+                  <div style="font-size:15px;font-weight:500;color:#3370ff;text-align:center;padding:8px;background:rgba(51,112,255,0.1);border-radius:6px;margin-bottom:16px;">暂未绑定模型</div>
                   {% endif %}
                 </div>
               </div>
@@ -79,4 +110,68 @@ scrollBtnDisplay = sideMenuState == 'shrunk' ? 'flex' : 'none' %}
       </div>
     </div>
   </aside>
+  <div class="side-menu-resizer" id="side-menu-resizer" title="拖拽调整侧栏宽度" style="display: {{ sideDisplay }};"></div>
 </section>
+
+<script>
+(function () {
+  var resizer = document.getElementById('side-menu-resizer');
+  if (!resizer) return;
+  var aside = document.querySelector('.admin-aside-outer');
+  var sideTwo = document.querySelector('.side-menu-two');
+  var sideMenu = document.querySelector('.app-side-menu');
+  var KEY = 'view_editor_sidebar_width';
+  var MIN = 180, MAX = 640;
+
+  function clamp(w) { return Math.max(MIN, Math.min(MAX, Math.round(w))); }
+
+  function applyWidth(w) {
+    w = clamp(w);
+    if (aside) aside.style.width = w + 'px';
+    if (sideTwo) sideTwo.style.width = w + 'px';
+    return w;
+  }
+
+  function isCollapsed() {
+    return !aside || aside.style.display === 'none' || (sideMenu && sideMenu.classList.contains('collapsed'));
+  }
+
+  // 恢复缓存的宽度（不触发过渡动画，避免刷新时的缩放闪烁）
+  if (!isCollapsed()) {
+    var saved = parseInt(localStorage.getItem(KEY), 10);
+    if (saved && saved >= MIN && saved <= MAX) {
+      if (sideMenu) sideMenu.classList.add('resizing');
+      applyWidth(saved);
+      requestAnimationFrame(function () { if (sideMenu) sideMenu.classList.remove('resizing'); });
+    }
+  }
+
+  var dragging = false, startX = 0, startW = 0;
+  resizer.addEventListener('mousedown', function (e) {
+    if (isCollapsed()) return;
+    dragging = true;
+    startX = e.clientX;
+    startW = aside ? aside.offsetWidth : 240;
+    if (sideMenu) sideMenu.classList.add('resizing');
+    resizer.classList.add('dragging');
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function (e) {
+    if (!dragging) return;
+    applyWidth(startW + (e.clientX - startX));
+  });
+
+  document.addEventListener('mouseup', function () {
+    if (!dragging) return;
+    dragging = false;
+    if (sideMenu) sideMenu.classList.remove('resizing');
+    resizer.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    localStorage.setItem(KEY, String(aside ? aside.offsetWidth : 240));
+  });
+})();
+</script>

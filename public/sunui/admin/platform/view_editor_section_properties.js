@@ -1,6 +1,32 @@
 /**
  * Section属性面板的JavaScript功能
  */
+
+// 让 section 包裹其内容：检测设计最外层 div 的 inline max-width，若有（如 860px）则按该宽度
+// 收缩 section-content，section 随之自动包裹（inline-block），实现"蓝色 section 紧贴内容"。
+function autoWrapSectionToContent() {
+    var $section = $('.section.active');
+    if (!$section.length) return;
+    var $sectionContent = $section.find('.section-content');
+    if (!$sectionContent.length) return;
+    var design = $sectionContent.children().first();
+    if (!design.length) return;
+    var mw = design.css('max-width');
+    if (!mw || mw === 'none' || !/px$/.test(mw)) return;
+    var px = parseInt(mw, 10);
+    if (!(px > 0)) return;
+    $sectionContent.css('width', px + 'px');
+    $section.css({ width: '', left: '' });
+    $section.find('.section-controls').css('left', '');
+    // 同步宽度面板控件为 boxed + px，保持保存后的配置一致
+    $('#content-width').val('boxed');
+    $('#width-value').val(px);
+    $('#width-slider').val(px);
+    var $unit = $('#width-value').closest('.input-with-unit').find('.unit-selector');
+    $unit.find('span').text('px');
+    $unit.find('.unit-dropdown').show();
+}
+
 $(document).ready(function() {
     // 页面加载时应用保存的 sectionConfig
     if (window.__SECTION_CONFIG__) {
@@ -42,6 +68,9 @@ $(document).ready(function() {
             $('#width-value').val(config.width);
         }
     }
+    // 让蓝色 section 包裹其内容：若设计最外层带 max-width（如 860px），section 按该宽度收缩，
+    // 避免"section 撑满画布、内容只占 max-width"的错位。此逻辑覆盖保存的 full-width/错误 boxed 宽度。
+    autoWrapSectionToContent();
     // 页面加载时同步已保存的控件样式到预览
     $('.editor-field-row').each(function() {
         const $row = $(this);

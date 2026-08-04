@@ -321,7 +321,8 @@ $(document).ready(function() {
         data: {
           viewId: viewId,
           canvasHtml: canvasHtml,
-          sectionConfig: sectionConfig
+          sectionConfig: sectionConfig,
+          version: window.__ACTIVE_VERSION__ || null
         },
         success: function(response) {
           hideLoading();

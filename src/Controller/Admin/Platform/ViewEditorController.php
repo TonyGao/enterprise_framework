@@ -50,7 +50,7 @@ class ViewEditorController extends BaseController
    * 视图详情预览
    */
   #[Route('/admin/platform/view/detail', name: 'platform_view_detail')]
-  public function viewDetail(Request $request, EntityManagerInterface $em): Response
+  public function viewDetail(Request $request, EntityManagerInterface $em, \App\Service\Platform\View\ViewPathResolver $pathResolver): Response
   {
     $id = $request->query->get('id');
     if (!$id) {
@@ -86,6 +86,7 @@ class ViewEditorController extends BaseController
       'fields' => $fields,
       'generalConfig' => $generalConfig,
       'previewUrl' => $previewUrl,
+      'currentVersion' => $pathResolver->currentVersion($view),
     ]);
   }
 
@@ -269,14 +270,13 @@ class ViewEditorController extends BaseController
         $name = $view->getName();
 
         // 磁盘文件夹名追加随机后缀，避免软删重建后同名视图的磁盘文件冲突。
-        // 路径整体入库，运行时渲染仍以 DB 中的 name 定位 {path}/{name}.html.twig，故兼容所有调用方。
+        // path 存视图目录基路径（不含版本段），文件定位由 ViewPathResolver 按 path/current_version 解析。
         $diskName = $name . '_' . substr(bin2hex(random_bytes(4)), 0, 6);
         $relativePath = $this->buildRelativePath($parent, $diskName);
 
         // 创建视图目录结构：视图名/1_0/
-        // 在原目录下创建以视图名命名的文件夹
         $viewFolderPath = $basePath . '/' . $relativePath;
-        // 在视图名文件夹下创建版本控制目录 1_0 表示 v1.0
+        // 初始版本目录 1_0 表示 v1.0
         $versionFolderPath = $viewFolderPath . '/1_0';
         
         // 确保视图目录存在
@@ -315,9 +315,17 @@ class ViewEditorController extends BaseController
           return new JsonResponse(['message' => '创建视图设计文件失败'], 500);
         }
         
-        // 设置相对路径到数据库（包含版本目录）
-        $relativePath = $relativePath . '/1_0';
+        // 视图目录基路径入库（不含版本段），当前版本 1_0
         $view->setPath($relativePath);
+        $view->setCurrentVersion('1_0');
+
+        // 初始版本记录
+        $initialVersion = new \App\Entity\Platform\ViewVersion();
+        $initialVersion->setView($view);
+        $initialVersion->setVersion('1_0');
+        $initialVersion->setLabel('v1.0 初始版本');
+        $initialVersion->setIsCurrent(true);
+        $view->addVersion($initialVersion);
       }
       
       $em->persist($view);
@@ -487,8 +495,12 @@ class ViewEditorController extends BaseController
   )]
   public function editor(
     string $id,
+    \Symfony\Component\HttpFoundation\Request $request,
     \App\Service\Form\FormFieldRenderer $formFieldRenderer,
+    \App\Service\Form\FormLayoutService $formLayoutService,
     \Doctrine\ORM\EntityManagerInterface $em,
+    \App\Service\Platform\View\ViewPathResolver $pathResolver,
+    \Twig\Environment $twig,
     #[Autowire('%kernel.project_dir%')] string $projectDir
   ): Response {
     $components = [
@@ -522,17 +534,28 @@ class ViewEditorController extends BaseController
       $tplVars['viewName'] = $view->getName();
       $tplVars['viewPath'] = $view->getPath();
 
-      // 尝试加载之前保存的设计文件（.design.twig），编辑状态以设计文件为准
-      $viewPath = $view->getPath();
-      $viewName = $view->getName();
-      $baseViewPath = $projectDir . '/templates/views/';
-      $designFilePath = null;
-
-      if ($view->isBuiltIn() && !$viewPath) {
-        $designFilePath = $baseViewPath . 'builtin/' . $viewName . '.design.twig';
-      } elseif ($viewPath && $viewName) {
-        $designFilePath = $baseViewPath . $viewPath . '/' . $viewName . '.design.twig';
+      // 版本解析：?version= 显式指定，否则当前激活版本
+      $requestedVersion = $request->query->get('version');
+      $activeVersion = $requestedVersion && \App\Service\Platform\View\VersionNumber::isValid($requestedVersion)
+        ? $requestedVersion
+        : $pathResolver->currentVersion($view);
+      $tplVars['activeVersion'] = $activeVersion;
+      $tplVars['currentVersion'] = $pathResolver->currentVersion($view);
+      $versions = [];
+      foreach ($view->getVersions() as $vv) {
+        if ($vv->isCurrent() && !$vv->getDeletedAt()) {
+          $view->setCurrentVersion($vv->getVersion());
+        }
+        $versions[] = [
+          'version' => $vv->getVersion(),
+          'label' => $vv->getLabel(),
+          'isCurrent' => $vv->isCurrent(),
+        ];
       }
+      $tplVars['viewVersions'] = $versions;
+
+      // 尝试加载对应版本的设计文件（.design.twig），编辑状态以设计文件为准
+      $designFilePath = $pathResolver->designFile($view, $activeVersion);
 
       if ($designFilePath && file_exists($designFilePath)) {
         $content = file_get_contents($designFilePath);
@@ -542,6 +565,17 @@ class ViewEditorController extends BaseController
           // 剥离外层 section 结构（设计文件包含完整的 canvas HTML: add-section-button + section 包裹器），
           // 只取 .section-content 内部的内容；编辑器模板自身已生成 section 包裹，避免层层嵌套
           $content = $this->extractSectionContentInnerHtml($content);
+          // 自定义 Twig 表单设计：画布需用 dummy form + 标准主题渲染，否则 {{ form_widget(...) }} 会显示为字面文本
+          if (preg_match('/\{(form_start|form_end|form_rest|form_widget|form_label|form_errors|form_row)\}|\{\{\s*(form\b|form_)|form_start\(|form_end\(|form_widget\(|form_label\(|form_errors\(/', $content)) {
+            try {
+              $fqn = $view->getFormEntity()?->getFqn();
+              $data = ($fqn && class_exists($fqn)) ? new $fqn() : (object) [];
+              $built = $formFieldRenderer->build($view, $data, $tplVars['generalConfig'] ?? []);
+              $content = $formLayoutService->renderDesignFragment($content, $built['formView'], $data);
+            } catch (\Throwable $e) {
+              // 渲染失败时保留原始（展示 Twig 源码，供用户修正）
+            }
+          }
           $tplVars['initialCanvasHtml'] = $content;
         }
       }
@@ -550,11 +584,16 @@ class ViewEditorController extends BaseController
       $tplVars['designFilePath'] = $designFilePath;
       $tplVars['viewDesignPath'] = $designFilePath ? str_replace($projectDir . '/templates/', '', $designFilePath) : null;
     }
-    if ($view && $view->getFormEntity() && $view->isBuiltIn() && !isset($tplVars['initialCanvasHtml'])) {
+    // 数据源面板：只要视图绑定了模型，就传入 formEntity + entityProperties，
+    // 供左侧"数据源"标签展示（与是否有已保存的设计文件无关，避免误显示"暂未绑定模型"）
+    if ($view && $view->getFormEntity()) {
       $tplVars['formEntity'] = $view->getFormEntity();
       $tplVars['entityProperties'] = $em->getRepository(\App\Entity\Platform\EntityProperty::class)
         ->findBy(['entity' => $view->getFormEntity()], ['orderNum' => 'ASC']);
+    }
 
+    // 内置表单视图且尚无已保存设计文件时，用绑定字段渲染初始画布
+    if ($view && $view->getFormEntity() && $view->isBuiltIn() && !isset($tplVars['initialCanvasHtml'])) {
       $fields = $em->getRepository(\App\Entity\Platform\ViewField::class)
         ->findBy(['view' => $view], ['sortOrder' => 'ASC']);
       if (!empty($fields)) {
@@ -573,6 +612,57 @@ class ViewEditorController extends BaseController
   }
 
   /**
+   * 版本预览（iframe）：渲染指定版本设计文件内容（.section-content 内部 HTML），
+   * 用于版本切换前的可视化确认。
+   */
+  #[Route(
+    '/admin/platform/view/{id}/versions/{version}/preview',
+    name: 'platform_view_version_preview'
+  )]
+  public function versionPreview(
+    string $id,
+    string $version,
+    \Doctrine\ORM\EntityManagerInterface $em,
+    \App\Service\Platform\View\ViewPathResolver $pathResolver,
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer,
+    \App\Service\Form\FormLayoutService $formLayoutService
+  ): Response {
+    $view = $em->getRepository(\App\Entity\Platform\View::class)->find($id);
+    if (!$view || $view->getType() !== 'view' || !\App\Service\Platform\View\VersionNumber::isValid($version)) {
+      throw $this->createNotFoundException('视图或版本不存在');
+    }
+
+    $designFile = $pathResolver->designFile($view, $version);
+    $content = '';
+    $found = false;
+    if ($designFile && file_exists($designFile)) {
+      $raw = file_get_contents($designFile);
+      if ($raw !== false && trim($raw) !== '') {
+        $content = $this->extractSectionContentInnerHtml($raw);
+        // 自定义 Twig 表单设计：用 dummy form + 标准主题渲染预览
+        if (preg_match('/\{(form_start|form_end|form_rest|form_widget|form_label|form_errors|form_row)\}|\{\{\s*(form\b|form_)|form_start\(|form_end\(|form_widget\(|form_label\(|form_errors\(/', $content)) {
+          try {
+            $fqn = $view->getFormEntity()?->getFqn();
+            $data = ($fqn && class_exists($fqn)) ? new $fqn() : (object) [];
+            $built = $formFieldRenderer->build($view, $data, []);
+            $content = $formLayoutService->renderDesignFragment($content, $built['formView'], $data);
+          } catch (\Throwable) {
+            // 渲染失败保留原文
+          }
+        }
+        $found = true;
+      }
+    }
+
+    return $this->render('admin/platform/view/version_preview.html.twig', [
+      'viewName' => $view->getLabel() ?: $view->getName(),
+      'version' => $version,
+      'content' => $content,
+      'found' => $found,
+    ]);
+  }
+
+  /**
    * 从包含完整 canvas 结构的 HTML 中提取 .section-content 的内部内容。
    * 设计文件保存的是完整 canvas HTML（含 add-section-button、section 包裹器等），
    * 但编辑器模板自身已生成 section 包裹，此处剥离外层只保留实际内容，避免层层嵌套。
@@ -584,8 +674,7 @@ class ViewEditorController extends BaseController
     $dom->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_NOWARNING | LIBXML_NOERROR);
     libxml_use_internal_errors($useErrors);
     $xpath = new \DOMXPath($dom);
-    $nodes = $xpath->query("//*[contains(@class, 'section-content')]");
-    if ($nodes && $nodes->length > 0) {
+    $nodes = $xpath->query("//*[contains(@class, 'section-content')]");    if ($nodes && $nodes->length > 0) {
       $inner = '';
       foreach ($nodes->item(0)->childNodes as $child) {
         $inner .= $dom->saveHTML($child);

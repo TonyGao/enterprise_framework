@@ -1,6 +1,11 @@
 {% set _columns = section_config.columns|default(1) %}
 {% set _fieldLayout = section_config.fieldLayout|default('horizontal') %}
-{% if _columns > 1 or _fieldLayout == 'vertical' %}
+{# 主题默认底色：general_config 传入的视图主题；字段级配置优先覆盖 #}
+{% set _themeRegularBg = general_config.regularBg|default('') %}
+{% set _themeRequiredBg = general_config.requiredBg|default('') %}
+{% set _themePrimary = general_config.primary|default('#165DFF') %}
+{# 编辑画布模式不内联 <style>（避免 AI 布局把样式写进设计文件）；样式由编辑器全局 CSS 提供 #}
+{% if not editor_mode|default(false) and (_columns > 1 or _fieldLayout == 'vertical') %}
 <style>
 {% if _columns > 1 %}
 .form-grid-{{ _columns }} {
@@ -101,11 +106,11 @@ form.edit-form {
     color: #0f172a !important;
 }
 {% endif %}
-.section-header {
+.form-section-header {
     grid-column: 1 / -1;
     margin-top: 8px;
 }
-.section-header h4 {
+.form-section-header h4 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
@@ -114,11 +119,11 @@ form.edit-form {
     align-items: center;
     gap: 8px;
 }
-.section-header h4 i {
+.form-section-header h4 i {
     color: #64748b;
     font-size: 16px;
 }
-.section-divider {
+.form-section-divider {
     grid-column: 1 / -1;
     height: 1px;
     background: #f1f5f9;
@@ -133,29 +138,14 @@ form.edit-form {
 <div class="form-grid-{{ _columns }}">
 {% endif %}
 {% if editor_mode|default(false) %}
-<style>
-.ef-form-widget {
-    pointer-events: none;
-    user-select: none;
-}
-.ef-form-widget input,
-.ef-form-widget select,
-.ef-form-widget textarea,
-.ef-form-widget button {
-    pointer-events: none;
-    user-select: none;
-}
-</style>
-{% endif %}
-{% if editor_mode|default(false) %}
   {% for field in fields %}
     {% set fieldName = field.fieldName %}
     {% set colSpan = field.config.colSpan|default(1) %}
     {% if field.config.sectionDivider is defined and field.config.sectionDivider %}
-    <div class="section-divider"></div>
+    <div class="form-section-divider"></div>
     {% endif %}
     {% if field.config.sectionHeader is defined and field.config.sectionHeader is not empty %}
-    <div class="section-header">
+    <div class="form-section-header">
       <h4><i class="fa-solid fa-sitemap" style="color: #64748b; margin-right: 8px; font-size: 16px;"></i> {{ field.config.sectionHeader|trans }}</h4>
     </div>
     {% endif %}
@@ -170,8 +160,8 @@ form.edit-form {
         data-label-col="{{ field.config.labelCol|default(8) }}"
         data-placeholder="{{ field.config.placeholder|default('') }}"
         data-required="{{ field.config.required|default(false) ? 'true' : 'false' }}"
-        {% set _regularBg = field.config.regularBg|default('') %}{% if _regularBg is not empty and _regularBg|upper != '#FFFFFF' %} data-regular-bg="{{ _regularBg }}"{% endif %}
-        {% set _requiredBg = field.config.requiredBg|default('') %}{% if _requiredBg is not empty %}{% set _requiredBg = _requiredBg|upper == '#FFF2E8' and general_config.requiredBg|default(false) ? general_config.requiredBg : _requiredBg %} data-required-bg="{{ _requiredBg }}"{% endif %}>
+        {% set _regularBg = field.config.regularBg|default('') %}{% if _regularBg == '' %}{% set _regularBg = _themeRegularBg %}{% endif %}{% if _regularBg is not empty and _regularBg|upper != '#FFFFFF' %} data-regular-bg="{{ _regularBg }}"{% endif %}
+        {% set _requiredBg = field.config.requiredBg|default('') %}{% if _requiredBg == '' and field.config.required|default(false) %}{% set _requiredBg = _themeRequiredBg %}{% endif %}{% if _requiredBg is not empty %}{% set _requiredBg = _requiredBg|upper == '#FFF2E8' and _themeRequiredBg != '' ? _themeRequiredBg : _requiredBg %} data-required-bg="{{ _requiredBg }}"{% endif %}>
         {{ form_label(attribute(form, fieldName)) }}
       </div>
       <div style="flex:1;">
@@ -195,8 +185,8 @@ form.edit-form {
           data-label-col="{{ field.config.labelCol|default(8) }}"
           data-placeholder="{{ field.config.placeholder|default('') }}"
           data-required="{{ field.config.required|default(false) ? 'true' : 'false' }}"
-          {% set _regularBg = field.config.regularBg|default('') %}{% if _regularBg is not empty and _regularBg|upper != '#FFFFFF' %} data-regular-bg="{{ _regularBg }}"{% endif %}
-          {% set _requiredBg = field.config.requiredBg|default('') %}{% if _requiredBg is not empty %}{% set _requiredBg = _requiredBg|upper == '#FFF2E8' and general_config.requiredBg|default(false) ? general_config.requiredBg : _requiredBg %} data-required-bg="{{ _requiredBg }}"{% endif %}>
+          {% set _regularBg = field.config.regularBg|default('') %}{% if _regularBg == '' %}{% set _regularBg = _themeRegularBg %}{% endif %}{% if _regularBg is not empty and _regularBg|upper != '#FFFFFF' %} data-regular-bg="{{ _regularBg }}"{% endif %}
+          {% set _requiredBg = field.config.requiredBg|default('') %}{% if _requiredBg == '' and field.config.required|default(false) %}{% set _requiredBg = _themeRequiredBg %}{% endif %}{% if _requiredBg is not empty %}{% set _requiredBg = _requiredBg|upper == '#FFF2E8' and _themeRequiredBg != '' ? _themeRequiredBg : _requiredBg %} data-required-bg="{{ _requiredBg }}"{% endif %}>
           {{ form_label(attribute(form, fieldName)) }}
         </div>
       </div>
@@ -217,21 +207,23 @@ form.edit-form {
   {% for field in fields %}
     {% set fieldName = field.fieldName %}
     {% if field.config.sectionDivider is defined and field.config.sectionDivider %}
-    <div class="section-divider"></div>
+    <div class="form-section-divider"></div>
     {% endif %}
     {% if field.config.sectionHeader is defined and field.config.sectionHeader is not empty %}
-    <div class="section-header">
+    <div class="form-section-header">
       <h4><i class="fa-solid fa-sitemap" style="color: #64748b; margin-right: 8px; font-size: 16px;"></i> {{ field.config.sectionHeader|trans }}</h4>
     </div>
     {% endif %}
     {% set _regularBg = field.config.regularBg|default('') %}
     {% set _requiredBg = field.config.requiredBg|default('') %}
+    {% if _regularBg == '' %}{% set _regularBg = _themeRegularBg %}{% endif %}
+    {% if _requiredBg == '' and field.config.required|default(false) %}{% set _requiredBg = _themeRequiredBg %}{% endif %}
     {% set _widgetAttr = {} %}
     {% if _regularBg is not empty and _regularBg|upper != '#FFFFFF' %}
       {% set _widgetAttr = _widgetAttr|merge({'data-regular-bg': _regularBg}) %}
     {% endif %}
     {% if _requiredBg is not empty %}
-      {% set _requiredBg = _requiredBg|upper == '#FFF2E8' and general_config.requiredBg|default(false) ? general_config.requiredBg : _requiredBg %}
+      {% set _requiredBg = _requiredBg|upper == '#FFF2E8' and _themeRequiredBg != '' ? _themeRequiredBg : _requiredBg %}
       {% set _widgetAttr = _widgetAttr|merge({'data-required-bg': _requiredBg}) %}
     {% endif %}
     {% if _fieldLayout == 'vertical' %}
@@ -300,7 +292,7 @@ form.edit-form {
         <div class="ef-form-item-content ef-form-item-content-flex">
           <div class="ef-space ef-space-horizontal ef-space-align-center">
             <div class="ef-space-item" style="margin-right: 8px;">
-          <button class="btn primary medium" type="button" disabled>提交</button>
+              <button class="btn primary medium" type="submit">提交</button>
             </div>
             <div class="ef-space-item">
               <button class="btn primary medium back-btn" type="button">返回</button>

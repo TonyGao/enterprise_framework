@@ -987,3 +987,33 @@ h1, h2, h3 {
 }
 
 
+
+/* ===== 表单多列网格 + 分组头（编辑器画布全局样式）
+   AI 布局 renderDesignHtml 不再把 <style> 写进设计文件，改由这里统一提供 */
+.form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.form-grid-2 .ef-form-item, .form-grid-3 .ef-form-item { width: 100%; }
+
+.form-section-header {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+}
+.form-section-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.form-section-header h4 i {
+  color: #64748b;
+  font-size: 16px;
+}
+.form-section-divider {
+  grid-column: 1 / -1;
+  height: 1px;
+  background: #f1f5f9;
+  margin: 8px 0;
+}

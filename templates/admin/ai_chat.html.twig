@@ -11,6 +11,7 @@
             <div class="ai-message-content">你好！我是你的 AI 助手，可以帮你完成当前页面的操作。随时向我提问！</div>
         </div>
     </div>
+    <div class="ai-chat-quick" id="ai-chat-quick" style="display: none; padding: 0 12px 8px; display: none; flex-wrap: wrap; gap: 6px;"></div>
     <div class="ai-chat-input-area">
         <textarea class="ai-chat-input" id="ai-chat-input" placeholder="输入你的问题..." rows="2"></textarea>
         <button class="ai-chat-send" id="ai-chat-send" type="button" disabled>
@@ -19,8 +20,112 @@
     </div>
 </div>
 
-<button class="toggle-ai-chat" id="toggle-ai-chat" type="button" title="AI 助手">
-    <i class="fa-solid fa-robot"></i>
+<style>
+    .ai-chat-rollback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        margin-left: 6px;
+        padding: 0;
+        font-size: 11px;
+        color: #94a3b8;
+        background: transparent;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        vertical-align: middle;
+        transition: all .15s;
+    }
+    .ai-chat-rollback:hover { color: #6366f1; background: #eef2ff; }
+    .ai-chat-rollback:disabled { opacity: .5; cursor: not-allowed; }
+
+    .ai-loading-row { display: flex; align-items: center; gap: 8px; }
+    .ai-loading-spinner {
+        width: 14px; height: 14px; border-radius: 50%;
+        border: 2px solid #c7d2fe; border-top-color: #6366f1;
+        animation: ai-spin .8s linear infinite; flex-shrink: 0;
+    }
+    @keyframes ai-spin { to { transform: rotate(360deg); } }
+    .ai-loading-status { font-size: 13px; color: #64748b; }
+    .ai-loading-timer { font-size: 12px; color: #94a3b8; font-variant-numeric: tabular-nums; }
+    .ai-loading-progress { margin-top: 8px; height: 4px; border-radius: 4px; background: #eef2ff; overflow: hidden; }
+    .ai-loading-progress-bar {
+        height: 100%; width: 30%; border-radius: 4px;
+        background: linear-gradient(90deg, #c7d2fe, #6366f1, #c7d2fe);
+        background-size: 200% 100%;
+        animation: ai-shimmer 1.2s linear infinite;
+    }
+    @keyframes ai-shimmer { 0% { background-position: 0 0; } 100% { background-position: 200% 0; } }
+
+    .ai-clarify { margin-top: 4px; }
+    .ai-clarify-question { font-size: 13px; color: #334155; font-weight: 600; margin-bottom: 8px; }
+    .ai-clarify-options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+    .ai-clarify-option {
+        text-align: left;
+        padding: 8px 12px;
+        font-size: 12px;
+        color: #475569;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all .15s;
+    }
+    .ai-clarify-option:hover { border-color: #c7d2fe; background: #eef2ff; color: #4f46e5; }
+    .ai-clarify-free { display: flex; gap: 6px; }
+    .ai-clarify-input {
+        flex: 1;
+        padding: 7px 10px;
+        font-size: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        outline: none;
+        transition: border-color .15s;
+    }
+    .ai-clarify-input:focus { border-color: #6366f1; }
+    .ai-clarify-submit {
+        padding: 7px 14px;
+        font-size: 12px;
+        color: #fff;
+        background: #6366f1;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    .ai-clarify-submit:hover { background: #4f46e5; }
+    .ai-clarify-chosen {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #16a34a;
+        font-weight: 600;
+    }
+    .ai-chat-viewresult {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 8px;
+        margin-left: 6px;
+        padding: 4px 12px;
+        font-size: 12px;
+        color: #fff;
+        background: #6366f1;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background .15s;
+        vertical-align: middle;
+    }
+    .ai-chat-viewresult:hover { background: #4f46e5; }
+    .ai-chat-meta {
+        margin-top: 6px;
+        font-size: 11px;
+        color: #94a3b8;
+    }
+</style>
+
+<button class="toggle-ai-chat" id="toggle-ai-chat" type="button" title="AI 助手">    <i class="fa-solid fa-robot"></i>
 </button>
 
 <script src="{{ asset('lib/marked/marked.min.js') }}"></script>
@@ -43,10 +148,18 @@
     function getContextId() {
         var ctx = getContext();
         if (!ctx) return null;
+        // 视图编辑器：传完整 URL（含 version 参数），供后端区分当前编辑的版本
+        if (ctx.name === 'view_editor') {
+            return window.location.href;
+        }
         return ctx.pageId || window.location.pathname;
     }
 
     function getSessionContextId() {
+        var ctx = getContext();
+        if (ctx && ctx.name === 'view_editor') {
+            return window.location.href;
+        }
         return window.location.pathname;
     }
 
@@ -78,6 +191,8 @@
         if (panel.style.display === 'none') {
             panel.style.display = 'flex';
             toggleBtn.style.display = 'none';
+            localStorage.setItem('ai_chat_panel_open', '1');
+            subscribeChatProgress();
             inputEl.focus();
             loadHistoryFromBackend();
         }
@@ -86,6 +201,7 @@
     function closePanel() {
         panel.style.display = 'none';
         toggleBtn.style.display = 'flex';
+        localStorage.setItem('ai_chat_panel_open', '0');
     }
 
     function renderMarkdown(text) {
@@ -149,9 +265,10 @@
         return text;
     }
 
-    function addMessage(role, content) {
+    function addMessage(role, content, messageId) {
         var div = document.createElement('div');
         div.className = 'ai-message ' + (role === 'user' ? 'ai-user' : 'ai-assistant');
+        if (messageId) div.setAttribute('data-message-id', messageId);
         var contentDiv = document.createElement('div');
         contentDiv.className = 'ai-message-content' + (role === 'user' ? ' bg-blue-500 text-white' : ' rounded-lg');
         if (role === 'assistant') {
@@ -162,23 +279,290 @@
         div.appendChild(contentDiv);
         messagesEl.appendChild(div);
         messagesEl.scrollTop = messagesEl.scrollHeight;
+        return div;
+    }
+
+    // 视图编辑器消息级回退：在消息内容尾部挂一个小图标按钮，hover 提示"回退到此"
+    function attachCheckpointButton(msgEl, checkpointId) {
+        if (!msgEl || !checkpointId) return;
+        var contentEl = msgEl.querySelector('.ai-message-content');
+        if (!contentEl) return;
+        if (contentEl.querySelector('.ai-chat-rollback')) return;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ai-chat-rollback';
+        btn.title = '回退到此：将视图恢复到这条消息时的状态';
+        btn.innerHTML = '<i class="fa-solid fa-rotate-left"></i>';
+        btn.addEventListener('click', function () {
+            if (!confirm('将视图恢复到这条消息时的状态吗？')) return;
+            btn.disabled = true;
+            var viewId = window.__VIEW_ID__;
+            var version = window.__ACTIVE_VERSION__;
+            if (!viewId || !version) { btn.disabled = false; return; }
+            fetch('/api/admin/platform/view/' + viewId + '/versions/' + version + '/checkpoint/' + checkpointId + '/restore', { method: 'POST' })
+                .then(function (r) { return r.json(); })
+                .then(function (json) {
+                    if (json.code === 200) {
+                        window.location.reload();
+                    } else {
+                        alert('回退失败: ' + (json.message || ''));
+                        btn.disabled = false;
+                    }
+                })
+                .catch(function () { btn.disabled = false; });
+        });
+        contentEl.appendChild(btn);
+    }
+
+    function createCheckpointForMessage(messageId, msgEl) {
+        var ctx = getContext();
+        if (!ctx || ctx.name !== 'view_editor' || !messageId) return;
+        var viewId = window.__VIEW_ID__;
+        var version = window.__ACTIVE_VERSION__;
+        if (!viewId || !version) return;
+        fetch('/api/admin/platform/view/' + viewId + '/versions/' + version + '/checkpoint', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message_id: messageId })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (json) {
+            if (json.code === 200 && json.data && json.data.checkpoint && json.data.checkpoint.created) {
+                attachCheckpointButton(msgEl, json.data.checkpoint.id);
+            }
+        });
+    }
+
+    function fetchCheckpointsAndAttach() {
+        var ctx = getContext();
+        if (!ctx || ctx.name !== 'view_editor') return;
+        var viewId = window.__VIEW_ID__;
+        var version = window.__ACTIVE_VERSION__;
+        if (!viewId || !version) return;
+        fetch('/api/admin/platform/view/' + viewId + '/versions/' + version + '/checkpoints')
+            .then(function (r) { return r.json(); })
+            .then(function (json) {
+                if (json.code !== 200 || !json.data) return;
+                (json.data.checkpoints || []).forEach(function (cp) {
+                    if (!cp.messageId) return;
+                    var msg = messagesEl.querySelector('.ai-message[data-message-id="' + cp.messageId + '"]');
+                    if (msg) attachCheckpointButton(msg, cp.id);
+                });
+            });
+    }
+
+    // 旧消息无 meta 时，用内容启发式识别"澄清征询"（问句 + 若干短选项列表），尽力重建卡片样式
+    function looksLikeClarification(content) {
+        if (!content) return null;
+        var text = String(content).trim();
+        if (text.length > 400) return null;
+        if (/^#|^\*\*|<h[1-6]|<strong|```/.test(text)) return null;
+        var lines = text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+        if (lines.length < 3) return null;
+        var question = lines[0];
+        var options = [];
+        for (var i = 1; i < lines.length; i++) {
+            var m = lines[i].match(/^[-•*]\s+(.+)$/);
+            if (!m || m[1].length > 120) return null;
+            options.push(m[1]);
+        }
+        if (options.length < 2) return null;
+        return { question: question, options: options };
+    }
+
+    // 历史消息重载：根据持久化的 meta 重建澄清卡片/执行效率/重构结果等特殊 UI，
+    // 避免刷新后退化为普通对话样式、丢失选中标记与统计数据。
+    function renderHistoryMessage(msg, idx, allMsgs) {
+        var meta = msg.meta || null;
+        var clarify = null;
+        if (msg.role === 'assistant') {
+            clarify = meta && meta.type === 'clarification'
+                ? { question: meta.question, options: meta.options || [] }
+                : (meta ? null : looksLikeClarification(msg.content));
+        }
+        if (clarify) {
+            var div = document.createElement('div');
+            div.className = 'ai-message ai-assistant';
+            if (msg.id) div.setAttribute('data-message-id', msg.id);
+            var contentDiv = document.createElement('div');
+            contentDiv.className = 'ai-message-content rounded-lg';
+            var html = '<div class="ai-clarify">';
+            html += '<div class="ai-clarify-question">' + renderMarkdown(clarify.question || '请确认你的需求') + '</div>';
+            if (clarify.options && clarify.options.length) {
+                html += '<div class="ai-clarify-options">';
+                for (var i = 0; i < clarify.options.length; i++) {
+                    html += '<div class="ai-clarify-option" style="cursor:default">' + escHtml(clarify.options[i]) + '</div>';
+                }
+                html += '</div>';
+            }
+            // 用户当时的选择 = 紧跟该澄清消息之后的用户消息（静默发送的选择已入库）
+            var nextMsg = allMsgs[idx + 1];
+            if (nextMsg && nextMsg.role === 'user' && nextMsg.content) {
+                html += '<div class="ai-clarify-chosen">✓ 已选择：' + escHtml(nextMsg.content) + '</div>';
+            }
+            html += '</div>';
+            contentDiv.innerHTML = html;
+            div.appendChild(contentDiv);
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return;
+        }
+
+        var el = addMessage(msg.role, msg.content, msg.id);
+        if (msg.role === 'assistant' && el && meta) {
+            var contentEl = el.querySelector('.ai-message-content');
+            if (!contentEl) return;
+            if (meta.elapsedMs) {
+                var metaEl = document.createElement('div');
+                metaEl.className = 'ai-chat-meta';
+                var secs = Math.round(meta.elapsedMs / 1000);
+                metaEl.textContent = '⏱ 耗时 ' + secs + ' 秒 · 执行 ' + (meta.toolCount || 0) + ' 次工具操作';
+                contentEl.appendChild(metaEl);
+            }
+            if (meta.redesignApplied) {
+                var viewBtn = document.createElement('button');
+                viewBtn.type = 'button';
+                viewBtn.className = 'ai-chat-viewresult';
+                viewBtn.innerHTML = '<i class="fa-solid fa-eye"></i> 查看重构结果';
+                viewBtn.addEventListener('click', function () { window.location.reload(); });
+                contentEl.appendChild(viewBtn);
+            }
+        }
+    }
+
+    // AI 征询用户：渲染澄清问题 + 选项按钮 + 自由输入，用户选择后作为新消息继续
+    function renderClarification(question, options, messageId) {
+        var div = document.createElement('div');
+        div.className = 'ai-message ai-assistant';
+        if (messageId) div.setAttribute('data-message-id', messageId);
+        var contentDiv = document.createElement('div');
+        contentDiv.className = 'ai-message-content rounded-lg';
+        var html = '<div class="ai-clarify">';
+        html += '<div class="ai-clarify-question">' + renderMarkdown(question || '请确认你的需求') + '</div>';
+        if (options && options.length) {
+            html += '<div class="ai-clarify-options">';
+            for (var i = 0; i < options.length; i++) {
+                html += '<button type="button" class="ai-clarify-option" data-choice="' + escAttr(options[i]) + '">' + escHtml(options[i]) + '</button>';
+            }
+            html += '</div>';
+        }
+        html += '<div class="ai-clarify-free">';
+        html += '<input type="text" class="ai-clarify-input" placeholder="或输入你的具体要求…">';
+        html += '<button type="button" class="ai-clarify-submit">确认</button>';
+        html += '</div></div>';
+        contentDiv.innerHTML = html;
+        div.appendChild(contentDiv);
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+
+        var submitChoice = function (choice) {
+            if (!choice) return;
+            var trimmed = choice.trim();
+            if (!trimmed) return;
+            // 在澄清卡片上标注已选择（不新增用户气泡）
+            var mark = div.querySelector('.ai-clarify-chosen');
+            if (mark) mark.remove();
+            mark = document.createElement('div');
+            mark.className = 'ai-clarify-chosen';
+            mark.textContent = '✓ 已选择：' + trimmed;
+            div.querySelector('.ai-clarify').appendChild(mark);
+            // 静默发送选择（不渲染为用户消息，避免重复与混淆）
+            inputEl.value = trimmed;
+            inputEl.disabled = false;
+            sendBtn.disabled = false;
+            sendMessage({ silent: true });
+        };
+        div.querySelectorAll('.ai-clarify-option').forEach(function (btn) {
+            btn.addEventListener('click', function () { submitChoice(btn.getAttribute('data-choice')); });
+        });
+        var input = div.querySelector('.ai-clarify-input');
+        div.querySelector('.ai-clarify-submit').addEventListener('click', function () { submitChoice(input.value); });
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); submitChoice(input.value); }
+        });
+    }
+
+    function escHtml(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function escAttr(s) {
+        return escHtml(s).replace(/'/g, '&#39;');
     }
 
     function addLoading() {
         var div = document.createElement('div');
         div.className = 'ai-message ai-assistant ai-loading';
         var contentDiv = document.createElement('div');
-        contentDiv.className = 'ai-message-content rounded-lg text-gray-400';
-        contentDiv.textContent = '思考中...';
+        contentDiv.className = 'ai-message-content rounded-lg';
+        contentDiv.innerHTML =
+            '<div class="ai-loading-row">' +
+                '<span class="ai-loading-spinner"></span>' +
+                '<span class="ai-loading-status" id="ai-loading-status">AI 正在分析并执行…</span>' +
+                '<span class="ai-loading-timer" id="ai-loading-timer">0s</span>' +
+            '</div>' +
+            '<div class="ai-loading-progress"><div class="ai-loading-progress-bar"></div></div>';
         div.appendChild(contentDiv);
         messagesEl.appendChild(div);
         messagesEl.scrollTop = messagesEl.scrollHeight;
+        startLoadingTimer();
         return div;
     }
 
+    var loadingTimer = null;
+    var loadingSeconds = 0;
+
+    function startLoadingTimer() {
+        stopLoadingTimer();
+        loadingSeconds = 0;
+        var t = document.getElementById('ai-loading-timer');
+        if (t) t.textContent = '0s';
+        loadingTimer = setInterval(function () {
+            loadingSeconds++;
+            var el = document.getElementById('ai-loading-timer');
+            if (el) el.textContent = loadingSeconds + 's';
+        }, 1000);
+    }
+
+    function stopLoadingTimer() {
+        if (loadingTimer) { clearInterval(loadingTimer); loadingTimer = null; }
+    }
+
     function removeLoading(el) {
+        stopLoadingTimer();
         if (el && el.parentNode) {
             el.parentNode.removeChild(el);
+        }
+    }
+
+    // 进度订阅：Mercure 实时接收 AI 执行过程中的工具调用进度
+    var chatProgressSubscribed = false;
+
+    function getChatProgressTopic() {
+        return 'https://enterprise.local/ai/chat/' + encodeURIComponent(getContextId());
+    }
+
+    function subscribeChatProgress() {
+        if (chatProgressSubscribed) return;
+        if (!window.EF || !window.EF.Mercure || !window.EF.Mercure.subscribe) return;
+        chatProgressSubscribed = true;
+        window.EF.Mercure.on('ai_chat_progress', handleChatProgress);
+        try {
+            window.EF.Mercure.subscribe(getChatProgressTopic());
+        } catch (e) {}
+    }
+
+    function handleChatProgress(data) {
+        if (!data) return;
+        var statusEl = document.getElementById('ai-loading-status');
+        if (!statusEl) return;
+        if (data.status === 'tool') {
+            statusEl.textContent = '正在执行：' + (data.tool || '工具操作') + '…';
+        } else if (data.status === 'tool_error') {
+            statusEl.textContent = '某步骤出错，AI 正在调整重试…';
+        } else if (data.status === 'started') {
+            statusEl.textContent = 'AI 正在分析并执行…';
+        } else if (data.status === 'done') {
+            statusEl.textContent = '处理完成，即将返回…';
         }
     }
 
@@ -216,8 +600,10 @@
                     // Render history
                     for (var i = 0; i < json.data.messages.length; i++) {
                         var msg = json.data.messages[i];
-                        addMessage(msg.role, msg.content);
+                        renderHistoryMessage(msg, i, json.data.messages);
                     }
+                    // 给有检查点的历史消息挂「回退到此」
+                    fetchCheckpointsAndAttach();
                 }
             }
         })
@@ -235,7 +621,9 @@
         return '';
     }
 
-    function sendMessage() {
+    // sendMessage(opts) 支持 opts.silent=true：不把消息渲染为用户气泡（用于澄清选项等系统交互）
+    function sendMessage(opts) {
+        opts = opts || {};
         var text = inputEl.value.trim();
         if (!text || isSending) return;
 
@@ -248,14 +636,18 @@
         }
 
         var selContext = getSelectedElementContext();
-        var fullMessage = selContext + text;
+        // 静默发送（如澄清选项选择）是直接回答，不前置选中元素上下文，避免改变对话内容
+        var fullMessage = opts.silent ? text : (selContext + text);
 
-        addMessage('user', text);
+        if (!opts.silent) {
+            addMessage('user', text);
+        }
         inputEl.value = '';
         sendBtn.disabled = true;
         inputEl.disabled = true;
         isSending = true;
 
+        subscribeChatProgress();
         var loadingEl = addLoading();
 
         var contextId = getSessionContextId();
@@ -274,11 +666,39 @@
         .then(function(json) {
             removeLoading(loadingEl);
             if (json.code === 200) {
+                // 澄清响应：渲染问题与选项，征询用户后再执行
+                if (json.data && json.data.type === 'clarification') {
+                    renderClarification(json.data.question, json.data.options || [], json.data.assistantMessageId);
+                    return;
+                }
                 var reply = (json.data && json.data.reply) ? json.data.reply : '抱歉，我没有理解你的意思。';
-                addMessage('assistant', reply);
+                var msgEl = addMessage('assistant', reply, json.data && json.data.assistantMessageId);
                 if (json.data && json.data.sessionId) {
                     currentSessionId = json.data.sessionId;
                     saveSessionId(currentSessionId);
+                }
+                // 显示执行效率：耗时 + 工具调用数
+                if (json.data && json.data.elapsedMs && msgEl) {
+                    var metaEl = document.createElement('div');
+                    metaEl.className = 'ai-chat-meta';
+                    var secs = Math.round(json.data.elapsedMs / 1000);
+                    metaEl.textContent = '⏱ 耗时 ' + secs + ' 秒 · 执行 ' + (json.data.toolCount || 0) + ' 次工具操作';
+                    var contentEl = msgEl.querySelector('.ai-message-content');
+                    if (contentEl) contentEl.appendChild(metaEl);
+                }
+                // 该回复可能修改了视图：创建检查点，让用户可「回退到此」
+                createCheckpointForMessage(json.data && json.data.assistantMessageId, msgEl);
+                // 整体重构走"文件重写"：完成后自动刷新编辑器画布以展示新设计（保留按钮作手动兜底）
+                if (json.data && json.data.redesignApplied && msgEl) {
+                    var viewBtn = document.createElement('button');
+                    viewBtn.type = 'button';
+                    viewBtn.className = 'ai-chat-viewresult';
+                    viewBtn.innerHTML = '<i class="fa-solid fa-eye"></i> 查看重构结果';
+                    viewBtn.addEventListener('click', function () { window.location.reload(); });
+                    var contentEl = msgEl.querySelector('.ai-message-content');
+                    if (contentEl) contentEl.appendChild(viewBtn);
+                    // 延迟自动刷新，让用户先看到 AI 回复，随后画布加载全新设计
+                    setTimeout(function () { window.location.reload(); }, 1500);
                 }
             } else {
                 addMessage('assistant', '出错了: ' + (json.message || '未知错误'));
@@ -298,6 +718,13 @@
 
     toggleBtn.addEventListener('click', togglePanel);
     closeBtn.addEventListener('click', closePanel);
+    // 刷新/重构自动刷新后恢复聊天面板打开状态
+    if (localStorage.getItem('ai_chat_panel_open') === '1') {
+        panel.style.display = 'flex';
+        toggleBtn.style.display = 'none';
+        subscribeChatProgress();
+        loadHistoryFromBackend();
+    }
     sendBtn.addEventListener('click', sendMessage);
     inputEl.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -308,6 +735,32 @@
     inputEl.addEventListener('input', function() {
         sendBtn.disabled = !this.value.trim() || isSending;
     });
+
+    // 表单视图快捷指令
+    (function() {
+        var quickEl = document.getElementById('ai-chat-quick');
+        if (!quickEl || !window.__FORM_VIEW__) return;
+        var commands = [
+            '把表单分组成卡片，双列布局，换个清爽主题',
+            '改成整页：加个标题区和说明区',
+            '切换为可复用表单片段',
+            '把必填字段标清楚并优化占位提示'
+        ];
+        var css = 'padding:5px 10px;font-size:12px;color:#4f46e5;background:#eef2ff;border:1px solid #c7d2fe;border-radius:14px;cursor:pointer;';
+        commands.forEach(function(cmd) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.setAttribute('style', css);
+            b.textContent = cmd;
+            b.addEventListener('click', function() {
+                inputEl.value = cmd;
+                inputEl.focus();
+                sendMessage();
+            });
+            quickEl.appendChild(b);
+        });
+        quickEl.style.display = 'flex';
+    })();
 
     // Restore saved panel width
     try {

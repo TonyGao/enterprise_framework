@@ -1,5 +1,7 @@
 {
 	frankenphp {
+		# AI 重构/长任务需要较大内存（生成整页 HTML + 工具调用历史），128M 默认值会 OOM
+		php_ini memory_limit 512M
 	}
 	order php_server before file_server
 	order php before file_server

@@ -1,3 +1,4 @@
+{% import 'ui/template/ui.html.twig' as ui %}
 <div class="view-detail-container">
   <div class="view-detail-header">
     <div class="view-detail-title-row">
@@ -10,7 +11,12 @@
         {% else %}
           <span class="ef-tag ef-tag-default ef-tag-small" style="margin-left: 8px;">自定义</span>
         {% endif %}
+        <span class="view-detail-version-badge" id="view-detail-current-version" title="当前版本">v{{ currentVersion|default('1_0') }}</span>
       </div>
+      <button type="button" class="btn outline primary small" id="btn-toggle-versions" style="margin-left: auto; flex-shrink: 0;">
+        <i class="fa-solid fa-code-branch"></i> 版本管理
+        <i class="fa-solid fa-chevron-down" id="version-toggle-arrow" style="margin-left: 2px;"></i>
+      </button>
     </div>
   </div>
 
@@ -94,6 +100,29 @@
     </div>
     {% endif %}
     {% endif %}
+
+    <div class="view-detail-card view-version-card" style="display: none;">
+      <div class="view-detail-card-header">
+        <i class="fa-solid fa-code-branch"></i>
+        版本管理
+        <span class="view-detail-count" id="version-count-badge"></span>
+      </div>
+      <div class="view-detail-card-body">
+        <div id="version-list-container" style="min-height: 40px; color: #94a3b8; font-size: 13px;">加载版本列表…</div>
+        <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center;">
+          <button type="button" class="btn primary small" id="btn-new-version">
+            <i class="fa-solid fa-plus"></i> 新增版本
+          </button>
+          <button type="button" class="btn secondary small" id="btn-version-tiles">
+            <i class="fa-solid fa-table-cells-large"></i> 平铺视图
+          </button>
+          <button type="button" class="btn secondary small" id="btn-open-trash">
+            <i class="fa-solid fa-trash-can"></i> 回收站
+          </button>
+          <span class="text-muted" style="font-size: 12px;" id="version-hint"></span>
+        </div>
+      </div>
+    </div>
   </div>
 
   {% if fields is not empty %}
@@ -217,9 +246,9 @@
           <div style="font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 8px;">
             确定要删除视图「{{ view.label|default(view.name) }}」吗？
           </div>
-          <div style="color: #ef4444; font-size: 13px;">
+          <div style="color: #dc2626; font-size: 13px;" id="delete-view-version-info">
             <i class="fa-solid fa-circle-exclamation"></i>
-            此操作不可撤销，删除后所有数据将无法恢复！
+            删除后将移入<strong>回收站</strong>，可在回收站恢复。
           </div>
         </div>
       </div>
@@ -227,9 +256,493 @@
         <button class="btn secondary small" type="button" data-close-delete-modal>取消</button>
         <button class="btn red small" type="button" data-confirm-delete-view>
           <i class="fa-solid fa-trash-can"></i>
-          确认删除
+          移入回收站
         </button>
       </div>
     </div>
   </div>
 </div>
+
+<!-- 新增版本弹窗 -->
+<div class="ef-modal-container" id="newVersionModal" style="z-index: 1002; display: none;">
+  <div class="ef-modal-mask" data-close-new-version></div>
+  <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
+    <div class="ef-modal" style="width: 480px;">
+      <div class="ef-modal-header">
+        <div class="ef-modal-title ef-modal-title-align-left"><i class="fa-solid fa-code-branch" style="margin-right: 8px; color:#6366f1;"></i> 新增版本</div>
+        <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" data-close-new-version>
+          <span class="ef-icon-hover">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path></svg>
+          </span>
+        </div>
+      </div>
+      <div class="ef-modal-body" style="padding: 20px 24px;">
+        <div style="margin-bottom: 20px;">
+          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">来源</div>
+          <div style="display: flex; gap: 24px;">
+            <label class="nv-source-radio">
+              <input type="radio" name="nv-source" value="current" checked>
+              <span class="nv-source-dot"></span>
+              <span class="nv-source-label">从当前版本复制</span>
+            </label>
+            <label class="nv-source-radio">
+              <input type="radio" name="nv-source" value="blank">
+              <span class="nv-source-dot"></span>
+              <span class="nv-source-label">新建空白版本</span>
+            </label>
+          </div>
+        </div>
+        <div style="margin-bottom: 20px;">
+          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">版本号 <span style="color:#ef4444;">*</span></div>
+          <div style="max-width: 240px;">
+            {{ ui.input('nv-version', 'text', '如 1_1', '', '', '', '', {'style': 'width: 100%;'}) }}
+          </div>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 6px;">默认按当前版本 minor 递增（1_0 → 1_1）</div>
+          <div style="color:#ef4444; font-size:12px; display:none;" id="nv-version-error"></div>
+        </div>
+        <div>
+          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">版本说明（可选）</div>
+          {{ ui.textarea('nv-label', '如：春节活动版、改版优化说明…', 2, 4) }}
+        </div>
+      </div>
+      <div class="ef-modal-footer">
+        <button class="btn secondary small" type="button" data-close-new-version>取消</button>
+        <button class="btn primary small" type="button" id="nv-confirm"><i class="fa-solid fa-plus"></i> 创建版本</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 重命名版本弹窗 -->
+<div class="ef-modal-container" id="renameVersionModal" style="z-index: 1002; display: none;">
+  <div class="ef-modal-mask" data-close-rename-version></div>
+  <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
+    <div class="ef-modal" style="width: 420px;">
+      <div class="ef-modal-header">
+        <div class="ef-modal-title ef-modal-title-align-left"><i class="fa-solid fa-pen" style="margin-right: 8px; color:#6366f1;"></i> 重命名版本</div>
+        <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" data-close-rename-version>
+          <span class="ef-icon-hover">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path></svg>
+          </span>
+        </div>
+      </div>
+      <div class="ef-modal-body" style="padding: 20px 24px;">
+        <div>
+          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">版本名称</div>
+          <input type="text" id="rv-label" class="ef-input" style="width: 100%; padding: 7px 10px; font-size: 13px; border: 1px solid #e2e8f0; border-radius: 6px; outline: none;" placeholder="如：春节活动版">
+          <div style="color:#ef4444; font-size:12px; display:none; margin-top:6px;" id="rv-error"></div>
+        </div>
+      </div>
+      <div class="ef-modal-footer">
+        <button class="btn secondary small" type="button" data-close-rename-version>取消</button>
+        <button class="btn primary small" type="button" id="rv-confirm"><i class="fa-solid fa-check"></i> 保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 版本预览弹窗 -->
+<div class="ef-modal-container" id="versionPreviewModal" style="z-index: 1003; display: none;">
+  <div class="ef-modal-mask" data-close-version-preview></div>
+  <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
+    <div class="ef-modal" style="width: 80%; max-width: 960px; height: 80%; display: flex; flex-direction: column;">
+      <div class="ef-modal-header">
+        <div class="ef-modal-title ef-modal-title-align-left" id="version-preview-title">版本预览</div>
+        <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" data-close-version-preview>
+          <span class="ef-icon-hover">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path></svg>
+          </span>
+        </div>
+      </div>
+      <div class="ef-modal-body" style="flex: 1; min-height: 0; padding: 0; overflow: hidden; background: #eef1f5;">
+        <iframe id="version-preview-frame" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 回收站弹窗 -->
+<div class="ef-modal-container" id="trashModal" style="z-index: 1004; display: none;">
+  <div class="ef-modal-mask" data-close-trash></div>
+  <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
+    <div class="ef-modal" style="width: 640px; max-height: 80vh;">
+      <div class="ef-modal-header">
+        <div class="ef-modal-title ef-modal-title-align-left"><i class="fa-solid fa-trash-can"></i> 回收站</div>
+        <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" data-close-trash>
+          <span class="ef-icon-hover">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path></svg>
+          </span>
+        </div>
+      </div>
+      <div class="ef-modal-body" style="overflow-y: auto; max-height: 55vh;">
+        <div id="trash-list-container" style="color:#94a3b8; font-size:13px;">加载回收站…</div>
+      </div>
+      <div class="ef-modal-footer">
+        <button class="btn secondary small" type="button" data-close-trash>关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% include 'admin/platform/view/version_tiles.html.twig' %}
+
+<style>
+  .view-version-card { grid-column: span 2; }
+  .view-detail-version-badge {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6366f1;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 20px;
+    padding: 1px 9px;
+    vertical-align: 1px;
+    white-space: nowrap;
+  }
+  .version-list { display: flex; flex-direction: column; gap: 8px; }
+  .version-row {
+    display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;
+    background: #fcfdff;
+  }
+  .version-row.is-current { border-color: #c7d2fe; background: #f5f6ff; }
+  .version-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .version-badge {
+    font-size: 12px; font-weight: 700; color: #4f46e5; background: #eef2ff;
+    border: 1px solid #c7d2fe; border-radius: 6px; padding: 2px 8px; white-space: nowrap;
+  }
+  .version-label { font-size: 13px; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .version-current-tag {
+    font-size: 11px; font-weight: 600; color: #16a34a; background: #f0fdf4;
+    border: 1px solid #bbf7d0; border-radius: 20px; padding: 1px 8px; white-space: nowrap;
+  }
+  .version-time { font-size: 12px; color: #94a3b8; }
+  .version-actions { display: flex; gap: 10px; flex-shrink: 0; }
+  .version-action { font-size: 12px; color: #6366f1; cursor: pointer; text-decoration: none; }
+  .version-action:hover { text-decoration: underline; }
+  .trash-row {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #eef2f7; padding: 10px 4px;
+  }
+  .trash-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #0f172a; }
+  .trash-info .text-muted { color: #94a3b8; font-size: 12px; }
+  .trash-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .nv-source-radio {
+    display: inline-flex; align-items: center; gap: 7px;
+    cursor: pointer; font-size: 13px; color: #0f172a;
+    user-select: none;
+  }
+  .nv-source-radio input { display: none; }
+  .nv-source-dot {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 1.5px solid #cbd5e1; background: #fff; position: relative;
+    flex-shrink: 0; transition: border-color .15s;
+  }
+  .nv-source-radio:hover .nv-source-dot { border-color: #6366f1; }
+  .nv-source-radio input:checked + .nv-source-dot { border-color: #6366f1; }
+  .nv-source-radio input:checked + .nv-source-dot::after {
+    content: ''; position: absolute; inset: 3px; border-radius: 50%; background: #6366f1;
+  }
+</style>
+
+<script>
+(function () {
+  var VIEW_ID = '{{ view.id }}';
+  var $list = $('#version-list-container');
+
+  // .inside-wrapper 含 transform，会破坏 position:fixed 模态框的视口定位，
+  // 把模态框挂到 body 下，保证遮罩覆盖全屏、高度按视口计算
+  $('#newVersionModal, #versionPreviewModal, #trashModal, #renameVersionModal').detach().appendTo(document.body);
+  var $count = $('#version-count-badge');
+  var $hint = $('#version-hint');
+  var versionsData = { currentVersion: '1_0', versions: [] };
+  var pendingFromVersion = null;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function loadVersions() {
+    $list.html('加载版本列表…');
+    fetch('/api/admin/platform/view/' + VIEW_ID + '/versions')
+      .then(function (r) { return r.json(); })
+      .then(function (json) {
+        if (json.code !== 200 || !json.data) {
+          $list.html('<span style="color:#ef4444;">版本列表加载失败</span>');
+          return;
+        }
+        versionsData = json.data;
+        renderVersions(json.data);
+      })
+      .catch(function () { $list.html('<span style="color:#ef4444;">版本列表加载失败</span>'); });
+  }
+
+  function renderVersions(data) {
+    var versions = data.versions || [];
+    $count.text(versions.length + ' 个版本');
+    $hint.text('当前版本：' + esc(data.currentVersion));
+    $('#view-detail-current-version').text('v' + esc(data.currentVersion));
+    if (!versions.length) {
+      $list.html('<span>该视图暂无版本</span>');
+      return;
+    }
+    var html = '';
+    versions.forEach(function (v) {
+      html +=
+        '<div class="version-row' + (v.isCurrent ? ' is-current' : '') + '">' +
+          '<div class="version-info">' +
+            '<span class="version-badge">v' + esc(v.version) + '</span>' +
+            '<span class="version-label">' + esc(v.label) + '</span>' +
+            (v.isCurrent ? '<span class="version-current-tag">当前</span>' : '') +
+            '<span class="version-time">' + esc(v.updatedAt || '') + '</span>' +
+          '</div>' +
+          '<div class="version-actions">' +
+            '<a href="javascript:void(0)" class="version-action" data-action="preview" data-version="' + esc(v.version) + '">预览</a>' +
+            (v.isCurrent ? '' : '<a href="javascript:void(0)" class="version-action" data-action="activate" data-version="' + esc(v.version) + '">设为当前</a>') +
+            '<a href="javascript:void(0)" class="version-action" data-action="rename" data-version="' + esc(v.version) + '">重命名</a>' +
+            '<a href="javascript:void(0)" class="version-action" data-action="copy" data-version="' + esc(v.version) + '">复制</a>' +
+            '<a class="version-action" target="_blank" href="/admin/platform/view/editor/' + VIEW_ID + '?version=' + esc(v.version) + '">编辑</a>' +
+          '</div>' +
+        '</div>';
+    });
+    $list.html('<div class="version-list">' + html + '</div>');
+  }
+
+  $list.on('click', '.version-action', function (e) {
+    var action = $(this).data('action');
+    if (!action) return; // 纯链接（如编辑）放行默认跳转
+    e.preventDefault();
+    var version = $(this).data('version');
+    if (action === 'preview') openPreview(version);
+    else if (action === 'activate') activateVersion(version);
+    else if (action === 'rename') renameVersion(version);
+    else if (action === 'copy') openNewVersion(version);
+  });
+
+  function openPreview(version) {
+    $('#version-preview-title').text('版本 v' + version + ' 预览');
+    $('#version-preview-frame').attr('src', '/admin/platform/view/' + VIEW_ID + '/versions/' + version + '/preview');
+    $('#versionPreviewModal').show();
+  }
+
+  function activateVersion(version) {
+    fetch('/api/admin/platform/view/' + VIEW_ID + '/versions/' + version + '/activate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (json) {
+      if (json.code === 200) {
+        loadVersions();
+      } else {
+        alert('切换失败: ' + (json.message || '未知错误'));
+      }
+    });
+  }
+
+  function openNewVersion(fromVersion) {
+    pendingFromVersion = fromVersion || null;
+    var source = pendingFromVersion || (versionsData.currentVersion || '1_0');
+    var nextVersion = nextMinor(source);
+    $('#nv-version').val(nextVersion);
+    $('#nv-version-error').hide();
+    $('#nv-label').val('');
+    $('input[name="nv-source"]').prop('checked', false);
+    $('input[name="nv-source"][value="current"]').prop('checked', true);
+    if (fromVersion) {
+      $('input[name="nv-source"][value="current"]').closest('.nv-source-radio').find('.nv-source-label').text('从版本 v' + fromVersion + ' 复制');
+    } else {
+      $('input[name="nv-source"][value="current"]').closest('.nv-source-radio').find('.nv-source-label').text('从当前版本复制');
+    }
+    $('#newVersionModal').show();
+  }
+
+  function nextMinor(version) {
+    var m = version.split('_');
+    var major = parseInt(m[0]) || 0;
+    var minor = parseInt(m[1]) || 0;
+    return major + '_' + (minor + 1);
+  }
+
+  $('#btn-new-version').on('click', function () { openNewVersion(null); });
+
+  // 平铺视图：打开全屏网格，展示所有版本预览，点击某个版本 = 选中（跳转到其编辑器）
+  $('#btn-version-tiles').on('click', function () {
+    openVersionTiles(VIEW_ID, versionsData.versions, versionsData.currentVersion);
+  });
+
+  // 版本管理卡片显示/隐藏开关
+  $('#btn-toggle-versions').on('click', function () {
+    var $card = $('.view-version-card');
+    var $arrow = $('#version-toggle-arrow');
+    if ($card.is(':visible')) {
+      $card.hide();
+      $arrow.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+    } else {
+      $card.show();
+      $arrow.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+      loadVersions();
+    }
+  });
+
+  $('#nv-confirm').on('click', function () {
+    var source = $('input[name="nv-source"]:checked').val();
+    var version = ($('#nv-version').val() || '').trim();
+    var label = ($('#nv-label').val() || '').trim();
+    // blank=新建空白；否则用复制来源（特定版本或当前版本）
+    var fromVersion = source === 'blank' ? 'blank' : (pendingFromVersion || versionsData.currentVersion);
+
+    fetch('/api/admin/platform/view/' + VIEW_ID + '/versions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fromVersion: fromVersion, version: version, label: label })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (json) {
+      if (json.code === 200) {
+        $('#newVersionModal').hide();
+        loadVersions();
+        if (window.alert && alert.success) alert.success('已创建并切换到版本 v' + (json.data.version.version), { percent: '280px', title: '成功', closable: true });
+      } else {
+        $('#nv-version-error').text(json.message || '创建失败').show();
+      }
+    });
+  });
+
+  // 新增版本弹窗关闭
+  $('[data-close-new-version]').on('click', function () { $('#newVersionModal').hide(); });
+
+  // 重命名版本：打开弹窗预填当前名称，保存后调用接口并刷新列表
+  var pendingRenameVersion = null;
+  function renameVersion(version) {
+    pendingRenameVersion = version;
+    var label = '';
+    (versionsData.versions || []).forEach(function (v) {
+      if (String(v.version) === String(version)) label = v.label || '';
+    });
+    $('#rv-label').val(label);
+    $('#rv-error').hide();
+    $('#renameVersionModal').show();
+    $('#rv-label').focus();
+  }
+
+  $('#rv-confirm').on('click', function () {
+    var label = ($('#rv-label').val() || '').trim();
+    if (!label) {
+      $('#rv-error').text('版本名称不能为空').show();
+      $('#rv-label').focus();
+      return;
+    }
+    if (!pendingRenameVersion) return;
+    fetch('/api/admin/platform/view/' + VIEW_ID + '/versions/' + pendingRenameVersion + '/rename', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ label: label })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (json) {
+      if (json.code === 200) {
+        $('#renameVersionModal').hide();
+        loadVersions();
+      } else {
+        $('#rv-error').text(json.message || '重命名失败').show();
+      }
+    })
+    .catch(function () { $('#rv-error').text('重命名失败，网络错误').show(); });
+  });
+
+  $('#rv-label').on('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); $('#rv-confirm').trigger('click'); }
+  });
+  $('[data-close-rename-version]').on('click', function () { $('#renameVersionModal').hide(); });
+
+  // 预览弹窗关闭
+  $('[data-close-version-preview]').on('click', function () {
+    $('#versionPreviewModal').hide();
+    $('#version-preview-frame').attr('src', 'about:blank');
+  });
+
+  // 回收站
+  $('#btn-open-trash').on('click', function () {
+    $('#trashModal').show();
+    loadTrash();
+  });
+  $('[data-close-trash]').on('click', function () { $('#trashModal').hide(); });
+
+  function loadTrash() {
+    var $t = $('#trash-list-container');
+    $t.html('加载回收站…');
+    fetch('/api/admin/platform/view/trash')
+      .then(function (r) { return r.json(); })
+      .then(function (json) {
+        if (json.code !== 200 || !json.data) { $t.html('<span style="color:#ef4444;">加载失败</span>'); return; }
+        var items = json.data.items || [];
+        if (!items.length) {
+          $t.html('<div style="text-align:center; padding: 24px 0;"><i class="fa-solid fa-inbox" style="font-size: 28px; display:block; margin-bottom: 8px;"></i>回收站为空</div>');
+          return;
+        }
+        var html = '';
+        items.forEach(function (item) {
+          var icon = item.type === 'folder' ? 'fa-folder' : 'fa-file-lines';
+          html +=
+            '<div class="trash-row">' +
+              '<div class="trash-info">' +
+                '<i class="fa-solid ' + icon + '"></i> ' +
+                '<strong>' + esc(item.label) + '</strong>' +
+                '<span class="text-muted">' + esc(item.name) + '</span>' +
+                '<span class="text-muted">' + (item.type === 'view' ? (item.versionCount + ' 版本 / ' + item.fileCount + ' 文件') : '') + '</span>' +
+                '<span class="text-muted">' + esc(item.deletedAt) + '</span>' +
+              '</div>' +
+              '<div class="trash-actions">' +
+                '<button type="button" class="btn primary small" data-trash-action="restore" data-id="' + item.id + '">恢复</button>' +
+                '<button type="button" class="btn red small" data-trash-action="purge" data-id="' + item.id + '">彻底删除</button>' +
+              '</div>' +
+            '</div>';
+        });
+        $t.html(html);
+      })
+      .catch(function () { $t.html('<span style="color:#ef4444;">加载回收站失败</span>'); });
+  }
+
+  $t = $('#trash-list-container');
+  $t.on('click', '[data-trash-action]', function () {
+    var action = $(this).data('trash-action');
+    var id = $(this).data('id');
+    if (action === 'restore') {
+      fetch('/api/admin/platform/view/trash/' + id + '/restore', { method: 'POST' })
+        .then(function (r) { return r.json(); })
+        .then(function (json) {
+          if (json.code === 200) { loadTrash(); } else { alert('恢复失败: ' + (json.message || '')); }
+        });
+    } else if (action === 'purge') {
+      if (!confirm('彻底删除不可恢复，确定删除该项及其全部版本文件吗？')) return;
+      fetch('/api/admin/platform/view/trash/' + id + '/purge', { method: 'POST' })
+        .then(function (r) { return r.json(); })
+        .then(function (json) {
+          if (json.code === 200) { loadTrash(); } else { alert('彻底删除失败: ' + (json.message || '')); }
+        });
+    }
+  });
+
+  // 删除视图：提示版本/文件数（增强；直接绑定避免与 view.js 的委托冲突）
+  $('[data-delete-view]').on('click', function () {
+    fetch('/api/admin/platform/view/' + VIEW_ID + '/versions')
+      .then(function (r) { return r.json(); })
+      .then(function (json) {
+        if (json.code === 200 && json.data) {
+          var vs = json.data.versions || [];
+          var fileCount = vs.reduce(function (s, v) { return s + (v.fileCount || 0); }, 0);
+          $('#delete-view-version-info').html(
+            '<i class="fa-solid fa-circle-exclamation"></i> ' +
+            '该视图含 <strong>' + vs.length + '</strong> 个版本、共 <strong>' + fileCount + '</strong> 个文件。' +
+            '删除后将移入<strong>回收站</strong>，可在回收站恢复。'
+          );
+        }
+      })
+      .catch(function () {});
+  });
+
+})();
+</script>

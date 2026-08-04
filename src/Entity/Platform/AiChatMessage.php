@@ -31,6 +31,13 @@ class AiChatMessage
     #[ORM\Column(name: "tool_calls", type: "json", nullable: true)]
     private ?array $toolCalls = null;
 
+    /**
+     * 结构化附加信息：{type?: 'clarification', question?, options?, elapsedMs?, toolCount?, redesignApplied?}
+     * 用于历史消息重载时重建澄清选项/执行效率/重构结果等特殊 UI。
+     */
+    #[ORM\Column(name: "meta", type: "json", nullable: true)]
+    private ?array $meta = null;
+
     public function __construct()
     {
         $this->id = Uuid::v4();
@@ -82,6 +89,17 @@ class AiChatMessage
     public function setToolCalls(?array $toolCalls): self
     {
         $this->toolCalls = $toolCalls;
+        return $this;
+    }
+
+    public function getMeta(): ?array
+    {
+        return $this->meta;
+    }
+
+    public function setMeta(?array $meta): self
+    {
+        $this->meta = $meta;
         return $this;
     }
 }

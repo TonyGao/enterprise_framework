@@ -67,7 +67,12 @@ class OpenAiGateway implements LlmGatewayInterface
         $body = $response->getContent(false);
 
         if ($statusCode !== 200) {
-            throw new LlmException($this->getProviderName() . " API error (HTTP $statusCode): " . mb_substr($body, 0, 500));
+            throw new LlmException(
+                $this->getProviderName() . " API error (HTTP $statusCode): " . mb_substr($body, 0, 500),
+                0,
+                null,
+                ['statusCode' => $statusCode],
+            );
         }
 
         $data = json_decode($body, true);
@@ -105,7 +110,7 @@ class OpenAiGateway implements LlmGatewayInterface
         $response = $this->httpClient->request('POST', $this->endpoint . '/chat/completions', [
             'headers' => $this->getAuthHeaders(),
             'json' => $payload,
-            'timeout' => $opts['timeout'] ?? 120,
+            'timeout' => $opts['timeout'] ?? 300,
         ]);
 
         $stream = $response->toStream();

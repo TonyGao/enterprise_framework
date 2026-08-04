@@ -34,11 +34,14 @@ class ViewEditorApiController extends AbstractController
     public function saveView(
         Request $request,
         EntityManagerInterface $em,
-        DomManipulator $domManipulator
+        DomManipulator $domManipulator,
+        \App\Service\Platform\View\ViewPathResolver $pathResolver,
+        \App\Service\Platform\View\ViewVersionHistory $versionHistory
     ): ApiResponse {
         $payload = $request->toArray();
         $viewId = $payload['viewId'] ?? null;
         $canvasHtml = $payload['canvasHtml'] ?? null;
+        $targetVersion = $payload['version'] ?? null;
 
         if (!$viewId || !$canvasHtml) {
             return ApiResponse::error('视图ID和画布内容不能为空', 400);
@@ -49,6 +52,15 @@ class ViewEditorApiController extends AbstractController
             if (!$view) {
                 return ApiResponse::error('视图不存在', 404);
             }
+
+            // 写入目标版本：默认当前激活版本；编辑器显式携带 ?version 时写入对应版本。
+            // 注意：仅决定写哪个版本的 twig 文件，不改变视图的 current_version（当前版本指针）。
+            $activeVersion = ($targetVersion && \App\Service\Platform\View\VersionNumber::isValid($targetVersion))
+                ? $targetVersion
+                : $pathResolver->currentVersion($view);
+
+            // 保存前快照当前文件到撤销栈（与工具栏/AI 命令共用同一回滚机制）
+            $versionHistory->snapshotOnSave($view, $activeVersion);
 
             // 保存 sectionConfig
             if (isset($payload['sectionConfig'])) {
@@ -65,7 +77,6 @@ class ViewEditorApiController extends AbstractController
             }
 
             $filesystem = new Filesystem();
-            $basePath = $this->getParameter('kernel.project_dir') . '/templates/views/';
 
             // 去掉动态添加的 section-controls，避免污染设计文件
             $domManipulator->load($canvasHtml);
@@ -74,27 +85,24 @@ class ViewEditorApiController extends AbstractController
 
             if ($view->isBuiltIn() && $view->getTemplate()) {
                 // 内置视图：只保存设计文件，不覆盖生产模板
-                $viewPath = $view->getPath();
-                $viewName = $view->getName();
-                $designDir = $basePath . ($viewPath ? $viewPath . '/' : 'builtin/');
-                $filesystem->mkdir($designDir, 0755);
-                $filesystem->dumpFile($designDir . $viewName . '.design.twig', $cleanHtml);
+                $designFile = $pathResolver->designFile($view, $activeVersion);
+                if ($designFile) {
+                    $filesystem->mkdir(dirname($designFile), 0755);
+                    $filesystem->dumpFile($designFile, $cleanHtml);
+                }
                 return ApiResponse::success(json_encode(['message' => '保存成功（字段配置已更新）']));
             }
 
             // 2. 非内置视图：保存设计文件 + 清理后可执行文件
-            $viewPath = $view->getPath();
-            $viewName = $view->getName();
+            $designFile = $pathResolver->designFile($view, $activeVersion);
+            $executableFile = $pathResolver->htmlFile($view, $activeVersion);
 
-            $designFilePath = $basePath . $viewPath . '/' . $viewName . '.design.twig';
-            $executableFilePath = $basePath . $viewPath . '/' . $viewName . '.html.twig';
-
-            $directory = dirname($designFilePath);
+            $directory = dirname($designFile);
             if (!$filesystem->exists($directory)) {
                 $filesystem->mkdir($directory, 0755);
             }
 
-            $filesystem->dumpFile($designFilePath, $cleanHtml);
+            $filesystem->dumpFile($designFile, $cleanHtml);
 
             $domManipulator->remove('.add-section-button');
             $domManipulator->remove('.section-header');
@@ -104,9 +112,19 @@ class ViewEditorApiController extends AbstractController
             $domManipulator->processTableCells();
             $domManipulator->processDynamicFields();
 
-            $filesystem->dumpFile($executableFilePath, $domManipulator->getHtml());
+            $filesystem->dumpFile($executableFile, $domManipulator->getHtml());
 
-            return ApiResponse::success(json_encode(['message' => '视图保存成功']));
+            // 更新版本记录更新时间
+            foreach ($view->getVersions() as $vv) {
+                if ($vv->getVersion() === $activeVersion) {
+                    $vv->setUpdatedAt(new \DateTime());
+                    $em->persist($vv);
+                    break;
+                }
+            }
+            $em->flush();
+
+            return ApiResponse::success(json_encode(['message' => '视图保存成功', 'version' => $activeVersion]));
         } catch (\Exception $e) {
             return ApiResponse::error('保存视图失败: ' . $e->getMessage(), 500);
         }
@@ -653,7 +671,7 @@ class ViewEditorApiController extends AbstractController
     }
 
     /**
-     * 删除视图/文件夹（递归删除所有子节点）
+     * 删除视图/文件夹（递归软删所有子节点）→ 移入回收站，文件保留以便恢复。
      */
     #[Route(
         '/api/admin/platform/view/{id}/delete',
@@ -662,7 +680,8 @@ class ViewEditorApiController extends AbstractController
     )]
     public function deleteView(
         string $id,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        \App\Service\Platform\View\ViewPathResolver $pathResolver
     ): ApiResponse {
         $view = $em->getRepository(View::class)->find($id);
         if (!$view) {
@@ -682,6 +701,31 @@ class ViewEditorApiController extends AbstractController
             // 按 level 从深到浅排序
             usort($descendants, fn($a, $b) => $b->getLvl() - $a->getLvl());
 
+            // 统计受影响版本与文件（移入回收站前）
+            $versionCount = 0;
+            $fileCount = 0;
+            $viewCount = 0;
+            foreach ($descendants as $node) {
+                if ($node->getType() !== 'view') {
+                    continue;
+                }
+                $viewCount++;
+                $versionCount += count(array_filter($node->getVersions()->toArray(), fn($vv) => !$vv->getDeletedAt()));
+                foreach ($node->getVersions() as $vv) {
+                    if ($vv->getDeletedAt()) {
+                        continue;
+                    }
+                    $dir = $pathResolver->versionedDir($node, $vv->getVersion());
+                    if (is_dir($dir)) {
+                        foreach (['design.twig', 'html.twig'] as $ext) {
+                            if (file_exists($dir . '/' . $node->getName() . '.' . $ext)) {
+                                $fileCount++;
+                            }
+                        }
+                    }
+                }
+            }
+
             foreach ($descendants as $node) {
                 $node->setFormEntity(null);
                 $node->setParent(null);
@@ -692,12 +736,172 @@ class ViewEditorApiController extends AbstractController
             $em->getConnection()->commit();
 
             return ApiResponse::success(json_encode([
-                'message' => '删除成功',
+                'message' => '已移入回收站，可随时恢复',
                 'deletedCount' => count($descendants),
+                'viewCount' => $viewCount,
+                'versionCount' => $versionCount,
+                'fileCount' => $fileCount,
             ]));
         } catch (\Exception $e) {
             $em->getConnection()->rollBack();
             return ApiResponse::error('删除失败: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * 回收站列表（软删节点）
+     */
+    #[Route(
+        '/api/admin/platform/view/trash',
+        name: 'api_platform_view_trash',
+        methods: ['GET']
+    )]
+    public function trash(EntityManagerInterface $em, \App\Service\Platform\View\ViewPathResolver $pathResolver): ApiResponse
+    {
+        $em->getFilters()->disable('softdeleteable');
+        $repo = $em->getRepository(View::class);
+
+        // 顶层软删节点（父节点未软删或为空），避免重复列出子树
+        $qb = $repo->createQueryBuilder('v')
+            ->where('v.deletedAt IS NOT NULL')
+            ->orderBy('v.deletedAt', 'DESC');
+        $nodes = $qb->getQuery()->getResult();
+
+        $items = [];
+        foreach ($nodes as $node) {
+            if ($node->getType() === 'root') {
+                continue;
+            }
+            // 若父节点也在回收站中，只列顶层（父节点）
+            if ($node->getParent() && $node->getParent()->getDeletedAt()) {
+                continue;
+            }
+
+            $versionCount = 0;
+            $fileCount = 0;
+            foreach ($node->getVersions() as $vv) {
+                if ($vv->getDeletedAt()) {
+                    continue;
+                }
+                $versionCount++;
+                $dir = $pathResolver->versionedDir($node, $vv->getVersion());
+                if (is_dir($dir)) {
+                    foreach (['design.twig', 'html.twig'] as $ext) {
+                        if (file_exists($dir . '/' . $node->getName() . '.' . $ext)) {
+                            $fileCount++;
+                        }
+                    }
+                }
+            }
+
+            $items[] = [
+                'id' => (string) $node->getId(),
+                'name' => $node->getName(),
+                'label' => $node->getLabel() ?: $node->getName(),
+                'type' => $node->getType(),
+                'versionCount' => $versionCount,
+                'fileCount' => $fileCount,
+                'deletedAt' => $node->getDeletedAt()?->format('Y-m-d H:i'),
+            ];
+        }
+
+        return ApiResponse::success(json_encode(['items' => $items]));
+    }
+
+    /**
+     * 恢复回收站节点（递归恢复后代）
+     */
+    #[Route(
+        '/api/admin/platform/view/trash/{id}/restore',
+        name: 'api_platform_view_trash_restore',
+        methods: ['POST']
+    )]
+    public function restore(string $id, EntityManagerInterface $em): ApiResponse
+    {
+        $em->getFilters()->disable('softdeleteable');
+        $repo = $em->getRepository(View::class);
+        $node = $repo->find($id);
+        if (!$node) {
+            return ApiResponse::error('', 404, '记录不存在');
+        }
+
+        // 若原父节点仍在回收站中，恢复到根目录（父节点置空）
+        if ($node->getParent() && $node->getParent()->getDeletedAt()) {
+            $node->setParent(null);
+        }
+
+        $this->restoreRecursive($node, $em);
+        $em->flush();
+
+        return ApiResponse::success(json_encode(['message' => '已恢复']));
+    }
+
+    private function restoreRecursive(\App\Entity\Platform\View $node, EntityManagerInterface $em): void
+    {
+        $node->setDeletedAt(null);
+        $em->persist($node);
+        foreach ($node->getChildren() as $child) {
+            $this->restoreRecursive($child, $em);
+        }
+    }
+
+    /**
+     * 彻底删除回收站节点（DB + 磁盘文件目录），不可恢复
+     */
+    #[Route(
+        '/api/admin/platform/view/trash/{id}/purge',
+        name: 'api_platform_view_trash_purge',
+        methods: ['POST']
+    )]
+    public function purge(string $id, EntityManagerInterface $em, \App\Service\Platform\View\ViewPathResolver $pathResolver): ApiResponse
+    {
+        $em->getFilters()->disable('softdeleteable');
+        $repo = $em->getRepository(View::class);
+        $node = $repo->find($id);
+        if (!$node) {
+            return ApiResponse::error('', 404, '记录不存在');
+        }
+
+        try {
+            $em->getConnection()->beginTransaction();
+
+            // 收集所有节点（含后代）
+            $nodes = $repo->getChildren($node, false, null, 'ASC', true);
+            $allIds = array_map(fn($n) => $n->getId(), $nodes);
+
+            // 删除磁盘视图目录
+            $fs = new \Symfony\Component\Filesystem\Filesystem();
+            $baseDir = $pathResolver->baseDir();
+            foreach ($nodes as $n) {
+                $relPath = trim((string) $n->getPath(), '/');
+                // 仅当 path 非空且位于 baseDir 内时删除，防止空 path 误删整个目录
+                if ($relPath === '') {
+                    continue;
+                }
+                $viewDir = $baseDir . $relPath;
+                $resolved = realpath($viewDir);
+                if ($resolved !== false && str_starts_with($resolved, realpath($baseDir)) && $fs->exists($viewDir)) {
+                    $fs->remove($viewDir);
+                }
+            }
+
+            // 硬删相关记录（绕过软删监听器）
+            $conn = $em->getConnection();
+            $idList = implode(',', array_map(fn($id) => $conn->quote((string) $id), $allIds));
+            $conn->executeStatement("DELETE FROM platform_view_field WHERE view_id IN ($idList)");
+            $conn->executeStatement("DELETE FROM platform_view_version WHERE view_id IN ($idList)");
+            $conn->executeStatement("DELETE FROM platform_ai_view_task WHERE view_id IN ($idList)");
+            $conn->executeStatement("DELETE FROM platform_view WHERE id IN ($idList)");
+
+            $em->getConnection()->commit();
+
+            return ApiResponse::success(json_encode([
+                'message' => '已彻底删除',
+                'purgedCount' => count($allIds),
+            ]));
+        } catch (\Exception $e) {
+            $em->getConnection()->rollBack();
+            return ApiResponse::error('彻底删除失败: ' . $e->getMessage(), 500);
         }
     }
 }

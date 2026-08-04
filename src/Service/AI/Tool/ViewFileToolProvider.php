@@ -3,10 +3,12 @@
 namespace App\Service\AI\Tool;
 
 use App\Entity\Platform\View;
+use App\Service\Platform\View\ViewPathResolver;
 use App\Service\Utils\DomManipulator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * 视图文件直写型工具：异步 AI 二次加工时没有打开的编辑器页面，
@@ -20,6 +22,8 @@ class ViewFileToolProvider
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly DomManipulator $domManipulator,
+        private readonly ViewPathResolver $pathResolver,
+        private readonly RequestStack $requestStack,
         #[Autowire('%kernel.project_dir%')] private readonly string $projectDir,
     ) {}
 
@@ -37,19 +41,27 @@ class ViewFileToolProvider
      */
     private function resolveFiles(View $view): array
     {
-        $viewPath = $view->getPath();
-        $viewName = $view->getName();
-        $base = $this->projectDir . '/templates/views/';
+        // 交互式 AI 聊天时按用户当前查看的版本（请求上下文中的 ?version=）解析文件，
+        // 而非视图 current_version（避免"在 v1.1 里下指令却写进 v1.4"）。
+        $version = $this->requestVersion();
+        $designFile = $this->pathResolver->designFile($view, $version);
+        $htmlFile = $this->pathResolver->htmlFile($view, $version);
 
-        if ($view->isBuiltIn() && !$viewPath) {
-            return ['designFile' => $base . 'builtin/' . $viewName . '.design.twig', 'builtIn' => true];
+        $files = ['builtIn' => $view->isBuiltIn()];
+        if ($designFile) {
+            $files['designFile'] = $designFile;
         }
+        if ($htmlFile) {
+            $files['htmlFile'] = $htmlFile;
+        }
+        return $files;
+    }
 
-        return [
-            'designFile' => $base . $viewPath . '/' . $viewName . '.design.twig',
-            'htmlFile' => $base . $viewPath . '/' . $viewName . '.html.twig',
-            'builtIn' => $view->isBuiltIn(),
-        ];
+    private function requestVersion(): ?string
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        $v = $request?->attributes->get('ai_view_version');
+        return is_string($v) && $v !== '' ? $v : null;
     }
 
     private function extractSectionContentInnerHtml(string $html): string

@@ -33,6 +33,9 @@ class AiChatSession
     #[ORM\Column(name: "intent", type: "string", length: 64, nullable: true)]
     private ?string $intent = null;
 
+    #[ORM\Column(name: "mode", type: "string", length: 16, nullable: true)]
+    private ?string $mode = null;
+
     #[ORM\Column(name: "is_active", type: "boolean")]
     private bool $isActive = true;
 
@@ -95,6 +98,17 @@ class AiChatSession
     public function setIntent(?string $intent): self
     {
         $this->intent = $intent;
+        return $this;
+    }
+
+    public function getMode(): ?string
+    {
+        return $this->mode;
+    }
+
+    public function setMode(?string $mode): self
+    {
+        $this->mode = $mode;
         return $this;
     }
 

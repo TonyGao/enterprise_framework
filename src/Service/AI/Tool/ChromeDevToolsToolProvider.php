@@ -19,6 +19,7 @@ use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 #[AsTool(name: 'cdp_removeClass', description: '移除元素的 CSS 类名', method: 'removeClass')]
 #[AsTool(name: 'cdp_injectHTML', description: '在指定元素周围插入 HTML（position: beforebegin/afterbegin/beforeend/afterend）', method: 'injectHTML')]
 #[AsTool(name: 'cdp_removeElement', description: '删除页面中匹配选择器的元素', method: 'removeElement')]
+#[AsTool(name: 'cdp_setContent', description: '一次性整体替换 .section-content 的完整内容为新 HTML（整页重写）', method: 'setContent')]
 #[AsTool(name: 'cdp_save', description: '点击视图编辑器的保存按钮来持久化所有 CDP 修改', method: 'save')]
 #[AsTool(name: 'cdp_setAttr', description: '设置元素的 HTML 属性', method: 'setAttr')]
 #[AsTool(name: 'cdp_removeAttr', description: '移除元素的 HTML 属性', method: 'removeAttr')]
@@ -531,16 +532,36 @@ class ChromeDevToolsToolProvider
         }
     }
 
-    #[AsTool(name: 'cdp.removeElement', description: '删除页面中匹配选择器的元素')]
+    #[AsTool(name: 'cdp.removeElement', description: '删除页面中匹配选择器的所有元素（支持子选择器，如 .section-content > *）')]
     public function removeElement(string $selector): array
     {
         try {
             $selJson = json_encode($selector);
             $result = $this->sendCDP('Runtime.evaluate', [
-                'expression' => "(el=document.querySelector($selJson))?el.remove():'未找到元素';'已删除'",
+                'expression' => "const els=document.querySelectorAll($selJson);const n=els.length;els.forEach(el=>el.remove());'已删除 '+n+' 个元素'",
                 'returnByValue' => true,
             ]);
             return ['result' => $result['result']['value'] ?? '已删除'];
+        } catch (\Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * 整体替换 .section-content 的完整内容：一次性写入整页（等价于文件直写的 writeDesign），
+     * 避免增量编辑导致"描述但不执行"。
+     */
+    #[AsTool(name: 'cdp.setContent', description: '一次性整体替换 .section-content 的完整内容为新 HTML（整页重写，用于整体重构时直接给出完整新布局）')]
+    public function setContent(string $html): array
+    {
+        try {
+            $selJson = json_encode('.section-content');
+            $htmlJson = json_encode($html);
+            $result = $this->sendCDP('Runtime.evaluate', [
+                'expression' => "(function(){ const c=document.querySelector($selJson); if(!c) return '未找到 .section-content'; c.innerHTML = $htmlJson; return '已整体替换 .section-content 内容，子元素数='+c.childElementCount; })()",
+                'returnByValue' => true,
+            ]);
+            return ['result' => $result['result']['value'] ?? '已整体替换'];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
         }

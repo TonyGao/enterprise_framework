@@ -320,11 +320,33 @@
   window.__VIEW_NAME__ = {{ viewName is defined ? viewName|json_encode|raw : 'null' }};
   window.__VIEW_PATH__ = {{ viewPath is defined ? viewPath|json_encode|raw : 'null' }};
   window.__VIEW_DESIGN_PATH__ = {{ viewDesignPath is defined ? viewDesignPath|json_encode|raw : 'null' }};
+  window.__ACTIVE_VERSION__ = {{ activeVersion is defined ? activeVersion|json_encode|raw : '1_0' }};
+  window.__CURRENT_VERSION__ = {{ currentVersion is defined ? currentVersion|json_encode|raw : '1_0' }};
+  window.__VIEW_VERSIONS__ = {{ viewVersions is defined ? viewVersions|json_encode|raw : [] }};
   window.__SECTION_CONFIG__ = {{ sectionConfig is defined and sectionConfig ? sectionConfig|json_encode|raw : {contentWidth: '', width: 100, unit: '%'}|json_encode|raw }};
+  window.__FORM_VIEW__ = {{ formEntity is defined and formEntity ? 'true' : 'false' }};
+  window.__RENDER_MODE__ = {{ sectionConfig is defined and sectionConfig.render_mode is defined ? sectionConfig.render_mode|json_encode|raw : 'page' }};
   window.__AI_CONTEXT__ = {
       name: 'view_editor',
       pageId: {{ id is defined ? id|json_encode|raw : 'null' }},
   };
+  // 页面壳中的表单占位（data-view-form）在编辑器里给出可见提示（仅视觉，不写回保存内容）
+  (function() {
+      function stylePlaceholders() {
+          document.querySelectorAll('#canvas [data-view-form]').forEach(function(el) {
+              var empty = !el.children.length && !el.textContent.trim();
+              if (empty && !el.getAttribute('data-view-form-styled')) {
+                  el.setAttribute('data-view-form-styled', '1');
+                  el.setAttribute('style', (el.getAttribute('style') || '') + ';border:2px dashed #6366f1;border-radius:8px;padding:28px;text-align:center;color:#6366f1;background:#eef2ff;font-size:13px;min-height:60px;');
+                  el.textContent = '📋 表单区域（页面渲染时注入绑定表单，可在 AI 对话中继续美化）';
+              }
+          });
+      }
+      document.addEventListener('DOMContentLoaded', function() { setTimeout(stylePlaceholders, 300); });
+      var _phObs = new MutationObserver(function() { setTimeout(stylePlaceholders, 100); });
+      var _canvas = document.getElementById('canvas');
+      if (_canvas) _phObs.observe(_canvas, { childList: true, subtree: true });
+  })();
   document.addEventListener('cssElementSelected', function(e) {
       var el = e.detail && e.detail.element;
       if (el) {

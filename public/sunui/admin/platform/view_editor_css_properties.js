@@ -74,7 +74,15 @@
     function selectElement(el) {
         if (el && el.id === 'canvas') { clearSelection(); return; }
         if (el && $(el).closest('.section-header, .section-controls, .add-section-button').length) return;
+        // 表单控件（字段行/标签/控件）单击优先显示"组件"面板：不切到 CSS tab，也不叠加 CSS 选择框
+        var isFormField = el && $(el).closest('.ef-form-widget, .ef-form-label, .editor-field-row').length > 0;
         selectedEl = el;
+        if (isFormField) {
+            if (selectionOverlay) selectionOverlay.hide();
+            updateCssPanel();
+            dispatchEvent('cssElementSelected', { element: el });
+            return;
+        }
         updateOverlay();
         updateCssPanel();
         switchToCssTab();
@@ -99,7 +107,14 @@
             }
         });
         if (elements.length > 0) {
+            var isFormField = $(elements[0]).closest('.ef-form-widget, .ef-form-label, .editor-field-row').length > 0;
             selectedEl = elements[0];
+            if (isFormField) {
+                if (selectionOverlay) selectionOverlay.hide();
+                updateCssPanel();
+                dispatchEvent('cssElementSelected', { element: selectedEl, elements: elements });
+                return;
+            }
             updateOverlay();
             updateCssPanel();
             switchToCssTab();

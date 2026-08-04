@@ -176,6 +176,12 @@ $(document).ready(function () {
       dataType: 'html',
       success: function(html) {
         $('.right-content').html(html);
+        // 同步 URL，刷新/前进后退可保留当前视图（popstate/初始加载时跳过避免重复入栈）
+        if (!skipUrlPush) {
+          pushViewUrl(viewId);
+        } else {
+          skipUrlPush = false;
+        }
         // 删除视图按钮
         $('.right-content').off('click', '[data-delete-view]').on('click', '[data-delete-view]', function() {
           var viewId = $(this).data('view-id');
@@ -191,6 +197,8 @@ $(document).ready(function () {
             .then(function(json) {
               if (json.code === 200) {
                 $('#deleteViewModal').hide();
+                // 清理 URL 中的 viewId，回到视图管理首页
+                history.replaceState(null, '', window.location.pathname);
                 window.location.reload();
               } else {
                 alert('删除失败: ' + (json.message || '未知错误'));
@@ -792,5 +800,62 @@ $(document).ready(function () {
       });
     }
     }, 100);
+  }
+
+  // ============ 视图详情 URL 同步（pushState / popstate） ============
+  var skipUrlPush = false;
+
+  function getUrlParam(name) {
+    var params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
+
+  function pushViewUrl(viewId) {
+    var params = new URLSearchParams(window.location.search);
+    if (viewId) {
+      params.set('viewId', viewId);
+    } else {
+      params.delete('viewId');
+    }
+    var qs = params.toString();
+    var url = window.location.pathname + (qs ? '?' + qs : '');
+    try {
+      if (url === window.location.pathname + window.location.search) {
+        // URL 未变化：用 replaceState 避免产生重复历史条目
+        window.history.replaceState({ viewId: viewId }, '', url);
+      } else {
+        window.history.pushState({ viewId: viewId }, '', url);
+      }
+    } catch (e) { /* 忽略 */ }
+  }
+
+  window.addEventListener('popstate', function (e) {
+    var viewId = e.state && e.state.viewId;
+    skipUrlPush = true;
+    if (viewId) {
+      $('.tree-text-content.chosen').removeClass('chosen');
+      var $node = $('.tree-text-content[id="' + viewId + '"]');
+      if ($node.length) {
+        $node.addClass('chosen');
+      }
+      loadViewDetail(viewId);
+    } else {
+      // 回到首页
+      window.location.reload();
+    }
+  });
+
+  // 初始加载：URL 带 viewId 时直接打开对应视图详情
+  var initialViewId = getUrlParam('viewId');
+  if (initialViewId) {
+    skipUrlPush = true;
+    var $initNode = $('.tree-text-content[id="' + initialViewId + '"]');
+    if ($initNode.length) {
+      $initNode.addClass('chosen');
+      loadViewDetail(initialViewId);
+    } else {
+      // 视图已不存在（可能被删除），清理 URL
+      history.replaceState(null, '', window.location.pathname);
+    }
   }
 })

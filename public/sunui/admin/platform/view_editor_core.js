@@ -447,16 +447,21 @@ $(document).ready(function () {
     const $panel = $('.properties-panel');
     const $button = $(this);
 
-    $panel.toggleClass('hidden'); // 切换面板的显示状态
-    $button.toggleClass('reverse'); // 切换按钮的梯形方向
+    // 用 :visible 判定实际可见性，兼容 .hidden class 与 display:none 两种隐藏方式
+    const isHidden = !$panel.is(':visible');
+
+    if (isHidden) {
+      $panel.show().removeClass('hidden');
+      $button.removeClass('reverse');
+    } else {
+      $panel.hide().addClass('hidden');
+      $button.addClass('reverse');
+    }
 
     // 切换图标方向
     const icon = $button.find('i');
-    if ($panel.hasClass('hidden')) {
-      icon.removeClass('fa-solid fa-angle-right').addClass('fa-solid fa-angle-left');
-    } else {
-      icon.removeClass('fa-solid fa-angle-left').addClass('fa-solid fa-angle-right');
-    }
+    icon.removeClass('fa-angle-right fa-angle-left');
+    icon.addClass(isHidden ? 'fa-angle-right' : 'fa-angle-left');
   });
 
   // 点击模态框外部关闭布局弹窗

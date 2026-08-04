@@ -8,6 +8,7 @@ use App\Service\AI\Orchestrator\SubAgent\ViewSubAgentInterface;
 use App\Service\AI\Runtime\AiAssistant;
 use App\Service\AI\Tool\ViewEditorToolProvider;
 use App\Service\AI\Tool\ViewFileToolProvider;
+use App\Service\Platform\View\ViewPathResolver;
 
 /**
  * 视图增强编排器：
@@ -23,6 +24,7 @@ class ViewEnhanceAgentOrchestrator
         private readonly AiAssistant $assistant,
         private readonly ViewFileToolProvider $viewFileToolProvider,
         private readonly ViewEditorToolProvider $viewEditorToolProvider,
+        private readonly ViewPathResolver $pathResolver,
         private readonly GeneralViewSubAgent $fallback,
         private readonly iterable $subAgents,
     ) {}
@@ -67,12 +69,18 @@ class ViewEnhanceAgentOrchestrator
 
     private function buildUserMessage(View $view, string $requirement, array $intent): string
     {
+        $designFile = $this->pathResolver->designFile($view);
+        $designRef = $designFile
+            ? '[设计文件: views/' . ltrim(str_replace($this->pathResolver->baseDir(), '', $designFile), '/') . ']'
+            : '[内置视图，设计文件位于 builtin 目录]';
+
         return implode("\n", [
             '[任务: 对视图进行 AI 二次加工]',
             '[视图ID: ' . $view->getId() . ']',
             '[视图名称: ' . ($view->getName() ?? '') . ']',
             '[视图标签: ' . ($view->getLabel() ?? '') . ']',
-            ($view->getPath() ? '[设计文件: views/' . $view->getPath() . '/' . $view->getName() . '.design.twig]' : '[内置视图，设计文件位于 builtin 目录]'),
+            '[当前版本: ' . $this->pathResolver->currentVersion($view) . ']',
+            $designRef,
             '[意图判断: ' . ($intent['intent'] ?? 'general') . ']',
             '[执行要点]',
             ($intent['plan'] ?? '') ?: '按用户需求自由设计',

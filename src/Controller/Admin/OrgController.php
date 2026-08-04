@@ -182,7 +182,8 @@ class OrgController extends BaseController
     Request $request,
     EntityManagerInterface $em,
     string $id,
-    \App\Service\Form\FormFieldRenderer $formFieldRenderer
+    \App\Service\Form\FormFieldRenderer $formFieldRenderer,
+    \App\Service\Form\FormLayoutService $formLayoutService
   ): Response {
     // Pre-load all companies before loading the specific entity. This ensures
     // Company's self-referencing ManyToOne associations (parent) reuse
@@ -210,7 +211,7 @@ class OrgController extends BaseController
           $json = file_get_contents($configFile);
           $generalConfig = json_decode($json, true) ?? [];
         }
-        $result = $formFieldRenderer->render($view, $company, false, [], $generalConfig);
+        $result = $formFieldRenderer->build($view, $company, $generalConfig);
         $form = $result['form'];
         $form->handleRequest($request);
 
@@ -230,9 +231,13 @@ class OrgController extends BaseController
           return $this->redirectToRoute('org_corporation');
         }
 
+        // 自定义 Twig 表单设计优先（AI 文件重写产物）；否则回退传统 ef-form 渲染
+        $dynamicFormHtml = $formLayoutService->renderCustomDesign($view, $result['formView'], $company)
+          ?? $formFieldRenderer->render($view, $company, false, [], $generalConfig)['html'];
+
         $tplVars = [
           'form' => $result['formView'],
-          'dynamicFormHtml' => $result['html'],
+          'dynamicFormHtml' => $dynamicFormHtml,
           'designerViewId' => $view->getId(),
           'designerViewLabel' => $view->getLabel() ?: $view->getName(),
           'designerViewEntityId' => $view->getFormEntity() ? $view->getFormEntity()->getId() : null,

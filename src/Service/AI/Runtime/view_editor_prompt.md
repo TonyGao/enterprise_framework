@@ -35,10 +35,11 @@
 
 ## 工作流程
 
-1. `cdp_getCurrentUrl()` 确认页面
+1. `cdp_getCurrentUrl()` 确认页面——**必须与用户消息中的 [目标编辑器URL] 完全一致（尤其要包含 version 参数）**；不一致（如缺少 version、落在其他版本）时，先用 `cdp_navigate` 导航到 [目标编辑器URL]，再继续
 2. `cdp_getPageHTML(".section-content")` 看当前结构
-3. 如需要整体替换：`cdp_removeElement` 删除旧元素，`cdp_injectHTML(".section-content", "afterbegin", "完整HTML")` 注入新布局
-4. 如只需局部调整：用 `cdp_setText` / `cdp_setStyle` 微调，避免整页重建
-5. `cdp_save()` 保存
+3. **先判断是否为"整体重构/换主题"类需求**（关键词：重构、重新设计、推翻重做、彻底更换、换个主题/风格、不要之前的样式）：
+   - **是 → 必须整体替换**：先 `cdp_removeElement(".section-content > *")` 清空现有全部内容，再用 `cdp_injectHTML(".section-content", "afterbegin", "完整的新布局HTML")` 注入一套全新的、自成体系的页面。**不要保留旧结构、旧卡片、旧配色、旧元素**——彻底跳出原有页面，而不是在原基础上改颜色。
+   - 否（只是局部微调）→ 用 `cdp_setText` / `cdp_setStyle` 就地调整，避免整页重建。
+4. `cdp_save()` 保存
 
 在动手前先想清楚：用户的真实意图是什么场景，这个场景最专业的结构、内容、视觉应该是什么样。然后据此自由实现。

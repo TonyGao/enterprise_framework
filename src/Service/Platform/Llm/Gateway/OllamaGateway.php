@@ -51,7 +51,7 @@ class OllamaGateway implements LlmGatewayInterface
                 'Content-Type' => 'application/json',
             ],
             'json' => $payload,
-            'timeout' => $opts['timeout'] ?? 120,
+            'timeout' => $opts['timeout'] ?? 300,
         ]);
 
         $statusCode = $response->getStatusCode();
@@ -88,7 +88,7 @@ class OllamaGateway implements LlmGatewayInterface
                 'Content-Type' => 'application/json',
             ],
             'json' => $payload,
-            'timeout' => $opts['timeout'] ?? 120,
+            'timeout' => $opts['timeout'] ?? 300,
         ]);
 
         $stream = $response->toStream();

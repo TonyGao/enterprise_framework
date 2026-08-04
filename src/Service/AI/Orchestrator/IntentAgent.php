@@ -55,12 +55,21 @@ class IntentAgent
     }
 
     /**
-     * 从模型回复中提取 {intent, confidence, plan, reason}。
-     * 解析失败时回退到 general，保证任务不中断。
+     * 从模型回复中提取 {intent, redesign, needsClarification, clarificationQuestion, clarificationOptions, plan, reason}。
+     * 解析失败时回退到 general + 微调模式，保证任务不中断。
      */
     private function parse(string $reply): array
     {
-        $fallback = ['intent' => 'general', 'confidence' => 0.0, 'plan' => '', 'reason' => '意图识别失败，走通用兜底'];
+        $fallback = [
+            'intent' => 'general',
+            'redesign' => false,
+            'needsClarification' => false,
+            'clarificationQuestion' => null,
+            'clarificationOptions' => [],
+            'confidence' => 0.0,
+            'plan' => '',
+            'reason' => '意图识别失败，走通用兜底',
+        ];
 
         $reply = trim($reply);
         $start = strpos($reply, '{');
@@ -80,8 +89,18 @@ class IntentAgent
             $intent = 'general';
         }
 
+        $options = $data['clarification_options'] ?? $data['clarificationOptions'] ?? [];
+        if (!is_array($options)) {
+            $options = [];
+        }
+        $options = array_values(array_map('strval', array_filter($options, 'is_string')));
+
         return [
             'intent' => $intent,
+            'redesign' => (bool) ($data['redesign'] ?? false),
+            'needsClarification' => (bool) ($data['needs_clarification'] ?? $data['needsClarification'] ?? false),
+            'clarificationQuestion' => (string) ($data['clarification_question'] ?? $data['clarificationQuestion'] ?? ''),
+            'clarificationOptions' => $options,
             'confidence' => (float) ($data['confidence'] ?? 0.0),
             'plan' => (string) ($data['plan'] ?? ''),
             'reason' => (string) ($data['reason'] ?? ''),

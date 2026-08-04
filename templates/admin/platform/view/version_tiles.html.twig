@@ -1,0 +1,195 @@
+{# 平铺视图：以网格展示所有版本的预览，点击某个版本预览 = 选中该版本（跳转到其编辑器） #}
+<div class="ef-modal-container" id="versionTilesModal" style="z-index: 100002; display: none;">
+  <div class="ef-modal-mask" data-close-version-tiles></div>
+  <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
+    <div class="ef-modal version-tiles-modal">
+      <div class="ef-modal-header">
+        <div class="ef-modal-title ef-modal-title-align-left">
+          <i class="fa-solid fa-table-cells-large" style="margin-right: 8px; color: #6366f1;"></i>
+          平铺视图
+          <span style="font-size: 12px; color: #94a3b8; margin-left: 8px;">点击某个版本预览 = 选中该版本</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="version-tiles-zoom">
+            <button type="button" class="vz-btn" data-zoom="-0.25" title="缩小"><i class="fa-solid fa-minus"></i></button>
+            <span class="vz-val" id="vz-val">100%</span>
+            <button type="button" class="vz-btn" data-zoom="0.25" title="放大"><i class="fa-solid fa-plus"></i></button>
+            <button type="button" class="vz-btn" data-zoom="reset" title="重置缩放">重置</button>
+          </div>
+          <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" data-close-version-tiles>
+            <span class="ef-icon-hover">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="ef-modal-body version-tiles-body">
+        <div class="version-tiles-grid" id="version-tiles-grid">加载中…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .version-tiles-modal { width: 94vw; max-width: 1500px; height: 92vh; display: flex; flex-direction: column; }
+  .version-tiles-body { flex: 1; min-height: 0; overflow: auto; padding: 16px; background: #f1f5f9; }
+  .version-tiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 16px; }
+  .version-tile {
+    display: flex; flex-direction: column;
+    height: 600px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow .15s, border-color .15s;
+  }
+  .version-tile:hover { border-color: #6366f1; box-shadow: 0 6px 18px rgba(99,102,241,.18); }
+  .version-tile.is-current { border-color: #6366f1; box-shadow: 0 0 0 2px #eef2ff; }
+  .version-tile-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #eef1f5;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .version-tile-badge { font-weight: 700; color: #6366f1; }
+  .version-tile-label { color: #334155; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .version-tile-cur { color: #16a34a; font-weight: 600; }
+  /* 预览区：等比缩略图（整页按比例缩小显示），overflow hidden 裁掉缩放后的溢出 */
+  .version-tile-preview {
+    flex: 1; min-height: 0;
+    position: relative;
+    overflow: hidden;
+    background: #eef1f5;
+  }
+  /* 先按设计自然宽度加载，JS 加载完成后测量真实尺寸再 transform:scale 缩放 */
+  .version-tile-frame {
+    display: block;
+    width: 1100px;
+    height: 8000px;
+    border: none;
+    background: #fff;
+    transform-origin: top left;
+    box-shadow: 0 2px 12px rgba(15,23,42,.12);
+  }
+  /* 缩放控件 */
+  .version-tiles-zoom { display: flex; align-items: center; gap: 6px; }
+  .vz-btn {
+    min-width: 26px; height: 26px; padding: 0 6px;
+    font-size: 12px; line-height: 1;
+    color: #475569; background: #fff;
+    border: 1px solid #e2e8f0; border-radius: 6px;
+    cursor: pointer; transition: all .15s;
+  }
+  .vz-btn:hover { border-color: #c7d2fe; background: #eef2ff; color: #4f46e5; }
+  .vz-btn:active { transform: translateY(1px); }
+  .vz-val { min-width: 44px; text-align: center; font-size: 12px; color: #64748b; font-variant-numeric: tabular-nums; }
+</style>
+
+<script>
+$(function () {
+  var $tilesModal = $('#versionTilesModal');
+  if ($tilesModal.length) $tilesModal.detach().appendTo(document.body);
+
+  function escTiles(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // 缩放状态：通过放大/缩小 tile 尺寸并重新 fit，让整页缩略图更大/更小但保持完整
+  var zoomLevel = 1;
+
+  function applyZoom() {
+    var grid = document.getElementById('version-tiles-grid');
+    if (!grid) return;
+    var minW = Math.round(440 * zoomLevel);
+    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(' + minW + 'px, 1fr))';
+    grid.querySelectorAll('.version-tile').forEach(function (t) {
+      t.style.height = Math.round(600 * zoomLevel) + 'px';
+    });
+    grid.querySelectorAll('.version-tile-frame').forEach(function (f) { fitVersionTile(f); });
+  }
+
+  function setZoom(levelOrDelta, isDelta) {
+    zoomLevel = isDelta ? +(zoomLevel + levelOrDelta).toFixed(2) : levelOrDelta;
+    zoomLevel = Math.min(3, Math.max(0.5, zoomLevel));
+    $('#vz-val').text(Math.round(zoomLevel * 100) + '%');
+    applyZoom();
+  }
+
+  $tilesModal.on('click', '[data-zoom]', function () {
+    var v = $(this).data('zoom');
+    setZoom(v === 'reset' ? 1 : parseFloat(v), v !== 'reset');
+  });
+
+  // 同源 iframe：整页按等比缩小显示（同时适配宽高，完整可见）居中到预览区。
+  // 关键：保持 iframe 渲染宽度(1100)不变以避免设计(width:100%)触发重排，仅按设计实际宽度计算缩放。
+  function fitVersionTile(iframe) {
+    try {
+      var doc = iframe.contentDocument;
+      if (!doc || !doc.body) return;
+      var body = doc.body;
+      var frame = doc.querySelector('.preview-frame');
+      var designEl = frame ? frame.firstElementChild : null;
+      var designW = (designEl && designEl.offsetWidth) || 1100;
+      var fullH = body.scrollHeight || 2000;
+      var preview = iframe.parentElement;
+      var availW = preview.clientWidth - 8;
+      var availH = preview.clientHeight - 8;
+      if (availW < 20 || availH < 20) return;
+      var scale = Math.min(availW / designW, availH / fullH, 1);
+      iframe.style.width = '1100px';
+      iframe.style.height = fullH + 'px';
+      iframe.style.transform = 'scale(' + scale + ')';
+      iframe.style.transformOrigin = 'top left';
+      iframe.style.marginLeft = Math.max(0, (availW - 1100 * scale) / 2) + 'px';
+      iframe.style.marginTop = Math.max(0, (availH - fullH * scale) / 2) + 'px';
+    } catch (e) {}
+  }
+
+  window.openVersionTiles = function (viewId, versions, currentVersion) {
+    if (!viewId || !versions || !versions.length) { alert('暂无可预览的版本'); return; }
+    $tilesModal.data('view-id', viewId);
+    zoomLevel = 1;
+    $('#vz-val').text('100%');
+    var grid = document.getElementById('version-tiles-grid');
+    grid.style.gridTemplateColumns = '';
+    var html = '';
+    versions.forEach(function (v) {
+      var isCur = String(v.version) === String(currentVersion);
+      html +=
+        '<div class="version-tile' + (isCur ? ' is-current' : '') + '" data-version="' + escTiles(v.version) + '" title="点击选中 v' + escTiles(v.version) + '">' +
+          '<div class="version-tile-head">' +
+            '<span class="version-tile-badge">v' + escTiles(v.version) + '</span>' +
+            '<span class="version-tile-label">' + escTiles(v.label || '') + '</span>' +
+            (isCur ? '<span class="version-tile-cur">当前</span>' : '') +
+          '</div>' +
+          '<div class="version-tile-preview">' +
+            '<iframe class="version-tile-frame" src="/admin/platform/view/' + escTiles(viewId) + '/versions/' + escTiles(v.version) + '/preview"></iframe>' +
+          '</div>' +
+        '</div>';
+    });
+    grid.innerHTML = html;
+    $tilesModal.show();
+    // 每个 iframe 加载完成后做等比缩放；已缓存则立即处理
+    var frames = grid.querySelectorAll('.version-tile-frame');
+    frames.forEach(function (f) {
+      f.addEventListener('load', function () { fitVersionTile(f); });
+      if (f.contentDocument && f.contentDocument.readyState === 'complete') fitVersionTile(f);
+    });
+    // 模态框显示后布局就绪，再校准一次缩放
+    setTimeout(function () {
+      grid.querySelectorAll('.version-tile-frame').forEach(function (f) { fitVersionTile(f); });
+    }, 80);
+  };
+
+  $tilesModal.on('click', '.version-tile', function () {
+    var v = $(this).data('version');
+    var viewId = $tilesModal.data('view-id');
+    if (!v || !viewId) return;
+    // 选中该版本 = 跳转到对应版本的编辑器
+    window.location.href = '/admin/platform/view/editor/' + viewId + '?version=' + v;
+  });
+  $tilesModal.on('click', '[data-close-version-tiles]', function () { $tilesModal.hide(); });
+});
+</script>
