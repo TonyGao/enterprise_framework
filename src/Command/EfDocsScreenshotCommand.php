@@ -137,7 +137,7 @@ class EfDocsScreenshotCommand extends Command
         $saved = [];
         foreach ($selected as $key) {
             $t = $targets[$key];
-            $url = $t['url'];
+            $url = $this->resolvePlaceholders($t['url']);
             if (!str_starts_with($url, 'http')) {
                 $url = $baseUrl.$url;
             }
@@ -484,7 +484,130 @@ class EfDocsScreenshotCommand extends Command
                 'filename' => 'ai-assistant-panel',
                 'desc' => 'AI 助手面板（视图页右下角）',
             ],
+
+            // ---------- 深层复杂界面（每个模块最完整的操作界面） ----------
+
+            'view-editor' => [
+                'url' => '/admin/platform/view/editor/{viewId}',
+                'filename' => 'view-editor-canvas',
+                'desc' => '视图设计器 - 编辑器画布（完整表单视图）',
+            ],
+            'view-detail' => [
+                'url' => '/admin/platform/view/detail?id={viewId}',
+                'filename' => 'view-detail',
+                'desc' => '视图设计器 - 视图详情',
+            ],
+            'entity-itemtable' => [
+                'url' => '/admin/platform/entity/itemtable?token={entityToken}',
+                'filename' => 'dynamic-model-itemtable',
+                'desc' => '动态模型 - 实体数据表格（字段配置）',
+            ],
+            'employee-edit' => [
+                'url' => '/employee/{employeeId}/edit',
+                'filename' => 'employee-edit-form',
+                'desc' => '员工管理 - 编辑表单（完整字段）',
+            ],
+            'position-edit' => [
+                'url' => '/admin/org/position/edit/{positionId}',
+                'filename' => 'position-edit-form',
+                'desc' => '岗位管理 - 编辑表单',
+            ],
+            'dept-edit' => [
+                'url' => '/admin/org/department/edit/{deptId}',
+                'filename' => 'department-edit-form',
+                'desc' => '部门管理 - 编辑表单',
+            ],
+            'email-editor' => [
+                'url' => '/admin/email/template/editor',
+                'filename' => 'email-template-editor',
+                'desc' => '邮件 - 模板编辑器',
+            ],
+            'llm-edit' => [
+                'url' => '/admin/platform/llm-config/provider/create',
+                'filename' => 'llm-provider-form',
+                'desc' => 'LLM 配置 - 厂商编辑表单',
+            ],
         ];
+    }
+
+    /**
+     * 将 URL 中的 {viewId} / {employeeId} / {deptId} / {positionId} / {entityToken} 占位符替换为真实数据 ID。
+     */
+    private function resolvePlaceholders(string $url): string
+    {
+        $map = $this->idMap();
+        foreach ($map as $key => $value) {
+            $url = str_replace('{'.$key.'}', (string) $value, $url);
+        }
+
+        return $url;
+    }
+
+    private ?array $cachedIdMap = null;
+
+    /**
+     * 从数据库查询各实体的真实 ID，用于填充 URL 占位符。
+     */
+    private function idMap(): array
+    {
+        if (null !== $this->cachedIdMap) {
+            return $this->cachedIdMap;
+        }
+        $conn = $this->entityManager->getConnection();
+        $map = [];
+
+        // 视图：优先选内容最丰富的（最近更新的非内置 view）
+        try {
+            $row = $conn->fetchAssociative(
+                'SELECT id FROM platform_view WHERE deleted_at IS NULL AND type = :type ORDER BY updated_at DESC LIMIT 1',
+                ['type' => 'view']
+            );
+            $map['viewId'] = $row['id'] ?? '';
+        } catch (\Throwable) {
+        }
+
+        // 员工：优先选一个普通员工（非管理员）
+        try {
+            $row = $conn->fetchAssociative(
+                'SELECT id FROM org_employee WHERE deleted_at IS NULL AND username NOT IN (:admins) ORDER BY created_at LIMIT 1',
+                ['admins' => ['sys_admin', 'sec_admin', 'auditor']],
+                ['admins' => \Doctrine\DBAL\ArrayParameterType::STRING]
+            );
+            $map['employeeId'] = $row['id'] ?? '';
+        } catch (\Throwable) {
+        }
+
+        // 部门
+        try {
+            $row = $conn->fetchAssociative(
+                'SELECT id FROM org_department WHERE deleted_at IS NULL ORDER BY lft LIMIT 1'
+            );
+            $map['deptId'] = $row['id'] ?? '';
+        } catch (\Throwable) {
+        }
+
+        // 岗位
+        try {
+            $row = $conn->fetchAssociative(
+                'SELECT id FROM org_position WHERE deleted_at IS NULL ORDER BY created_at LIMIT 1'
+            );
+            $map['positionId'] = $row['id'] ?? '';
+        } catch (\Throwable) {
+        }
+
+        // 实体 token（用于 itemtable，选部门实体展示字段表格）
+        try {
+            $row = $conn->fetchAssociative(
+                'SELECT token FROM platform_entity WHERE deleted_at IS NULL AND data_table_name = :tbl LIMIT 1',
+                ['tbl' => 'org_department']
+            );
+            $map['entityToken'] = $row['token'] ?? '';
+        } catch (\Throwable) {
+        }
+
+        $this->cachedIdMap = $map;
+
+        return $map;
     }
 
     private function listTargets(SymfonyStyle $io): void
