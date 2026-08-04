@@ -23,6 +23,7 @@ use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 #[AsTool(name: 'cdp_save', description: '点击视图编辑器的保存按钮来持久化所有 CDP 修改', method: 'save')]
 #[AsTool(name: 'cdp_setAttr', description: '设置元素的 HTML 属性', method: 'setAttr')]
 #[AsTool(name: 'cdp_removeAttr', description: '移除元素的 HTML 属性', method: 'removeAttr')]
+#[AsTool(name: 'cdp_screenshot', description: '对当前页面或指定元素截图。selector 可选（截取该元素），fullPage 可选（整页长截图），保存到本地文件或返回 base64', method: 'screenshot')]
 class ChromeDevToolsToolProvider
 {
     private const PROXY_HOST = '127.0.0.1';
@@ -34,7 +35,7 @@ class ChromeDevToolsToolProvider
             'method' => $method,
             'params' => $params,
             'timeout' => 30000,
-        ]) . "\n";
+        ])."\n";
 
         $fp = @stream_socket_client(
             sprintf('tcp://%s:%d', self::PROXY_HOST, self::PROXY_PORT),
@@ -44,7 +45,7 @@ class ChromeDevToolsToolProvider
         );
 
         if (!$fp) {
-            throw new \RuntimeException('无法连接 CDP 代理 (127.0.0.1:' . self::PROXY_PORT . ')，请先运行 php bin/console ef:chrome:open 启动 Chrome 调试');
+            throw new \RuntimeException('无法连接 CDP 代理 (127.0.0.1:'.self::PROXY_PORT.')，请先运行 php bin/console ef:chrome:open 启动 Chrome 调试');
         }
 
         stream_set_timeout($fp, 30);
@@ -52,9 +53,13 @@ class ChromeDevToolsToolProvider
         $response = '';
         while (!feof($fp)) {
             $chunk = fgets($fp);
-            if ($chunk === false) break;
+            if (false === $chunk) {
+                break;
+            }
             $response .= $chunk;
-            if (str_ends_with(trim($chunk), '}')) break;
+            if (str_ends_with(trim($chunk), '}')) {
+                break;
+            }
         }
         fclose($fp);
 
@@ -64,7 +69,7 @@ class ChromeDevToolsToolProvider
         }
 
         if (isset($result['error'])) {
-            throw new \RuntimeException('CDP 错误: ' . $result['error']);
+            throw new \RuntimeException('CDP 错误: '.$result['error']);
         }
 
         return $result['result'] ?? [];
@@ -78,15 +83,17 @@ class ChromeDevToolsToolProvider
             'selector' => $selector,
         ]);
         $nodeId = $result['nodeId'] ?? 0;
-        if ($nodeId === 0) {
+        if (0 === $nodeId) {
             throw new \RuntimeException("未找到选择器匹配的元素: $selector");
         }
+
         return $nodeId;
     }
 
     private function resolveObjectId(int $nodeId): string
     {
         $result = $this->sendCDP('DOM.resolveNode', ['nodeId' => $nodeId]);
+
         return $result['object']['objectId'];
     }
 
@@ -105,6 +112,7 @@ class ChromeDevToolsToolProvider
                 'expression' => 'window.location.href',
                 'returnByValue' => true,
             ]);
+
             return ['url' => $result['result']['value'] ?? ''];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage(), 'hint' => '请先运行 php bin/console ef:chrome:open 启动 Chrome 远程调试'];
@@ -119,6 +127,7 @@ class ChromeDevToolsToolProvider
     {
         try {
             $this->sendCDP('Page.navigate', ['url' => $url]);
+
             return ['result' => "已导航到: $url"];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage(), 'hint' => '请先运行 php bin/console ef:chrome:open 启动 Chrome 远程调试'];
@@ -145,11 +154,19 @@ class ChromeDevToolsToolProvider
             foreach ($props['result'] ?? [] as $prop) {
                 $name = $prop['name'] ?? '';
                 $value = $prop['value']['value'] ?? null;
-                if ($name === 'tagName') $info['tagName'] = $value;
-                if ($name === 'id') $info['id'] = $value;
-                if ($name === 'className') $info['className'] = $value;
-                if ($name === 'innerText') $info['innerText'] = $value !== null ? mb_substr((string)$value, 0, 200) : null;
-                if ($name === 'style' && isset($prop['value']['preview']['properties'])) {
+                if ('tagName' === $name) {
+                    $info['tagName'] = $value;
+                }
+                if ('id' === $name) {
+                    $info['id'] = $value;
+                }
+                if ('className' === $name) {
+                    $info['className'] = $value;
+                }
+                if ('innerText' === $name) {
+                    $info['innerText'] = null !== $value ? mb_substr((string) $value, 0, 200) : null;
+                }
+                if ('style' === $name && isset($prop['value']['preview']['properties'])) {
                     foreach ($prop['value']['preview']['properties'] as $s) {
                         $info['styles'][$s['name']] = $s['value'];
                     }
@@ -199,6 +216,7 @@ class ChromeDevToolsToolProvider
             ]);
 
             $newStyle = $result['result']['value'] ?? '';
+
             return ['result' => "样式已更新，当前内联样式: $newStyle"];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage(), 'hint' => '请先运行 php bin/console ef:chrome:open 启动 Chrome 远程调试'];
@@ -297,6 +315,7 @@ class ChromeDevToolsToolProvider
             ]);
 
             $html = $result['result']['value'] ?? '';
+
             return ['html' => mb_substr($html, 0, 50000)];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage(), 'hint' => '请先运行 php bin/console ef:chrome:open 启动 Chrome 远程调试'];
@@ -311,7 +330,7 @@ class ChromeDevToolsToolProvider
     {
         try {
             $textJson = json_encode($textContent);
-            $marker = '_cdp_' . bin2hex(random_bytes(8));
+            $marker = '_cdp_'.bin2hex(random_bytes(8));
             $markerJson = json_encode($marker);
             $cssTextJson = json_encode($cssText);
 
@@ -351,14 +370,14 @@ class ChromeDevToolsToolProvider
             ]);
 
             $nodeId = $qsResult['nodeId'] ?? 0;
-            if ($nodeId === 0) {
-                return ['error' => "找到文本但无法获取元素引用"];
+            if (0 === $nodeId) {
+                return ['error' => '找到文本但无法获取元素引用'];
             }
 
             $objResult = $this->sendCDP('DOM.resolveNode', ['nodeId' => $nodeId]);
             $objId = $objResult['object']['objectId'] ?? '';
             if (!$objId) {
-                return ['error' => "无法解析元素对象"];
+                return ['error' => '无法解析元素对象'];
             }
 
             if ($replaceAll) {
@@ -387,6 +406,7 @@ class ChromeDevToolsToolProvider
             ]);
 
             $newStyle = $result['result']['value'] ?? '';
+
             return ['result' => "已找到文本「{$textContent}」的元素并应用样式，当前内联样式: {$newStyle}", 'elementHtml' => $foundHtml];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage(), 'hint' => '请先运行 php bin/console ef:chrome:open 启动 Chrome 远程调试'];
@@ -413,6 +433,7 @@ class ChromeDevToolsToolProvider
                 'expression' => $script,
                 'returnByValue' => true,
             ]);
+
             return ['result' => $result['result']['value'] ?? '已点击'];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage(), 'hint' => '请先运行 php bin/console ef:chrome:open 启动 Chrome 远程调试'];
@@ -427,7 +448,7 @@ class ChromeDevToolsToolProvider
     {
         try {
             $colsJson = json_encode($columns);
-            $random = '_cdp_r_' . bin2hex(random_bytes(6));
+            $random = '_cdp_r_'.bin2hex(random_bytes(6));
             $script = <<<JS
             (() => {
                 const section = document.querySelector('$sectionContentSelector');
@@ -474,7 +495,8 @@ class ChromeDevToolsToolProvider
                 'expression' => "document.querySelector($selJson).textContent = $textJson; document.querySelector($selJson).textContent.substring(0,100)",
                 'returnByValue' => true,
             ]);
-            return ['result' => "文本已设置为: " . ($result['result']['value'] ?? '')];
+
+            return ['result' => '文本已设置为: '.($result['result']['value'] ?? '')];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
         }
@@ -490,7 +512,8 @@ class ChromeDevToolsToolProvider
                 'expression' => "document.querySelector($selJson)?.classList.add($clsJson); document.querySelector($selJson)?.className",
                 'returnByValue' => true,
             ]);
-            return ['result' => '类名已添加，当前 class: ' . ($result['result']['value'] ?? '')];
+
+            return ['result' => '类名已添加，当前 class: '.($result['result']['value'] ?? '')];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
         }
@@ -506,7 +529,8 @@ class ChromeDevToolsToolProvider
                 'expression' => "document.querySelector($selJson)?.classList.remove($clsJson); document.querySelector($selJson)?.className",
                 'returnByValue' => true,
             ]);
-            return ['result' => '类名已移除，当前 class: ' . ($result['result']['value'] ?? '')];
+
+            return ['result' => '类名已移除，当前 class: '.($result['result']['value'] ?? '')];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
         }
@@ -520,12 +544,13 @@ class ChromeDevToolsToolProvider
             $htmlJson = json_encode($html);
             $allowed = ['beforebegin', 'afterbegin', 'beforeend', 'afterend'];
             if (!in_array($position, $allowed)) {
-                return ['error' => 'position 必须是: ' . implode(', ', $allowed)];
+                return ['error' => 'position 必须是: '.implode(', ', $allowed)];
             }
             $result = $this->sendCDP('Runtime.evaluate', [
                 'expression' => "document.querySelector($selJson)?.insertAdjacentHTML('$position', $htmlJson); 'HTML 已插入'",
                 'returnByValue' => true,
             ]);
+
             return ['result' => $result['result']['value'] ?? 'HTML 已插入'];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
@@ -541,6 +566,7 @@ class ChromeDevToolsToolProvider
                 'expression' => "const els=document.querySelectorAll($selJson);const n=els.length;els.forEach(el=>el.remove());'已删除 '+n+' 个元素'",
                 'returnByValue' => true,
             ]);
+
             return ['result' => $result['result']['value'] ?? '已删除'];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
@@ -561,6 +587,7 @@ class ChromeDevToolsToolProvider
                 'expression' => "(function(){ const c=document.querySelector($selJson); if(!c) return '未找到 .section-content'; c.innerHTML = $htmlJson; return '已整体替换 .section-content 内容，子元素数='+c.childElementCount; })()",
                 'returnByValue' => true,
             ]);
+
             return ['result' => $result['result']['value'] ?? '已整体替换'];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
@@ -581,6 +608,7 @@ class ChromeDevToolsToolProvider
                 JS,
                 'returnByValue' => true,
             ]);
+
             return ['result' => $result['result']['value'] ?? ''];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
@@ -598,6 +626,7 @@ class ChromeDevToolsToolProvider
                 'expression' => "document.querySelector($selJson)?.setAttribute($attrJson, $valJson)",
                 'returnByValue' => true,
             ]);
+
             return ['result' => "属性 {$attr} 已设置"];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
@@ -614,9 +643,111 @@ class ChromeDevToolsToolProvider
                 'expression' => "document.querySelector($selJson)?.removeAttribute($attrJson)",
                 'returnByValue' => true,
             ]);
+
             return ['result' => "属性 {$attr} 已移除"];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * 对当前页面或指定元素截图。
+     *
+     * @param string|null $selector 可选，CSS 选择器，指定则只截取该元素
+     * @param bool        $fullPage 可选，是否整页长截图（默认 false，只截当前视口）
+     * @param string|null $savePath 可选，本地保存路径，传了则写入文件并返回路径，否则返回 base64
+     * @param string      $format   可选，图片格式 png / jpeg
+     * @param int         $quality  可选，jpeg 质量 0-100
+     */
+    #[AsTool(name: 'cdp.screenshot', description: '对当前页面或指定元素截图，返回 base64 或保存到本地文件')]
+    public function screenshot(
+        ?string $selector = null,
+        bool $fullPage = false,
+        ?string $savePath = null,
+        string $format = 'png',
+        int $quality = 90,
+    ): array {
+        try {
+            $params = [
+                'format' => 'jpeg' === $format ? 'jpeg' : 'png',
+            ];
+            if ('jpeg' === $format) {
+                $params['quality'] = min(100, max(1, $quality));
+            }
+
+            if ($fullPage) {
+                $metrics = $this->sendCDP('Page.getLayoutMetrics');
+                $contentSize = $metrics['cssContentSize'] ?? null;
+                if ($contentSize) {
+                    $params['captureBeyondViewport'] = true;
+                    $params['clip'] = [
+                        'x' => 0,
+                        'y' => 0,
+                        'width' => $contentSize['width'] ?? 1280,
+                        'height' => $contentSize['height'] ?? 800,
+                        'scale' => 1,
+                    ];
+                }
+            } elseif ($selector) {
+                $nodeId = $this->findNodeId($selector);
+                $objId = $this->resolveObjectId($nodeId);
+                $box = $this->sendCDP('DOM.getBoxModel', ['nodeId' => $nodeId]);
+                $quad = $box['model']['border'] ?? null;
+                if (!$quad) {
+                    return ['error' => "元素不可见或无边界框: $selector"];
+                }
+                $params['clip'] = [
+                    'x' => $quad[0],
+                    'y' => $quad[1],
+                    'width' => max(1, $quad[2] - $quad[0]),
+                    'height' => max(1, $quad[5] - $quad[1]),
+                    'scale' => 1,
+                ];
+            }
+
+            $result = $this->sendCDP('Page.captureScreenshot', $params);
+            $base64 = $result['data'] ?? '';
+            if ('' === $base64) {
+                return ['error' => '截图返回为空'];
+            }
+
+            $imageData = base64_decode($base64);
+            if ($savePath) {
+                $dir = dirname($savePath);
+                if (!is_dir($dir)) {
+                    @mkdir($dir, 0777, true);
+                }
+                file_put_contents($savePath, $imageData);
+
+                return [
+                    'result' => "截图已保存: $savePath",
+                    'path' => $savePath,
+                    'bytes' => strlen($imageData),
+                    'url' => $this->getPageUrlForLog(),
+                ];
+            }
+
+            return [
+                'result' => '截图成功',
+                'base64' => $base64,
+                'bytes' => strlen($imageData),
+            ];
+        } catch (\Exception $e) {
+            return ['error' => $e->getMessage(), 'hint' => '请先运行 php bin/console ef:chrome:open 启动 Chrome 远程调试'];
+        }
+    }
+
+    private function getPageUrlForLog(): string
+    {
+        try {
+            $result = $this->sendCDP('Runtime.evaluate', [
+                'expression' => 'window.location.href',
+                'returnByValue' => true,
+            ]);
+
+            return (string) ($result['result']['value'] ?? '');
+        } catch (\Exception $e) {
+            return '';
         }
     }
 }
