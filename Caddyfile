@@ -2,6 +2,9 @@
 	frankenphp {
 		# AI 重构/长任务需要较大内存（生成整页 HTML + 工具调用历史），128M 默认值会 OOM
 		php_ini memory_limit 512M
+		# 国际化：默认时区与 Intl locale（多语言/多时区支持）
+		php_ini date.timezone Asia/Shanghai
+		php_ini intl.default_locale zh_CN
 	}
 	order php_server before file_server
 	order php before file_server

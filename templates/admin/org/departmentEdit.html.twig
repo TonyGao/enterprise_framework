@@ -12,7 +12,7 @@
                 font-size: 13px; color: #856404; white-space: nowrap;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: inline-flex; align-items: center; gap: 6px;
                 cursor: pointer;">
-        <i class="fa-solid fa-link"></i> 创建视图绑定
+        <i class="fa-solid fa-link"></i> {{ "deptEdit.1"|trans }}
       </button>
     </div>
   {% endif %}
@@ -27,10 +27,10 @@
                   <div class="ef-form-item-content ef-form-item-content-flex">
                       <div class="ef-space ef-space-horizontal ef-space-align-center">
                           <div class="ef-space-item" style="margin-right: 8px;">
-                              <button class="btn primary medium" type="submit">提交</button>
+                              <button class="btn primary medium" type="submit">{{ "deptEdit.2"|trans }}</button>
                           </div>
                           <div class="ef-space-item">
-                                <button class="btn primary medium back-btn" type="button">返回</button>
+                                <button class="btn primary medium back-btn" type="button">{{ "deptEdit.3"|trans }}</button>
                           </div>
                       </div>
                   </div>
@@ -45,7 +45,7 @@
 <script>
 function autoCreateView() {
   var btn = $('#btn-create-designer');
-  btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 创建中...');
+  btn.prop('disabled', true).html(t('deptEdit.js1'));
   var _alert = new Alert($('.app-content-container'));
   ajax({
     url: '{{ path('api_platform_view_auto_bind') }}',
@@ -64,9 +64,9 @@ function autoCreateView() {
       }
     },
     error: function(xhr) {
-      var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : '创建失败';
-      _alert.error(msg, { percent: '280px', title: '操作提示', closable: true });
-      btn.prop('disabled', false).html('<i class="fa-solid fa-link"></i> 创建视图绑定');
+      var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : t('deptEdit.js2');
+      _alert.error(msg, { percent: '280px', title: t('deptEdit.js3'), closable: true });
+      btn.prop('disabled', false).html(t('deptEdit.js4'));
     }
   });
 }

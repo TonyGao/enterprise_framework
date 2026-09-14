@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * 视图文件直写型工具：异步 AI 二次加工时没有打开的编辑器页面，
@@ -17,6 +18,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
 #[AsTool(name: 'viewfile_getDesign', description: '读取视图设计文件内容（.section-content 内部 HTML）及文件路径', method: 'getDesign')]
 #[AsTool(name: 'viewfile_writeDesign', description: '将完整的页面内容写入视图设计文件（html 只包含页面内容，不含外层 section 包裹器）', method: 'writeDesign')]
 #[AsTool(name: 'viewfile_renderHtml', description: '根据当前设计文件重新生成可执行模板（.html.twig），清理编辑器专用标记', method: 'renderHtml')]
+#[AsTool(name: 'viewfile_fetchWebPage', description: '抓取一个 http/https 网页，返回其标题、提取的 CSS 与清理后的 HTML，供 AI 分析该网页的视觉风格并模仿（仅允许公网地址，禁止内网/本机）', method: 'fetchWebPage')]
+#[AsTool(name: 'viewfile_downloadImage', description: '从公网 URL 下载一张图片到本站并返回可引用的本地地址（/uploads/...），用于页面构成中的真实图片（Hero/背景/产品图/头像等）。仅允许 http/https 公网图片，限制大小；返回的 url 可直接放进 <img src> 或 background-image', method: 'downloadImage')]
 class ViewFileToolProvider
 {
     public function __construct(
@@ -24,8 +27,178 @@ class ViewFileToolProvider
         private readonly DomManipulator $domManipulator,
         private readonly ViewPathResolver $pathResolver,
         private readonly RequestStack $requestStack,
+        private readonly HttpClientInterface $httpClient,
         #[Autowire('%kernel.project_dir%')] private readonly string $projectDir,
     ) {}
+
+    /**
+     * 抓取网页并提取视觉风格线索（HTML + CSS）供 AI 模仿 /
+     * fetch a webpage and extract style cues (HTML + CSS) for the AI to mimic
+     */
+    public function fetchWebPage(string $url): array
+    {
+        if (!preg_match('#^https?://#i', trim($url))) {
+            return ['error' => '仅支持 http/https 链接'];
+        }
+        $host = parse_url($url, PHP_URL_HOST);
+        if (!$host) {
+            return ['error' => '链接无效'];
+        }
+        if ($this->isBlockedHost($host)) {
+            return ['error' => '不允许访问本机或内网地址'];
+        }
+
+        try {
+            $response = $this->httpClient->request('GET', trim($url), [
+                'timeout' => 15,
+                'max_duration' => 15,
+                'headers' => [
+                    'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                ],
+            ]);
+            $html = $response->getContent(false);
+
+            preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $t);
+            $title = trim(strip_tags($t[1] ?? ''));
+
+            // 提取 <style> 与 <link rel=stylesheet> 的 CSS 文本
+            preg_match_all('/<style[^>]*>(.*?)<\/style>/is', $html, $styleMatches);
+            $css = implode("\n\n", array_slice($styleMatches[1] ?? [], 0, 6));
+
+            // 清理 script/style/注释，保留结构与文字
+            $clean = (string) preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
+            $clean = (string) preg_replace('/<style\b[^>]*>.*?<\/style>/is', '', $clean);
+            $clean = (string) preg_replace('/<!--.*?-->/s', '', $clean);
+
+            return [
+                'title' => $title ?: '(无标题)',
+                'url' => trim($url),
+                'css' => mb_substr($css, 0, 20000),
+                'html' => mb_substr($clean, 0, 30000),
+            ];
+        } catch (\Throwable $e) {
+            return ['error' => '抓取网页失败：' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * 从公网 URL 下载图片到 public/uploads/YYYY/MM/{uuid}.{ext}，返回可引用的 /uploads/... 地址。
+     * 用于视图设计里需要真实图片（Hero/背景/产品图/头像）时，避免直接外链（易失效/防盗链）。
+     */
+    public function downloadImage(string $url, ?string $alt = null): array
+    {
+        $url = trim($url);
+        if (!preg_match('#^https?://#i', $url)) {
+            return ['error' => '仅支持 http/https 链接'];
+        }
+        $host = (string) parse_url($url, PHP_URL_HOST);
+        if (!$host || $this->isBlockedHost($host)) {
+            return ['error' => '不允许下载本机或内网地址'];
+        }
+
+        $maxBytes = 8 * 1024 * 1024; // 8MB 上限
+        try {
+            $response = $this->httpClient->request('GET', $url, [
+                'timeout' => 20,
+                'max_duration' => 20,
+                'max_redirects' => 5,
+                'headers' => [
+                    'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+                    'Accept' => 'image/*,*/*;q=0.8',
+                ],
+            ]);
+
+            $status = $response->getStatusCode();
+            if ($status < 200 || $status >= 300) {
+                return ['error' => "下载失败（HTTP $status）"];
+            }
+
+            $contentType = strtolower((string) ($response->getHeaders(false)['content-type'][0] ?? ''));
+            if ($contentType !== '' && !str_starts_with($contentType, 'image/')) {
+                return ['error' => '该地址不是图片（Content-Type: ' . $contentType . '）'];
+            }
+
+            $data = $response->getContent(false);
+            if (strlen($data) > $maxBytes) {
+                return ['error' => '图片过大（超过 8MB）'];
+            }
+            if (strlen($data) < 64) {
+                return ['error' => '下载内容为空或过小'];
+            }
+
+            $ext = $this->imageExtension($contentType, $url);
+            if ($ext === null) {
+                return ['error' => '不支持的图片格式'];
+            }
+
+            $rel = sprintf('uploads/%s/%s', date('Y/m'), bin2hex(random_bytes(16)) . '.' . $ext);
+            $abs = $this->projectDir . '/public/' . $rel;
+            $dir = dirname($abs);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            if (file_put_contents($abs, $data) === false) {
+                return ['error' => '保存图片失败'];
+            }
+
+            return [
+                'url' => '/' . $rel,
+                'bytes' => strlen($data),
+                'alt' => $alt ?: '',
+                'hint' => '在设计中引用：<img src="/' . $rel . '" alt="' . ($alt ?: '') . '">，或 background-image:url(/' . $rel . ')',
+            ];
+        } catch (\Throwable $e) {
+            return ['error' => '下载图片失败：' . $e->getMessage()];
+        }
+    }
+
+    /** 由 content-type / 扩展名推断图片扩展名，非图片返回 null */
+    private function imageExtension(string $contentType, string $url): ?string
+    {
+        $byMime = [
+            'image/png' => 'png',
+            'image/jpeg' => 'jpg',
+            'image/jpg' => 'jpg',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'image/svg+xml' => 'svg',
+            'image/bmp' => 'bmp',
+            'image/avif' => 'avif',
+        ];
+        foreach ($byMime as $mime => $ext) {
+            if (str_starts_with($contentType, $mime)) {
+                return $ext;
+            }
+        }
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        $urlExt = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        if (in_array($urlExt, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'avif'], true)) {
+            return $urlExt === 'jpeg' ? 'jpg' : $urlExt;
+        }
+        return null;
+    }
+
+    /** 阻止访问本机/内网地址（SSRF 防护） / block localhost & private networks (SSRF guard) */
+    private function isBlockedHost(string $host): bool
+    {
+        $host = strtolower(rtrim($host, '.'));
+        if ($host === 'localhost' || str_ends_with($host, '.localhost')) {
+            return true;
+        }
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            return !filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+        }
+        $ips = @gethostbynamel($host);
+        if (is_array($ips)) {
+            foreach ($ips as $ip) {
+                if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     private function findView(string $idOrName): ?View
     {

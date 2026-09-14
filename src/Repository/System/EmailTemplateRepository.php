@@ -20,4 +20,22 @@ class EmailTemplateRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, EmailTemplate::class);
     }
+
+    /**
+     * 按代码 + 语言查找模板；指定语言缺失时回退到回退语言，再回退到任意一条。
+     *
+     * Find a template by code + locale; falls back to the fallback locale,
+     * then to any template with that code.
+     */
+    public function findByCodeLocalized(string $code, string $locale, string $fallbackLocale = 'zh_CN'): ?EmailTemplate
+    {
+        foreach ([$locale, $fallbackLocale] as $candidate) {
+            $tpl = $this->findOneBy(['code' => $code, 'locale' => $candidate]);
+            if ($tpl) {
+                return $tpl;
+            }
+        }
+
+        return $this->findOneBy(['code' => $code]);
+    }
 }

@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use App\Form\Organization\CorporationFormType;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use App\Controller\Api\ApiResponse;
 use App\Service\Platform\DataGridService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -583,7 +584,7 @@ class OrgController extends BaseController
               'type' => 'new',
               'parentId' => $parentId,
               'html' => $html
-            ], 200, '部门创建成功');
+            ], 200, 'msg.org.department_created');
           }
 
           $this->addFlash('org.singleDepartment', 'clear');
@@ -640,7 +641,7 @@ class OrgController extends BaseController
               'type' => 'new',
               'parentId' => $parentId,
               'html' => $html
-          ], 200, '部门创建成功');
+          ], 200, 'msg.org.department_created');
       }
 
       $this->addFlash('org.singleDepartment', 'clear');
@@ -695,7 +696,7 @@ class OrgController extends BaseController
               'type' => 'edit',
               'id' => $submitDepartment->getId(),
               'name' => $submitDepartment->getName()
-            ], 200, '部门修改成功');
+            ], 200, 'msg.org.department_updated');
           }
 
           return $this->redirectToRoute('org_department');
@@ -728,7 +729,7 @@ class OrgController extends BaseController
               'type' => 'edit',
               'id' => $submitDepartment->getId(),
               'name' => $submitDepartment->getName()
-          ], 200, '部门修改成功');
+          ], 200, 'msg.org.department_updated');
       }
 
       return $this->redirectToRoute('org_department');
@@ -844,10 +845,10 @@ class OrgController extends BaseController
           $dataGridService->clearEntityCache(Position::class);
 
           if ($request->isXmlHttpRequest()) {
-            return ApiResponse::success([], 200, '岗位创建成功');
+            return ApiResponse::success([], 200, 'msg.org.position_created');
           }
 
-          $this->addFlash('success', '岗位创建成功');
+          $this->addFlash('success', 'flash.position_created');
           return $this->redirectToRoute('org_position');
         }
 
@@ -875,7 +876,7 @@ class OrgController extends BaseController
       $em->flush();
       $dataGridService->clearEntityCache(Position::class);
 
-      $this->addFlash('success', '岗位创建成功');
+      $this->addFlash('success', 'flash.position_created');
       return $this->redirectToRoute('org_position');
     }
 
@@ -930,10 +931,10 @@ class OrgController extends BaseController
           $dataGridService->clearEntityCache(Position::class);
 
           if ($request->isXmlHttpRequest()) {
-            return ApiResponse::success([], 200, '岗位更新成功');
+            return ApiResponse::success([], 200, 'msg.org.position_updated');
           }
 
-          $this->addFlash('success', '岗位更新成功');
+          $this->addFlash('success', 'flash.position_updated');
           return $this->redirectToRoute('org_position');
         }
 
@@ -961,7 +962,7 @@ class OrgController extends BaseController
       $em->flush();
       $dataGridService->clearEntityCache(Position::class);
 
-      $this->addFlash('success', '岗位更新成功');
+      $this->addFlash('success', 'flash.position_updated');
       return $this->redirectToRoute('org_position');
     }
 
@@ -976,7 +977,7 @@ class OrgController extends BaseController
    * 批量删除岗位
    */
   #[Route('/admin/org/position/batch-delete', name: 'org_position_batch_delete', methods: ['POST'])]
-  public function batchDeletePosition(Request $request, EntityManagerInterface $em, DataGridService $dataGridService): Response
+  public function batchDeletePosition(TranslatorInterface $translator, Request $request, EntityManagerInterface $em, DataGridService $dataGridService): Response
   {
       $data = $request->toArray();
       $ids = $data['ids'] ?? [];
@@ -984,7 +985,7 @@ class OrgController extends BaseController
       $excludedIds = $data['excludedIds'] ?? [];
       
       if (empty($ids) && !$isSelectAll) {
-          return ApiResponse::error('', 400, '请选择要删除的岗位');
+          return ApiResponse::error('', 400, 'msg.org.select_positions');
       }
 
       $repo = $em->getRepository(Position::class);
@@ -999,7 +1000,7 @@ class OrgController extends BaseController
           $ids = array_column($result, 'id');
           
           if (empty($ids)) {
-               return ApiResponse::error('', 400, '没有可删除的岗位');
+               return ApiResponse::error('', 400, 'msg.org.no_positions');
           }
       }
 
@@ -1038,11 +1039,11 @@ class OrgController extends BaseController
       }
 
       if ($errorCount > 0) {
-          $msg = "成功删除 {$deletedCount} 个岗位，{$errorCount} 个失败：" . implode('; ', $errors);
+          $msg = $translator->trans('msg.org.deleted_some', ['count' => $deletedCount, 'err' => $errorCount, 'details' => implode('; ', $errors)]);
           return ApiResponse::success(json_encode(['deleted' => $deletedCount, 'errors' => $errors]), 200, $msg);
       }
 
-      return ApiResponse::success('', 200, "成功删除 {$deletedCount} 个岗位");
+      return ApiResponse::success('', 200, $translator->trans('msg.org.deleted', ['count' => $deletedCount]));
   }
 
   /**
@@ -1060,14 +1061,14 @@ class OrgController extends BaseController
     // 检查是否有下级岗位
     $hasChildren = $em->getRepository(Position::class)->findBy(['parent' => $position]);
     if (count($hasChildren) > 0) {
-      $this->addFlash('error', '该岗位存在下级岗位，无法删除');
+      $this->addFlash('error', 'flash.position_has_children');
       return $this->redirectToRoute('org_position');
     }
 
     // 检查是否有员工关联
     $hasEmployees = $em->getRepository('App\Entity\Organization\Employee')->findBy(['position' => $position]);
     if (count($hasEmployees) > 0) {
-      $this->addFlash('error', '该岗位已有员工关联，无法删除');
+      $this->addFlash('error', 'flash.position_has_employees');
       return $this->redirectToRoute('org_position');
     }
 
@@ -1075,7 +1076,7 @@ class OrgController extends BaseController
     $em->flush();
     $dataGridService->clearEntityCache(Position::class);
 
-    $this->addFlash('success', '岗位删除成功');
+    $this->addFlash('success', 'flash.position_deleted');
     return $this->redirectToRoute('org_position');
   }
 
@@ -1168,10 +1169,10 @@ class OrgController extends BaseController
           $dataGridService->clearEntityCache(PositionLevel::class);
 
           if ($request->isXmlHttpRequest()) {
-            return ApiResponse::success([], 200, '岗位级别创建成功');
+            return ApiResponse::success([], 200, 'msg.org.level_created');
           }
 
-          $this->addFlash('success', '岗位级别创建成功');
+          $this->addFlash('success', 'flash.level_created');
           return $this->redirectToRoute('org_position_level');
         }
 
@@ -1199,7 +1200,7 @@ class OrgController extends BaseController
       $em->flush();
       $dataGridService->clearEntityCache(PositionLevel::class);
 
-      $this->addFlash('success', '岗位级别创建成功');
+      $this->addFlash('success', 'flash.level_created');
       return $this->redirectToRoute('org_position_level');
     }
 
@@ -1254,10 +1255,10 @@ class OrgController extends BaseController
           $dataGridService->clearEntityCache(PositionLevel::class);
 
           if ($request->isXmlHttpRequest()) {
-            return ApiResponse::success([], 200, '岗位级别更新成功');
+            return ApiResponse::success([], 200, 'msg.org.level_updated');
           }
 
-          $this->addFlash('success', '岗位级别更新成功');
+          $this->addFlash('success', 'flash.level_updated');
           return $this->redirectToRoute('org_position_level');
         }
 
@@ -1283,7 +1284,7 @@ class OrgController extends BaseController
     if ($form->isSubmitted() && $form->isValid()) {
       $em->flush();
       $dataGridService->clearEntityCache(PositionLevel::class);
-      $this->addFlash('success', '岗位级别更新成功');
+      $this->addFlash('success', 'flash.level_updated');
       return $this->redirectToRoute('org_position_level');
     }
 

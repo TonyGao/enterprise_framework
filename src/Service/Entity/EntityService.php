@@ -85,7 +85,7 @@ class EntityService extends BaseService
    */
   public function backupEntity(): EntityService
   {
-    // 备份目录
+    // 备份目录 / Backup directory
     $backupDir = $this->projectDir . '/var/backup/entity/';
     if (!is_dir($backupDir)) {
       mkdir($backupDir, 0777, true);
@@ -127,7 +127,7 @@ class EntityService extends BaseService
     $unique = ($property['unique']['value'] ?? '0') === '1' ? true : false;
     $property['unique']['value'] = $unique;
 
-    // 检查属性是否已存在于数据库模型中以及EntityProperty中
+    // 检查属性是否已存在于数据库模型中以及EntityProperty中 / Check whether the property exists in the DB model and EntityProperty
     if ($this->isExisted($property)) {
       throw EntityException::alreadyExistsProperty($this->class, $pName);
     }
@@ -149,14 +149,14 @@ class EntityService extends BaseService
         $attributeArr = ['type' => 'text', 'nullable' => $nullable];
       }
 
-      // 默认值
+      // 默认值 / Default value
       if (($property['defaultValue']['value'] ?? '') !== '') {
         $defaultValue = $property['defaultValue']['value'];
         $attributeArr['options'] = ['default' => $defaultValue];
         $class->setValue($defaultValue);
       }
 
-      // 唯一性
+      // 唯一性 / Uniqueness
       if ($unique) {
         $attributeArr['unique'] = $unique;
       }
@@ -173,7 +173,7 @@ class EntityService extends BaseService
       $prop->addAttribute('Doctrine\ORM\Mapping\Column', ['type' => 'json', 'nullable' => $nullable]);
     }
 
-    // 添加属性的 setter 方法
+    // 添加属性的 setter 方法 / Add a setter method for the attribute
     $setterMethodName = 'set' . ucfirst($pName);
     $method = $this->class->addMethod($setterMethodName)
       ->setReturnType($this->namespace)
@@ -187,7 +187,7 @@ class EntityService extends BaseService
       $method->getParameter($pName)->setType('array');
     }
 
-    // 添加属性的 getter 方法
+    // 添加属性的 getter 方法 / Add a getter method for the attribute
     $getterMethodName = 'get' . ucfirst($pName);
     $this->class->addMethod($getterMethodName)
       ->setReturnType($finalType)
@@ -204,7 +204,7 @@ class EntityService extends BaseService
   public function insertEntityProperty($property)
   {
     $groupId = $property['group']['value'];
-    // 获取 EntityPropertyGroup 对象
+    // 获取 EntityPropertyGroup 对象 / Get the EntityPropertyGroup object
     $groupRepo = $this->em->getRepository(EntityPropertyGroup::class);
     $group = $groupRepo->find($groupId);
 
@@ -266,14 +266,14 @@ class EntityService extends BaseService
 
     $oldPropertyName = $entityProperty->getPropertyName();
 
-    // 获取 Entity 对象
+    // 获取 Entity 对象 / Get the Entity object
     $entity = $entityProperty->getEntity();
 
-    // 加载 PHP 实体文件
+    // 加载 PHP 实体文件 / Load the PHP entity file
     $this->loadByToken($entity->getToken())
       ->loadEntity();
 
-    // 准备字段值
+    // 准备字段值 / Prepare field values
     $comment = $fields['comment']['value'] ?? $entityProperty->getComment();
     $type = $fields['type']['value'] ?? $entityProperty->getType();
     $groupId = $fields['group']['value'] ?? $entityProperty->getGroup()->getId();
@@ -297,7 +297,7 @@ class EntityService extends BaseService
       unset($formOptions['autosize']);
     }
 
-    // 在 PHP class 中找到对应属性
+    // 在 PHP class 中找到对应属性 / Find the corresponding property in the PHP class
     $class = $this->class;
     try {
       $propInClass = $class->getProperty($oldPropertyName);
@@ -305,16 +305,16 @@ class EntityService extends BaseService
       throw new \Exception("Property '{$oldPropertyName}' not found in entity class.");
     }
 
-    // 移除旧的 Column 注解
+    // 移除旧的 Column 注解 / Remove the old Column annotation
     $existingAttrs = array_values(array_filter($propInClass->getAttributes(), function ($attr) {
       return $attr->getName() !== 'Doctrine\ORM\Mapping\Column';
     }));
     $propInClass->setAttributes($existingAttrs);
 
-    // 更新注释
+    // 更新注释 / Update comment
     $propInClass->setComment($comment);
 
-    // 构建新的 Column 属性
+    // 构建新的 Column 属性 / Build a new Column attribute
     $attributeArr = ['type' => $type, 'nullable' => $nullable];
     if ($type === 'string') {
       $attributeArr['length'] = $length;
@@ -323,7 +323,7 @@ class EntityService extends BaseService
       $attributeArr['unique'] = true;
     }
 
-    // 默认值
+    // 默认值 / Default value
     if (isset($fields['defaultValue']['value']) && $fields['defaultValue']['value'] !== '') {
       $defaultValue = $fields['defaultValue']['value'];
       $attributeArr['options'] = ['default' => $defaultValue];
@@ -332,7 +332,7 @@ class EntityService extends BaseService
 
     $propInClass->addAttribute('Doctrine\ORM\Mapping\Column', $attributeArr);
 
-    // 更新 EntityProperty 记录
+    // 更新 EntityProperty 记录 / Update EntityProperty records
     $entityProperty->setComment($comment)
       ->setLength($length)
       ->setNullable($nullable)
@@ -342,7 +342,7 @@ class EntityService extends BaseService
       ->setGroup($group)
       ->setFormOptions($formOptions);
 
-    // 保存
+    // 保存 / Save/persist
     $this->em->persist($entityProperty);
     $this->save();
 
@@ -351,12 +351,12 @@ class EntityService extends BaseService
 
   public function isExisted($property)
   {
-    // 判断属性的name(英文字段名)在模型中是否已经存在
+    // 判断属性的name(英文字段名)在模型中是否已经存在 / Check whether the property name (English field name) already exists in the model
     $propertyName = $property['name']['value'];
     $pName = $this->namingStrategy->propertyToColumnName($propertyName);
     $result = in_array($pName, $this->columnNames);
 
-    // 判断中文名称是否在EntityProperty中已经存在
+    // 判断中文名称是否在EntityProperty中已经存在 / Check whether the Chinese name already exists in EntityProperty
     $comment = $property['comment']['value'];
     $epRepo = $this->em->getRepository(EntityProperty::class);
     $ep = $epRepo->findOneBy(['comment' => $comment]);
@@ -374,7 +374,7 @@ class EntityService extends BaseService
       $fileContent = (string) $this->file;
       file_put_contents($this->filePath, $fileContent);
 
-      // 执行 doctrine migrations
+      // 执行 doctrine migrations / Run doctrine migrations
       $this->migrationService->executeMigrationsDiff();
       $this->migrationService->executeMigrationsMigrate();
     } catch (\Exception $e) {
@@ -388,7 +388,7 @@ class EntityService extends BaseService
     return $this;
   }
 
-  // 读取class
+  // 读取class / Read class
   public function getClass()
   {
     return $this->class;
@@ -400,14 +400,14 @@ class EntityService extends BaseService
     return $this->file;
   }
 
-  // 添加目录
+  // 添加目录 / Add directory
   public function addFolderByEntity(EntityPropertyGroup $post, $type)
   {
     $post->setType('namespace');
     $parentDirectory = $this->getParentDirectoryPath($post);
     $newDirectoryName = $post->getName();
     $post->setLabel($newDirectoryName);
-    // 物理目录完整路径
+    // 物理目录完整路径 / Physical directory full path
     $newDirectoryPath = $parentDirectory . DIRECTORY_SEPARATOR . $newDirectoryName;
 
     if ($this->fR->directoryExists($newDirectoryPath)) {

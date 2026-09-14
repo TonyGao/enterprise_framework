@@ -116,22 +116,22 @@
 								</div>
 								<div class="dropdown-divider" style="margin: 0!important;"></div>
 								<a href="#" class="dropdown-item">
-									<span>{{ 'layout.user.settings'|trans }}</span>
+									<span>{{ "layout.user.settings"|trans }}</span>
 								</a>
 								<div class="dropdown-divider" style="margin: 0!important;"></div>
 								<div class="dropdown-multilevel">
 									<div class="dropdown-item">
-										<span>{{ 'layout.user.language'|trans }}</span>
+										<span>{{ "layout.user.language"|trans }}</span>
 										<i class="fa-solid fa-angle-right"></i>
 									</div>
 									<div class="dropdown-menu">
-										<a href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(app.request.query.all)|merge({'_locale': 'zh_CN'})) }}" class="dropdown-item">{{ 'layout.language.zh'|trans }}</a>
-										<a href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(app.request.query.all)|merge({'_locale': 'en'})) }}" class="dropdown-item">{{ 'layout.language.en'|trans }}</a>
+										<a href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(app.request.query.all)|merge({'_locale': 'zh_CN'})) }}" class="dropdown-item">{{ "layout.language.zh"|trans }}</a>
+										<a href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(app.request.query.all)|merge({'_locale': 'en'})) }}" class="dropdown-item">{{ "layout.language.en"|trans }}</a>
 									</div>
 								</div>
 								<div class="dropdown-divider" style="margin: 0!important;"></div>
 								<a href="{{ path('app_logout') }}" class="dropdown-item">
-									<span>{{ 'layout.user.logout'|trans }}</span>
+									<span>{{ "layout.user.logout"|trans }}</span>
 								</a>
 							</div>
 						</div>

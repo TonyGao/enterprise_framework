@@ -300,7 +300,7 @@ $(document).ready(function() {
         const $activeSection = $('.section.active');
         
         if ($activeSection.length === 0) {
-            console.warn('没有激活的Section');
+            console.warn(t('viewEditorSecPropsJs.js1'));
             return;
         }
         
@@ -729,7 +729,7 @@ $(document).ready(function() {
         const $selectedTable = $('.ef-table.selected');
         
         if ($selectedTable.length === 0) {
-            console.warn('没有选中的表格组件');
+            console.warn(t('viewEditorSecPropsJs.js2'));
             return;
         }
         
@@ -779,7 +779,7 @@ $(document).ready(function() {
         const $selectedComponent = $('.ef-table.selected, .ef-text.selected, .ef-image.selected');
         
         if ($selectedComponent.length === 0) {
-            console.warn('没有选中的组件');
+            console.warn(t('viewEditorSecPropsJs.js3'));
             return;
         }
         
@@ -789,7 +789,7 @@ $(document).ready(function() {
         // 隐藏属性面板
         $('.properties-panel').hide();
         
-        console.log('组件已删除');
+        console.log(t('viewEditorSecPropsJs.js4'));
     }
     
     // 检查是否选中表格组件并显示/隐藏表格属性
@@ -889,7 +889,7 @@ $(document).ready(function() {
         // 在组件右上角添加关闭图标
         if ($el.closest('.canvas, #canvas').length && !$el.find('.ef-component-close-btn').length) {
             $target.css('position', 'relative');
-            const $btn = $('<div class="ef-component-close-btn" title="删除组件"><i class="fa fa-times"></i></div>');
+            const $btn = $(t('viewEditorSecPropsJs.js5'));
             $btn.on('mousedown', function(e) {
                 e.stopPropagation();
                 e.preventDefault();
@@ -927,7 +927,7 @@ $(document).ready(function() {
         $row.addClass('selected').css({outline: '2px solid #1890ff'});
         // 添加关闭按钮
         if (!$row.find('.ef-row-close-btn').length) {
-            const $btn = $('<div class="ef-row-close-btn" title="删除行"><i class="fa fa-times"></i></div>');
+            const $btn = $(t('viewEditorSecPropsJs.js6'));
             $btn.on('mousedown', function(ev) {
                 ev.stopPropagation();
                 ev.preventDefault();
@@ -1111,6 +1111,13 @@ $(document).ready(function() {
             markComponentSelected($widget);
             $(document).trigger('componentSelected', [$widget[0]]);
         } else if (inLabelCol && $label.length) {
+            markComponentSelected($label);
+            $(document).trigger('componentSelected', [$label[0]]);
+        } else if ($widget.length && !inWidgetCol && !inLabelCol) {
+            // 自定义表单设计（无 ef-form-item-wrapper-col/label-col 结构）：点击控件区即选中控件
+            markComponentSelected($widget);
+            $(document).trigger('componentSelected', [$widget[0]]);
+        } else if ($label.length && !inWidgetCol && !inLabelCol) {
             markComponentSelected($label);
             $(document).trigger('componentSelected', [$label[0]]);
         } else if (inWidgetCol) {

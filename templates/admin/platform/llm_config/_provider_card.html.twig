@@ -45,14 +45,14 @@
   <div class="card-bottom">
     <div class="card-actions">
       <a href="{{ path('admin_llm_provider_edit', {id: provider.id}) }}" class="btn outline small icon" style="border-radius: 8px;">
-        <i class="fa-solid fa-pen"></i> 编辑
+        <i class="fa-solid fa-pen"></i> {{ "llmProviderCard.1"|trans }}
       </a>
       <button type="button" class="btn outline small icon btn-test-connection" data-provider-id="{{ provider.id }}" style="border-radius: 8px;">
-        <i class="fa-solid fa-plug"></i> 测试
+        <i class="fa-solid fa-plug"></i> {{ "llmProviderCard.2"|trans }}
       </button>
       <form method="post" action="{{ path('admin_llm_provider_delete', {id: provider.id}) }}" style="display:inline" onsubmit="return confirm('确定删除该服务商？')">
         <button class="btn outline small icon btn-delete" style="border-radius: 8px;">
-          <i class="fa-solid fa-trash"></i> 删除
+          <i class="fa-solid fa-trash"></i> {{ "llmProviderCard.3"|trans }}
         </button>
       </form>
     </div>

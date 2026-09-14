@@ -99,7 +99,7 @@
 					<div class="start-node-wrapper">
 						<h2 class="corporation-node">
               {{ corporation.name }}
-              <a class="btn primary mini node-edit" href="{{ path('org_corporation_edit') }}" style="display: none;">编辑</a>
+              <a class="btn primary mini node-edit" href="{{ path('org_corporation_edit') }}" style="display: none;">{{ "orgCorp.1"|trans }}</a>
             </h2>
 					</div>
             <button class="btn primary mini icon circle" id="add-company" style="position: absolute; right: -15px;">
@@ -114,7 +114,7 @@
                 <li>
                   <h2>
                     {{ company.name }}
-                    <a class="btn primary mini node-edit" href="{{ path('org_company_edit', {id: company.id}) }}" style="display: none;">编辑</a>
+                    <a class="btn primary mini node-edit" href="{{ path('org_company_edit', {id: company.id}) }}" style="display: none;">{{ "orgCorp.1"|trans }}</a>
                   </h2>
                 </li>
               {% endfor %}
@@ -123,14 +123,14 @@
         </div>
       {% else %}
           <div class="warning-content">
-              <div class="warning-title">没有任何数据 T_T</div>
+              <div class="warning-title">{{ "orgCorp.2"|trans }}</div>
               <img src="{{ asset('status/no-data.png', 'image') }}" width="587px" height="307px">
-              <button class="btn primary medium round" onclick="location.href='{{ path('org_corporation_edit') }}'"><i class="fa-solid fa-plus"></i>添加集团信息</button>
+              <button class="btn primary medium round" onclick="location.href='{{ path('org_corporation_edit') }}'"><i class="fa-solid fa-plus"></i>{{ "orgCorp.3"|trans }}</button>
           </div>
       {% endif %}
 			</div>
       <span class="button-group added-company" style="display: none">
-        <button class="btn primary medium round" id="save-company">保存</button>
+        <button class="btn primary medium round" id="save-company">{{ "orgCorp.4"|trans }}</button>
       </span>
 		</div>
 	</div>

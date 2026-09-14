@@ -60,12 +60,6 @@
             }
         });
 
-        $(document).on('click', function(e) {
-            if (!$.contains($('#canvas')[0], e.target) && selectedEl) {
-                clearSelection();
-            }
-        });
-
         $('#canvas').on('scroll', function() {
             if (selectedEl) updateOverlay();
         });
@@ -153,7 +147,7 @@
 
     function renderPropertyList(styleStr) {
         var $list = $('#css-property-list').empty();
-        if (!styleStr) { $list.html('<p style="font-size:11px;color:#94a3b8;text-align:center;padding:8px 0">无内联样式</p>'); return; }
+        if (!styleStr) { $list.html('<p style="font-size:11px;color:#94a3b8;text-align:center;padding:8px 0">' + t('viewEditorCss.noStyle') + '</p>'); return; }
         var props = styleStr.split(';').map(function(s) { return s.trim(); }).filter(Boolean);
         props.forEach(function(prop) {
             var colonIdx = prop.indexOf(':');
@@ -195,7 +189,7 @@
         if (!selectedEl) return;
         $(selectedEl).removeAttr('style');
         $('#css-inline-textarea').val('');
-        $('#css-property-list').empty().html('<p style="font-size:11px;color:#94a3b8;text-align:center;padding:8px 0">无内联样式</p>');
+        $('#css-property-list').empty().html('<p style="font-size:11px;color:#94a3b8;text-align:center;padding:8px 0">' + t('viewEditorCss.noStyle') + '</p>');
         updateOverlay();
         dispatchEvent('cssStyleChanged', { element: selectedEl, style: '' });
     }

@@ -196,7 +196,7 @@ $(document).ready(function() {
             whiteSpace: 'nowrap',
             pointerEvents: 'none'
           });
-          $sizeTooltip.text(`宽度: ${Math.round(firstTdWitdh)}px | 高度: ${Math.round(cellHeight)}px`);
+          $sizeTooltip.text(t('viewTableJs.wh', {w: Math.round(firstTdWitdh), h: Math.round(cellHeight)}));
           
           $('body').append($guide, $sizeTooltip);
           
@@ -220,7 +220,7 @@ $(document).ready(function() {
             $sizeTooltip.css({
               left: cellOffset.left + newWidth + 10
             });
-            $sizeTooltip.text(`宽度: ${Math.round(actualNewWidth)}px | 高度: ${Math.round(cellHeight)}px`);
+            $sizeTooltip.text(t('viewTableJs.wh', {w: Math.round(actualNewWidth), h: Math.round(cellHeight)}));
           });
           
           // 鼠标释放事件
@@ -332,7 +332,7 @@ $(document).ready(function() {
             whiteSpace: 'nowrap',
             pointerEvents: 'none'
           });
-          $sizeTooltip.text(`宽度: ${Math.round(cellWidth)}px | 高度: ${Math.round(firstTdHeight)}px`);
+          $sizeTooltip.text(t('viewTableJs.wh', {w: Math.round(cellWidth), h: Math.round(firstTdHeight)}));
           
           // 将辅助线添加到body，使其能够跨越整个视口
           $('body').append($guide, $sizeTooltip);
@@ -347,7 +347,7 @@ $(document).ready(function() {
             $sizeTooltip.css({
               top: rowOffset.top + newHeight - 20
             });
-            $sizeTooltip.text(`宽度: ${Math.round(cellWidth)}px | 高度: ${Math.round(newHeight)}px`);
+            $sizeTooltip.text(t('viewTableJs.wh', {w: Math.round(cellWidth), h: Math.round(newHeight)}));
           });
           
           // 鼠标释放事件
@@ -452,7 +452,7 @@ $(document).ready(function() {
             whiteSpace: 'nowrap',
             pointerEvents: 'none'
           });
-          $sizeTooltip.text(`宽度: ${Math.round(firstTdWitdh)}px | 高度: ${Math.round(firstTdHeight)}px`);
+          $sizeTooltip.text(t('viewTableJs.wh', {w: Math.round(firstTdWitdh), h: Math.round(firstTdHeight)}));
           
           $('body').append($vGuide, $sizeTooltip);
           
@@ -481,7 +481,7 @@ $(document).ready(function() {
               left: cellOffset.left + newWidth + 10,
               top: rowOffset.top + newHeight - 40
             });
-            $sizeTooltip.text(`宽度: ${Math.round(actualNewWidth)}px | 高度: ${Math.round(newHeight)}px`);
+            $sizeTooltip.text(t('viewTableJs.wh', {w: Math.round(actualNewWidth), h: Math.round(newHeight)}));
           });
           
           // 鼠标释放事件

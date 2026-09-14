@@ -1,6 +1,6 @@
 {% extends 'admin/layout.html.twig' %}
 
-{% block title %}{{ 'admin_security.page_title'|trans }}{% endblock %}
+{% block title %}{{ "admin_security.page_title"|trans }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -121,11 +121,11 @@
 <div class="org-structure-container security-page">
     <div class="outside-wrapper" style="padding: 40px; max-width: 1200px; margin: 0; background: #fff; min-height: calc(100vh - 60px);">
         
-        <div class="security-title">{{ 'admin_security.title'|trans }}</div>
+        <div class="security-title">{{ "admin_security.title"|trans }}</div>
         
         <div class="security-tabs">
-            <a href="{{ path('admin_security_index') }}" class="security-tab active" style="text-decoration: none;">{{ 'admin_security.tabs.2fa_settings'|trans }}</a>
-            <a href="{{ path('admin_security_password_policy') }}" class="security-tab" style="text-decoration: none;">{{ 'admin_security.tabs.password_policy'|trans }}</a>
+            <a href="{{ path('admin_security_index') }}" class="security-tab active" style="text-decoration: none;">{{ "admin_security.tabs.2fa_settings"|trans }}</a>
+            <a href="{{ path('admin_security_password_policy') }}" class="security-tab" style="text-decoration: none;">{{ "admin_security.tabs.password_policy"|trans }}</a>
         </div>
 
         <div class="ef-row ef-row-align-start ef-row-justify-start">
@@ -145,19 +145,19 @@
                         <i class="fa-solid fa-circle-info" style="font-size: 18px;"></i>
                     </div>
                     <div class="ef-alert-body">
-                        <div class="ef-alert-title" style="font-weight: 600; font-size: 15px; margin-bottom: 4px; color: #1d1d1f;">{{ 'admin_security.alert.title'|trans }}</div>
-                        <div class="ef-alert-content" style="color: #555; font-size: 14px; line-height: 1.5;">{{ 'admin_security.alert.content'|trans }}</div>
+                        <div class="ef-alert-title" style="font-weight: 600; font-size: 15px; margin-bottom: 4px; color: #1d1d1f;">{{ "admin_security.alert.title"|trans }}</div>
+                        <div class="ef-alert-content" style="color: #555; font-size: 14px; line-height: 1.5;">{{ "admin_security.alert.content"|trans }}</div>
                     </div>
                 </div>
 
                 <div class="ef-row ef-row-align-center ef-row-justify-between" style="margin-bottom: 16px;">
                     <div>
-                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">{{ 'admin_security.list.title'|trans }}</div>
-                        <div style="font-size: 14px; color: #86868b;">{{ 'admin_security.list.subtitle'|trans }}</div>
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">{{ "admin_security.list.title"|trans }}</div>
+                        <div style="font-size: 14px; color: #86868b;">{{ "admin_security.list.subtitle"|trans }}</div>
                     </div>
                     <div>
                         {% if methods|length == 0 %}
-                            <a href="{{ path('admin_security_init') }}" class="btn outline medium" style="border-radius: 20px;">{{ 'admin_security.btn.initialize'|trans }}</a>
+                            <a href="{{ path('admin_security_init') }}" class="btn outline medium" style="border-radius: 20px;">{{ "admin_security.btn.initialize"|trans }}</a>
                         {% endif %}
                     </div>
                 </div>
@@ -184,7 +184,7 @@
                         <div class="method-content">
                             <div class="method-title">{{ method.name }}</div>
                             <div class="method-subtitle {% if method.priority <= 20 %}secure{% else %}less-secure{% endif %}">
-                                {% if method.priority <= 20 %}{{ 'admin_security.status.more_secure'|trans }}{% else %}{{ 'admin_security.status.less_secure'|trans }}{% endif %}
+                                {% if method.priority <= 20 %}{{ "admin_security.status.more_secure"|trans }}{% else %}{{ "admin_security.status.less_secure"|trans }}{% endif %}
                             </div>
                         </div>
                         <div class="method-actions">
@@ -225,19 +225,19 @@
                                     </div>
                                     <div class="ef-modal-body text-start" style="padding: 20px;">
                                         <div style="margin-bottom: 20px;">
-                                            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">{{ 'admin_security.modal.priority_label'|trans }}</label>
+                                            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">{{ "admin_security.modal.priority_label"|trans }}</label>
                                             <span class="ef-input-wrapper" style="width: 100%;">
                                                 <input type="number" name="priority" class="ef-input ef-input-size-medium text" value="{{ method.priority }}" required>
                                             </span>
-                                            <div style="margin-top: 8px; font-size: 12px; color: #86868b;">{{ 'admin_security.modal.priority_help'|trans }}</div>
+                                            <div style="margin-top: 8px; font-size: 12px; color: #86868b;">{{ "admin_security.modal.priority_help"|trans }}</div>
                                         </div>
                                         
                                         {% if method.methodKey == 'email' %}
                                         <div style="margin-bottom: 20px;">
-                                            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">选择邮件模版</label>
+                                            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">{{ "secIndex.1"|trans }}</label>
                                             <span class="ef-input-wrapper" style="width: 100%;">
                                                 <select name="config[template]" class="ef-input ef-input-size-medium text" style="width: 100%; border: none; outline: none; background: transparent; padding: 0;">
-                                                    <option value="">-- 请选择模版 --</option>
+                                                    <option value="">{{ "secIndex.2"|trans }}</option>
                                                     {% for template in emailTemplates %}
                                                         <option value="{{ template.code }}" {% if method.config.template|default('') == template.code %}selected{% endif %}>{{ template.name }} ({{ template.code }})</option>
                                                     {% endfor %}
@@ -245,13 +245,13 @@
                                             </span>
                                         </div>
                                         <div style="margin-bottom: 20px;">
-                                            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">验证码有效期 (分钟)</label>
+                                            <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">{{ "secIndex.3"|trans }} ({{ "secIndex.4"|trans }})</label>
                                             <span class="ef-input-wrapper" style="width: 100%;">
                                                 <input type="number" name="config[expire_minutes]" class="ef-input ef-input-size-medium text" value="{{ method.config.expire_minutes|default('15') }}">
                                             </span>
                                         </div>
                                         <div style="margin-bottom: 20px; font-size: 13px;">
-                                            <a href="{{ path('admin_email_index') }}" style="color: #0066cc; text-decoration: none;">如需修改发件服务器，请前往 [系统设置 - 邮件配置]</a>
+                                            <a href="{{ path('admin_email_index') }}" style="color: #0066cc; text-decoration: none;">{{ "secIndex.5"|trans }} [{{ "secIndex.6"|trans }}]</a>
                                         </div>
                                         {% endif %}
 
@@ -261,13 +261,13 @@
                                                 <span class="ef-icon-hover ef-checkbox-icon-hover">
                                                     <div class="ef-checkbox-icon"></div>
                                                 </span>
-                                                <span class="ef-checkbox-label" style="font-weight: 500; font-size: 14px;">{{ 'admin_security.modal.enable_method'|trans }}</span>
+                                                <span class="ef-checkbox-label" style="font-weight: 500; font-size: 14px;">{{ "admin_security.modal.enable_method"|trans }}</span>
                                             </label>
                                         </div>
                                     </div>
                                     <div class="ef-modal-footer">
-                                        <button class="btn secondary medium" type="button" onclick="closeModal('editMethodModal{{ method.id }}')">{{ 'admin_security.btn.cancel'|trans }}</button>
-                                        <button class="btn primary medium" type="submit">{{ 'admin_security.btn.save'|trans }}</button>
+                                        <button class="btn secondary medium" type="button" onclick="closeModal('editMethodModal{{ method.id }}')">{{ "admin_security.btn.cancel"|trans }}</button>
+                                        <button class="btn primary medium" type="submit">{{ "admin_security.btn.save"|trans }}</button>
                                     </div>
                                 </form>
                             </div>
@@ -279,15 +279,15 @@
 
             <div class="ef-col-8">
                 <div class="side-card">
-                    <div class="side-card-title">{{ 'admin_security.side_card.checkup.title'|trans }}</div>
-                    <div class="side-card-text">{{ 'admin_security.side_card.checkup.text'|trans }}</div>
-                    <a href="#" class="side-card-link">{{ 'admin_security.side_card.checkup.link'|trans }}</a>
+                    <div class="side-card-title">{{ "admin_security.side_card.checkup.title"|trans }}</div>
+                    <div class="side-card-text">{{ "admin_security.side_card.checkup.text"|trans }}</div>
+                    <a href="#" class="side-card-link">{{ "admin_security.side_card.checkup.link"|trans }}</a>
                 </div>
 
                 <div class="side-card">
-                    <div class="side-card-title">{{ 'admin_security.side_card.help.title'|trans }}</div>
-                    <div class="side-card-text">{{ 'admin_security.side_card.help.text'|trans }}</div>
-                    <a href="#" class="side-card-link">{{ 'admin_security.side_card.help.link'|trans }}</a>
+                    <div class="side-card-title">{{ "admin_security.side_card.help.title"|trans }}</div>
+                    <div class="side-card-text">{{ "admin_security.side_card.help.text"|trans }}</div>
+                    <a href="#" class="side-card-link">{{ "admin_security.side_card.help.link"|trans }}</a>
                 </div>
             </div>
         </div>

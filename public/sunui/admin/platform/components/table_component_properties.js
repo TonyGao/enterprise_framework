@@ -10,11 +10,11 @@
             <!-- 表格组件属性面板 -->
             <div id="table-properties" style="display: none;">
                 <div class="property-group">
-                    <div class="property-group-title">表格样式</div>
+                    <div class="property-group-title">${t('tableComp.m24')}</div>
                     
                     <!-- 边框宽度 -->
                     <div class="property-item">
-                        <label class="property-label">边框宽度</label>
+                        <label class="property-label">${t('tableComp.m25')}</label>
                         <div class="property-control">
                             <input type="number" id="table-border-width" class="ef-input text" min="0" max="10" value="1" style="width: 80px;">
                             <span style="margin-left: 5px;">px</span>
@@ -23,7 +23,7 @@
                     
                     <!-- 边框颜色 -->
                     <div class="property-item">
-                        <label class="property-label">边框颜色</label>
+                        <label class="property-label">${t('tableComp.m26')}</label>
                         <div class="property-control">
                             <span class="ef-input-wrapper ef-input-rounded" style="padding: 2px; width: auto; cursor: pointer;" id="table-border-color-trigger">
                                 <span id="table-border-color-preview" style="display: block; width: 50px; height: 30px; background: #cccccc; border-radius: 2px;"></span>
@@ -33,10 +33,10 @@
                     
                     <!-- 边框样式 -->
                     <div class="property-item">
-                        <label class="property-label">边框样式</label>
+                        <label class="property-label">${t('tableComp.m27')}</label>
                         <div class="property-control">
                             <span class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium" style="width: 120px;" id="table-border-style-select">
-                                <input class="ef-select-view-input" placeholder="选择样式" readonly>
+                                <input class="ef-select-view-input" placeholder=t('tableComponentPropsJs.js1') readonly>
                                 <span class="ef-select-view-value ef-select-view-value-hidden">solid</span>
                                 <span class="ef-select-view-suffix">
                                     <span class="ef-select-view-icon">
@@ -47,17 +47,17 @@
                                 </span>
                             </span>
                             <div class="ef-select-content" style="display: none; position: absolute; z-index: 1000; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 120px;">
-                                <div class="ef-select-option" data-value="solid">实线</div>
-                                <div class="ef-select-option" data-value="dashed">虚线</div>
-                                <div class="ef-select-option" data-value="dotted">点线</div>
-                                <div class="ef-select-option" data-value="double">双线</div>
+                                <div class="ef-select-option" data-value="solid">${t('tableComp.m28')}</div>
+                                <div class="ef-select-option" data-value="dashed">${t('tableComp.m29')}</div>
+                                <div class="ef-select-option" data-value="dotted">${t('tableComp.m30')}</div>
+                                <div class="ef-select-option" data-value="double">${t('tableComp.m31')}</div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- 单元格内边距 -->
                     <div class="property-item">
-                        <label class="property-label">单元格内边距</label>
+                        <label class="property-label">${t('tableComp.m32')}</label>
                         <div class="property-control">
                             <input type="number" id="table-cell-padding" class="ef-input text" min="0" max="50" value="8" style="width: 80px;">
                             <span style="margin-left: 5px;">px</span>
@@ -66,7 +66,7 @@
                     
                     <!-- 斑马纹 -->
                     <div class="property-item">
-                        <label class="property-label">斑马纹</label>
+                        <label class="property-label">${t('tableComp.m33')}</label>
                         <div class="property-control">
                             <button type="button" role="switch" aria-checked="false" class="ef-switch ef-switch-type-circle" id="table-stripe-rows">
                                 <span class="ef-switch-handle">
@@ -78,7 +78,7 @@
                     
                     <!-- 悬停效果 -->
                     <div class="property-item">
-                        <label class="property-label">悬停效果</label>
+                        <label class="property-label">${t('tableComp.m34')}</label>
                         <div class="property-control">
                             <button type="button" role="switch" aria-checked="false" class="ef-switch ef-switch-type-circle" id="table-hover-effect">
                                 <span class="ef-switch-handle">
@@ -92,7 +92,7 @@
                 <!-- 删除组件按钮 -->
                 <div class="property-group" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
                     <button class="btn red medium long" id="delete-component-btn">
-                        <i class="fa-solid fa-trash-can"></i> 删除组件
+                        <i class="fa-solid fa-trash-can"></i> ${t('tableComp.delete')}
                     </button>
                 </div>
             </div>

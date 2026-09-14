@@ -37,7 +37,7 @@ $(document).ready(async function () {
     },
     update: function (event, ui) {
       // 在此可以处理后台更新逻辑
-      console.log("新的排序已更新");
+      console.log(t('menuJs.js1'));
       // 可以在这里发送新的排序数据到后端，更新数据库
     },
     receive: function (event, ui) {
@@ -85,11 +85,11 @@ $(document).ready(async function () {
 
   $("#modify").on("click", async function() {
     if (choseMenus.length === 0) {
-      $.alert.warning('请先选择一个菜单', { title: '提示' });
+      $.alert.warning(t('menuJs.js2'), { title: t('menuJs.js3') });
       return;
     }
     if (choseMenus.length > 1) {
-      $.alert.warning('一次只能修改一个菜单', { title: '提示' });
+      $.alert.warning(t('menuJs.js4'), { title: t('menuJs.js3') });
       return;
     }
     const menuId = choseMenus[0].id;

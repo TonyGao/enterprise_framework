@@ -9,16 +9,16 @@
       <div id="field-row-context-menu" class="context-menu" style="display: none;">
         <div class="menu-item" data-action="insert-row-above">
             <i class="fa-solid fa-arrow-up"></i>
-            <span>向上插入行</span>
+            <span>${t('fieldRowCtx.m12')}</span>
         </div>
         <div class="menu-item" data-action="insert-row-below">
             <i class="fa-solid fa-arrow-down"></i>
-            <span>向下插入行</span>
+            <span>${t('fieldRowCtx.m13')}</span>
         </div>
         <div class="menu-separator"></div>
         <div class="menu-item" data-action="delete-row">
             <i class="fa-solid fa-trash-can"></i>
-            <span>删除行</span>
+            <span>${t('fieldRowCtx.m14')}</span>
         </div>
       </div>
     `;
@@ -73,14 +73,14 @@
     $newRow.find('.ef-form-label').each(function() {
       const $label = $(this);
       $label.removeAttr('data-field-name data-placeholder data-required data-required-bg');
-      $label.find('label').text('-- 未绑定 --');
+      $label.find('label').text(t('fieldRowCtxJs.js1'));
     });
 
     $newRow.find('.ef-form-widget').each(function() {
       const $widget = $(this);
       $widget.removeAttr('data-field-name data-field-type');
       $widget.empty();
-      $widget.append('<div class="unbound-placeholder">从数据源绑定字段</div>');
+      $widget.append(t('fieldRowCtxJs.js2'));
     });
 
     return $newRow;

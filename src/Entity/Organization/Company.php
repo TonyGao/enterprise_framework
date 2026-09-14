@@ -29,72 +29,51 @@ class Company implements GedmoNode
 	private $id;
 
 	/**
-	 * 公司名称
-	 * @Ef(
-	 *     group="company_base_info",
-	 *     isBF=true
-	 * )
+	 * 公司名称 / Company name
 	 */
+	#[Ef(group: 'company_base_info', isBF: true)]
 	#[ORM\Column(type: 'string', length: 180, unique: true)]
 	private $name;
 
 	/**
-	 * 简称
-	 * @Ef(
-	 *     group="company_base_info",
-	 *     isBF=true
-	 * )
+	 * 简称 / Short name / alias
 	 */
+	#[Ef(group: 'company_base_info', isBF: true)]
 	#[ORM\Column(type: 'string', length: 80, nullable: true)]
 	private $alias;
 
 	/**
-	 * 编码
-	 * @Ef(
-	 *    group="company_base_info",
-	 *    isBF=true
-	 * )
+	 * 编码 / Code
 	 */
+	#[Ef(group: 'company_base_info', isBF: true)]
 	#[ORM\Column(type: 'string', length: 180, nullable: true)]
 	private $code;
 
 	/**
-	 * 描述
-	 * @Ef(
-	 *     group="company_base_info",
-	 *     isBF=true
-	 * )
+	 * 描述 / Description
 	 */
+	#[Ef(group: 'company_base_info', isBF: true)]
 	#[ORM\Column(type: 'text', nullable: true)]
 	private $remark;
 
 	/**
 	 * 重复排序号处理: 插入、重复
-	 * @Ef(
-	 *     group="company_base_info",
-	 *     isBF=true
-	 * )
 	 */
+	#[Ef(group: 'company_base_info', isBF: true)]
 	#[ORM\Column(type: 'string', nullable: true)]
 	private $repetitionNumHandling;
 
 	/**
 	 * 状态: 启用、停用
-	 * @Ef(
-	 *     group="company_base_info",
-	 *     isBF=true
-	 * )
 	 */
+	#[Ef(group: 'company_base_info', isBF: true)]
 	#[ORM\Column(type: 'boolean', options: ['default' => 1])]
 	private $state = true;
 
 	/**
-	 * 独立登录页
-	 * @Ef(
-	 *     group="company_base_info",
-	 *     isBF=true
-	 * )
+	 * 独立登录页 / Independent login page
 	 */
+	#[Ef(group: 'company_base_info', isBF: true)]
 	#[ORM\Column(type: 'boolean', nullable: true)]
 	private $loginIndependent;
 
@@ -117,12 +96,9 @@ class Company implements GedmoNode
 	private $sortOrder;
 
 	/**
-	 * 上级公司
-	 * @Ef(
-	 *     group="company_associated_info",
-	 *     isBF=true
-	 * )
+	 * 上级公司 / Parent company
 	 */
+	#[Ef(group: 'company_associated_info', isBF: true)]
 	#[Gedmo\TreeParent]
 	#[ORM\ManyToOne(targetEntity: 'Company', inversedBy: 'children')]
 	#[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
@@ -161,6 +137,24 @@ class Company implements GedmoNode
 	/** 公司法人 */
 	#[ORM\Column(type: 'string', length: 255, nullable: true)]
 	private $gongSiFaRen;
+
+	/**
+	 * 国家代码（ISO 3166-1）/ Country code (ISO 3166-1)
+	 */
+	#[ORM\Column(type: 'string', length: 2, nullable: true)]
+	private $countryCode;
+
+	/**
+	 * 默认语言 / Default locale
+	 */
+	#[ORM\Column(type: 'string', length: 16, nullable: true)]
+	private $defaultLocale;
+
+	/**
+	 * 默认币种（ISO 4217）/ Default currency (ISO 4217)
+	 */
+	#[ORM\Column(type: 'string', length: 3, nullable: true)]
+	private $defaultCurrency;
 
 
 	public function __construct()
@@ -478,5 +472,56 @@ class Company implements GedmoNode
 	public function getGongSiFaRen(): string
 	{
 		return $this->gongSiFaRen;
+	}
+
+	/**
+	 * 国家代码 Getter / Country code getter
+	 */
+	public function getCountryCode(): ?string
+	{
+		return $this->countryCode;
+	}
+
+	/**
+	 * 国家代码 Setter / Country code setter
+	 */
+	public function setCountryCode(?string $countryCode): Company
+	{
+		$this->countryCode = $countryCode ? strtoupper($countryCode) : null;
+		return $this;
+	}
+
+	/**
+	 * 默认语言 Getter / Default locale getter
+	 */
+	public function getDefaultLocale(): ?string
+	{
+		return $this->defaultLocale;
+	}
+
+	/**
+	 * 默认语言 Setter / Default locale setter
+	 */
+	public function setDefaultLocale(?string $defaultLocale): Company
+	{
+		$this->defaultLocale = $defaultLocale;
+		return $this;
+	}
+
+	/**
+	 * 默认币种 Getter / Default currency getter
+	 */
+	public function getDefaultCurrency(): ?string
+	{
+		return $this->defaultCurrency;
+	}
+
+	/**
+	 * 默认币种 Setter / Default currency setter
+	 */
+	public function setDefaultCurrency(?string $defaultCurrency): Company
+	{
+		$this->defaultCurrency = $defaultCurrency ? strtoupper($defaultCurrency) : null;
+		return $this;
 	}
 }

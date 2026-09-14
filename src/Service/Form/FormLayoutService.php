@@ -122,7 +122,7 @@ class FormLayoutService
                     unset($config['sectionDivider']);
                 }
 
-                // 字段级覆盖
+                // 字段级覆盖 / Field-level overrides
                 if (isset($fieldOverrides[$name])) {
                     $ov = $fieldOverrides[$name];
                     if (array_key_exists('label', $ov) && $ov['label'] !== null) {
@@ -270,7 +270,17 @@ class FormLayoutService
                 return null;
             }
 
-            return $this->renderDesignFragment($inner, $formView, $entity);
+            $html = $this->renderDesignFragment($inner, $formView, $entity);
+
+            // 应用 section_config 的 boxed 宽度（与 FormFieldRenderer::render 的 formAttr 逻辑一致）/
+            // apply boxed width from section_config (consistent with FormFieldRenderer::render formAttr logic)
+            $sc = $view->getSectionConfig() ?? [];
+            if (($sc['contentWidth'] ?? null) === 'boxed' && !empty($sc['width'])) {
+                $unit = $sc['unit'] ?? 'px';
+                $html = '<div class="ef-view-boxed" style="width:' . ((float) $sc['width']) . $unit . ';max-width:100%;margin:0 auto;box-sizing:border-box;">' . $html . '</div>';
+            }
+
+            return $html;
         } catch (\Throwable) {
             return null;
         }
@@ -279,13 +289,136 @@ class FormLayoutService
     /**
      * 渲染自定义表单设计片段：控件用框架标准控件（ef-form 主题，保留前端交互功能），
      * AI 只负责布局外壳美化。直接渲染设计 Twig（form_start/form_widget 等由全局 ef-form 主题输出）。
+     *
+     * @param FormView   $formView   Symfony FormView
+     * @param object     $entity     实体数据
+     * @param array|null $fields     ViewField 记录（用于编辑器注入 data-field-type）
+     * @param bool       $editorMode 编辑器画布模式：注入透明字段标记（editor-field-row/ef-form-label/ef-form-widget），
+     *                               使右侧"组件"面板可点击调整，同时不破坏 AI 布局
      */
-    public function renderDesignFragment(string $inner, FormView $formView, object $entity): string
+    public function renderDesignFragment(string $inner, FormView $formView, object $entity, ?array $fields = null, bool $editorMode = false): string
     {
-        return $this->twig->createTemplate($inner)->render([
+        $html = $this->twig->createTemplate($inner)->render([
             'form' => $formView,
             'entity' => $entity,
         ]);
+
+        if ($editorMode) {
+            $html = $this->injectEditorFieldMarkers($html, $formView, $fields ?? []);
+        }
+
+        return $html;
+    }
+
+    /**
+     * 给编辑器画布注入透明的字段编辑标记：每个表单控件外面包一层
+     * .editor-field-row > .ef-form-label(data-field-name) + .ef-form-widget(data-field-type)，
+     * 全部 display:contents（不改变布局）。这样点击控件时右侧"组件"面板能识别字段并调整。
+     */
+    private function injectEditorFieldMarkers(string $html, FormView $formView, array $fields): string
+    {
+        $fieldTypes = [];
+        foreach ($fields as $field) {
+            if (method_exists($field, 'getFieldName') && method_exists($field, 'getFieldType')) {
+                $fieldTypes[(string) $field->getFieldName()] = (string) $field->getFieldType();
+            }
+        }
+
+        $useErrors = libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_NOWARNING | LIBXML_NOERROR);
+        libxml_use_internal_errors($useErrors);
+        $xp = new \DOMXPath($dom);
+
+        $containerQuery = "//*[contains(concat(' ', normalize-space(@class), ' '), ' ef-input-wrapper ')
+            or contains(concat(' ', normalize-space(@class), ' '), ' ef-switch ')
+            or contains(concat(' ', normalize-space(@class), ' '), ' ef-select-view-single ')
+            or contains(concat(' ', normalize-space(@class), ' '), ' ef-textarea-wrapper ')]";
+        $containers = $xp->query($containerQuery);
+        $done = [];
+
+        foreach ($containers as $container) {
+            $fieldName = null;
+            $nameEls = $xp->query(".//*[@name and starts-with(@name, 'form[')]", $container);
+            if ($nameEls->length) {
+                $fieldName = preg_replace('/^form\[(.*)\]$/', '$1', $nameEls->item(0)->getAttribute('name'));
+            }
+            if (!$fieldName) {
+                $idEls = $xp->query(".//*[starts-with(@id, 'form_')]", $container);
+                if ($idEls->length) {
+                    $fieldName = substr($idEls->item(0)->getAttribute('id'), 5);
+                }
+            }
+            if (!$fieldName || $fieldName === '_token' || isset($done[$fieldName])) {
+                continue;
+            }
+
+            $vars = $formView->children[$fieldName]->vars ?? [];
+            $label = $vars['label'] ?? $fieldName;
+            $required = !empty($vars['required']);
+            $attr = $vars['attr'] ?? [];
+            $placeholder = $attr['placeholder'] ?? '';
+            $height = $attr['height'] ?? ($attr['rows'] ?? 36);
+            $rounded = !empty($attr['rounded']);
+            $regularBg = $attr['data-regular-bg'] ?? '';
+            $requiredBg = $attr['data-required-bg'] ?? '';
+            $fieldType = $fieldTypes[$fieldName] ?? '';
+
+            // 透明包装结构
+            $row = $dom->createElement('div');
+            $row->setAttribute('class', 'editor-field-row');
+            $row->setAttribute('style', 'display:contents');
+
+            $labelWrap = $dom->createElement('div');
+            $labelWrap->setAttribute('class', 'ef-component ef-form-label');
+            $labelWrap->setAttribute('style', 'display:contents');
+            $labelWrap->setAttribute('data-field-name', $fieldName);
+            $labelWrap->setAttribute('data-col-span', '1');
+            $labelWrap->setAttribute('data-label-col', '8');
+            $labelWrap->setAttribute('data-height', (string) $height);
+            $labelWrap->setAttribute('data-rounded', $rounded ? 'true' : 'false');
+            $labelWrap->setAttribute('data-placeholder', $placeholder);
+            $labelWrap->setAttribute('data-required', $required ? 'true' : 'false');
+            if ($regularBg !== '') {
+                $labelWrap->setAttribute('data-regular-bg', $regularBg);
+            }
+            if ($requiredBg !== '') {
+                $labelWrap->setAttribute('data-required-bg', $requiredBg);
+            }
+            $innerLabel = $dom->createElement('label');
+            $innerLabel->setAttribute('class', 'ef-form-item-label');
+            $innerLabel->setAttribute('style', 'display:none');
+            $innerLabel->textContent = (string) $label;
+            $labelWrap->appendChild($innerLabel);
+
+            $widgetWrap = $dom->createElement('div');
+            $widgetWrap->setAttribute('class', 'ef-component ef-form-widget');
+            $widgetWrap->setAttribute('style', 'display:contents');
+            $widgetWrap->setAttribute('data-field-name', $fieldName);
+            if ($fieldType !== '') {
+                $widgetWrap->setAttribute('data-field-type', $fieldType);
+            }
+
+            $origParent = $container->parentNode;
+            $origParent->insertBefore($widgetWrap, $container);
+            $widgetWrap->appendChild($container);
+            $row->appendChild($labelWrap);
+            $origParent->insertBefore($row, $widgetWrap);
+            $row->appendChild($widgetWrap);
+
+            $done[$fieldName] = true;
+        }
+
+        $body = $xp->query('//body')->item(0);
+        if (!$body) {
+            return $html;
+        }
+        $out = '';
+        foreach ($body->childNodes as $child) {
+            $out .= $dom->saveHTML($child);
+        }
+
+        return $out === '' ? $html : $out;
     }
 
     /**

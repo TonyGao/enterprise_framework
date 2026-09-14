@@ -9,6 +9,7 @@ use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: EmailTemplateRepository::class)]
 #[ORM\Table(name: 'sys_email_template')]
+#[ORM\UniqueConstraint(name: 'uniq_email_template_code_locale', columns: ['code', 'locale'])]
 class EmailTemplate
 {
     use CommonTraitWithoutOrg;
@@ -19,8 +20,14 @@ class EmailTemplate
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     private ?Uuid $id = null;
 
-    #[ORM\Column(type: 'string', length: 100, unique: true)]
+    #[ORM\Column(type: 'string', length: 100)]
     private ?string $code = null;
+
+    /**
+     * 模板语言 / Template locale（如 zh_CN、en）
+     */
+    #[ORM\Column(type: 'string', length: 16, options: ['default' => 'zh_CN'])]
+    private ?string $locale = 'zh_CN';
 
     #[ORM\Column(type: 'string', length: 255)]
     private ?string $name = null;
@@ -51,6 +58,17 @@ class EmailTemplate
     public function setCode(string $code): self
     {
         $this->code = $code;
+        return $this;
+    }
+
+    public function getLocale(): ?string
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(string $locale): self
+    {
+        $this->locale = $locale;
         return $this;
     }
 

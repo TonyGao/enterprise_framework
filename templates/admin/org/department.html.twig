@@ -203,16 +203,16 @@
 	<div class="org-structure-container">
 		<div class="outside-wrapper">
 			{{ ui.toolBar([
-					{'type': 'create', 'text': '新建', 'id': 'create'},
-					{'type': 'modify', 'text': '修改', 'id': 'modify'},
-          {'type':'disable', 'text': '停用', 'id':'disable'},
+					{'type': 'create', 'text': 'btn.create', 'id': 'create'},
+					{'type': 'modify', 'text': 'btn.modify', 'id': 'modify'},
+          {'type':'disable', 'text': 'btn.disable', 'id':'disable'},
 			]) }}
 			<div class="inside-wrapper">
 				<div class="left-tree visible" id="leftTree">
 					<div class="left-tree-wrapper">
 						<div class="search-department-wrapper">
 							<span class="ef-input-wrapper">
-								<input class="ef-input ef-input-size-mini text" type="text" clearable="true" placeholder="请输入部门名称"/>
+								<input class="ef-input ef-input-size-mini text" type="text" clearable="true" placeholder="{{ "orgDept.1"|trans }}"/>
 								<span class="ef-input-suffix">
 									<i class="fa-solid fa-magnifying-glass"></i>
 								</span>

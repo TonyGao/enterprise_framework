@@ -54,7 +54,7 @@ class LlmConfigController extends BaseController
             $provider->setOptions($this->buildOptions($form));
             $em->persist($provider);
             $em->flush();
-            $this->addFlash('success', '服务商创建成功');
+            $this->addFlash('success', 'flash.provider_created');
             return $this->redirectToRoute('admin_llm_config_index');
         }
 
@@ -95,7 +95,7 @@ class LlmConfigController extends BaseController
             }
             $provider->setOptions($this->buildOptions($form));
             $em->flush();
-            $this->addFlash('success', '服务商编辑成功');
+            $this->addFlash('success', 'flash.provider_updated');
             return $this->redirectToRoute('admin_llm_config_index');
         }
 
@@ -118,7 +118,7 @@ class LlmConfigController extends BaseController
         }
         $em->remove($provider);
         $em->flush();
-        $this->addFlash('success', '服务商已删除');
+        $this->addFlash('success', 'flash.provider_deleted');
         return $this->redirectToRoute('admin_llm_config_index');
     }
 
@@ -151,7 +151,7 @@ class LlmConfigController extends BaseController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $em->flush();
-            $this->addFlash('success', '角色编辑成功');
+            $this->addFlash('success', 'flash.role_updated');
             return $this->redirectToRoute('admin_llm_config_index');
         }
 
@@ -172,14 +172,14 @@ class LlmConfigController extends BaseController
         $providerId = $request->request->get('provider_id');
 
         if (empty($roleCodes)) {
-            return $this->json(['success' => false, 'error' => '请选择至少一个角色'], 422);
+            return $this->json(['success' => false, 'error' => 'msg.llm.select_role'], 422);
         }
 
         $provider = null;
         if ($providerId) {
             $provider = $providerRepo->find(Uuid::fromString($providerId));
             if (!$provider) {
-                return $this->json(['success' => false, 'error' => '服务商不存在'], 422);
+                return $this->json(['success' => false, 'error' => 'msg.llm.provider_not_found'], 422);
             }
         }
 
@@ -207,7 +207,7 @@ class LlmConfigController extends BaseController
         if (!$provider->getApiKeyEncrypted()) {
             return $this->json([
                 'success' => false,
-                'error' => 'API Key 未配置',
+                'error' => 'msg.llm.api_key_missing',
             ], 422);
         }
 

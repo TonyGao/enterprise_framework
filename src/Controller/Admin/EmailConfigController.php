@@ -68,14 +68,27 @@ class EmailConfigController extends AbstractController
 
     #[Route('/template/editor', name: 'admin_email_template_editor')]
     #[Route('/template/editor/{id}', name: 'admin_email_template_editor_with_id')]
-    public function editor(EmailConfigRepository $configRepository, EmailTemplateRepository $templateRepository, ?EmailTemplate $id = null): Response
+    public function editor(Request $request, EmailConfigRepository $configRepository, EmailTemplateRepository $templateRepository, ?EmailTemplate $id = null): Response
     {
         $configs = $configRepository->findAll();
-        $templates = $templateRepository->findBy([], ['createdAt' => 'DESC']);
+
+        // 邮件模板多语言：默认当前请求语言，可经 ?locale= 显式切换 /
+        // Multi-language email templates: default to request locale, switchable via ?locale=
+        $locale = $request->query->get('locale') ?: $request->getLocale();
+        $locale = in_array($locale, ['zh_CN', 'en'], true) ? $locale : 'zh_CN';
+
+        $templates = $templateRepository->findBy(['locale' => $locale], ['createdAt' => 'DESC']);
+        if (empty($templates)) {
+            // 该语言尚无模板时回退默认语言 / Fall back to default locale when empty
+            $templates = $templateRepository->findBy(['locale' => 'zh_CN'], ['createdAt' => 'DESC']);
+        }
+
         return $this->render('admin/email/editor.html.twig', [
             'configs' => $configs,
             'templates' => $templates,
             'editingTemplate' => $id,
+            'currentLocale' => $locale,
+            'supportedLocales' => ['zh_CN' => '中文', 'en' => 'English'],
         ]);
     }
 
@@ -94,7 +107,7 @@ class EmailConfigController extends AbstractController
         $testEmail = $data['testEmail'] ?? $request->request->get('testEmail');
 
         if (!$testEmail) {
-            return \App\Controller\Api\ApiResponse::error(json_encode([]), 400, '测试接收邮箱不能为空');
+            return \App\Controller\Api\ApiResponse::error(json_encode([]), 400, 'msg.email.recipient_required');
         }
 
         $config = null;
@@ -106,7 +119,7 @@ class EmailConfigController extends AbstractController
         }
 
         if (!$config) {
-            return \App\Controller\Api\ApiResponse::error(json_encode([]), 400, '未找到可用的邮件服务器配置');
+            return \App\Controller\Api\ApiResponse::error(json_encode([]), 400, 'msg.email.no_config');
         }
 
         try {
@@ -280,13 +293,20 @@ class EmailConfigController extends AbstractController
         $name = $request->request->get('name');
         
         if (empty($name)) {
-            $this->addFlash('error', '模版名称不能为空。');
+            $this->addFlash('error', 'flash.template_name_required');
             return $this->redirectToRoute('admin_email_index');
         }
 
-        $existing = $templateRepository->findOneBy(['name' => $name]);
+        // 模板语言：随表单提交，缺省当前请求语言 / Template locale from form, default to request locale
+        $locale = (string) $request->request->get('locale');
+        if (!in_array($locale, ['zh_CN', 'en'], true)) {
+            $locale = $request->getLocale();
+        }
+        $locale = in_array($locale, ['zh_CN', 'en'], true) ? $locale : 'zh_CN';
+
+        $existing = $templateRepository->findOneBy(['name' => $name, 'locale' => $locale]);
         if ($existing && $existing->getId() != $id) {
-            $this->addFlash('error', '模版名称已存在，请使用唯一的名称。');
+            $this->addFlash('error', 'flash.template_name_duplicate');
             return $this->redirectToRoute('admin_email_index');
         }
 
@@ -303,6 +323,7 @@ class EmailConfigController extends AbstractController
 
         $template->setCode($name);
         $template->setName($name);
+        $template->setLocale($locale);
         $template->setSubject($unmangle($request->request->get('subject')));
         $template->setBodyHtml($bodyHtml);
         $template->setDescription($request->request->get('description'));
@@ -401,7 +422,7 @@ class EmailConfigController extends AbstractController
 
             return \App\Controller\Api\ApiResponse::success(json_encode([]), 200, '连接成功，测试邮件已发送至 ' . $testEmail);
         } catch (\Exception $e) {
-            return \App\Controller\Api\ApiResponse::error(json_encode([]), 500, '连接失败，请检查邮件服务器配置。');
+            return \App\Controller\Api\ApiResponse::error(json_encode([]), 500, 'msg.email.conn_failed');
         }
     }
 }

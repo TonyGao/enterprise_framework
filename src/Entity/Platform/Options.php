@@ -29,7 +29,7 @@ class Options
     private $name;
 
     /**
-     * 编码
+ * 编码 / Code
      */
     #[ORM\Column(type: 'string', length: 80)]
     private $code;

@@ -192,7 +192,7 @@ class StorageConfigController extends AbstractController
             $entityManager->flush();
 
             if ($request->isXmlHttpRequest()) {
-                return new JsonResponse(['status' => 'success', 'message' => '创建成功']);
+                return new JsonResponse(['status' => 'success', 'message' => 'msg.storage.created']);
             }
 
             return $this->redirectToRoute('admin_storage_index', [], Response::HTTP_SEE_OTHER);
@@ -226,7 +226,7 @@ class StorageConfigController extends AbstractController
             $entityManager->flush();
 
             if ($request->isXmlHttpRequest()) {
-                return new JsonResponse(['status' => 'success', 'message' => '更新成功']);
+                return new JsonResponse(['status' => 'success', 'message' => 'msg.storage.updated']);
             }
 
             return $this->redirectToRoute('admin_storage_index', [], Response::HTTP_SEE_OTHER);

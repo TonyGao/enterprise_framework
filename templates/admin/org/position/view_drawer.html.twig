@@ -6,7 +6,7 @@
             <div class="ef-drawer-title">
                 <i class="fa-solid fa-user-tie" style="margin-right: 12px; font-size: 18px;"></i>
                 {{ position.name }}
-                <span style="font-size: 14px; font-weight: 400; margin-left: 8px; opacity: 0.8;">岗位详情</span>
+                <span style="font-size: 14px; font-weight: 400; margin-left: 8px; opacity: 0.8;">{{ "posViewDrawer.1"|trans }}</span>
             </div>
             <div tabindex="-1" role="button" aria-label="Close" class="ef-drawer-close-btn">
                 <span class="ef-icon-hover">
@@ -22,51 +22,51 @@
                 <div class="ef-section">
                     <div class="ef-section-header">
                         <i class="fa-solid fa-info-circle"></i>
-                        <span>基本信息</span>
+                        <span>{{ "posViewDrawer.2"|trans }}</span>
                     </div>
                     <div class="ef-detail-view ef-detail-two-columns">
                         <div class="ef-detail-row-group">
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">岗位名称</div>
+                                <div class="ef-detail-label">{{ "posViewDrawer.3"|trans }}</div>
                                 <div class="ef-detail-value">{{ position.name }}</div>
                             </div>
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">岗位编码</div>
+                                <div class="ef-detail-label">{{ "posViewDrawer.4"|trans }}</div>
                                 <div class="ef-detail-value">{{ position.code ?: '无' }}</div>
                             </div>
                         </div>
                         <div class="ef-detail-row-group">
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">所属部门</div>
+                                <div class="ef-detail-label">{{ "posViewDrawer.5"|trans }}</div>
                                 <div class="ef-detail-value">{{ position.department ? position.department.name : '无' }}</div>
                             </div>
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">岗位类型</div>
+                                <div class="ef-detail-label">{{ "posViewDrawer.6"|trans }}</div>
                                 <div class="ef-detail-value">{{ position.type ? position.type.stringValue : '无' }}</div>
                             </div>
                         </div>
                         <div class="ef-detail-row-group">
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">岗位级别</div>
+                                <div class="ef-detail-label">{{ "posViewDrawer.7"|trans }}</div>
                                 <div class="ef-detail-value">{{ position.level ? position.level.name : '无' }}</div>
                             </div>
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">上级岗位</div>
+                                <div class="ef-detail-label">{{ "posViewDrawer.8"|trans }}</div>
                                 <div class="ef-detail-value">{{ position.parent ? position.parent.name : '无' }}</div>
                             </div>
                         </div>
                         <div class="ef-detail-row-group">
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">编制人数</div>
+                                <div class="ef-detail-label">{{ "posViewDrawer.9"|trans }}</div>
                                 <div class="ef-detail-value">{{ position.headcount ?: '未设置' }}</div>
                             </div>
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">状态</div>
+                                <div class="ef-detail-label">{{ "posViewDrawer.10"|trans }}</div>
                                 <div class="ef-detail-value">
                                     {% if position.state %}
-                                        <span class="ef-badge ef-badge-success">✓ 启用</span>
+                                        <span class="ef-badge ef-badge-success">✓ {{ "posViewDrawer.11"|trans }}</span>
                                     {% else %}
-                                        <span class="ef-badge ef-badge-danger">✗ 停用</span>
+                                        <span class="ef-badge ef-badge-danger">✗ {{ "posViewDrawer.12"|trans }}</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -79,7 +79,7 @@
                 <div class="ef-section">
                     <div class="ef-section-header">
                         <i class="fa-solid fa-tasks"></i>
-                        <span>岗位职责</span>
+                        <span>{{ "posViewDrawer.13"|trans }}</span>
                     </div>
                     <div class="ef-detail-content">
                         {{ position.responsibility|nl2br }}
@@ -92,7 +92,7 @@
                 <div class="ef-section">
                     <div class="ef-section-header">
                         <i class="fa-solid fa-graduation-cap"></i>
-                        <span>任职要求</span>
+                        <span>{{ "posViewDrawer.14"|trans }}</span>
                     </div>
                     <div class="ef-detail-content">
                         {{ position.requirement|nl2br }}
@@ -104,7 +104,7 @@
                 <div class="ef-section">
                     <div class="ef-section-header">
                         <i class="fa-solid fa-users"></i>
-                        <span>岗位人员 ({{ employees|length }} 人)</span>
+                        <span>{{ "posViewDrawer.15"|trans }} ({{ employees|length }} {{ "posViewDrawer.16"|trans }})</span>
                     </div>
                     {% if employees|length > 0 %}
                         <div class="ef-table ef-table-size-medium">
@@ -112,10 +112,10 @@
                                 <table class="ef-table-element">
                                     <thead>
                                         <tr class="ef-table-tr">
-                                            <th class="ef-table-th">员工姓名</th>
-                                            <th class="ef-table-th">工号</th>
-                                            <th class="ef-table-th">入职日期</th>
-                                            <th class="ef-table-th">状态</th>
+                                            <th class="ef-table-th">{{ "posViewDrawer.17"|trans }}</th>
+                                            <th class="ef-table-th">{{ "posViewDrawer.18"|trans }}</th>
+                                            <th class="ef-table-th">{{ "posViewDrawer.19"|trans }}</th>
+                                            <th class="ef-table-th">{{ "posViewDrawer.10"|trans }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -146,18 +146,18 @@
                     {% else %}
                         <div class="ef-empty-state">
                             <i class="fa-solid fa-user-slash"></i>
-                            <div class="ef-empty-state-text">暂无员工数据</div>
-                            <div class="ef-empty-state-desc">该岗位尚未分配员工</div>
+                            <div class="ef-empty-state-text">{{ "posViewDrawer.20"|trans }}</div>
+                            <div class="ef-empty-state-desc">{{ "posViewDrawer.21"|trans }}</div>
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
         <div class="ef-drawer-footer">
-            <button class="cancelDrawer ef-drawer-btn ef-drawer-btn-secondary" type="button">关闭</button>
+            <button class="cancelDrawer ef-drawer-btn ef-drawer-btn-secondary" type="button">{{ "posViewDrawer.22"|trans }}</button>
             <button type="button" class="ef-drawer-btn ef-drawer-btn-primary edit-button" onclick="openPositionEditDrawer({{ position.id }})">
                     <i class="fa-solid fa-edit"></i>
-                    编辑
+                    {{ "posViewDrawer.23"|trans }}
                 </button>
         </div>
     </div>
@@ -237,7 +237,7 @@ function openPositionEditDrawer(positionId) {
     })
     .catch(error => {
         console.error('Error loading position edit drawer:', error);
-        alert('加载岗位编辑失败，请重试');
+        alert(t('posViewDrawer.js1'));
     });
 }
 </script>

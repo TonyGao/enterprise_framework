@@ -71,7 +71,7 @@ class DatabaseConnection
     private string $charset = 'utf8mb4';
 
     /**
-     * 用户名
+ * 用户名 / Username
      */
     #[ORM\Column(type: "string", length: 255)]
     private $username;

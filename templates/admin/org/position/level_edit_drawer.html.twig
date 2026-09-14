@@ -5,7 +5,7 @@
         <div class="ef-drawer-header">
             <div class="ef-drawer-title">
                 <i class="fa-solid fa-edit" style="margin-right: 12px; font-size: 18px;"></i>
-                编辑岗位级别
+                {{ "posLevelEdit.1"|trans }}
                 <span style="font-size: 14px; font-weight: 400; margin-left: 8px; opacity: 0.8;">{{ positionLevel.name }}</span>
             </div>
             {% if is_granted('ROLE_SYS_ADMIN') %}
@@ -15,14 +15,14 @@
                            style="padding: 4px 10px; background: #f0f7ff; border: 1px solid #cce5ff; border-radius: 14px;
                                   font-size: 12px; color: #0066cc; text-decoration: none; white-space: nowrap;
                                   display: inline-flex; align-items: center; gap: 4px;">
-                            <i class="fa-solid fa-pen-to-square"></i> 视图设计器
+                            <i class="fa-solid fa-pen-to-square"></i> {{ "posLevelEdit.2"|trans }}
                         </a>
                     {% elseif designerViewName is defined %}
                         <button type="button" onclick="autoCreatePositionView(this)"
                                 style="padding: 4px 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 14px;
                                        font-size: 12px; color: #856404; white-space: nowrap; cursor: pointer;
                                        display: inline-flex; align-items: center; gap: 4px;">
-                            <i class="fa-solid fa-link"></i> 新建视图
+                            <i class="fa-solid fa-link"></i> {{ "posLevelEdit.3"|trans }}
                         </button>
                     {% endif %}
                 </div>
@@ -49,7 +49,7 @@
             </div>
         </div>
         <div class="ef-drawer-footer">
-            <button class="cancelDrawer ef-drawer-btn ef-drawer-btn-secondary" type="button" onclick="closeDrawer()">取消</button>
+            <button class="cancelDrawer ef-drawer-btn ef-drawer-btn-secondary" type="button" onclick="closeDrawer()">{{ "posLevelEdit.4"|trans }}</button>
         </div>
     </div>
 </div>
@@ -84,7 +84,7 @@ $(document).ready(function() {
 function onFormSubmitSuccess() {
     removeDrawerOpenClass();
     $().hideDrawer('{{ drawerId }}');
-    alert('岗位级别保存成功！');
+    alert(t('posLevelEdit.js1'));
     window.location.reload();
 }
 
@@ -96,7 +96,7 @@ function closeDrawer() {
 {% if designerViewName is defined %}
 function autoCreatePositionView(btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 创建中...';
+    btn.innerHTML = t('posLevelEdit.js2');
     ajax({
         url: '{{ path('api_platform_view_auto_bind') }}',
         method: 'POST',
@@ -114,10 +114,10 @@ function autoCreatePositionView(btn) {
             }
         },
         error: function(xhr) {
-            var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : '创建失败';
+            var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : t('posLevelEdit.js3');
             alert(msg);
             btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-link"></i> 新建视图';
+            btn.innerHTML = t('posLevelEdit.js4');
         }
     });
 }

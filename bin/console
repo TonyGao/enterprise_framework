@@ -4,6 +4,30 @@
 use App\Kernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 
+// CLI 与 Web 保持一致的内存上限（Web 在 Caddyfile 中设为 512M）。
+// 默认 128M 在 cache:clear 预热大型模板时会 OOM，导致 `composer update` 的
+// post-update 脚本失败（ScriptExecutor 以 `php bin/console` 运行该脚本）。
+// Keep the CLI memory limit aligned with the web runtime (512M in the Caddyfile).
+// The default 128M OOMs while warming large templates, which breaks the
+// `composer update` post-update scripts (Flex runs them via `php bin/console`).
+$efMemoryUpperBound = 512 * 1024 ** 2;
+$efToBytes = static function (string $value): float {
+    $unit = strtolower(substr(trim($value), -1));
+    $bytes = (float) $value;
+
+    return match ($unit) {
+        'g' => $bytes * 1024 ** 3,
+        'm' => $bytes * 1024 ** 2,
+        'k' => $bytes * 1024,
+        default => $bytes,
+    };
+};
+$efMemoryLimit = (string) ini_get('memory_limit');
+if ('-1' !== $efMemoryLimit && $efToBytes($efMemoryLimit) < $efMemoryUpperBound) {
+    ini_set('memory_limit', '512M');
+}
+unset($efMemoryUpperBound, $efToBytes, $efMemoryLimit);
+
 if (!is_file(dirname(__DIR__).'/vendor/autoload_runtime.php')) {
     throw new LogicException('Symfony Runtime is missing. Try running "composer require symfony/runtime".');
 }

@@ -201,7 +201,7 @@ $(document).ready(function () {
   })
 
   // 定义组件模板（假设已经存在）
-  let textPlaceHolder = '在此添加您的文本';
+  let textPlaceHolder = t('viewEditorComponentsJs.js1');
   const componentTemplates = {
     text: {
       template: `
@@ -211,7 +211,7 @@ $(document).ready(function () {
             <span>Text</span>
           </span>
         </span>
-        <div class="font_2 ef-rich-text" style="font-size:64px;color:#000;" contenteditable="true" data-placeholder="请输入文本">${textPlaceHolder}</div>
+        <div class="font_2 ef-rich-text" style="font-size:64px;color:#000;" contenteditable="true" data-placeholder=t('viewEditorComponentsJs.js2')>${textPlaceHolder}</div>
       </div>`,
       width: 512, // 模板的预期宽度
       height: 68 // 模板的预期高度
@@ -229,21 +229,21 @@ $(document).ready(function () {
           <table class="ef-table" ef-table-hotkeys style="width: fit-content;">
             <thead>
               <tr style="height: 30px;">
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">标题 1</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">标题 2</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">标题 3</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">${t('viewEditorComponents.m15')}</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">${t('viewEditorComponents.m16')}</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">${t('viewEditorComponents.m17')}</th>
               </tr>
             </thead>
             <tbody>
               <tr style="height: 30px;">
-                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">内容 1</td>
-                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">内容 2</td>
-                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">内容 3</td>
+                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">${t('viewEditorComponents.m18')}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">${t('viewEditorComponents.m19')}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">${t('viewEditorComponents.m20')}</td>
               </tr>
               <tr style="height: 30px;">
-                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">内容 4</td>
-                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">内容 5</td>
-                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">内容 6</td>
+                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">${t('viewEditorComponents.m21')}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">${t('viewEditorComponents.m22')}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;" tabindex="0" data-cell-active="false">${t('viewEditorComponents.m23')}</td>
               </tr>
             </tbody>
           </table>

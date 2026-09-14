@@ -87,19 +87,19 @@ class CalendarController extends AbstractController
         $source = (string) ($data['source'] ?? 'timor');
 
         if ($year < 2000 || $year > 2100) {
-            return ApiResponse::error(json_encode([]), 400, '年份范围需在 2000-2100 之间');
+            return ApiResponse::error(json_encode([]), 400, 'msg.calendar.year_range');
         }
 
         if (!in_array($source, ['timor', 'holiday_cn'], true)) {
-            return ApiResponse::error(json_encode([]), 400, '不支持的数据源');
+            return ApiResponse::error(json_encode([]), 400, 'msg.calendar.unsupported_source');
         }
 
         try {
             $result = $this->holidayImportService->import($year, $source);
 
-            return ApiResponse::success(json_encode($result->toArray()), 200, '假日导入完成');
+            return ApiResponse::success(json_encode($result->toArray()), 200, 'msg.calendar.import_done');
         } catch (\Throwable $e) {
-            return ApiResponse::error(json_encode(['details' => $e->getMessage()]), 500, '假日导入失败：' . $e->getMessage());
+            return ApiResponse::error(json_encode(['details' => $e->getMessage()]), 500, 'msg.calendar.import_failed' . $e->getMessage());
         }
     }
 

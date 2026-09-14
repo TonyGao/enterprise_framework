@@ -7,6 +7,7 @@ use App\Service\Storage\FileUploadService;
 use App\Service\Storage\FileUrlGenerator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -90,7 +91,7 @@ class AvatarController extends AbstractController
         } catch (\Exception $e) {
             return $this->json([
                 'status' => 'error',
-                'message' => '上传失败: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine()
+                'message' => $translator->trans('msg.avatar.upload_failed') . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine()
             ], 500);
         }
     }
@@ -164,9 +165,9 @@ class AvatarController extends AbstractController
             return $this->json(['status' => 'success', 'success' => true, 'message' => 'Verification email queued successfully.']);
         } catch (\DomainException $e) {
             // Translates binding exceptions
-            return $this->json(['status' => 'error', 'message' => '邮件系统未完全配置: ' . $e->getMessage()], 400);
+            return $this->json(['status' => 'error', 'message' => $translator->trans('msg.avatar.mail_not_configured') . $e->getMessage()], 400);
         } catch (\Exception $e) {
-            return $this->json(['status' => 'error', 'message' => '邮件发送失败 (' . get_class($e) . '): ' . $e->getMessage()], 500);
+            return $this->json(['status' => 'error', 'message' => 'msg.avatar.mail_send_failed' . get_class($e) . '): ' . $e->getMessage()], 500);
         }
     }
 }

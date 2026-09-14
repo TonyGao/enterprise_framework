@@ -21,7 +21,7 @@
             <div class="ef-row" style="display: flex; gap: 40px;">
                 <div class="ef-col" style="flex: 1;">
                     <div class="ef-card" style="border: 1px solid #e5e6eb; border-radius: 4px; padding: 20px;">
-                        <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">基本信息</h4>
+                        <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">{{ "storageForm.1"|trans }}</h4>
                         {{ form_row(form.name) }}
                         {{ form_row(form.adapterType) }}
                         {{ form_row(form.isDefault) }}
@@ -31,13 +31,13 @@
                 <div class="ef-col" style="flex: 1;">
                     <div class="ef-card" style="border: 1px solid #e5e6eb; border-radius: 4px; padding: 20px;">
                         <div id="local-config-section">
-                            <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">Local 配置</h4>
+                            <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">{{ "storageForm.2"|trans }}</h4>
                             {{ form_row(form.directory_strategy) }}
                             {{ form_row(form.directory) }}
                         </div>
 
                         <div id="s3-config-section" style="margin-top: 30px;">
-                            <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">S3 配置</h4>
+                            <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">{{ "storageForm.3"|trans }}</h4>
                             {{ form_row(form.endpoint) }}
                             {{ form_row(form.region) }}
                             {{ form_row(form.bucket) }}
@@ -55,7 +55,7 @@
                             <button class="btn primary medium">{{ button_label|default('保存') }}</button>
                         </div>
                         <div class="ef-space-item">
-                            <a href="{{ path('admin_storage_index') }}" class="btn secondary medium">返回</a>
+                            <a href="{{ path('admin_storage_index') }}" class="btn secondary medium">{{ "storageForm.4"|trans }}</a>
                         </div>
                     </div>
                 </div>

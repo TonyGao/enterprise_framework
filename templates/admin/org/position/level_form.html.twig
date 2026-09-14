@@ -1,12 +1,12 @@
 {% extends 'admin/layout.html.twig' %}
 {% import 'ui/template/ui.html.twig' as ui %}
 
-{% block title %}{{ title|default('岗位级别') }}{% endblock %}
+{% block title %}{{ title|default('posLevel.formTitle'|trans) }}{% endblock %}
 
 {% block app_content_container %}
 <div class="ef-page-header">
     <div class="ef-page-title">
-        <h1>{{ title|default('岗位级别') }}</h1>
+        <h1>{{ title|default('posLevel.formTitle'|trans) }}</h1>
     </div>
 </div>
 

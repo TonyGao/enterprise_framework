@@ -17,7 +17,7 @@
             <div class="arrow-icon"><i class="fa-solid fa-caret-down"></i></div>
             <div class="org-icon"><i class="fa-solid fa-newspaper"></i></div>
             <div class="node-name">
-              <div class="tree-text-content entity-root" type="root">视图</div>
+              <div class="tree-text-content entity-root" type="root">{{ "viewIndex.3"|trans }}</div>
             </div>
           </div>
         {% elseif node.type == 'folder' %}
@@ -73,18 +73,18 @@
 		<div class="outside-wrapper">
 			{# 渲染工具栏，并传入按钮配置数组 #}
 			{% set toolbarButtons = [
-				  {'type': 'modify', 'text': '视图编辑器', 'id': 'viewEditor'},
-					{'type': 'create', 'text': '新建视图', 'id': 'createView'},
+				  {'type': 'modify', 'text': 'viewIndex.viewEditor', 'id': 'viewEditor'},
+					{'type': 'create', 'text': 'viewIndex.createView', 'id': 'createView'},
 			] %}
 			{% if is_granted('ROLE_SYS_ADMIN') %}
 				{% set toolbarButtons = toolbarButtons|merge([
-					{'type': 'edit', 'text': '编辑视图', 'id': 'editView'},
-					{'type': 'modify', 'text': '重命名文件夹', 'icon': 'fa-solid fa-pen', 'id': 'renameFolder'},
+					{'type': 'edit', 'text': 'viewIndex.editView', 'id': 'editView'},
+					{'type': 'modify', 'text': 'viewIndex.renameFolder', 'icon': 'fa-solid fa-pen', 'id': 'renameFolder'},
 				]) %}
 			{% endif %}
 			{% set toolbarButtons = toolbarButtons|merge([
-				{'type': 'create', 'text': '新建文件夹', 'icon': 'fa-solid fa-folder-plus', 'id': 'createFolder'},
-				{'type': 'modify', 'text': '通用配置', 'icon': 'fa-solid fa-gear', 'id': 'generalConfigBtn'}
+				{'type': 'create', 'text': 'viewIndex.createFolder', 'icon': 'fa-solid fa-folder-plus', 'id': 'createFolder'},
+				{'type': 'modify', 'text': 'viewIndex.generalConfig', 'icon': 'fa-solid fa-gear', 'id': 'generalConfigBtn'}
 			]) %}
 			{{ ui.toolBar(toolbarButtons) }}
 			<div class="inside-wrapper">
@@ -93,7 +93,7 @@
 					  {% if treeData is not empty %}
 							<div class="search-wrapper">
 								<span class="ef-input-wrapper">
-									<input class="ef-input ef-input-size-mini text" type="text" clearable="true" placeholder="请输入视图名称"/>
+									<input class="ef-input ef-input-size-mini text" type="text" clearable="true" placeholder="{{ "viewIndex.1"|trans }}"/>
 									<span class="ef-input-suffix">
 										<i class="fa-solid fa-magnifying-glass"></i>
 									</span>
@@ -129,7 +129,7 @@
 		<div class="ef-drawer-mask"></div>
 		<div class="ef-drawer" style="right: 0px; width: 450px;">
 			<div class="ef-drawer-header">
-				<div class="ef-drawer-title">通用配置</div>
+				<div class="ef-drawer-title">{{ "viewIndex.4"|trans }}</div>
 				<div class="ef-drawer-close-btn">
 					<span class="ef-icon-hover"><i class="fa-solid fa-times"></i></span>
 				</div>
@@ -139,11 +139,11 @@
 					<div class="ef-drawer-section">
 						<div class="ef-drawer-section-header">
 							<i class="fa-solid fa-palette"></i>
-							表单控件配置
+							{{ "viewIndex.5"|trans }}
 						</div>
 						<div class="ef-drawer-section-body">
 							<div class="ef-drawer-form-group">
-								<label class="ef-drawer-form-label">表单控件必填项底色</label>
+								<label class="ef-drawer-form-label">{{ "viewIndex.6"|trans }}</label>
 								<div style="display: flex; align-items: center; gap: 12px;">
 									<span class="ef-input-wrapper ef-input-rounded" style="padding: 2px; width: auto; cursor: pointer;" id="generalConfigRequiredBgTrigger">
 										{% set requiredBg = generalConfig.requiredBg|default('#FFF2E8') %}
@@ -151,10 +151,10 @@
 									</span>
 									<input type="text" id="generalConfigRequiredBgText" value="{{ requiredBg }}" class="ef-input ef-input-size-small" style="width: 100px; font-family: monospace;">
 								</div>
-								<div style="margin-top: 4px; font-size: 12px; color: #999;">开启"必填"开关时，自动填入的控件底色</div>
+								<div style="margin-top: 4px; font-size: 12px; color: #999;">{{ "viewIndex.7"|trans }}"{{ "viewIndex.8"|trans }}"{{ "viewIndex.9"|trans }}</div>
 							</div>
 							<div class="ef-drawer-form-group" style="margin-top: 16px;">
-								<label class="ef-drawer-form-label">框架主题色</label>
+								<label class="ef-drawer-form-label">{{ "viewIndex.10"|trans }}</label>
 								<div style="display: flex; align-items: center; gap: 12px;">
 									<span class="ef-input-wrapper ef-input-rounded" style="padding: 2px; width: auto; cursor: pointer;" id="generalConfigThemeColorTrigger">
 										{% set themeColor = generalConfig.themeColor|default('#165DFF') %}
@@ -162,15 +162,15 @@
 									</span>
 									<input type="text" id="generalConfigThemeColorText" value="{{ themeColor }}" class="ef-input ef-input-size-small" style="width: 140px; font-family: monospace;">
 								</div>
-								<div style="margin-top: 4px; font-size: 12px; color: #999;">全局框架主题色，用于控件主色调</div>
+								<div style="margin-top: 4px; font-size: 12px; color: #999;">{{ "viewIndex.11"|trans }}</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 			<div class="ef-drawer-footer">
-				<button class="ef-drawer-btn ef-drawer-btn-secondary cancelDrawer" type="button" style="margin-right: 8px;">取消</button>
-				<button class="ef-drawer-btn ef-drawer-btn-primary" type="button" id="generalConfigSaveBtn">保存</button>
+				<button class="ef-drawer-btn ef-drawer-btn-secondary cancelDrawer" type="button" style="margin-right: 8px;">{{ "viewIndex.12"|trans }}</button>
+				<button class="ef-drawer-btn ef-drawer-btn-primary" type="button" id="generalConfigSaveBtn">{{ "viewIndex.13"|trans }}</button>
 			</div>
 		</div>
 	</div>
@@ -181,7 +181,7 @@
 		<div class="ef-modal-wrapper ef-modal-wrapper-align-center">
 			<div class="ef-modal" style="width: 480px;">
 				<div class="ef-modal-header">
-					<div class="ef-modal-title ef-modal-title-align-left">重命名文件夹</div>
+					<div class="ef-modal-title ef-modal-title-align-left">{{ "viewIndex.14"|trans }}</div>
 					<div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="closeModal('renameFolderModal')">
 						<span class="ef-icon-hover">
 							<svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
@@ -201,15 +201,15 @@
 
 	{# 树节点右键菜单 #}
 	<div id="tree-context-menu" class="context-menu" style="display: none;">
-		<div class="menu-item" data-action="createView"><i class="fa-solid fa-o"></i><span>新建视图</span></div>
-		<div class="menu-item" data-action="createFolder"><i class="fa-regular fa-folder"></i><span>新建文件夹</span></div>
+		<div class="menu-item" data-action="createView"><i class="fa-solid fa-o"></i><span>{{ "viewIndex.15"|trans }}</span></div>
+		<div class="menu-item" data-action="createFolder"><i class="fa-regular fa-folder"></i><span>{{ "viewIndex.16"|trans }}</span></div>
 		<div class="menu-separator" style="display: none;" id="ctx-sep-folder"></div>
-		<div class="menu-item" data-action="renameFolder"><i class="fa-solid fa-pen"></i><span>重命名文件夹</span></div>
+		<div class="menu-item" data-action="renameFolder"><i class="fa-solid fa-pen"></i><span>{{ "viewIndex.14"|trans }}</span></div>
 		<div class="menu-separator" style="display: none;" id="ctx-sep-view"></div>
-		<div class="menu-item" data-action="viewEditor"><i class="fa-solid fa-pen-to-square"></i><span>打开编辑器</span></div>
-		<div class="menu-item" data-action="editView"><i class="fa-solid fa-pencil"></i><span>编辑视图信息</span></div>
+		<div class="menu-item" data-action="viewEditor"><i class="fa-solid fa-pen-to-square"></i><span>{{ "viewIndex.17"|trans }}</span></div>
+		<div class="menu-item" data-action="editView"><i class="fa-solid fa-pencil"></i><span>{{ "viewIndex.18"|trans }}</span></div>
 		<div class="menu-separator" style="display: none;" id="ctx-sep-delete"></div>
-		<div class="menu-item" data-action="deleteNode" style="color: #ff4d4f;"><i class="fa-regular fa-trash-can"></i><span>删除</span></div>
+		<div class="menu-item" data-action="deleteNode" style="color: #ff4d4f;"><i class="fa-regular fa-trash-can"></i><span>{{ "viewIndex.19"|trans }}</span></div>
 	</div>
 
 	{# 删除确认弹窗 #}
@@ -219,7 +219,7 @@
 			<div class="ef-modal" style="width: 460px;">
 				<div class="ef-modal-header">
 					<div class="ef-modal-title ef-modal-title-align-left">
-						<i class="fa-solid fa-triangle-exclamation" style="color: #ff4d4f; margin-right: 8px;"></i>确认删除
+						<i class="fa-solid fa-triangle-exclamation" style="color: #ff4d4f; margin-right: 8px;"></i>{{ "viewIndex.20"|trans }}
 					</div>
 					<div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="closeModal('deleteConfirmModal')">
 						<span class="ef-icon-hover">
@@ -231,12 +231,12 @@
 				</div>
 				<div class="ef-modal-body">
 					<p id="delete-confirm-message" style="margin: 0 0 16px 0; font-size: 14px; color: #1e293b; line-height: 1.6;"></p>
-					<input type="text" id="delete-confirm-input" class="ef-input" placeholder="请输入“确认删除”" style="width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; outline: none; box-sizing: border-box;">
+					<input type="text" id="delete-confirm-input" class="ef-input" placeholder="{{ "viewIndex.2"|trans }}" style="width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; outline: none; box-sizing: border-box;">
 					<div id="delete-confirm-error" style="color: #ff4d4f; font-size: 12px; margin-top: 6px; display: none;"></div>
 				</div>
 				<div class="ef-modal-footer">
-					<button type="button" class="btn secondary medium" onclick="closeModal('deleteConfirmModal')">取消</button>
-					<button type="button" class="btn primary medium" id="delete-confirm-submit" disabled style="background: #ff4d4f; border-color: #ff4d4f; opacity: 0.5;">确认删除</button>
+					<button type="button" class="btn secondary medium" onclick="closeModal('deleteConfirmModal')">{{ "viewIndex.12"|trans }}</button>
+					<button type="button" class="btn primary medium" id="delete-confirm-submit" disabled style="background: #ff4d4f; border-color: #ff4d4f; opacity: 0.5;">{{ "viewIndex.20"|trans }}</button>
 				</div>
 			</div>
 		</div>

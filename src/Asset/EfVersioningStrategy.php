@@ -10,7 +10,7 @@ class EfVersioningStrategy implements VersionStrategyInterface
 
   public function __construct($env, $appVersion)
   {
-    if ($env === 'dev') {
+    if ($env === 'dev' || $env === 'test') {
       $this->version = sha1(random_bytes(10));
     }
 

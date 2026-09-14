@@ -3,14 +3,14 @@
     <div class="ef-modal-wrapper">
         <div class="ef-modal-container">
             <div class="ef-modal-header">
-                <div class="ef-modal-title">选择岗位</div>
+                <div class="ef-modal-title">{{ "posModal.2"|trans }}</div>
                 <button class="ef-modal-close" id="position-modal-close">
                     <i class="fa-solid fa-times"></i>
                 </button>
             </div>
             <div class="ef-modal-body">
                 <div class="ef-search-box mb-3">
-                    <input type="text" class="ef-input" id="position-search-input" placeholder="搜索岗位名称">
+                    <input type="text" class="ef-input" id="position-search-input" placeholder="{{ "posModal.1"|trans }}">
                     <button class="ef-button ef-button-primary" id="position-search-button">
                         <i class="fa-solid fa-search"></i>
                     </button>
@@ -22,9 +22,9 @@
                             <thead>
                                 <tr class="ef-table-tr">
                                     <th class="ef-table-th" style="width: 60px;"></th>
-                                    <th class="ef-table-th">岗位名称</th>
-                                    <th class="ef-table-th">所属部门</th>
-                                    <th class="ef-table-th">岗位级别</th>
+                                    <th class="ef-table-th">{{ "posModal.3"|trans }}</th>
+                                    <th class="ef-table-th">{{ "posModal.4"|trans }}</th>
+                                    <th class="ef-table-th">{{ "posModal.5"|trans }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -49,8 +49,8 @@
                 </div>
             </div>
             <div class="ef-modal-footer">
-                <button class="ef-button ef-button-default" id="position-cancel-button">取消</button>
-                <button class="ef-button ef-button-primary" id="position-confirm-button">确定</button>
+                <button class="ef-button ef-button-default" id="position-cancel-button">{{ "posModal.6"|trans }}</button>
+                <button class="ef-button ef-button-primary" id="position-confirm-button">{{ "posModal.7"|trans }}</button>
             </div>
         </div>
     </div>
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('position-confirm-button').addEventListener('click', function() {
         const selectedRadio = document.querySelector('input[name="position"]:checked');
         if (!selectedRadio) {
-            alert('请选择一个岗位');
+            alert(t('posModal.js1'));
             return;
         }
         

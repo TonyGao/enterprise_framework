@@ -7,14 +7,14 @@
         <h2>{{ view.label|default(view.name) }}</h2>
         <span class="view-detail-meta">{{ view.name }}</span>
         {% if view.builtIn %}
-          <span class="ef-tag ef-tag-blue ef-tag-small" style="margin-left: 8px;">内置</span>
+          <span class="ef-tag ef-tag-blue ef-tag-small" style="margin-left: 8px;">{{ "viewDetail.3"|trans }}</span>
         {% else %}
-          <span class="ef-tag ef-tag-default ef-tag-small" style="margin-left: 8px;">自定义</span>
+          <span class="ef-tag ef-tag-default ef-tag-small" style="margin-left: 8px;">{{ "viewDetail.4"|trans }}</span>
         {% endif %}
-        <span class="view-detail-version-badge" id="view-detail-current-version" title="当前版本">v{{ currentVersion|default('1_0') }}</span>
+        <span class="view-detail-version-badge" id="view-detail-current-version" title="{{ "viewDetail.1"|trans }}">v{{ currentVersion|default('1_0') }}</span>
       </div>
       <button type="button" class="btn outline primary small" id="btn-toggle-versions" style="margin-left: auto; flex-shrink: 0;">
-        <i class="fa-solid fa-code-branch"></i> 版本管理
+        <i class="fa-solid fa-code-branch"></i> {{ "viewDetail.5"|trans }}
         <i class="fa-solid fa-chevron-down" id="version-toggle-arrow" style="margin-left: 2px;"></i>
       </button>
     </div>
@@ -24,28 +24,28 @@
     <div class="view-detail-card">
       <div class="view-detail-card-header">
         <i class="fa-solid fa-info-circle"></i>
-        基本信息
+        {{ "viewDetail.6"|trans }}
       </div>
       <div class="view-detail-card-body">
         <table class="view-detail-info-table">
           <tr>
-            <td class="info-label">名称</td>
+            <td class="info-label">{{ "viewDetail.7"|trans }}</td>
             <td class="info-value"><code>{{ view.name }}</code></td>
           </tr>
           <tr>
-            <td class="info-label">标签</td>
+            <td class="info-label">{{ "viewDetail.8"|trans }}</td>
             <td class="info-value">{{ view.label|default('-') }}</td>
           </tr>
           <tr>
-            <td class="info-label">类型</td>
+            <td class="info-label">{{ "viewDetail.9"|trans }}</td>
             <td class="info-value">{{ view.type }}</td>
           </tr>
           <tr>
-            <td class="info-label">模板</td>
+            <td class="info-label">{{ "viewDetail.10"|trans }}</td>
             <td class="info-value">{{ view.template|default('-') }}</td>
           </tr>
           <tr>
-            <td class="info-label">路径</td>
+            <td class="info-label">{{ "viewDetail.11"|trans }}</td>
             <td class="info-value"><code>{{ view.path|default('-') }}</code></td>
           </tr>
         </table>
@@ -56,12 +56,12 @@
     <div class="view-detail-card">
       <div class="view-detail-card-header">
         <i class="fa-solid fa-database"></i>
-        关联实体
+        {{ "viewDetail.12"|trans }}
       </div>
       <div class="view-detail-card-body">
         <table class="view-detail-info-table">
           <tr>
-            <td class="info-label">实体</td>
+            <td class="info-label">{{ "viewDetail.13"|trans }}</td>
             <td class="info-value">{{ view.formEntity.name }}</td>
           </tr>
           <tr>
@@ -69,7 +69,7 @@
             <td class="info-value"><code>{{ view.formEntity.fqn }}</code></td>
           </tr>
           <tr>
-            <td class="info-label">字段数</td>
+            <td class="info-label">{{ "viewDetail.14"|trans }}</td>
             <td class="info-value">{{ fields|length }}</td>
           </tr>
         </table>
@@ -81,17 +81,17 @@
     <div class="view-detail-card">
       <div class="view-detail-card-header">
         <i class="fa-solid fa-layout"></i>
-        布局配置
+        {{ "viewDetail.15"|trans }}
       </div>
       <div class="view-detail-card-body">
         <table class="view-detail-info-table">
           <tr>
-            <td class="info-label">内容宽度</td>
+            <td class="info-label">{{ "viewDetail.16"|trans }}</td>
             <td class="info-value">{{ sc.contentWidth|default('100%') }}</td>
           </tr>
           {% if sc.contentWidth is defined and sc.contentWidth == 'boxed' %}
           <tr>
-            <td class="info-label">定宽</td>
+            <td class="info-label">{{ "viewDetail.17"|trans }}</td>
             <td class="info-value">{{ sc.width|default('auto') }}{{ sc.unit|default('px') }}</td>
           </tr>
           {% endif %}
@@ -104,20 +104,20 @@
     <div class="view-detail-card view-version-card" style="display: none;">
       <div class="view-detail-card-header">
         <i class="fa-solid fa-code-branch"></i>
-        版本管理
+        {{ "viewDetail.5"|trans }}
         <span class="view-detail-count" id="version-count-badge"></span>
       </div>
       <div class="view-detail-card-body">
-        <div id="version-list-container" style="min-height: 40px; color: #94a3b8; font-size: 13px;">加载版本列表…</div>
+        <div id="version-list-container" style="min-height: 40px; color: #94a3b8; font-size: 13px;">{{ "viewDetail.18"|trans }}…</div>
         <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center;">
           <button type="button" class="btn primary small" id="btn-new-version">
-            <i class="fa-solid fa-plus"></i> 新增版本
+            <i class="fa-solid fa-plus"></i> {{ "viewDetail.19"|trans }}
           </button>
           <button type="button" class="btn secondary small" id="btn-version-tiles">
-            <i class="fa-solid fa-table-cells-large"></i> 平铺视图
+            <i class="fa-solid fa-table-cells-large"></i> {{ "viewDetail.20"|trans }}
           </button>
           <button type="button" class="btn secondary small" id="btn-open-trash">
-            <i class="fa-solid fa-trash-can"></i> 回收站
+            <i class="fa-solid fa-trash-can"></i> {{ "viewDetail.21"|trans }}
           </button>
           <span class="text-muted" style="font-size: 12px;" id="version-hint"></span>
         </div>
@@ -129,18 +129,18 @@
   <div class="view-detail-section">
     <div class="view-detail-section-header">
       <i class="fa-solid fa-list"></i>
-      字段列表
+      {{ "viewDetail.22"|trans }}
       <span class="view-detail-count">{{ fields|length }}</span>
     </div>
     <table class="ef-table view-field-table">
       <thead>
         <tr>
           <th style="width: 40px;">#</th>
-          <th>字段名</th>
-          <th>类型</th>
-          <th>标签</th>
-          <th>必填</th>
-          <th style="width: 180px;">配置摘要</th>
+          <th>{{ "viewDetail.23"|trans }}</th>
+          <th>{{ "viewDetail.9"|trans }}</th>
+          <th>{{ "viewDetail.8"|trans }}</th>
+          <th>{{ "viewDetail.24"|trans }}</th>
+          <th style="width: 180px;">{{ "viewDetail.25"|trans }}</th>
         </tr>
       </thead>
       <tbody>
@@ -167,7 +167,7 @@
           <td>{{ cfg.label|default(field.fieldLabel)|default('-') }}</td>
           <td>
             {% if cfg.required|default(false) %}
-              <span class="ef-tag ef-tag-red ef-tag-small">必填</span>
+              <span class="ef-tag ef-tag-red ef-tag-small">{{ "viewDetail.24"|trans }}</span>
             {% else %}
               <span class="text-muted">-</span>
             {% endif %}
@@ -175,16 +175,16 @@
           <td>
             {% set summary = [] %}
             {% if cfg.height is defined %}
-              {% set summary = summary|merge([field.fieldType == 'text' ? cfg.height ~ '行' : cfg.height ~ 'px']) %}
+              {% set summary = summary|merge([field.fieldType == 'text' ? cfg.height ~ 'viewDetail.row'|trans : cfg.height ~ 'px']) %}
             {% endif %}
             {% if cfg.rounded|default(true) == false %}
-              {% set summary = summary|merge(['方角']) %}
+              {% set summary = summary|merge(['viewDetail.square'|trans]) %}
             {% endif %}
             {% if cfg.regularBg is defined and cfg.regularBg is not empty and cfg.regularBg|upper != '#FFFFFF' %}
-              {% set summary = summary|merge(['底色']) %}
+              {% set summary = summary|merge(['viewDetail.bg'|trans]) %}
             {% endif %}
             {% if cfg.placeholder is defined and cfg.placeholder is not empty %}
-              {% set summary = summary|merge(['占位']) %}
+              {% set summary = summary|merge(['viewDetail.placeholder'|trans]) %}
             {% endif %}
             <span class="config-summary">{{ summary|default(['默认'])|join(', ') }}</span>
           </td>
@@ -196,9 +196,9 @@
   {% else %}
   <div class="view-detail-empty">
     <i class="fa-solid fa-inbox"></i>
-    <p>暂无字段配置</p>
+    <p>{{ "viewDetail.26"|trans }}</p>
     {% if view.formEntity %}
-    <p class="text-muted">该视图已关联实体，但尚未绑定字段。请在视图中使用"绑定视图设计器"功能。</p>
+    <p class="text-muted">{{ "viewDetail.27"|trans }}"{{ "viewDetail.28"|trans }}"{{ "viewDetail.29"|trans }}</p>
     {% endif %}
   </div>
   {% endif %}
@@ -206,18 +206,18 @@
   <div class="view-detail-actions">
     <a href="{{ path('platform_view_editor', {id: view.id}) }}" target="_blank" class="btn primary medium">
       <i class="fa-solid fa-pen-to-square"></i>
-      打开编辑器
+      {{ "viewDetail.30"|trans }}
     </a>
     {% if is_granted('ROLE_SYS_ADMIN') %}
     <button type="button" class="btn secondary medium" onclick="loadEditView('{{ view.id }}')">
       <i class="fa-solid fa-edit"></i>
-      编辑视图
+      {{ "viewDetail.31"|trans }}
     </button>
     {% endif %}
     {% if not view.builtIn %}
     <button type="button" class="btn red medium" data-view-id="{{ view.id }}" data-delete-view style="margin-left: auto;">
       <i class="fa-solid fa-trash-can"></i>
-      删除视图
+      {{ "viewDetail.32"|trans }}
     </button>
     {% endif %}
   </div>
@@ -229,7 +229,7 @@
   <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
     <div class="ef-modal" style="width: 420px;">
       <div class="ef-modal-header">
-        <div class="ef-modal-title ef-modal-title-align-left">确认删除</div>
+        <div class="ef-modal-title ef-modal-title-align-left">{{ "viewDetail.33"|trans }}</div>
         <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" data-close-delete-modal>
           <span class="ef-icon-hover">
             <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
@@ -244,19 +244,19 @@
             <i class="fa-solid fa-triangle-exclamation"></i>
           </div>
           <div style="font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 8px;">
-            确定要删除视图「{{ view.label|default(view.name) }}」吗？
+            {{ "viewDetail.34"|trans }}「{{ view.label|default(view.name) }}」{{ "viewDetail.35"|trans }}
           </div>
           <div style="color: #dc2626; font-size: 13px;" id="delete-view-version-info">
             <i class="fa-solid fa-circle-exclamation"></i>
-            删除后将移入<strong>回收站</strong>，可在回收站恢复。
+            {{ "viewDetail.36"|trans }}<strong>{{ "viewDetail.21"|trans }}</strong>{{ "viewDetail.37"|trans }}
           </div>
         </div>
       </div>
       <div class="ef-modal-footer">
-        <button class="btn secondary small" type="button" data-close-delete-modal>取消</button>
+        <button class="btn secondary small" type="button" data-close-delete-modal>{{ "viewDetail.38"|trans }}</button>
         <button class="btn red small" type="button" data-confirm-delete-view>
           <i class="fa-solid fa-trash-can"></i>
-          移入回收站
+          {{ "viewDetail.39"|trans }}
         </button>
       </div>
     </div>
@@ -269,7 +269,7 @@
   <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
     <div class="ef-modal" style="width: 480px;">
       <div class="ef-modal-header">
-        <div class="ef-modal-title ef-modal-title-align-left"><i class="fa-solid fa-code-branch" style="margin-right: 8px; color:#6366f1;"></i> 新增版本</div>
+        <div class="ef-modal-title ef-modal-title-align-left"><i class="fa-solid fa-code-branch" style="margin-right: 8px; color:#6366f1;"></i> {{ "viewDetail.19"|trans }}</div>
         <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" data-close-new-version>
           <span class="ef-icon-hover">
             <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path></svg>
@@ -278,36 +278,36 @@
       </div>
       <div class="ef-modal-body" style="padding: 20px 24px;">
         <div style="margin-bottom: 20px;">
-          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">来源</div>
+          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">{{ "viewDetail.40"|trans }}</div>
           <div style="display: flex; gap: 24px;">
             <label class="nv-source-radio">
               <input type="radio" name="nv-source" value="current" checked>
               <span class="nv-source-dot"></span>
-              <span class="nv-source-label">从当前版本复制</span>
+              <span class="nv-source-label">{{ "viewDetail.41"|trans }}</span>
             </label>
             <label class="nv-source-radio">
               <input type="radio" name="nv-source" value="blank">
               <span class="nv-source-dot"></span>
-              <span class="nv-source-label">新建空白版本</span>
+              <span class="nv-source-label">{{ "viewDetail.42"|trans }}</span>
             </label>
           </div>
         </div>
         <div style="margin-bottom: 20px;">
-          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">版本号 <span style="color:#ef4444;">*</span></div>
+          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">{{ "viewDetail.43"|trans }} <span style="color:#ef4444;">*</span></div>
           <div style="max-width: 240px;">
             {{ ui.input('nv-version', 'text', '如 1_1', '', '', '', '', {'style': 'width: 100%;'}) }}
           </div>
-          <div style="font-size: 12px; color: #94a3b8; margin-top: 6px;">默认按当前版本 minor 递增（1_0 → 1_1）</div>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 6px;">{{ "viewDetail.44"|trans }} → 1_1）</div>
           <div style="color:#ef4444; font-size:12px; display:none;" id="nv-version-error"></div>
         </div>
         <div>
-          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">版本说明（可选）</div>
+          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">{{ "viewDetail.45"|trans }}</div>
           {{ ui.textarea('nv-label', '如：春节活动版、改版优化说明…', 2, 4) }}
         </div>
       </div>
       <div class="ef-modal-footer">
-        <button class="btn secondary small" type="button" data-close-new-version>取消</button>
-        <button class="btn primary small" type="button" id="nv-confirm"><i class="fa-solid fa-plus"></i> 创建版本</button>
+        <button class="btn secondary small" type="button" data-close-new-version>{{ "viewDetail.38"|trans }}</button>
+        <button class="btn primary small" type="button" id="nv-confirm"><i class="fa-solid fa-plus"></i> {{ "viewDetail.46"|trans }}</button>
       </div>
     </div>
   </div>
@@ -319,7 +319,7 @@
   <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
     <div class="ef-modal" style="width: 420px;">
       <div class="ef-modal-header">
-        <div class="ef-modal-title ef-modal-title-align-left"><i class="fa-solid fa-pen" style="margin-right: 8px; color:#6366f1;"></i> 重命名版本</div>
+        <div class="ef-modal-title ef-modal-title-align-left"><i class="fa-solid fa-pen" style="margin-right: 8px; color:#6366f1;"></i> {{ "viewDetail.47"|trans }}</div>
         <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" data-close-rename-version>
           <span class="ef-icon-hover">
             <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path></svg>
@@ -328,14 +328,14 @@
       </div>
       <div class="ef-modal-body" style="padding: 20px 24px;">
         <div>
-          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">版本名称</div>
-          <input type="text" id="rv-label" class="ef-input" style="width: 100%; padding: 7px 10px; font-size: 13px; border: 1px solid #e2e8f0; border-radius: 6px; outline: none;" placeholder="如：春节活动版">
+          <div class="ef-form-item-label" style="margin-bottom: 8px; font-weight: 600;">{{ "viewDetail.48"|trans }}</div>
+          <input type="text" id="rv-label" class="ef-input" style="width: 100%; padding: 7px 10px; font-size: 13px; border: 1px solid #e2e8f0; border-radius: 6px; outline: none;" placeholder="{{ "viewDetail.2"|trans }}">
           <div style="color:#ef4444; font-size:12px; display:none; margin-top:6px;" id="rv-error"></div>
         </div>
       </div>
       <div class="ef-modal-footer">
-        <button class="btn secondary small" type="button" data-close-rename-version>取消</button>
-        <button class="btn primary small" type="button" id="rv-confirm"><i class="fa-solid fa-check"></i> 保存</button>
+        <button class="btn secondary small" type="button" data-close-rename-version>{{ "viewDetail.38"|trans }}</button>
+        <button class="btn primary small" type="button" id="rv-confirm"><i class="fa-solid fa-check"></i> {{ "viewDetail.49"|trans }}</button>
       </div>
     </div>
   </div>
@@ -347,7 +347,7 @@
   <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
     <div class="ef-modal" style="width: 80%; max-width: 960px; height: 80%; display: flex; flex-direction: column;">
       <div class="ef-modal-header">
-        <div class="ef-modal-title ef-modal-title-align-left" id="version-preview-title">版本预览</div>
+        <div class="ef-modal-title ef-modal-title-align-left" id="version-preview-title">{{ "viewDetail.50"|trans }}</div>
         <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" data-close-version-preview>
           <span class="ef-icon-hover">
             <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path></svg>
@@ -367,7 +367,7 @@
   <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
     <div class="ef-modal" style="width: 640px; max-height: 80vh;">
       <div class="ef-modal-header">
-        <div class="ef-modal-title ef-modal-title-align-left"><i class="fa-solid fa-trash-can"></i> 回收站</div>
+        <div class="ef-modal-title ef-modal-title-align-left"><i class="fa-solid fa-trash-can"></i> {{ "viewDetail.21"|trans }}</div>
         <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" data-close-trash>
           <span class="ef-icon-hover">
             <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path></svg>
@@ -375,10 +375,10 @@
         </div>
       </div>
       <div class="ef-modal-body" style="overflow-y: auto; max-height: 55vh;">
-        <div id="trash-list-container" style="color:#94a3b8; font-size:13px;">加载回收站…</div>
+        <div id="trash-list-container" style="color:#94a3b8; font-size:13px;">{{ "viewDetail.51"|trans }}…</div>
       </div>
       <div class="ef-modal-footer">
-        <button class="btn secondary small" type="button" data-close-trash>关闭</button>
+        <button class="btn secondary small" type="button" data-close-trash>{{ "viewDetail.52"|trans }}</button>
       </div>
     </div>
   </div>
@@ -465,27 +465,27 @@
   }
 
   function loadVersions() {
-    $list.html('加载版本列表…');
+    $list.html(t('viewDetail.js1'));
     fetch('/api/admin/platform/view/' + VIEW_ID + '/versions')
       .then(function (r) { return r.json(); })
       .then(function (json) {
         if (json.code !== 200 || !json.data) {
-          $list.html('<span style="color:#ef4444;">版本列表加载失败</span>');
+          $list.html('<span style="color:#ef4444;">{{ "viewDetail.loadFail"|trans }}</span>');
           return;
         }
         versionsData = json.data;
         renderVersions(json.data);
       })
-      .catch(function () { $list.html('<span style="color:#ef4444;">版本列表加载失败</span>'); });
+      .catch(function () { $list.html('<span style="color:#ef4444;">{{ "viewDetail.loadFail"|trans }}</span>'); });
   }
 
   function renderVersions(data) {
     var versions = data.versions || [];
-    $count.text(versions.length + ' 个版本');
-    $hint.text('当前版本：' + esc(data.currentVersion));
+    $count.text(versions.length + t('viewDetail.js2'));
+    $hint.text(t('viewDetail.js3') + esc(data.currentVersion));
     $('#view-detail-current-version').text('v' + esc(data.currentVersion));
     if (!versions.length) {
-      $list.html('<span>该视图暂无版本</span>');
+      $list.html(t('viewDetail.js4'));
       return;
     }
     var html = '';
@@ -495,15 +495,15 @@
           '<div class="version-info">' +
             '<span class="version-badge">v' + esc(v.version) + '</span>' +
             '<span class="version-label">' + esc(v.label) + '</span>' +
-            (v.isCurrent ? '<span class="version-current-tag">当前</span>' : '') +
+            (v.isCurrent ? t('viewDetail.js5') : '') +
             '<span class="version-time">' + esc(v.updatedAt || '') + '</span>' +
           '</div>' +
           '<div class="version-actions">' +
-            '<a href="javascript:void(0)" class="version-action" data-action="preview" data-version="' + esc(v.version) + '">预览</a>' +
-            (v.isCurrent ? '' : '<a href="javascript:void(0)" class="version-action" data-action="activate" data-version="' + esc(v.version) + '">设为当前</a>') +
-            '<a href="javascript:void(0)" class="version-action" data-action="rename" data-version="' + esc(v.version) + '">重命名</a>' +
-            '<a href="javascript:void(0)" class="version-action" data-action="copy" data-version="' + esc(v.version) + '">复制</a>' +
-            '<a class="version-action" target="_blank" href="/admin/platform/view/editor/' + VIEW_ID + '?version=' + esc(v.version) + '">编辑</a>' +
+            '<a href="javascript:void(0)" class="version-action" data-action="preview" data-version="' + esc(v.version) + '">' + t('viewDetail.js6') + '</a>' +
+            (v.isCurrent ? '' : '<a href="javascript:void(0)" class="version-action" data-action="activate" data-version="' + esc(v.version) + '">' + t('viewDetail.js7') + '</a>') +
+            '<a href="javascript:void(0)" class="version-action" data-action="rename" data-version="' + esc(v.version) + '">' + t('viewDetail.js8') + '</a>' +
+            '<a href="javascript:void(0)" class="version-action" data-action="copy" data-version="' + esc(v.version) + '">' + t('viewDetail.js9') + '</a>' +
+            '<a class="version-action" target="_blank" href="/admin/platform/view/editor/' + VIEW_ID + '?version=' + esc(v.version) + '">' + t('viewDetail.js10') + '</a>' +
           '</div>' +
         '</div>';
     });
@@ -522,7 +522,7 @@
   });
 
   function openPreview(version) {
-    $('#version-preview-title').text('版本 v' + version + ' 预览');
+    $('#version-preview-title').text(t('viewDetail.js11') + version + t('viewDetail.js12'));
     $('#version-preview-frame').attr('src', '/admin/platform/view/' + VIEW_ID + '/versions/' + version + '/preview');
     $('#versionPreviewModal').show();
   }
@@ -537,7 +537,7 @@
       if (json.code === 200) {
         loadVersions();
       } else {
-        alert('切换失败: ' + (json.message || '未知错误'));
+        alert(t('viewDetail.js13') + (json.message || t('viewDetail.js14')));
       }
     });
   }
@@ -552,9 +552,9 @@
     $('input[name="nv-source"]').prop('checked', false);
     $('input[name="nv-source"][value="current"]').prop('checked', true);
     if (fromVersion) {
-      $('input[name="nv-source"][value="current"]').closest('.nv-source-radio').find('.nv-source-label').text('从版本 v' + fromVersion + ' 复制');
+      $('input[name="nv-source"][value="current"]').closest('.nv-source-radio').find('.nv-source-label').text(t('viewDetail.js15') + fromVersion + t('viewDetail.js16'));
     } else {
-      $('input[name="nv-source"][value="current"]').closest('.nv-source-radio').find('.nv-source-label').text('从当前版本复制');
+      $('input[name="nv-source"][value="current"]').closest('.nv-source-radio').find('.nv-source-label').text(t('viewDetail.js17'));
     }
     $('#newVersionModal').show();
   }
@@ -604,9 +604,9 @@
       if (json.code === 200) {
         $('#newVersionModal').hide();
         loadVersions();
-        if (window.alert && alert.success) alert.success('已创建并切换到版本 v' + (json.data.version.version), { percent: '280px', title: '成功', closable: true });
+        if (window.alert && alert.success) alert.success(t('viewDetail.js18') + (json.data.version.version), { percent: '280px', title: t('viewDetail.js19'), closable: true });
       } else {
-        $('#nv-version-error').text(json.message || '创建失败').show();
+        $('#nv-version-error').text(json.message || t('viewDetail.js20')).show();
       }
     });
   });
@@ -631,7 +631,7 @@
   $('#rv-confirm').on('click', function () {
     var label = ($('#rv-label').val() || '').trim();
     if (!label) {
-      $('#rv-error').text('版本名称不能为空').show();
+      $('#rv-error').text(t('viewDetail.js21')).show();
       $('#rv-label').focus();
       return;
     }
@@ -647,10 +647,10 @@
         $('#renameVersionModal').hide();
         loadVersions();
       } else {
-        $('#rv-error').text(json.message || '重命名失败').show();
+        $('#rv-error').text(json.message || t('viewDetail.js22')).show();
       }
     })
-    .catch(function () { $('#rv-error').text('重命名失败，网络错误').show(); });
+    .catch(function () { $('#rv-error').text(t('viewDetail.js23')).show(); });
   });
 
   $('#rv-label').on('keydown', function (e) {
@@ -673,14 +673,14 @@
 
   function loadTrash() {
     var $t = $('#trash-list-container');
-    $t.html('加载回收站…');
+    $t.html(t('viewDetail.js24'));
     fetch('/api/admin/platform/view/trash')
       .then(function (r) { return r.json(); })
       .then(function (json) {
-        if (json.code !== 200 || !json.data) { $t.html('<span style="color:#ef4444;">加载失败</span>'); return; }
+        if (json.code !== 200 || !json.data) { $t.html('<span style="color:#ef4444;">{{ "viewDetail.loadFail"|trans }}</span>'); return; }
         var items = json.data.items || [];
         if (!items.length) {
-          $t.html('<div style="text-align:center; padding: 24px 0;"><i class="fa-solid fa-inbox" style="font-size: 28px; display:block; margin-bottom: 8px;"></i>回收站为空</div>');
+          $t.html('<div style="text-align:center; padding: 24px 0;"><i class="fa-solid fa-inbox" style="font-size: 28px; display:block; margin-bottom: 8px;"></i>{{ "viewDetail.trashEmpty"|trans }}</div>');
           return;
         }
         var html = '';
@@ -692,18 +692,18 @@
                 '<i class="fa-solid ' + icon + '"></i> ' +
                 '<strong>' + esc(item.label) + '</strong>' +
                 '<span class="text-muted">' + esc(item.name) + '</span>' +
-                '<span class="text-muted">' + (item.type === 'view' ? (item.versionCount + ' 版本 / ' + item.fileCount + ' 文件') : '') + '</span>' +
+                '<span class="text-muted">' + (item.type === 'view' ? (item.versionCount + t('viewDetail.js25') + item.fileCount + t('viewDetail.js26')) : '') + '</span>' +
                 '<span class="text-muted">' + esc(item.deletedAt) + '</span>' +
               '</div>' +
               '<div class="trash-actions">' +
-                '<button type="button" class="btn primary small" data-trash-action="restore" data-id="' + item.id + '">恢复</button>' +
-                '<button type="button" class="btn red small" data-trash-action="purge" data-id="' + item.id + '">彻底删除</button>' +
+                '<button type="button" class="btn primary small" data-trash-action="restore" data-id="' + item.id + '">' + t('viewDetail.js27') + '</button>' +
+                '<button type="button" class="btn red small" data-trash-action="purge" data-id="' + item.id + '">' + t('viewDetail.js28') + '</button>' +
               '</div>' +
             '</div>';
         });
         $t.html(html);
       })
-      .catch(function () { $t.html('<span style="color:#ef4444;">加载回收站失败</span>'); });
+      .catch(function () { $t.html('<span style="color:#ef4444;">{{ "viewDetail.trashLoadFail"|trans }}</span>'); });
   }
 
   $t = $('#trash-list-container');
@@ -714,14 +714,14 @@
       fetch('/api/admin/platform/view/trash/' + id + '/restore', { method: 'POST' })
         .then(function (r) { return r.json(); })
         .then(function (json) {
-          if (json.code === 200) { loadTrash(); } else { alert('恢复失败: ' + (json.message || '')); }
+          if (json.code === 200) { loadTrash(); } else { alert(t('viewDetail.js29') + (json.message || '')); }
         });
     } else if (action === 'purge') {
-      if (!confirm('彻底删除不可恢复，确定删除该项及其全部版本文件吗？')) return;
+      if (!confirm(t('viewDetail.js30'))) return;
       fetch('/api/admin/platform/view/trash/' + id + '/purge', { method: 'POST' })
         .then(function (r) { return r.json(); })
         .then(function (json) {
-          if (json.code === 200) { loadTrash(); } else { alert('彻底删除失败: ' + (json.message || '')); }
+          if (json.code === 200) { loadTrash(); } else { alert(t('viewDetail.js31') + (json.message || '')); }
         });
     }
   });
@@ -736,8 +736,8 @@
           var fileCount = vs.reduce(function (s, v) { return s + (v.fileCount || 0); }, 0);
           $('#delete-view-version-info').html(
             '<i class="fa-solid fa-circle-exclamation"></i> ' +
-            '该视图含 <strong>' + vs.length + '</strong> 个版本、共 <strong>' + fileCount + '</strong> 个文件。' +
-            '删除后将移入<strong>回收站</strong>，可在回收站恢复。'
+            t('viewDetail.js32') + vs.length + t('viewDetail.js33') + fileCount + t('viewDetail.js34') +
+            t('viewDetail.js35')
           );
         }
       })

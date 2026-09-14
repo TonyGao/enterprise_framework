@@ -3,6 +3,7 @@
 namespace App\Service\AI\Tool;
 
 use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
+use App\Service\AI\ImageStyleAnalyzer;
 
 #[AsTool(name: 'cdp_inspect', description: '通过 Chrome DevTools 检查页面元素信息（标签、ID、class、文本内容、内联样式），需 Chrome 已开启远程调试', method: 'inspect')]
 #[AsTool(name: 'cdp_setStyle', description: '通过 Chrome DevTools 修改页面元素的 CSS 内联样式，支持单个或多个属性，需 Chrome 已开启远程调试', method: 'setStyle')]
@@ -28,6 +29,10 @@ class ChromeDevToolsToolProvider
 {
     private const PROXY_HOST = '127.0.0.1';
     private const PROXY_PORT = 9223;
+
+    public function __construct(
+        private readonly ImageStyleAnalyzer $imageStyleAnalyzer,
+    ) {}
 
     private function sendCDP(string $method, array $params = []): array
     {
@@ -131,6 +136,138 @@ class ChromeDevToolsToolProvider
             return ['result' => "已导航到: $url"];
         } catch (\Exception $e) {
             return ['error' => $e->getMessage(), 'hint' => '请先运行 php bin/console ef:chrome:open 启动 Chrome 远程调试'];
+        }
+    }
+
+    #[AsTool(
+        name: 'cdp.fetchWebPage',
+        description: '通过 Chrome 打开指定网页并抓取其 JS 渲染后的 HTML 与标题（比 viewfile_fetchWebPage 更适合单页应用/JS 渲染页面），抓取后自动导航回编辑器。若 Chrome 未开启远程调试会失败，此时改用 viewfile_fetchWebPage',
+    )]
+    public function fetchWebPage(string $url): array
+    {
+        $currentUrl = '';
+        try {
+            $url = trim($url);
+            if (!preg_match('#^https?://#i', $url)) {
+                return ['error' => '仅支持 http/https 链接'];
+            }
+            $host = (string) parse_url($url, PHP_URL_HOST);
+            if (!$host || $this->isBlockedHost($host)) {
+                return ['error' => '不允许访问本机或内网地址'];
+            }
+
+            $cur = $this->sendCDP('Runtime.evaluate', ['expression' => 'window.location.href', 'returnByValue' => true]);
+            $currentUrl = (string) ($cur['result']['value'] ?? '');
+
+            $this->sendCDP('Page.navigate', ['url' => $url]);
+            // 等待加载完成（轮询 readyState） / wait for the page to finish loading
+            for ($i = 0; $i < 8; $i++) {
+                usleep(700000);
+                try {
+                    $st = $this->sendCDP('Runtime.evaluate', ['expression' => 'document.readyState', 'returnByValue' => true]);
+                    if (($st['result']['value'] ?? '') === 'complete') {
+                        break;
+                    }
+                } catch (\Throwable $e) {
+                    break;
+                }
+            }
+
+            $html = $this->sendCDP('Runtime.evaluate', ['expression' => 'document.documentElement.outerHTML', 'returnByValue' => true]);
+            $title = $this->sendCDP('Runtime.evaluate', ['expression' => 'document.title', 'returnByValue' => true]);
+
+            return [
+                'title' => (string) ($title['result']['value'] ?? ''),
+                'url' => $url,
+                'html' => mb_substr((string) ($html['result']['value'] ?? ''), 0, 50000),
+            ];
+        } catch (\Throwable $e) {
+            return ['error' => $e->getMessage(), 'hint' => '请先运行 php bin/console ef:chrome:open 启动 Chrome 远程调试'];
+        } finally {
+            // 无论成功失败都导航回编辑器页面 / always navigate back to the editor page
+            if ($currentUrl !== '' && $currentUrl !== $url) {
+                try {
+                    $this->sendCDP('Page.navigate', ['url' => $currentUrl]);
+                } catch (\Throwable $e) {
+                }
+            }
+        }
+    }
+
+    /** 阻止访问本机/内网地址（SSRF 防护） / block localhost & private networks (SSRF guard) */
+    private function isBlockedHost(string $host): bool
+    {
+        $host = strtolower(rtrim($host, '.'));
+        if ($host === 'localhost' || str_ends_with($host, '.localhost')) {
+            return true;
+        }
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            return !filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+        }
+        $ips = @gethostbynamel($host);
+        if (is_array($ips)) {
+            foreach ($ips as $ip) {
+                if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    #[AsTool(
+        name: 'cdp.analyzeUrlStyle',
+        description: '打开一个网页并对其整体截图，用视觉模型分析该页面的视觉风格（配色/字体/布局/卡片/按钮/风格），返回结构化设计规格 JSON。适合"模仿某网页风格实现视图"。需 Chrome 已开启远程调试，分析后自动回到编辑器',
+    )]
+    public function analyzeUrlStyle(string $url, ?string $goal = null): array
+    {
+        $currentUrl = '';
+        try {
+            $url = trim($url);
+            if (!preg_match('#^https?://#i', $url)) {
+                return ['error' => '仅支持 http/https 链接'];
+            }
+            $host = (string) parse_url($url, PHP_URL_HOST);
+            if (!$host || $this->isBlockedHost($host)) {
+                return ['error' => '不允许访问本机或内网地址'];
+            }
+
+            $cur = $this->sendCDP('Runtime.evaluate', ['expression' => 'window.location.href', 'returnByValue' => true]);
+            $currentUrl = (string) ($cur['result']['value'] ?? '');
+
+            $this->sendCDP('Page.navigate', ['url' => $url]);
+            for ($i = 0; $i < 8; $i++) {
+                usleep(700000);
+                try {
+                    $st = $this->sendCDP('Runtime.evaluate', ['expression' => 'document.readyState', 'returnByValue' => true]);
+                    if (($st['result']['value'] ?? '') === 'complete') {
+                        break;
+                    }
+                } catch (\Throwable $e) {
+                    break;
+                }
+            }
+
+            // 整页截图
+            $shot = $this->sendCDP('Page.captureScreenshot', ['format' => 'png', 'captureBeyondViewport' => true]);
+            $base64 = $shot['data'] ?? '';
+            if ($base64 === '') {
+                return ['error' => '截图返回为空'];
+            }
+
+            // 视觉模型分析截图风格
+            $spec = $this->imageStyleAnalyzer->analyzeBase64([['mime' => 'image/png', 'data' => $base64]], $goal);
+
+            return ['design_spec' => $spec];
+        } catch (\Throwable $e) {
+            return ['error' => $e->getMessage(), 'hint' => '请先运行 php bin/console ef:chrome:open 启动 Chrome 远程调试'];
+        } finally {
+            if ($currentUrl !== '' && $currentUrl !== $url) {
+                try {
+                    $this->sendCDP('Page.navigate', ['url' => $currentUrl]);
+                } catch (\Throwable $e) {
+                }
+            }
         }
     }
 

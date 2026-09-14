@@ -33,15 +33,15 @@
 		<div class="outside-wrapper">
 			{# 渲染工具栏，并传入按钮配置数组 #}
 			{{ ui.toolBar([
-					{'type': 'create', 'text': '新建模型', 'id': 'createEntity'},
-					{'type': 'create', 'text': '新建文件夹', 'icon': 'fa-solid fa-folder-plus', 'id': 'createFolder'}
+					{'type': 'create', 'text': 'entityIndex.create', 'id': 'createEntity'},
+					{'type': 'create', 'text': 'entityIndex.createFolder', 'icon': 'fa-solid fa-folder-plus', 'id': 'createFolder'}
 			]) }}
 			<div class="inside-wrapper">
 				<div class="left-tree visible" id="leftTree">
 					<div class="left-tree-wrapper">
 						<div class="search-department-wrapper">
 							<span class="ef-input-wrapper">
-								<input class="ef-input ef-input-size-mini text" type="text" clearable="true" placeholder="请输入实体、字段名称"/>
+								<input class="ef-input ef-input-size-mini text" type="text" clearable="true" placeholder="{{ "entityIndex.1"|trans }}"/>
 								<span class="ef-input-suffix">
 									<i class="fa-solid fa-magnifying-glass"></i>
 								</span>

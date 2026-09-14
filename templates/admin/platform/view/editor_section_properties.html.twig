@@ -290,7 +290,7 @@
         <div class="ef-modal">
             <div class="ef-modal-header">
                 <div class="ef-modal-title ef-modal-title-align-left">
-                    确认删除
+                    {{ "editorSecProps.1"|trans }}
                 </div>
                 <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="closeDeleteConfirmModal()">
                     <span class="ef-icon-hover">
@@ -301,11 +301,11 @@
                 </div>
             </div>
             <div class="ef-modal-body">
-                <div>确定要删除这个组件吗？此操作不可撤销。</div>
+                <div>{{ "editorSecProps.2"|trans }}</div>
             </div>
             <div class="ef-modal-footer">
-                <button class="btn secondary small" type="button" onclick="closeDeleteConfirmModal()">取消</button>
-                <button class="btn red small" type="button" id="confirm-delete-btn">确定删除</button>
+                <button class="btn secondary small" type="button" onclick="closeDeleteConfirmModal()">{{ "editorSecProps.3"|trans }}</button>
+                <button class="btn red small" type="button" id="confirm-delete-btn">{{ "editorSecProps.4"|trans }}</button>
             </div>
         </div>
     </div>

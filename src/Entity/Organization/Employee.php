@@ -32,217 +32,157 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $passkeys;
 
     /**
-     * 工号
-     * @Ef(
-     *     group="employee_base_info",
-     *     isBF=true
-     * )
+     * 工号 / Employee number
      */
+    #[Ef(group: 'employee_base_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 50, unique: true)]
     private $employeeNo;
 
     /**
-     * 姓名
-     * @Ef(
-     *     group="employee_base_info",
-     *     isBF=true
-     * )
+     * 姓名 / Name
      */
+    #[Ef(group: 'employee_base_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 100)]
     private $name;
 
     /**
-     * 头像
-     * @Ef(
-     *     group="employee_base_info",
-     *     isBF=true
-     * )
+     * 头像 / Avatar
      */
+    #[Ef(group: 'employee_base_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $avatar;
 
     /**
-     * 英文名
-     * @Ef(
-     *     group="employee_base_info",
-     *     isBF=true
-     * )
+     * 英文名 / English name
      */
+    #[Ef(group: 'employee_base_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private $englishName;
 
     /**
-     * 用户名
-     * @Ef(
-     *     group="employee_account_info",
-     *     isBF=true
-     * )
+     * 用户名 / Username
      */
+    #[Ef(group: 'employee_account_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 180, unique: true)]
     private $username;
 
     /**
-     * 密码
-     * @Ef(
-     *     group="employee_account_info",
-     *     isBF=true
-     * )
+     * 密码 / Password
      */
+    #[Ef(group: 'employee_account_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 255)]
     private $password;
 
     /**
      * 强制重置密码标记（首次登录时）
-     * @Ef(
-     *     group="employee_account_info",
-     *     isBF=false
-     * )
      */
+    #[Ef(group: 'employee_account_info', isBF: false)]
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private bool $forcePasswordReset = true;
 
     /**
-     * 邮箱
-     * @Ef(
-     *     group="employee_contact_info",
-     *     isBF=true
-     * )
+     * 邮箱 / Email
      */
+    #[Ef(group: 'employee_contact_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 180, unique: true)]
     private $email;
 
     /**
-     * 手机号
-     * @Ef(
-     *     group="employee_contact_info",
-     *     isBF=true
-     * )
+     * 手机号 / Mobile phone
      */
+    #[Ef(group: 'employee_contact_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 20, nullable: true)]
     private $mobile;
 
     /**
-     * 性别
-     * @Ef(
-     *     group="employee_base_info",
-     *     isBF=true
-     * )
+     * 性别 / Gender
      */
+    #[Ef(group: 'employee_base_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 10, nullable: true)]
     private $gender;
 
     /**
-     * 出生日期
-     * @Ef(
-     *     group="employee_base_info",
-     *     isBF=true
-     * )
+     * 出生日期 / Date of birth
      */
+    #[Ef(group: 'employee_base_info', isBF: true)]
     #[ORM\Column(type: 'date', nullable: true)]
     private $birthDate;
 
     /**
-     * 身份证号
-     * @Ef(
-     *     group="employee_base_info",
-     *     isBF=true
-     * )
+     * 身份证号 / ID card number
      */
+    #[Ef(group: 'employee_base_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 18, nullable: true)]
     private $idCard;
 
     /**
-     * 入职日期
-     * @Ef(
-     *     group="employee_job_info",
-     *     isBF=true
-     * )
+     * 入职日期 / Join date
      */
+    #[Ef(group: 'employee_job_info', isBF: true)]
     #[ORM\Column(type: 'date', nullable: true)]
     private $hireDate;
 
     /**
-     * 离职日期
-     * @Ef(
-     *     group="employee_job_info",
-     *     isBF=true
-     * )
+     * 离职日期 / Departure date
      */
+    #[Ef(group: 'employee_job_info', isBF: true)]
     #[ORM\Column(type: 'date', nullable: true)]
     private $terminationDate;
 
     /**
-     * 在职状态（在职/离职）
-     * @Ef(
-     *     group="employee_job_info",
-     *     isBF=true
-     * )
+     * 在职状态（在职/离职） / Employment status (active/left)
      */
+    #[Ef(group: 'employee_job_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 20)]
     private $employmentStatus = 'active';
 
     /**
      * 工作状态（工作/休假/出差/外出/会议中）
-     * @Ef(
-     *     group="employee_job_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'employee_job_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 20)]
     private $workStatus = 'working';
 
     /**
-     * 所属公司
-     * @Ef(
-     *     group="employee_org_info",
-     *     isBF=true
-     * )
+     * 所属公司 / Company
      */
+    #[Ef(group: 'employee_org_info', isBF: true)]
     #[ORM\ManyToOne(targetEntity: Company::class)]
     #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id')]
     private $company;
 
     /**
-     * 所属部门
-     * @Ef(
-     *     group="employee_org_info",
-     *     isBF=true
-     * )
+     * 所属部门 / Department
      */
+    #[Ef(group: 'employee_org_info', isBF: true)]
     #[ORM\ManyToOne(targetEntity: Department::class)]
     #[ORM\JoinColumn(name: 'department_id', referencedColumnName: 'id')]
     private $department;
 
     /**
      * 岗位
-     * @Ef(
-     *     group="employee_job_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'employee_job_info', isBF: true)]
     #[ORM\ManyToOne(targetEntity: Position::class)]
     #[ORM\JoinColumn(name: 'position_id', referencedColumnName: 'id')]
     private $position;
 
     /**
-     * 直接上级
-     * @Ef(
-     *     group="employee_org_info",
-     *     isBF=true
-     * )
+     * 直接上级 / Direct manager
      */
+    #[Ef(group: 'employee_org_info', isBF: true)]
     #[ORM\ManyToOne(targetEntity: Employee::class, inversedBy: 'subordinates')]
     #[ORM\JoinColumn(name: 'manager_id', referencedColumnName: 'id', nullable: true)]
     private $manager;
 
     /**
-     * 下属
+ * 下属 / Subordinates
      */
     #[ORM\OneToMany(mappedBy: 'manager', targetEntity: Employee::class)]
     private $subordinates;
 
     /**
-     * 用户角色
+ * 用户角色 / User role
      */
     #[ORM\Column(type: 'json')]
     private $roles = [];
@@ -254,78 +194,57 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     private $isSystem = false;
 
     /**
-     * 最后登录时间
+ * 最后登录时间 / Last login time
      */
     #[ORM\Column(type: 'datetime', nullable: true)]
     private $lastLoginAt;
 
     /**
      * 密码是否由用户自己修改过
-     * @Ef(
-     *     group="employee_account_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'employee_account_info', isBF: true)]
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private $isPasswordModifiedByUser = false;
 
     /**
-     * 账户是否启用
-     * @Ef(
-     *     group="employee_account_info",
-     *     isBF=true
-     * )
+     * 账户是否启用 / Whether the account is enabled
      */
+    #[Ef(group: 'employee_account_info', isBF: true)]
     #[ORM\Column(type: 'boolean', options: ['default' => 1])]
     private $isActive = true;
 
     /**
-     * 紧急联系人
-     * @Ef(
-     *     group="employee_contact_info",
-     *     isBF=true
-     * )
+     * 紧急联系人 / Emergency contact
      */
+    #[Ef(group: 'employee_contact_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private $emergencyContact;
 
     /**
-     * 紧急联系人电话
-     * @Ef(
-     *     group="employee_contact_info",
-     *     isBF=true
-     * )
+     * 紧急联系人电话 / Emergency contact phone
      */
+    #[Ef(group: 'employee_contact_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 20, nullable: true)]
     private $emergencyPhone;
 
     /**
-     * 最高学历
-     * @Ef(
-     *     group="employee_education_info",
-     *     isBF=true
-     * )
+     * 最高学历 / Highest education
      */
+    #[Ef(group: 'employee_education_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private $education;
 
     /**
-     * 毕业院校
-     * @Ef(
-     *     group="employee_education_info",
-     *     isBF=true
-     * )
+     * 毕业院校 / Graduated school
      */
+    #[Ef(group: 'employee_education_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private $school;
 
     /**
-     * 专业
-     * @Ef(
-     *     group="employee_education_info",
-     *     isBF=true
-     * )
+     * 专业 / Major
      */
+    #[Ef(group: 'employee_education_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private $major;
 
@@ -348,22 +267,16 @@ class Employee implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * 毕业时间
-     * @Ef(
-     *     group="employee_education_info",
-     *     isBF=true
-     * )
+     * 毕业时间 / Graduation date
      */
+    #[Ef(group: 'employee_education_info', isBF: true)]
     #[ORM\Column(type: 'date', nullable: true)]
     private $graduationDate;
 
     /**
-     * 家庭住址
-     * @Ef(
-     *     group="employee_contact_info",
-     *     isBF=true
-     * )
+     * 家庭住址 / Home address
      */
+    #[Ef(group: 'employee_contact_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $address;
 

@@ -45,7 +45,7 @@
 							</span>
 							<span class="ef-menu-left-title-button">
 							  <button class="btn mini medium icon circle menu-title-button" id="{{ titleButtonId }}" titleMenuId="{{ titleMenuId }}"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-								<div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" for="所属公司" style="z-index: 1001; pointer-events: auto; min-width: 100px; left: 170px; top: 25px; display: none;" id="{{ titleMenuId }}" parentid="{{ titleButtonId }}">
+								<div class="ef-trigger-popup ef-trigger-position-bl" trigger-placement="bl" for="{{ "menuIndex.company"|trans }}" style="z-index: 1001; pointer-events: auto; min-width: 100px; left: 170px; top: 25px; display: none;" id="{{ titleMenuId }}" parentid="{{ titleButtonId }}">
 									<div class="ef-trigger-popup-wrapper" style="transform-origin: 0px 0px;">
 										<div class="ef-trigger-content">
 											<div class="ef-select-dropdown">
@@ -54,15 +54,15 @@
 														<ul class="ef-select-dropdown-list">
 															<li id="110587992" value="19" class="ef-select-option ">
 															  <i class="fa-regular fa-square-plus"></i>
-																<span class="ef-select-option-content">全部收起</span>
+																<span class="ef-select-option-content">{{ "menuIndex.1"|trans }}</span>
 															</li>
 															<li id="1264061729" value="21" class="ef-select-option ">
 															  <i class="fa-regular fa-square-minus"></i>
-																<span class="ef-select-option-content">全部展开</span>
+																<span class="ef-select-option-content">{{ "menuIndex.2"|trans }}</span>
 															</li>
 															<li id="1693656877" value="22" class="ef-select-option ">
 															  <i class="fa-solid fa-shuffle"></i>
-																<span class="ef-select-option-content">批量移动</span>
+																<span class="ef-select-option-content">{{ "menuIndex.3"|trans }}</span>
 															</li>
 														</ul>
 													</div>

@@ -193,24 +193,24 @@ $(document).ready(function() {
     }
     
     const buttonTitle = $(this).attr('title');
-    console.log(`点击了 ${buttonTitle} 按钮`);
+    console.log(t('editorToolbarJs.js1', {p1: buttonTitle}));
     
     if (iconClass.includes('fa-rotate-left')) {
-      console.log('执行撤销操作');
+      console.log(t('editorToolbarJs.js4'));
     } else if (iconClass.includes('fa-rotate-right')) {
-      console.log('执行重做操作');
+      console.log(t('editorToolbarJs.js5'));
     }
   });
   
   // 处理下拉选择框变化
-  $('.toolbar-select[title="字体选择"]').on('change', function() {
-    console.log(`选择了字体: ${$(this).val()}`);
+  $('.toolbar-select[title="' + t('editorToolbar.7') + '"]').on('change', function() {
+    console.log(t('editorToolbarJs.js2', {p1: $(this).val()}));
     // 实现字体更改逻辑 — 使用 applyStyleToSelection
     window.applyStyleToSelection('font-family', $(this).val());
   });
   
-  $('.toolbar-select[title="字号选择"]').on('change', function() {
-    console.log(`选择了字号: ${$(this).val()}px`);
+  $('.toolbar-select[title="' + t('editorToolbar.8') + '"]').on('change', function() {
+    console.log(t('editorToolbarJs.js3', {p1: $(this).val()}));
     window.applyStyleToSelection('font-size', $(this).val() + 'px');
   });
   
@@ -270,12 +270,12 @@ $(document).ready(function() {
           }
           window.viewEditor.toolbar.syncToolbarButtonStates($rich);
         } else {
-          alert.warning('请先选择要应用字体的内容');
+          alert.warning(t('editorToolbarJs.js6'));
           return;
         }
         
         $('#fontSelectorTrigger .font-selector-text').text(selectedFont.name);
-        console.log('应用字体:', selectedFont.name);
+        console.log(t('editorToolbarJs.js7'), selectedFont.name);
       }, currentFont);
     }
   });
@@ -327,25 +327,31 @@ $(document).ready(function() {
         success: function(response) {
           hideLoading();
           if (response.code === 200) {
-            alert.success('视图保存成功', { percent: '280px', title: "保存成功", closable: false });
+            // 自定义 Twig 表单设计：画布结构改动不会写入设计源码，明确提示而非假装保存成功 /
+            // custom Twig form design: canvas structural changes are not written to the design source
+            if (response.data && response.data.designPreserved) {
+              alert.error(t('editorToolbarJs.designPreserved'), { percent: '40%', title: t('editorToolbarJs.js11'), closable: true });
+              return;
+            }
+            alert.success(t('editorToolbarJs.js8'), { percent: '280px', title: t('editorToolbarJs.js9'), closable: false });
           } else {
-            alert.error('保存失败: ' + response.message, { percent: '40%', title: "保存失败", closable: true });
+            alert.error(t('editorToolbarJs.js10') + response.message, { percent: '40%', title: t('editorToolbarJs.js11'), closable: true });
           }
         },
         error: function(xhr, status, error) {
           hideLoading();
-          let errorMsg = '保存视图时发生错误';
-          if (xhr.responseJSON && xhr.responseJSON.message) {
-            errorMsg = xhr.responseJSON.message;
+          let errorMsg = t('editorToolbarJs.js12');
+          if (xhr.responseJSON && apiMsg(xhr)) {
+            errorMsg = apiMsg(xhr);
           }
-          console.error('保存视图失败: ' + errorMsg);
-          alert.error(errorMsg, { percent: '40%', title: "请求错误", closable: true });
+          console.error(t('editorToolbarJs.js13') + errorMsg);
+          alert.error(errorMsg, { percent: '40%', title: t('editorToolbarJs.js14'), closable: true });
         }
       });
     } catch (e) {
       hideLoading();
-      alert.error('保存视图时发生错误: ' + e.message, { percent: '40%', title: "请求错误", closable: true });
-      console.error('保存视图错误', e);
+      alert.error(t('editorToolbarJs.js15') + e.message, { percent: '40%', title: t('editorToolbarJs.js14'), closable: true });
+      console.error(t('editorToolbarJs.js16'), e);
     }
   }
 
@@ -356,7 +362,7 @@ $(document).ready(function() {
     // 如果页面中有加载指示器，可以在这里显示
     // 如果没有，可以创建一个简单的加载指示器
     if ($('#loading-indicator').length === 0) {
-      $('body').append('<div id="loading-indicator" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 9999; display: flex; justify-content: center; align-items: center;"><div style="background-color: white; padding: 20px; border-radius: 5px;">正在保存...</div></div>');
+      $('body').append('<div id="loading-indicator" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 9999; display: flex; justify-content: center; align-items: center;"><div style="background-color: white; padding: 20px; border-radius: 5px;">' + t('editorToolbarJs.saving') + '</div></div>');
     } else {
       $('#loading-indicator').show();
     }
@@ -1155,13 +1161,13 @@ $(document).ready(function() {
     const activeCells = activeSection.find('td[data-cell-active="true"]');
     
     if (activeCells.length < 2) {
-      alert.warning('请选择至少两个单元格进行合并');
+      alert.warning(t('editorToolbarJs.js17'));
       return;
     }
     
     // 检查选中的单元格是否连续
     if (!areSelectedCellsContinuous(activeCells)) {
-      alert.warning('只能合并连续的单元格区域');
+      alert.warning(t('editorToolbarJs.js18'));
       return;
     }
     
@@ -1256,7 +1262,7 @@ $(document).ready(function() {
       'outline': ''
     });
     
-    alert.success('单元格合并成功');
+    alert.success(t('editorToolbarJs.js19'));
   });
   
   // 检查拆分单元格按钮状态 - Feature 5
@@ -1299,7 +1305,7 @@ $(document).ready(function() {
     if (activeCells.length === 0) {
       // 没有选中单元格时，显示默认图标（不换行）
       $newlineBtn.find('i').removeClass('fa-align-justify').addClass('fa-align-left');
-      $newlineBtn.attr('title', '禁止换行');
+      $newlineBtn.attr('title', t('editorToolbarJs.js20'));
       return;
     }
     
@@ -1310,12 +1316,12 @@ $(document).ready(function() {
     if (whiteSpace === 'normal') {
       // 当前是换行状态，显示换行图标
       $newlineBtn.find('i').removeClass('fa-align-left').addClass('fa-align-justify');
-      $newlineBtn.attr('title', '允许换行');
+      $newlineBtn.attr('title', t('editorToolbarJs.js21'));
       $newlineBtn.addClass('active');
     } else {
       // 当前是不换行状态，显示不换行图标
       $newlineBtn.find('i').removeClass('fa-align-justify').addClass('fa-align-left');
-      $newlineBtn.attr('title', '禁止换行');
+      $newlineBtn.attr('title', t('editorToolbarJs.js20'));
       $newlineBtn.removeClass('active');
     }
   }
@@ -1349,7 +1355,7 @@ $(document).ready(function() {
     const activeCells = activeSection.find('td[data-cell-active="true"]');
     
     if (activeCells.length !== 1) {
-      alert.warning('请选择一个已合并的单元格进行拆分');
+      alert.warning(t('editorToolbarJs.js22'));
       return;
     }
     
@@ -1358,7 +1364,7 @@ $(document).ready(function() {
     const rowspan = parseInt(cell.attr('rowspan')) || 1;
     
     if (colspan === 1 && rowspan === 1) {
-      alert.warning('该单元格未合并，无需拆分');
+      alert.warning(t('editorToolbarJs.js23'));
       return;
     }
     
@@ -1389,7 +1395,7 @@ $(document).ready(function() {
     // 更新按钮状态
     updateSplitCellsButtonState();
     
-    alert.success('单元格拆分成功');
+    alert.success(t('editorToolbarJs.js24'));
   });
   
   // 自动换行功能
@@ -1398,7 +1404,7 @@ $(document).ready(function() {
     const activeCells = activeSection.find('td[data-cell-active="true"]');
     
     if (activeCells.length === 0) {
-      alert.warning('请先选择表格单元格');
+      alert.warning(t('editorToolbarJs.js25'));
       return;
     }
     
@@ -1550,7 +1556,7 @@ $(document).ready(function() {
       $('.custom-font-size-container').hide();
       $('.custom-font-size-input').val('');
     } else {
-      alert.warning('请输入6-200之间的有效字号');
+      alert.warning(t('editorToolbarJs.js26'));
     }
   });
   

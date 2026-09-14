@@ -186,7 +186,7 @@ $(document).ready(function () {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-          alert.success('字段更新成功', {
+          alert.success(t('entityJs.js1'), {
             percent: '50%',
             callback: function () {
               window.location.reload();
@@ -194,8 +194,8 @@ $(document).ready(function () {
           });
         },
         error: function (xhr, status, error) {
-          let errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : error;
-          alert.error("字段更新失败: " + errorMessage, { percent: '40%', title: "请求错误", closable: true });
+          let errorMessage = xhr.responseJSON && apiMsg(xhr) ? apiMsg(xhr) : error;
+          alert.error(t('entityJs.js2') + errorMessage, { percent: '40%', title: t('entityJs.js3'), closable: true });
         }
       });
     } else {
@@ -218,7 +218,7 @@ $(document).ready(function () {
         contentType: "application/json",
         data: JSON.stringify(payload),
         success: function (response) {
-          alert.success('表单提交成功', {
+          alert.success(t('entityJs.js4'), {
             percent: '50%',
             callback: function () {
               window.location.href = uri.path;
@@ -226,9 +226,9 @@ $(document).ready(function () {
           });
         },
         error: function (xhr, status, error) {
-          let errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : error;
-          console.error("表单提交失败: " + errorMessage);
-          alert.error("表单提交失败: " + errorMessage, { percent: '40%', title: "请求错误", closable: true });
+          let errorMessage = xhr.responseJSON && apiMsg(xhr) ? apiMsg(xhr) : error;
+          console.error(t('entityJs.js5') + errorMessage);
+          alert.error(t('entityJs.js5') + errorMessage, { percent: '40%', title: t('entityJs.js3'), closable: true });
         },
       });
     }
@@ -246,7 +246,7 @@ $(document).ready(function () {
     } else {
       // 如果只剩下一行，给出相应的提示或者不执行任何操作
       let alert = new Alert($(this).closest(".ef-drawer"));
-      alert.warning("至少需要保留一行字段", { percent: "40%", title: "不能再删除了" });
+      alert.warning(t('entityJs.js6'), { percent: "40%", title: t('entityJs.js7') });
     }
   });
 
@@ -264,7 +264,7 @@ $(document).ready(function () {
                   <div class="ef-row ef-row-align-start ef-row-justify-start ef-row-vertical-center">
                       <div class="ef-col-6" style="padding-left: 12px; padding-right: 12px;">
                           <div class="ud__col ud__form__item__label">
-                              <label class="ud__form__item-required" title="字段长度">字段长度<div class="ud__form__item__required-mark">*</div></label>
+                              <label class="ud__form__item-required" title=t('entityJs.js8')>' + t('entityJs.fieldLength') + '<div class="ud__form__item__required-mark">*</div></label>
                           </div>
                           <div class="ef-field-control-wrapper">
                               <span class="ef-input-wrapper" style="max-width: 320px;">
@@ -274,7 +274,7 @@ $(document).ready(function () {
                       </div>
                       <div class="ef-col-6" style="padding-left: 12px; padding-right: 12px;">
                           <div class="ud__col ud__form__item__label">
-                              <label class="ud__form__item-required" title="默认值">默认值</label>
+                              <label class="ud__form__item-required" title=t('entityJs.js9')>${t('entityJs.m65')}</label>
                           </div>
                           <div class="ef-field-control-wrapper">
                               <span class="ef-input-wrapper" style="max-width: 320px;">
@@ -284,7 +284,7 @@ $(document).ready(function () {
                       </div>
                       <div class="ef-col-3" style="padding-left: 12px; padding-right: 12px;">
                           <div class="ud__col ud__form__item__label">
-                              <label class="ud__form__item-required" title="允许为空">允许为空</label>
+                              <label class="ud__form__item-required" title=t('entityJs.js10')>${t('entityJs.m66')}</label>
                           </div>
                           <div class="ef-field-control-wrapper">
                               <label aria-disabled="false" class="ef-checkbox ef-checkbox-checked">
@@ -299,7 +299,7 @@ $(document).ready(function () {
                       </div>
                       <div class="ef-col-3" style="padding-left: 12px; padding-right: 12px;">
                           <div class="ud__col ud__form__item__label">
-                              <label class="ud__form__item-required" title="唯一的">唯一的</label>
+                              <label class="ud__form__item-required" title=t('entityJs.js11')>${t('entityJs.m67')}</label>
                           </div>
                           <div class="ef-field-control-wrapper">
                               <label aria-disabled="false" class="ef-checkbox">
@@ -426,8 +426,8 @@ $(document).ready(function () {
       },
       error: function (xhr, status, error) {
         // 错误处理，显示错误信息
-        console.error("创建命名空间目录失败:"+ xhr.responseJSON.message);
-        alert.error("表单提交失败: " + xhr.responseJSON.message, { percent: '40%', title: "请求错误", closable: true });
+        console.error(t('entityJs.js12')+ apiMsg(xhr));
+        alert.error(t('entityJs.js5') + apiMsg(xhr), { percent: '40%', title: t('entityJs.js3'), closable: true });
       }
     });
   });
@@ -450,8 +450,8 @@ $(document).ready(function () {
       },
       error: function (xhr, status, error) {
         // 错误处理，显示错误信息
-        console.error("创建模型Entity失败:"+ error);
-        alert.error("表单提交失败: " + error, { percent: '40%', title: "请求错误", closable: true });
+        console.error(t('entityJs.js13')+ error);
+        alert.error(t('entityJs.js5') + error, { percent: '40%', title: t('entityJs.js3'), closable: true });
       }
     });
   });

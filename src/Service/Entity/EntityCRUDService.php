@@ -26,7 +26,7 @@ class EntityCRUDService extends BaseService
      */
     public function save(object $entity, array $data): object
     {
-        // 动态设置属性
+        // 动态设置属性 / Dynamically set attributes
         $entity = $this->setEntityProperties($entity, $data);
 
         try {
@@ -36,7 +36,7 @@ class EntityCRUDService extends BaseService
             throw $e;
         }
 
-        // 返回保存后的实体对象
+        // 返回保存后的实体对象 / Return the persisted entity
         return $entity;
     }
 

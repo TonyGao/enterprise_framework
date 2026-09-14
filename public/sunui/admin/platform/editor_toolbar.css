@@ -50,6 +50,17 @@
   color: #3370ff;
 }
 
+/* 表单形态切换按钮：带文字标签，避免被 28px 正方形压成逐字竖排 */
+#editor-render-mode {
+  width: auto;
+  min-width: 28px;
+  padding: 0 10px;
+  white-space: nowrap;
+  gap: 6px;
+  display: inline-flex;
+  align-items: center;
+}
+
 .toolbar-btn.newline {
   transform: rotate(90deg);
 }

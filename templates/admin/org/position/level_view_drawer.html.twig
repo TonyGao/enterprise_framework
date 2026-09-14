@@ -6,7 +6,7 @@
             <div class="ef-drawer-title">
                 <i class="fa-solid fa-layer-group" style="margin-right: 12px; font-size: 18px;"></i>
                 {{ positionLevel.name }}
-                <span style="font-size: 14px; font-weight: 400; margin-left: 8px; opacity: 0.8;">岗位级别详情</span>
+                <span style="font-size: 14px; font-weight: 400; margin-left: 8px; opacity: 0.8;">{{ "posLevelView.1"|trans }}</span>
             </div>
             <div tabindex="-1" role="button" aria-label="Close" class="ef-drawer-close-btn">
                 <span class="ef-icon-hover">
@@ -22,42 +22,42 @@
                 <div class="ef-section">
                     <div class="ef-section-header">
                         <i class="fa-solid fa-info-circle"></i>
-                        <span>基本信息</span>
+                        <span>{{ "posLevelView.2"|trans }}</span>
                     </div>
                     <div class="ef-detail-view ef-detail-two-columns">
                         <div class="ef-detail-row-group">
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">级别名称</div>
+                                <div class="ef-detail-label">{{ "posLevelView.3"|trans }}</div>
                                 <div class="ef-detail-value">{{ positionLevel.name }}</div>
                             </div>
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">级别编码</div>
+                                <div class="ef-detail-label">{{ "posLevelView.4"|trans }}</div>
                                 <div class="ef-detail-value">{{ positionLevel.code ?: '无' }}</div>
                             </div>
                         </div>
                         <div class="ef-detail-row-group">
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">级别序号</div>
+                                <div class="ef-detail-label">{{ "posLevelView.5"|trans }}</div>
                                 <div class="ef-detail-value">{{ positionLevel.levelOrder }}</div>
                             </div>
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">状态</div>
+                                <div class="ef-detail-label">{{ "posLevelView.6"|trans }}</div>
                                 <div class="ef-detail-value">
                                     {% if positionLevel.state %}
-                                        <span class="ef-badge ef-badge-success">✓ 启用</span>
+                                        <span class="ef-badge ef-badge-success">✓ {{ "posLevelView.7"|trans }}</span>
                                     {% else %}
-                                        <span class="ef-badge ef-badge-danger">✗ 停用</span>
+                                        <span class="ef-badge ef-badge-danger">✗ {{ "posLevelView.8"|trans }}</span>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
                         <div class="ef-detail-row-group">
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">薪资范围下限</div>
+                                <div class="ef-detail-label">{{ "posLevelView.9"|trans }}</div>
                                 <div class="ef-detail-value">{{ positionLevel.salaryMin ? positionLevel.salaryMin|number_format(2) : '未设置' }}</div>
                             </div>
                             <div class="ef-detail-item">
-                                <div class="ef-detail-label">薪资范围上限</div>
+                                <div class="ef-detail-label">{{ "posLevelView.10"|trans }}</div>
                                 <div class="ef-detail-value">{{ positionLevel.salaryMax ? positionLevel.salaryMax|number_format(2) : '未设置' }}</div>
                             </div>
                         </div>
@@ -69,7 +69,7 @@
                 <div class="ef-section">
                     <div class="ef-section-header">
                         <i class="fa-solid fa-align-left"></i>
-                        <span>描述</span>
+                        <span>{{ "posLevelView.11"|trans }}</span>
                     </div>
                     <div class="ef-detail-content">
                         {{ positionLevel.description|nl2br }}
@@ -80,10 +80,10 @@
             </div>
         </div>
         <div class="ef-drawer-footer">
-            <button class="cancelDrawer ef-drawer-btn ef-drawer-btn-secondary" type="button">关闭</button>
+            <button class="cancelDrawer ef-drawer-btn ef-drawer-btn-secondary" type="button">{{ "posLevelView.12"|trans }}</button>
             <button type="button" class="ef-drawer-btn ef-drawer-btn-primary edit-button" onclick="openPositionLevelEditDrawer({{ positionLevel.id }})">
                     <i class="fa-solid fa-edit"></i>
-                    编辑
+                    {{ "posLevelView.13"|trans }}
             </button>
         </div>
     </div>

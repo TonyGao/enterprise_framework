@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>预览 {{ viewName }} · v{{ version }}</title>
+  <title>{{ "verPrev.1"|trans }} {{ viewName }} · v{{ version }}</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -41,8 +41,8 @@
 </head>
 <body>
   <div class="preview-head">
-    <span><strong>{{ viewName }}</strong> · 版本 {{ version }} 预览</span>
-    <span>（用于切换前查看效果）</span>
+    <span><strong>{{ viewName }}</strong> {{ "verPrev.2"|trans }} {{ version }} {{ "verPrev.1"|trans }}</span>
+    <span>{{ "verPrev.3"|trans }}</span>
   </div>
   <div class="preview-frame">
     {% if found and content is not empty %}
@@ -50,7 +50,7 @@
     {% else %}
       <div class="preview-empty">
         <i class="fa-regular fa-eye" style="font-size: 28px; display:block; margin-bottom: 8px;"></i>
-        该版本暂无内容
+        {{ "verPrev.4"|trans }}
       </div>
     {% endif %}
   </div>

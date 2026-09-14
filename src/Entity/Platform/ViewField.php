@@ -87,7 +87,7 @@ class ViewField
   private ?array $config = null;
 
   /**
-   * 排序号
+   * 排序号 / Sort order
    */
   #[ORM\Column(type: "integer", options: ["default" => 0])]
   private $sortOrder = 0;

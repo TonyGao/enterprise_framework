@@ -34,11 +34,11 @@ class CalendarTypeController extends AbstractController
         $label = trim((string) ($data['label'] ?? ''));
 
         if (!$this->isValidKey($key) || $label === '') {
-            return $this->json(['message' => 'key 格式无效，且 label 为必填'], 400);
+            return $this->json(['message' => 'msg.calendar.key_invalid'], 400);
         }
 
         if ($this->repo->findOneBy(['code' => $key])) {
-            return $this->json(['message' => 'key 已存在'], 400);
+            return $this->json(['message' => 'msg.calendar.key_exists'], 400);
         }
 
         $type = (new SystemCalendarEventType())
@@ -60,7 +60,7 @@ class CalendarTypeController extends AbstractController
     {
         $type = $this->repo->findOneBy(['code' => $key]);
         if (!$type instanceof SystemCalendarEventType) {
-            return $this->json(['message' => '未找到类型'], 404);
+            return $this->json(['message' => 'msg.calendar.type_not_found'], 404);
         }
 
         $data = json_decode($request->getContent(), true) ?: [];
@@ -87,10 +87,10 @@ class CalendarTypeController extends AbstractController
     {
         $type = $this->repo->findOneBy(['code' => $key]);
         if (!$type instanceof SystemCalendarEventType) {
-            return $this->json(['message' => '未找到类型'], 404);
+            return $this->json(['message' => 'msg.calendar.type_not_found'], 404);
         }
         if ($type->isSystem()) {
-            return $this->json(['message' => '系统预设类型不可删除'], 400);
+            return $this->json(['message' => 'msg.calendar.preset_not_deletable'], 400);
         }
 
         $this->em->remove($type);

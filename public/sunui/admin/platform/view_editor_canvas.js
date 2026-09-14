@@ -203,7 +203,7 @@ $(document).ready(function() {
                 addDistanceMeasurement($tempLine);
                 
                 // 添加提示
-                $tempLine.attr('title', '双击删除辅助线，拖拽可移动位置，按住Ctrl/Cmd点击可测量距离');
+                $tempLine.attr('title', t('viewEditorCanvasJs.js1'));
             }
             
             isDragging = false;
@@ -527,10 +527,10 @@ $(document).ready(function() {
         }
     });
     
-    console.log('标尺功能已初始化');
-    console.log('使用说明：');
-    console.log('- 从顶部标尺拖拽可创建垂直辅助线');
-    console.log('- 从左侧标尺拖拽可创建水平辅助线');
-    console.log('- 双击辅助线可删除');
-    console.log('- 按 Ctrl+Shift+G 清除所有辅助线');
+    console.log(t('viewEditorCanvasJs.js2'));
+    console.log(t('viewEditorCanvasJs.js3'));
+    console.log(t('viewEditorCanvasJs.js4'));
+    console.log(t('viewEditorCanvasJs.js5'));
+    console.log(t('viewEditorCanvasJs.js6'));
+    console.log(t('viewEditorCanvasJs.js7'));
 });

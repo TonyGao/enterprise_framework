@@ -23,7 +23,7 @@
                 {% else %}
                     {{ form_start(form, {'attr': {'class': 'ef-form'}}) }}
                         <div class="ef-form-section">
-                            <div class="ef-form-section-title">基本信息</div>
+                            <div class="ef-form-section-title">{{ "posForm.1"|trans }}</div>
                             <div class="ef-form-row">
                                 <div class="ef-form-col">
                                     {{ form_row(form.name) }}
@@ -64,7 +64,7 @@
                         </div>
 
                         <div class="ef-form-section">
-                            <div class="ef-form-section-title">详细信息</div>
+                            <div class="ef-form-section-title">{{ "posForm.2"|trans }}</div>
                             <div class="ef-form-row">
                                 <div class="ef-form-col">
                                     {{ form_row(form.responsibility) }}
@@ -83,8 +83,8 @@
                         </div>
 
                         <div class="ef-form-actions">
-                            <button type="submit" class="ef-button ef-button-primary">保存</button>
-                            <a href="{{ path('org_position') }}" class="ef-button ef-button-default">取消</a>
+                            <button type="submit" class="ef-button ef-button-primary">{{ "posForm.3"|trans }}</button>
+                            <a href="{{ path('org_position') }}" class="ef-button ef-button-default">{{ "posForm.4"|trans }}</a>
                         </div>
                     {{ form_end(form) }}
                 {% endif %}

@@ -1,6 +1,6 @@
 {% extends "admin/layout.html.twig" %}
 
-{% block title %}狗狗框架 | Enterprise Framework{% endblock %}
+{% block title %}{{ "adminIndex.title1"|trans }}{% endblock %}
 
 {% block css %}
 <style>
@@ -441,30 +441,30 @@
 <div class="home-hero">
   <div class="home-hero-content">
     <div class="home-hero-badge">
-      <i class="fa-solid fa-crown"></i> v0.1.0 · 基于 Symfony 7.4 LTS 构建
+      <i class="fa-solid fa-crown"></i> {{ "adminIndex.2"|trans }}
     </div>
     <div class="home-hero-brand">
-      <img src="{{ asset('logo/dog215.png', 'image') }}" alt="狗狗框架" class="home-hero-logo">
+      <img src="{{ asset('logo/dog215.png', 'image') }}" alt="{{ "adminIndex.1"|trans }}" class="home-hero-logo">
       <div class="home-hero-brand-text">
-        <h1>狗狗框架</h1>
+        <h1>{{ "adminIndex.1"|trans }}</h1>
         <div class="home-hero-brand-sub">ENTERPRISE FRAMEWORK</div>
       </div>
     </div>
     <div class="home-hero-desc">
-      基于 Symfony 7.4 LTS 构建的企业级低代码开发平台。提供模型驱动开发、动态表单、可视化视图设计、RESTful API 自动生成等核心能力，助力企业快速构建高质量业务系统。
+      {{ "adminIndex.3"|trans }}
     </div>
     <div class="home-hero-stats">
       <div class="home-hero-stat">
         <div class="home-hero-stat-num">Symfony 7.4</div>
-        <div class="home-hero-stat-label">LTS 全栈框架</div>
+        <div class="home-hero-stat-label">{{ "adminIndex.4"|trans }}</div>
       </div>
       <div class="home-hero-stat">
         <div class="home-hero-stat-num">PHP 8.2+</div>
-        <div class="home-hero-stat-label">运行环境</div>
+        <div class="home-hero-stat-label">{{ "adminIndex.5"|trans }}</div>
       </div>
       <div class="home-hero-stat">
         <div class="home-hero-stat-num">FrankenPHP</div>
-        <div class="home-hero-stat-label">应用服务器</div>
+        <div class="home-hero-stat-label">{{ "adminIndex.6"|trans }}</div>
       </div>
     </div>
   </div>
@@ -475,7 +475,7 @@
   <div class="home-section-header">
     <div class="home-section-title">
       <span class="title-icon"><i class="fa-solid fa-cubes"></i></span>
-      核心功能
+      {{ "adminIndex.7"|trans }}
     </div>
   </div>
   <div class="home-feature-grid">
@@ -483,60 +483,60 @@
       <div class="home-feature-card-icon indigo">
         <i class="fa-solid fa-database"></i>
       </div>
-      <h3>模型驱动开发 <span class="home-feature-badge">开发中</span></h3>
-      <p>通过可视化界面定义数据模型，自动生成 Doctrine 实体、数据库表、CRUD 接口和后台管理页面，实现从模型到应用的一键生成。</p>
+      <h3>{{ "adminIndex.8"|trans }} <span class="home-feature-badge">{{ "adminIndex.9"|trans }}</span></h3>
+      <p>{{ "adminIndex.10"|trans }}</p>
       <div class="home-feature-card-footer">
-        <i class="fa-regular fa-clock"></i> 预计 Q3 2025 完成
+        <i class="fa-regular fa-clock"></i> {{ "adminIndex.11"|trans }}
       </div>
     </div>
     <div class="home-feature-card">
       <div class="home-feature-card-icon emerald">
         <i class="fa-solid fa-paint-brush"></i>
       </div>
-      <h3>视图设计器 <span class="home-feature-badge">开发中</span></h3>
-      <p>拖拽式可视化视图编辑器，支持自定义布局、组件配置、数据绑定，所见即所得地构建业务页面，无需手写前端代码。</p>
+      <h3>{{ "adminIndex.12"|trans }} <span class="home-feature-badge">{{ "adminIndex.9"|trans }}</span></h3>
+      <p>{{ "adminIndex.13"|trans }}</p>
       <div class="home-feature-card-footer">
-        <i class="fa-regular fa-clock"></i> 预计 Q3 2025 完成
+        <i class="fa-regular fa-clock"></i> {{ "adminIndex.11"|trans }}
       </div>
     </div>
     <div class="home-feature-card">
       <div class="home-feature-card-icon amber">
         <i class="fa-solid fa-plug"></i>
       </div>
-      <h3>RESTful API 自动生成 <span class="home-feature-badge">开发中</span></h3>
-      <p>基于模型定义自动生成标准化 RESTful API，支持 CRUD 操作、关联查询、分页过滤，零代码构建后端接口服务。</p>
+      <h3>{{ "adminIndex.14"|trans }} <span class="home-feature-badge">{{ "adminIndex.9"|trans }}</span></h3>
+      <p>{{ "adminIndex.15"|trans }}</p>
       <div class="home-feature-card-footer">
-        <i class="fa-regular fa-clock"></i> 预计 Q3 2025 完成
+        <i class="fa-regular fa-clock"></i> {{ "adminIndex.11"|trans }}
       </div>
     </div>
     <div class="home-feature-card">
       <div class="home-feature-card-icon violet">
         <i class="fa-solid fa-table-list"></i>
       </div>
-      <h3>动态数据表格</h3>
-      <p>配置化的数据表格组件，支持列定义、排序、筛选、分页、行内编辑、批量操作，自动适配不同数据源。</p>
+      <h3>{{ "adminIndex.16"|trans }}</h3>
+      <p>{{ "adminIndex.17"|trans }}</p>
       <div class="home-feature-card-footer">
-        <i class="fa-solid fa-check-circle" style="color: #059669;"></i> 已就绪
+        <i class="fa-solid fa-check-circle" style="color: #059669;"></i> {{ "adminIndex.18"|trans }}
       </div>
     </div>
     <div class="home-feature-card">
       <div class="home-feature-card-icon teal">
         <i class="fa-solid fa-sitemap"></i>
       </div>
-      <h3>组织架构管理</h3>
-      <p>树形组织架构管理，支持公司、部门、岗位、职级体系，灵活的人员归属和权限分配，适配各类企业结构。</p>
+      <h3>{{ "adminIndex.19"|trans }}</h3>
+      <p>{{ "adminIndex.20"|trans }}</p>
       <div class="home-feature-card-footer">
-        <i class="fa-solid fa-check-circle" style="color: #059669;"></i> 已就绪
+        <i class="fa-solid fa-check-circle" style="color: #059669;"></i> {{ "adminIndex.18"|trans }}
       </div>
     </div>
     <div class="home-feature-card">
       <div class="home-feature-card-icon rose">
         <i class="fa-solid fa-clock"></i>
       </div>
-      <h3>定时任务调度</h3>
-      <p>内置 Cron 定时任务引擎，支持任务管理、执行日志、日历视图，满足系统自动化运维与定时业务处理需求。</p>
+      <h3>{{ "adminIndex.21"|trans }}</h3>
+      <p>{{ "adminIndex.22"|trans }}</p>
       <div class="home-feature-card-footer">
-        <i class="fa-solid fa-check-circle" style="color: #059669;"></i> 已就绪
+        <i class="fa-solid fa-check-circle" style="color: #059669;"></i> {{ "adminIndex.18"|trans }}
       </div>
     </div>
   </div>
@@ -549,59 +549,59 @@
   <div class="home-section-header">
     <div class="home-section-title">
       <span class="title-icon" style="background: #7c3aed;"><i class="fa-solid fa-star"></i></span>
-      技术优势
+      {{ "adminIndex.23"|trans }}
     </div>
   </div>
   <div class="home-advantage-list">
     <div class="home-advantage-item">
       <div class="home-advantage-icon"><i class="fa-solid fa-bolt"></i></div>
-      <h4>FrankenPHP Worker 模式</h4>
-      <p>基于 Caddy + PHP 常驻内存运行，避免传统 FPM 每次请求启动的开销，请求延迟降低 80%，吞吐量提升 3-5 倍。</p>
+      <h4>{{ "adminIndex.24"|trans }}</h4>
+      <p>{{ "adminIndex.25"|trans }} + {{ "adminIndex.26"|trans }}%{{ "adminIndex.27"|trans }}</p>
     </div>
     <div class="home-advantage-item">
       <div class="home-advantage-icon"><i class="fa-solid fa-layer-group"></i></div>
-      <h4>Symfony 7.4 LTS 全栈</h4>
-      <p>基于 Symfony 7.4 LTS（2025.11 - 2029.11），充分利用 Doctrine ORM、Form、Security、Messenger、Mercure 等核心组件。</p>
+      <h4>{{ "adminIndex.28"|trans }}</h4>
+      <p>{{ "adminIndex.29"|trans }}</p>
     </div>
     <div class="home-advantage-item">
       <div class="home-advantage-icon"><i class="fa-solid fa-puzzle-piece"></i></div>
-      <h4>sunui 组件库</h4>
-      <p>自研 UI 组件库，包含表格、表单、树、选择器、抽屉、弹窗等 30+ 组件，jQuery 驱动，轻量无框架依赖。</p>
+      <h4>{{ "adminIndex.30"|trans }}</h4>
+      <p>{{ "adminIndex.31"|trans }}+ {{ "adminIndex.32"|trans }}</p>
     </div>
     <div class="home-advantage-item">
       <div class="home-advantage-icon"><i class="fa-solid fa-tree"></i></div>
       <h4>Gedmo Nested Set</h4>
-      <p>基于 Doctrine Tree 扩展实现高性能树形数据管理，支持菜单、组织架构、视图目录等场景。</p>
+      <p>{{ "adminIndex.33"|trans }}</p>
     </div>
     <div class="home-advantage-item">
       <div class="home-advantage-icon"><i class="fa-solid fa-code"></i></div>
-      <h4>低代码 + 可扩展</h4>
-      <p>低代码生成与手写代码无缝融合，生成的代码均为标准 Symfony 组件，可自由修改扩展，不被框架锁定。</p>
+      <h4>{{ "adminIndex.34"|trans }} + {{ "adminIndex.35"|trans }}</h4>
+      <p>{{ "adminIndex.36"|trans }}</p>
     </div>
     <div class="home-advantage-item">
       <div class="home-advantage-icon"><i class="fa-solid fa-satellite-dish"></i></div>
-      <h4>Mercure 实时推送</h4>
-      <p>基于 Mercure 协议的 SSE 实时通信，支持在线心跳、消息推送、数据同步，无需额外部署 WebSocket。</p>
+      <h4>{{ "adminIndex.37"|trans }}</h4>
+      <p>{{ "adminIndex.38"|trans }}</p>
     </div>
     <div class="home-advantage-item">
       <div class="home-advantage-icon"><i class="fa-solid fa-database"></i></div>
-      <h4>多存储后端</h4>
-      <p>基于 Flysystem 统一文件存储抽象，支持本地、阿里云 OSS、AWS S3 等多种存储后端，配置切换无需改代码。</p>
+      <h4>{{ "adminIndex.39"|trans }}</h4>
+      <p>{{ "adminIndex.40"|trans }}</p>
     </div>
     <div class="home-advantage-item">
       <div class="home-advantage-icon"><i class="fa-solid fa-shield-halved"></i></div>
-      <h4>企业级安全</h4>
-      <p>三员分立权限模型、WebAuthn 无密码认证、CSRF 防护、Session 安全管理，满足等保合规要求。</p>
+      <h4>{{ "adminIndex.41"|trans }}</h4>
+      <p>{{ "adminIndex.42"|trans }}</p>
     </div>
   </div>
 </div>
 
 <!-- ====== Footer ====== -->
 <div class="home-footer">
-  <span>狗狗框架 v0.1.0 · Built with Symfony 7.4 &amp; FrankenPHP</span>
+  <span>{{ "adminIndex.43"|trans }} &amp; FrankenPHP</span>
   <div class="home-footer-links">
-    <a href="#"><i class="fa-regular fa-file-lines"></i> 文档</a>
-    <a href="#"><i class="fa-regular fa-circle-question"></i> 帮助</a>
+    <a href="#"><i class="fa-regular fa-file-lines"></i> {{ "adminIndex.44"|trans }}</a>
+    <a href="#"><i class="fa-regular fa-circle-question"></i> {{ "adminIndex.45"|trans }}</a>
     <a href="#"><i class="fa-brands fa-github"></i> GitHub</a>
   </div>
 </div>

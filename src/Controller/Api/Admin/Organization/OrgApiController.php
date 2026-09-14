@@ -18,6 +18,7 @@ use App\Controller\Api\ApiResponse;
 use App\Entity\Organization\Corporation;
 use App\Entity\Organization\Employee;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class OrgApiController extends AbstractController
@@ -276,7 +277,7 @@ class OrgApiController extends AbstractController
         $dataGridService->clearEntityCache(PositionLevel::class);
       }
 
-      $message = "成功删除 {$deletedCount} 个岗位级别";
+      $message = $translator->trans('msg.org.levels_deleted', ['count' => $deletedCount]);
       if (!empty($errors)) {
         $message .= "，但有 " . count($errors) . " 个级别删除失败";
       }
@@ -319,7 +320,7 @@ class OrgApiController extends AbstractController
       return ApiResponse::error(
         json_encode([]),
         400,
-        '请选择要删除的岗位'
+        'msg.org.select_positions'
       );
     }
 
@@ -363,7 +364,7 @@ class OrgApiController extends AbstractController
         $dataGridService->clearEntityCache(Position::class);
       }
 
-      $message = "成功删除 {$deletedCount} 个岗位";
+      $message = $translator->trans('msg.org.deleted', ['count' => $deletedCount]);
       if (!empty($errors)) {
         $message .= "，但有 " . count($errors) . " 个岗位删除失败";
       }

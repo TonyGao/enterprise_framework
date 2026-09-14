@@ -4,7 +4,7 @@
         <div class="ef-drawer-header">
             <div class="ef-drawer-title">
                 <i class="fa-solid fa-eye" style="margin-right: 12px; font-size: 18px;"></i>
-                存储配置详情
+                {{ "storageView.1"|trans }}
             </div>
             <div tabindex="-1" role="button" aria-label="Close" class="ef-drawer-close-btn" onclick="closeDrawer('{{ drawerId }}')">
                 <span class="ef-icon-hover">
@@ -18,22 +18,22 @@
             <div class="ef-drawer-content">
                 <div class="ef-form">
                     <div class="ef-card" style="border: 1px solid #e5e6eb; border-radius: 4px; padding: 20px; margin-bottom: 20px;">
-                        <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">基本信息</h4>
+                        <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">{{ "storageView.2"|trans }}</h4>
                         
                         <div class="ef-form-item ef-row">
-                            <div class="ef-form-label ef-col" style="flex: 0 0 160px;">存储名称</div>
+                            <div class="ef-form-label ef-col" style="flex: 0 0 160px;">{{ "storageView.3"|trans }}</div>
                             <div class="ef-form-item-content ef-form-item-content-flex ef-col" style="padding-top: 5px;">
                                 {{ storage_config.name }}
                              </div>
                          </div>
  
                          <div class="ef-form-item ef-row">
-                             <div class="ef-form-label ef-col" style="flex: 0 0 160px;">驱动类型</div>
+                             <div class="ef-form-label ef-col" style="flex: 0 0 160px;">{{ "storageView.4"|trans }}</div>
                              <div class="ef-form-item-content ef-form-item-content-flex ef-col" style="padding-top: 5px;">
                                  {% if storage_config.adapterType == 'local' %}
-                                     <span class="ef-tag ef-tag-blue">本地存储</span>
+                                     <span class="ef-tag ef-tag-blue">{{ "storageView.5"|trans }}</span>
                                  {% elseif storage_config.adapterType == 's3' %}
-                                     <span class="ef-tag ef-tag-orange">S3 兼容存储</span>
+                                     <span class="ef-tag ef-tag-orange">{{ "storageView.6"|trans }}</span>
                                  {% else %}
                                      {{ storage_config.adapterType }}
                                  {% endif %}
@@ -41,18 +41,18 @@
                          </div>
  
                          <div class="ef-form-item ef-row">
-                             <div class="ef-form-label ef-col" style="flex: 0 0 160px;">设为默认</div>
+                             <div class="ef-form-label ef-col" style="flex: 0 0 160px;">{{ "storageView.7"|trans }}</div>
                              <div class="ef-form-item-content ef-form-item-content-flex ef-col" style="padding-top: 5px;">
                                  {% if storage_config.isDefault %}
-                                     <span class="ef-tag ef-tag-green">是</span>
+                                     <span class="ef-tag ef-tag-green">{{ "storageView.8"|trans }}</span>
                                  {% else %}
-                                     <span class="ef-tag ef-tag-grey">否</span>
+                                     <span class="ef-tag ef-tag-grey">{{ "storageView.9"|trans }}</span>
                                  {% endif %}
                              </div>
                          </div>
  
                          <div class="ef-form-item ef-row">
-                            <div class="ef-form-label ef-col" style="flex: 0 0 160px;">CDN 域名</div>
+                            <div class="ef-form-label ef-col" style="flex: 0 0 160px;">{{ "storageView.10"|trans }}</div>
                             <div class="ef-form-item-content ef-form-item-content-flex ef-col" style="padding-top: 5px;">
                                 {{ storage_config.cdnDomain|default('-') }}
                             </div>
@@ -62,22 +62,22 @@
                     <div class="ef-card" id="storage-config-details-card" style="border: 1px solid #e5e6eb; border-radius: 4px; padding: 20px;">
                         {% if storage_config.adapterType == 'local' %}
                             <div id="local-config-section-drawer">
-                                <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">Local 配置</h4>
+                                <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">{{ "storageView.11"|trans }}</h4>
                                 
                                 <div class="ef-form-item ef-row">
-                                    <div class="ef-form-label ef-col" style="flex: 0 0 160px;">文件存储策略</div>
+                                    <div class="ef-form-label ef-col" style="flex: 0 0 160px;">{{ "storageView.12"|trans }}</div>
                                     <div class="ef-form-item-content ef-form-item-content-flex ef-col" style="padding-top: 5px;">
                                         {% set strategy = storage_config.config.directory_strategy|default('Y/m') %}
-                                        {% if strategy == 'Y/m/d' %}按年月日 (YYYY/MM/DD)
-                                        {% elseif strategy == 'Y/m' %}按年月 (YYYY/MM)
-                                        {% elseif strategy == 'Y' %}按年份 (YYYY)
-                                        {% elseif strategy == 'none' %}不创建子目录
-                                        {% else %}按年月 (YYYY/MM){% endif %}
+                                        {% if strategy == 'Y/m/d' %}{{ "storageView.13"|trans }} (YYYY/MM/DD)
+                                        {% elseif strategy == 'Y/m' %}{{ "storageView.14"|trans }} (YYYY/MM)
+                                        {% elseif strategy == 'Y' %}{{ "storageView.15"|trans }} (YYYY)
+                                        {% elseif strategy == 'none' %}{{ "storageView.16"|trans }}
+                                        {% else %}{{ "storageView.14"|trans }} (YYYY/MM){% endif %}
                                     </div>
                                 </div>
  
                                  <div class="ef-form-item ef-row">
-                                     <div class="ef-form-label ef-col" style="flex: 0 0 160px;">存储目录（相对于 public）</div>
+                                     <div class="ef-form-label ef-col" style="flex: 0 0 160px;">{{ "storageView.17"|trans }}</div>
                                      <div class="ef-form-item-content ef-form-item-content-flex ef-col" style="padding-top: 5px;">
                                          {{ storage_config.config.directory|default('-') }}
                                      </div>
@@ -87,7 +87,7 @@
  
                          {% if storage_config.adapterType == 's3' %}
                              <div id="s3-config-section-drawer">
-                                 <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">S3 配置</h4>
+                                 <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">{{ "storageView.18"|trans }}</h4>
                                  
                                  <div class="ef-form-item ef-row">
                                      <div class="ef-form-label ef-col" style="flex: 0 0 160px;">Endpoint</div>
@@ -131,7 +131,7 @@
                         <div class="ef-col">
                             <div class="ef-space ef-space-horizontal">
                                 <div class="ef-space-item">
-                                    <button class="btn secondary medium" type="button" onclick="closeDrawer('{{ drawerId }}')">关闭</button>
+                                    <button class="btn secondary medium" type="button" onclick="closeDrawer('{{ drawerId }}')">{{ "storageView.19"|trans }}</button>
                                 </div>
                             </div>
                         </div>

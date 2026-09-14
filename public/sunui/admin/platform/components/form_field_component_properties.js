@@ -9,30 +9,30 @@
         return `
             <div id="form-label-properties" style="display: none;">
                 <div class="property-group compact" id="label-field-group">
-                    <div class="property-group-title">字段信息</div>
+                    <div class="property-group-title">${t('formFieldComp.m35')}</div>
                     <div class="property-item p-row">
-                        <span class="property-label">字段名称</span>
+                        <span class="property-label">${t('formFieldComp.m36')}</span>
                         <div class="property-control">
                             <span id="form-label-field-name" style="color: #999; font-size: 12px; line-height: 20px;"></span>
                         </div>
                     </div>
                     <div class="property-item compact" id="prop-item-label-text">
-                        <div class="property-label">标签文本</div>
+                        <div class="property-label">${t('formFieldComp.m37')}</div>
                         <div class="property-control">
-                            <input type="text" id="form-label-text" class="ef-input ef-input-size-small" placeholder="输入标签文本" style="width: 100%;">
+                            <input type="text" id="form-label-text" class="ef-input ef-input-size-small" placeholder=t('formFieldComponentPropsJs.js1') style="width: 100%;">
                         </div>
                     </div>
                 </div>
                 <div class="property-group compact" id="widget-properties-group">
-                    <div class="property-group-title">控件属性</div>
+                    <div class="property-group-title">${t('formFieldComp.m38')}</div>
                     <div class="property-item compact" data-property="placeholder">
-                        <div class="property-label">占位文本</div>
+                        <div class="property-label">${t('formFieldComp.m39')}</div>
                         <div class="property-control">
-                            <input type="text" id="form-placeholder" class="ef-input ef-input-size-small" placeholder="输入占位文本" style="width: 100%;">
+                            <input type="text" id="form-placeholder" class="ef-input ef-input-size-small" placeholder=t('formFieldComponentPropsJs.js2') style="width: 100%;">
                         </div>
                     </div>
                     <div class="property-item compact" data-property="height">
-                        <div class="property-label">行数</div>
+                        <div class="property-label">${t('formFieldComp.m40')}</div>
                         <div class="property-control slider-with-input">
                             <div class="slider-container">
                                 <input type="range" id="form-height" min="1" max="20" value="3" class="property-slider" step="1">
@@ -41,25 +41,25 @@
                         </div>
                     </div>
                     <div class="property-item p-row" data-property="rounded">
-                        <span class="property-label">圆角</span>
+                        <span class="property-label">${t('formFieldComp.m41')}</span>
                         <div class="property-control">
                             <div class="ef-switch ef-switch-type-circle" id="form-rounded-wrapper" aria-checked="true">
                                 <div class="ef-switch-handle"></div>
                                 <input type="hidden" id="form-rounded" value="1">
                             </div>
-                            <span class="ef-switch-label" id="form-rounded-label" style="margin-left: 6px; font-size: 12px;">有</span>
+                            <span class="ef-switch-label" id="form-rounded-label" style="margin-left: 6px; font-size: 12px;">${t('formFieldComp.m42')}</span>
                         </div>
                     </div>
                     <div class="property-item p-row" data-property="required">
-                        <span class="property-label">必填</span>
+                        <span class="property-label">${t('formFieldComp.m43')}</span>
                         <div class="property-control" style="display: flex; align-items: center;">
                             <div class="ef-switch ef-switch-type-circle" id="form-required-wrapper" aria-checked="false">
                                 <div class="ef-switch-handle"></div>
                                 <input type="hidden" id="form-required" value="0">
                             </div>
-                            <span class="ef-switch-label" id="form-required-label" style="margin-left: 6px; font-size: 12px;">是</span>
+                            <span class="ef-switch-label" id="form-required-label" style="margin-left: 6px; font-size: 12px;">${t('formFieldComp.m44')}</span>
                             <span id="form-required-bg-group" style="margin-left: 10px; display: none; align-items: center;">
-                                <span style="font-size: 12px; color: #666;">未填</span>
+                                <span style="font-size: 12px; color: #666;">${t('formFieldComp.m45')}</span>
                                 <span class="ef-input-wrapper ef-input-rounded" style="padding: 2px; width: auto; cursor: pointer; margin-left: 4px;" id="form-required-bg-trigger">
                                     <span id="form-required-bg-preview" style="display: block; width: 32px; height: 20px; background-color: #FFF2E8; border-radius: 2px;"></span>
                                 </span>
@@ -67,7 +67,7 @@
                         </div>
                     </div>
                     <div class="property-item p-row" data-property="regular-bg" style="display: none;">
-                        <span class="property-label">常规底色</span>
+                        <span class="property-label">${t('formFieldComp.m46')}</span>
                         <div class="property-control">
                             <span class="ef-input-wrapper ef-input-rounded" style="padding: 2px; width: auto; cursor: pointer;" id="form-regular-bg-trigger">
                                 <span id="form-regular-bg-preview" style="display: block; width: 32px; height: 20px; background-color: #FFFFFF; border-radius: 2px;"></span>
@@ -76,9 +76,9 @@
                     </div>
                 </div>
                 <div class="property-group compact" id="label-layout-group">
-                    <div class="property-group-title">布局</div>
+                    <div class="property-group-title">${t('formFieldComp.m47')}</div>
                     <div class="property-item compact" data-property="col-span">
-                        <div class="property-label">跨列数</div>
+                        <div class="property-label">${t('formFieldComp.m48')}</div>
                         <div class="property-control slider-with-input">
                             <div class="slider-container">
                                 <input type="range" id="form-col-span" min="1" max="4" value="1" class="property-slider">
@@ -87,7 +87,7 @@
                         </div>
                     </div>
                     <div class="property-item compact" data-property="label-col">
-                        <div class="property-label">标签列宽</div>
+                        <div class="property-label">${t('formFieldComp.m49')}</div>
                         <div class="property-control slider-with-input">
                             <div class="slider-container">
                                 <input type="range" id="form-label-col" min="1" max="23" value="8" class="property-slider">
@@ -263,12 +263,12 @@
             if (r) {
                 const v = readDataAttr(currentLabel, 'rounded', 'true') !== 'false';
                 setSwitchState($('#form-rounded-wrapper'), v);
-                $('#form-rounded-label').text(v ? '有' : '无');
+                $('#form-rounded-label').text(v ? t('formFieldComponentPropsJs.js3') : t('formFieldComponentPropsJs.js4'));
             }
             if (showReq) {
                 const req = readDataAttr(currentLabel, 'required', 'false') === 'true';
                 setSwitchState($('#form-required-wrapper'), req);
-                $('#form-required-label').text(req ? '是' : '否');
+                $('#form-required-label').text(req ? t('formFieldComponentPropsJs.js5') : t('formFieldComponentPropsJs.js6'));
                 $('#form-required-bg-group').toggle(req).css('display', req ? 'inline-flex' : 'none');
             }
 
@@ -287,7 +287,7 @@
             applyWidgetBg($row, regularBg, requiredBg);
             var phVal = readDataAttr(currentLabel, 'placeholder', '');
             $row.find('.ef-form-widget input:not([type="hidden"]), .ef-form-widget textarea').attr('placeholder', phVal);
-            $row.find('.ef-form-widget .ef-select-view-input, .ef-form-widget .ef-department-view-input, .ef-form-widget .ef-user-view-input').attr('placeholder', phVal || '输入占位文本');
+            $row.find('.ef-form-widget .ef-select-view-input, .ef-form-widget .ef-department-view-input, .ef-form-widget .ef-user-view-input').attr('placeholder', phVal || t('formFieldComponentPropsJs.js2'));
         }
     }
 
@@ -337,7 +337,7 @@
         if (!$row.length) return;
         var $widget = $row.find('.ef-form-widget');
         $widget.find('input:not([type="hidden"]), textarea').attr('placeholder', val);
-        $widget.find('.ef-select-view-input, .ef-department-view-input, .ef-user-view-input').attr('placeholder', val || '输入占位文本');
+        $widget.find('.ef-select-view-input, .ef-department-view-input, .ef-user-view-input').attr('placeholder', val || t('formFieldComponentPropsJs.js2'));
     });
 
     function updateWidgetHeight(height) {
@@ -369,7 +369,7 @@
 
     $(document).on('click', '#form-rounded-wrapper', function() {
         const on = $(this).attr('aria-checked') === 'true';
-        $('#form-rounded-label').text(on ? '有' : '无');
+        $('#form-rounded-label').text(on ? t('formFieldComponentPropsJs.js3') : t('formFieldComponentPropsJs.js4'));
         if (currentLabel) {
             currentLabel.attr('data-rounded', on ? 'true' : 'false');
             const $row = currentLabel.closest('.editor-field-row');
@@ -385,7 +385,7 @@
     });
     $(document).on('click', '#form-required-wrapper', function() {
         const on = $(this).attr('aria-checked') === 'true';
-        $('#form-required-label').text(on ? '是' : '否');
+        $('#form-required-label').text(on ? t('formFieldComponentPropsJs.js5') : t('formFieldComponentPropsJs.js6'));
         $('#form-required-bg-group').toggle(on).css('display', on ? 'inline-flex' : 'none');
         if (!currentLabel) return;
         currentLabel.attr('data-required', on ? 'true' : 'false');

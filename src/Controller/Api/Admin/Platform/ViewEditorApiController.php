@@ -13,6 +13,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -44,13 +45,13 @@ class ViewEditorApiController extends AbstractController
         $targetVersion = $payload['version'] ?? null;
 
         if (!$viewId || !$canvasHtml) {
-            return ApiResponse::error('视图ID和画布内容不能为空', 400);
+            return ApiResponse::error('msg.view.id_canvas_required', 400);
         }
 
         try {
             $view = $em->getRepository(View::class)->find($viewId);
             if (!$view) {
-                return ApiResponse::error('视图不存在', 404);
+                return ApiResponse::error('msg.view.not_found', 404);
             }
 
             // 写入目标版本：默认当前激活版本；编辑器显式携带 ?version 时写入对应版本。
@@ -76,6 +77,26 @@ class ViewEditorApiController extends AbstractController
                 // 字段配置提取失败可忽略，设计文件仍可保存
             }
 
+            // 自定义 Twig 表单设计保护：设计文件含 Symfony 表单 Twig 语法时，画布只是渲染预览，
+            // 保存不应把渲染后的 HTML 回写覆盖 Twig 源码（否则动态表单退化为静态快照、字段绑定失效）。
+            $designFile = $pathResolver->designFile($view, $activeVersion);
+            $isCustomTwigForm = $designFile && file_exists($designFile)
+                && (bool) preg_match(
+                    '/\{(form_start|form_end|form_rest|form_widget|form_label|form_errors|form_row)\}|\{\{\s*(form\b|form_)|form_start\(|form_end\(|form_widget\(|form_label\(|form_errors\(/',
+                    (string) file_get_contents($designFile)
+                );
+            if ($isCustomTwigForm) {
+                foreach ($view->getVersions() as $vv) {
+                    if ($vv->getVersion() === $activeVersion) {
+                        $vv->setUpdatedAt(new \DateTime());
+                        $em->persist($vv);
+                        break;
+                    }
+                }
+                $em->flush();
+                return ApiResponse::success(json_encode(['message' => 'msg.view.design_preserved', 'designPreserved' => true]), 200, 'warning');
+            }
+
             $filesystem = new Filesystem();
 
             // 去掉动态添加的 section-controls，避免污染设计文件
@@ -90,7 +111,7 @@ class ViewEditorApiController extends AbstractController
                     $filesystem->mkdir(dirname($designFile), 0755);
                     $filesystem->dumpFile($designFile, $cleanHtml);
                 }
-                return ApiResponse::success(json_encode(['message' => '保存成功（字段配置已更新）']));
+                return ApiResponse::success(json_encode(['message' => 'msg.view.saved_field_config']));
             }
 
             // 2. 非内置视图：保存设计文件 + 清理后可执行文件
@@ -124,9 +145,9 @@ class ViewEditorApiController extends AbstractController
             }
             $em->flush();
 
-            return ApiResponse::success(json_encode(['message' => '视图保存成功', 'version' => $activeVersion]));
+            return ApiResponse::success(json_encode(['message' => 'msg.view.saved', 'version' => $activeVersion]));
         } catch (\Exception $e) {
-            return ApiResponse::error('保存视图失败: ' . $e->getMessage(), 500);
+            return ApiResponse::error($translator->trans('msg.view.save_failed') . $e->getMessage(), 500);
         }
     }
 
@@ -237,11 +258,15 @@ class ViewEditorApiController extends AbstractController
             }
         }
 
-        // 删除画布中已不存在的字段记录
-        $existingFields = $fieldRepo->findBy(['view' => $view]);
-        foreach ($existingFields as $existingField) {
-            if (!in_array($existingField->getFieldName(), $processedFieldNames)) {
-                $em->remove($existingField);
+        // 删除画布中已不存在的字段记录。
+        // 自定义表单设计（form_widget 渲染）画布不含 data-field-name 标记，processedFieldNames 为空，
+        // 此时保留现有 ViewField（表单绑定字段依赖它们构建 Symfony form），避免误删导致表单失效。
+        if (!empty($processedFieldNames)) {
+            $existingFields = $fieldRepo->findBy(['view' => $view]);
+            foreach ($existingFields as $existingField) {
+                if (!in_array($existingField->getFieldName(), $processedFieldNames)) {
+                    $em->remove($existingField);
+                }
             }
         }
 
@@ -373,13 +398,13 @@ class ViewEditorApiController extends AbstractController
         $fields = $payload['fields'] ?? null;
 
         if (!$viewName || !$entityFqn) {
-            return ApiResponse::error('viewName 和 entityFqn 不能为空', 400);
+            return ApiResponse::error('msg.view.binding_required', 400);
         }
 
         $map = $this->getViewEntityMap();
         $entry = $map[$viewName] ?? null;
         if (!$entry || $entry['fqn'] !== $entityFqn) {
-            return ApiResponse::error('不支持的视图绑定', 400);
+            return ApiResponse::error('msg.view.unsupported_binding', 400);
         }
 
         // 查找或创建视图
@@ -468,7 +493,7 @@ class ViewEditorApiController extends AbstractController
         $em->flush();
 
         return ApiResponse::success(json_encode([
-            'message' => '视图创建并绑定成功',
+            'message' => 'msg.view.created_bound',
             'viewId' => $view->getId(),
             'entityId' => $entity->getId(),
         ]));
@@ -495,14 +520,14 @@ class ViewEditorApiController extends AbstractController
 
         $view = $em->getRepository(View::class)->find($id);
         if (!$view) {
-            return ApiResponse::error('视图不存在', 404);
+            return ApiResponse::error('msg.view.not_found', 404);
         }
 
         if (!$entityId) {
             $map = $this->getViewEntityMap();
             $entry = $map[$view->getName()] ?? null;
             if (!$entry) {
-                return ApiResponse::error('无法自动匹配实体，请传入 entityId', 400);
+                return ApiResponse::error('msg.view.no_auto_entity', 400);
             }
             $entity = $em->getRepository(Entity::class)->findOneBy(['fqn' => $entry['fqn']]);
             if (!$entity) {
@@ -514,7 +539,7 @@ class ViewEditorApiController extends AbstractController
         } else {
             $entity = $em->getRepository(Entity::class)->find($entityId);
             if (!$entity) {
-                return ApiResponse::error('实体不存在', 404);
+                return ApiResponse::error('msg.view.entity_not_found', 404);
             }
         }
 
@@ -533,7 +558,7 @@ class ViewEditorApiController extends AbstractController
         $em->flush();
 
         return ApiResponse::success(json_encode([
-            'message' => '绑定成功（字段已重置为标准配置）',
+            'message' => 'msg.view.bound_reset',
             'viewId' => $view->getId(),
             'entityId' => $entity->getId(),
         ]));
@@ -553,7 +578,7 @@ class ViewEditorApiController extends AbstractController
     ): ApiResponse {
         $view = $em->getRepository(View::class)->find($id);
         if (!$view) {
-            return ApiResponse::error('视图不存在', 404);
+            return ApiResponse::error('msg.view.not_found', 404);
         }
 
         $view->setFormEntity(null);
@@ -561,7 +586,7 @@ class ViewEditorApiController extends AbstractController
         $em->flush();
 
         return ApiResponse::success(json_encode([
-            'message' => '已解除绑定',
+            'message' => 'msg.view.unbound',
             'viewId' => $view->getId(),
         ]));
     }
@@ -584,28 +609,28 @@ class ViewEditorApiController extends AbstractController
         $siblingId = $payload['siblingId'] ?? null;
 
         if (!$nodeId) {
-            return ApiResponse::error('缺少 nodeId', 400);
+            return ApiResponse::error('msg.view.node_id_required', 400);
         }
 
         $repo = $em->getRepository(View::class);
         $node = $repo->find($nodeId);
         if (!$node) {
-            return ApiResponse::error('节点不存在', 404);
+            return ApiResponse::error('msg.view.node_not_found', 404);
         }
         if ($node->getType() === 'root') {
-            return ApiResponse::error('根节点不可移动', 400);
+            return ApiResponse::error('msg.view.root_not_movable', 400);
         }
 
         if ($siblingId) {
             $sibling = $repo->find($siblingId);
             if (!$sibling) {
-                return ApiResponse::error('目标兄弟节点不存在', 404);
+                return ApiResponse::error('msg.view.target_sibling_missing', 404);
             }
             $repo->persistAsPrevSiblingOf($node, $sibling);
         } elseif ($parentId) {
             $parent = $repo->find($parentId);
             if (!$parent) {
-                return ApiResponse::error('目标文件夹不存在', 404);
+                return ApiResponse::error('msg.view.target_folder_missing', 404);
             }
             if (!in_array($parent->getType(), ['root', 'folder'], true)) {
                 return ApiResponse::error('只能移动到文件夹或根节点下', 400);
@@ -621,7 +646,7 @@ class ViewEditorApiController extends AbstractController
         $em->flush();
 
         return ApiResponse::success(json_encode([
-            'message' => '节点已移动',
+            'message' => 'msg.view.node_moved',
             'nodeId' => $nodeId,
             'parentId' => $parentId,
             'siblingId' => $siblingId,
@@ -647,7 +672,7 @@ class ViewEditorApiController extends AbstractController
 
         file_put_contents($configFile, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 
-        return ApiResponse::success(json_encode(['message' => '配置已保存']));
+        return ApiResponse::success(json_encode(['message' => 'msg.view.config_saved']));
     }
 
     #[Route(
@@ -685,7 +710,7 @@ class ViewEditorApiController extends AbstractController
     ): ApiResponse {
         $view = $em->getRepository(View::class)->find($id);
         if (!$view) {
-            return ApiResponse::error('视图不存在', 404);
+            return ApiResponse::error('msg.view.not_found', 404);
         }
 
         if ($view->getType() === 'root') {
@@ -736,7 +761,7 @@ class ViewEditorApiController extends AbstractController
             $em->getConnection()->commit();
 
             return ApiResponse::success(json_encode([
-                'message' => '已移入回收站，可随时恢复',
+                'message' => 'msg.view.trashed',
                 'deletedCount' => count($descendants),
                 'viewCount' => $viewCount,
                 'versionCount' => $versionCount,
@@ -744,7 +769,7 @@ class ViewEditorApiController extends AbstractController
             ]));
         } catch (\Exception $e) {
             $em->getConnection()->rollBack();
-            return ApiResponse::error('删除失败: ' . $e->getMessage(), 500);
+            return ApiResponse::error($translator->trans('msg.view.delete_failed') . $e->getMessage(), 500);
         }
     }
 
@@ -833,7 +858,7 @@ class ViewEditorApiController extends AbstractController
         $this->restoreRecursive($node, $em);
         $em->flush();
 
-        return ApiResponse::success(json_encode(['message' => '已恢复']));
+        return ApiResponse::success(json_encode(['message' => 'msg.view.restored']));
     }
 
     private function restoreRecursive(\App\Entity\Platform\View $node, EntityManagerInterface $em): void
@@ -896,12 +921,12 @@ class ViewEditorApiController extends AbstractController
             $em->getConnection()->commit();
 
             return ApiResponse::success(json_encode([
-                'message' => '已彻底删除',
+                'message' => 'msg.view.permanently_deleted',
                 'purgedCount' => count($allIds),
             ]));
         } catch (\Exception $e) {
             $em->getConnection()->rollBack();
-            return ApiResponse::error('彻底删除失败: ' . $e->getMessage(), 500);
+            return ApiResponse::error($translator->trans('msg.view.permanent_delete_failed') . $e->getMessage(), 500);
         }
     }
 }

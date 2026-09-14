@@ -101,9 +101,56 @@ class IntentAgent
             'needsClarification' => (bool) ($data['needs_clarification'] ?? $data['needsClarification'] ?? false),
             'clarificationQuestion' => (string) ($data['clarification_question'] ?? $data['clarificationQuestion'] ?? ''),
             'clarificationOptions' => $options,
+            'design_spec' => $this->parseDesignSpec($data),
             'confidence' => (float) ($data['confidence'] ?? 0.0),
             'plan' => (string) ($data['plan'] ?? ''),
             'reason' => (string) ($data['reason'] ?? ''),
         ];
+    }
+
+    /**
+     * 抽取结构化的设计规格（布局/风格/程度/紧凑/配色/字段排列），供下游子代理直接执行。
+     * 用户的具体诉求翻译成明确的 spec，而不是让子代理从自然语言里猜。
+     */
+    private function parseDesignSpec(array $data): array
+    {
+        $allowed = [
+            'layout_mode' => ['cards', 'split', 'sidebar', 'steps', 'hero_flow', 'single', 'immersive', 'table', 'free'],
+            'style' => ['cool', 'enterprise', 'minimal', 'dark', 'light', 'luxury'],
+            'degree' => ['full', 'skin', 'refine'],
+            'compact' => ['compact', 'spacious'],
+        ];
+
+        $spec = $data['design_spec'] ?? [];
+        if (!is_array($spec)) {
+            $spec = [];
+        }
+
+        $out = [
+            'layout_mode' => null,
+            'style' => null,
+            'degree' => null,
+            'compact' => null,
+            'colors' => null,
+            'fields_arrangement' => null,
+            'notes' => '',
+        ];
+
+        foreach ($allowed as $field => $enum) {
+            $v = $spec[$field] ?? null;
+            if (is_string($v) && in_array(strtolower($v), $enum, true)) {
+                $out[$field] = strtolower($v);
+            }
+        }
+        foreach (['colors', 'fields_arrangement'] as $field) {
+            if (isset($spec[$field]) && is_string($spec[$field]) && $spec[$field] !== '') {
+                $out[$field] = mb_substr($spec[$field], 0, 80);
+            }
+        }
+        if (isset($spec['notes']) && is_string($spec['notes'])) {
+            $out['notes'] = mb_substr(trim($spec['notes']), 0, 300);
+        }
+
+        return $out;
     }
 }

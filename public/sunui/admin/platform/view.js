@@ -132,11 +132,11 @@ $(document).ready(function () {
       data: { requiredBg: bg, themeColor: themeColor },
       success: function(resp) {
         $().hideDrawer('generalConfigDrawer');
-        alert.success('配置已保存', { percent: '280px', title: '操作提示', closable: false });
+        alert.success(t('viewJs.js1'), { percent: '280px', title: t('viewJs.js2'), closable: false });
         setTimeout(function() { $('.app-alert').remove(); }, 3000);
       },
       error: function(xhr) {
-        alert.error('保存失败', { percent: '280px', title: '操作提示', closable: true });
+        alert.error(t('viewJs.js3'), { percent: '280px', title: t('viewJs.js2'), closable: true });
       }
     });
   });
@@ -148,7 +148,7 @@ $(document).ready(function () {
     // 获取当前选中的视图节点
     const selectedNode = $(".tree-text-content.chosen");
     if (!selectedNode.length || selectedNode.attr("type") !== "view") {
-      alert.error("请先选择一个视图节点", { percent: '40%', title: "操作提示", closable: true });
+      alert.error(t('viewJs.js4'), { percent: '40%', title: t('viewJs.js2'), closable: true });
       return;
     }
     
@@ -162,7 +162,7 @@ $(document).ready(function () {
       // 在新标签页中打开编辑器
       window.open(uri.path, '_blank');
     } else {
-      alert.error("生成编辑器URL失败", { percent: '40%', title: "请求错误", closable: true });
+      alert.error(t('viewJs.js5'), { percent: '40%', title: t('viewJs.js6'), closable: true });
     }
   });
   // 加载视图详情
@@ -188,7 +188,7 @@ $(document).ready(function () {
           $('.right-content').off('click', '[data-confirm-delete-view]').on('click', '[data-confirm-delete-view]', function() {
             var btn = this;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 删除中...';
+            btn.innerHTML = t('viewJs.js7');
             fetch('/api/admin/platform/view/' + viewId + '/delete', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -201,15 +201,15 @@ $(document).ready(function () {
                 history.replaceState(null, '', window.location.pathname);
                 window.location.reload();
               } else {
-                alert('删除失败: ' + (json.message || '未知错误'));
+                alert(t('viewJs.js8') + (apiMsg(json) || t('viewJs.js9')));
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> 确认删除';
+                btn.innerHTML = t('viewJs.js10');
               }
             })
             .catch(function(err) {
-              alert('网络错误: ' + err.message);
+              alert(t('viewJs.js11') + err.message);
               btn.disabled = false;
-              btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> 确认删除';
+              btn.innerHTML = t('viewJs.js10');
             });
           });
           $('#deleteViewModal').show();
@@ -219,7 +219,7 @@ $(document).ready(function () {
         });
       },
       error: function() {
-        alert.error('加载视图详情失败', { percent: '280px', title: '操作提示', closable: true });
+        alert.error(t('viewJs.js12'), { percent: '280px', title: t('viewJs.js2'), closable: true });
       }
     });
   }
@@ -238,17 +238,17 @@ $(document).ready(function () {
           $('.right-content form').on('submit', function(e) {
             $(this).ajaxSubmit({
               success: function(response) {
-                if (response.includes('视图管理')) {
+                if (response.includes(t('viewJs.js13'))) {
                   window.location.reload();
                 } else {
                   $('.right-content').html(response);
                 }
               },
               error: function(xhr) {
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                  alert.error(xhr.responseJSON.message, { percent: '40%', title: '编辑失败', closable: true });
+                if (xhr.responseJSON && apiMsg(xhr)) {
+                  alert.error(apiMsg(xhr), { percent: '40%', title: t('viewJs.js14'), closable: true });
                 } else {
-                  alert.error('编辑视图失败，请检查输入', { percent: '40%', title: '编辑失败', closable: true });
+                  alert.error(t('viewJs.js15'), { percent: '40%', title: t('viewJs.js14'), closable: true });
                 }
               }
             });
@@ -256,7 +256,7 @@ $(document).ready(function () {
           });
         },
         error: function() {
-          alert.error('加载编辑表单失败', { percent: '280px', title: '操作提示', closable: true });
+          alert.error(t('viewJs.js16'), { percent: '280px', title: t('viewJs.js2'), closable: true });
         }
       });
     });
@@ -315,7 +315,7 @@ $(document).ready(function () {
         form.on("submit", function(e) {
           $(this).ajaxSubmit({
             success: function(response) {
-              if (response.includes('视图管理')) {
+              if (response.includes(t('viewJs.js13'))) {
                 // 成功提交后刷新页面
                 window.location.reload();
               } else {
@@ -323,10 +323,10 @@ $(document).ready(function () {
               }
             },
             error: function(xhr) {
-              if (xhr.responseJSON && xhr.responseJSON.message) {
-                alert.error(xhr.responseJSON.message, { percent: '40%', title: "创建失败", closable: true });
+              if (xhr.responseJSON && apiMsg(xhr)) {
+                alert.error(apiMsg(xhr), { percent: '40%', title: t('viewJs.js17'), closable: true });
               } else {
-                alert.error("创建文件夹失败，请检查输入", { percent: '40%', title: "创建失败", closable: true });
+                alert.error(t('viewJs.js18'), { percent: '40%', title: t('viewJs.js17'), closable: true });
               }
             }
           });
@@ -335,12 +335,12 @@ $(document).ready(function () {
       },
       error: function (xhr, status, error) {
         // 错误处理，显示错误信息
-        let errorMsg = "创建目录失败";
-        if (xhr.responseJSON && xhr.responseJSON.message) {
-          errorMsg = xhr.responseJSON.message;
+        let errorMsg = t('viewJs.js19');
+        if (xhr.responseJSON && apiMsg(xhr)) {
+          errorMsg = apiMsg(xhr);
         }
-        console.error("创建目录失败: "+ errorMsg);
-        alert.error(errorMsg, { percent: '40%', title: "请求错误", closable: true });
+        console.error(t('viewJs.js20')+ errorMsg);
+        alert.error(errorMsg, { percent: '40%', title: t('viewJs.js6'), closable: true });
       }
     });
   })
@@ -391,7 +391,7 @@ $(document).ready(function () {
                   }
                 }
               } catch (err) { /* 非 JSON 响应，走原有逻辑 */ }
-              if (response.includes('视图管理')) {
+              if (response.includes(t('viewJs.js13'))) {
                 // 成功提交后刷新页面
                 window.location.reload();
               } else {
@@ -399,10 +399,10 @@ $(document).ready(function () {
               }
             },
             error: function(xhr) {
-              if (xhr.responseJSON && xhr.responseJSON.message) {
-                alert.error(xhr.responseJSON.message, { percent: '40%', title: "创建失败", closable: true });
+              if (xhr.responseJSON && apiMsg(xhr)) {
+                alert.error(apiMsg(xhr), { percent: '40%', title: t('viewJs.js17'), closable: true });
               } else {
-                alert.error("创建视图失败，请检查输入", { percent: '40%', title: "创建失败", closable: true });
+                alert.error(t('viewJs.js21'), { percent: '40%', title: t('viewJs.js17'), closable: true });
               }
             }
           });
@@ -411,12 +411,12 @@ $(document).ready(function () {
       },
       error: function (xhr, status, error) {
         // 错误处理，显示错误信息
-        let errorMsg = "创建视图失败";
-        if (xhr.responseJSON && xhr.responseJSON.message) {
-          errorMsg = xhr.responseJSON.message;
+        let errorMsg = t('viewJs.js22');
+        if (xhr.responseJSON && apiMsg(xhr)) {
+          errorMsg = apiMsg(xhr);
         }
-        console.error("创建视图失败: "+ errorMsg);
-        alert.error(errorMsg, { percent: '40%', title: "请求错误", closable: true });
+        console.error(t('viewJs.js23')+ errorMsg);
+        alert.error(errorMsg, { percent: '40%', title: t('viewJs.js6'), closable: true });
       }
     });
   })
@@ -426,7 +426,7 @@ $(document).ready(function () {
 
     const selectedNode = $(".tree-text-content.chosen");
     if (!selectedNode.length || selectedNode.attr("type") !== "view") {
-      alert.error("请先选择一个视图节点", { percent: '40%', title: "操作提示", closable: true });
+      alert.error(t('viewJs.js4'), { percent: '40%', title: t('viewJs.js2'), closable: true });
       return;
     }
 
@@ -445,17 +445,17 @@ $(document).ready(function () {
         $(".right-content form").on("submit", function(e) {
           $(this).ajaxSubmit({
             success: function(response) {
-              if (response.includes('视图管理')) {
+              if (response.includes(t('viewJs.js13'))) {
                 window.location.reload();
               } else {
                 $(".right-content").html(response);
               }
             },
             error: function(xhr) {
-              if (xhr.responseJSON && xhr.responseJSON.message) {
-                alert.error(xhr.responseJSON.message, { percent: '40%', title: "编辑失败", closable: true });
+              if (xhr.responseJSON && apiMsg(xhr)) {
+                alert.error(apiMsg(xhr), { percent: '40%', title: t('viewJs.js14'), closable: true });
               } else {
-                alert.error("编辑视图失败，请检查输入", { percent: '40%', title: "编辑失败", closable: true });
+                alert.error(t('viewJs.js15'), { percent: '40%', title: t('viewJs.js14'), closable: true });
               }
             }
           });
@@ -463,12 +463,12 @@ $(document).ready(function () {
         });
       },
       error: function (xhr, status, error) {
-        let errorMsg = "编辑视图失败";
-        if (xhr.responseJSON && xhr.responseJSON.message) {
-          errorMsg = xhr.responseJSON.message;
+        let errorMsg = t('viewJs.js24');
+        if (xhr.responseJSON && apiMsg(xhr)) {
+          errorMsg = apiMsg(xhr);
         }
-        console.error("编辑视图失败: "+ errorMsg);
-        alert.error(errorMsg, { percent: '40%', title: "请求错误", closable: true });
+        console.error(t('viewJs.js25')+ errorMsg);
+        alert.error(errorMsg, { percent: '40%', title: t('viewJs.js6'), closable: true });
       }
     });
   })
@@ -479,7 +479,7 @@ $(document).ready(function () {
 
     const selectedNode = $(".tree-text-content.chosen");
     if (!selectedNode.length || selectedNode.attr("type") !== "folder") {
-      alert.error("请先选择一个文件夹节点", { percent: '40%', title: "操作提示", closable: true });
+      alert.error(t('viewJs.js26'), { percent: '40%', title: t('viewJs.js2'), closable: true });
       return;
     }
 
@@ -496,11 +496,11 @@ $(document).ready(function () {
         openModal('renameFolderModal');
       },
       error: function (xhr, status, error) {
-        let errorMsg = "重命名文件夹失败";
-        if (xhr.responseJSON && xhr.responseJSON.message) {
-          errorMsg = xhr.responseJSON.message;
+        let errorMsg = t('viewJs.js27');
+        if (xhr.responseJSON && apiMsg(xhr)) {
+          errorMsg = apiMsg(xhr);
         }
-        alert.error(errorMsg, { percent: '40%', title: "请求错误", closable: true });
+        alert.error(errorMsg, { percent: '40%', title: t('viewJs.js6'), closable: true });
       }
     });
   })
@@ -523,11 +523,11 @@ $(document).ready(function () {
         }
       },
       error: function(xhr) {
-        var msg = "重命名文件夹失败，请检查输入";
-        if (xhr.responseJSON && xhr.responseJSON.message) {
-          msg = xhr.responseJSON.message;
+        var msg = t('viewJs.js28');
+        if (xhr.responseJSON && apiMsg(xhr)) {
+          msg = apiMsg(xhr);
         }
-        alert.error(msg, { percent: '40%', title: "重命名失败", closable: true });
+        alert.error(msg, { percent: '40%', title: t('viewJs.js29'), closable: true });
       }
     });
   });
@@ -657,7 +657,7 @@ $(document).ready(function () {
     if (!chosen.length) return;
     _deleteNodeId = chosen.attr('id');
     // 节点主名称 + 副名称（postscript/label）
-    var nodeName = chosen.text().trim() || '未命名';
+    var nodeName = chosen.text().trim() || t('viewJs.js30');
     var $postscript = chosen.siblings('.postscript');
     if ($postscript.length) {
       nodeName += ' (' + $postscript.text().trim() + ')';
@@ -667,9 +667,9 @@ $(document).ready(function () {
     $('#delete-confirm-error').hide();
     $('#delete-confirm-submit').prop('disabled', true).css('opacity', '0.5');
     $('#delete-confirm-message').html(
-      '<strong style="color: #ff4d4f;">此操作不可撤回。</strong>一旦删除将无法挽回。<br>' +
-      '将删除：<strong>' + $('<span>').text(nodeName).html() + '</strong><br><br>' +
-      '请输入 <strong style="color: #ff4d4f;">确认删除</strong> 以继续：'
+      '<strong style="color: #ff4d4f;">' + t('viewJs.irreversible') + '</strong>' + t('viewJs.noRecover') + '<br>' +
+      t('viewJs.js31') + $('<span>').text(nodeName).html() + '</strong><br><br>' +
+      t('viewJs.enter') + ' <strong style="color: #ff4d4f;">' + t('viewJs.confirmDelete') + '</strong>' + t('viewJs.toContinue')
     );
     openModal('deleteConfirmModal');
   }
@@ -677,7 +677,7 @@ $(document).ready(function () {
   // 输入监听：只有输入"确认删除"才启用按钮
   $(document).on('input', '#delete-confirm-input', function() {
     var val = $(this).val().trim();
-    if (val === '确认删除') {
+    if (val === t('viewJs.js32')) {
       $('#delete-confirm-submit').prop('disabled', false).css('opacity', '1');
       $('#delete-confirm-error').hide();
     } else {
@@ -691,7 +691,7 @@ $(document).ready(function () {
     if (!_deleteNodeId) return;
 
     var $btn = $(this);
-    $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 删除中...');
+    $btn.prop('disabled', true).html(t('viewJs.js7'));
 
     $.ajax({
       url: '/api/admin/platform/view/' + _deleteNodeId + '/delete',
@@ -702,13 +702,13 @@ $(document).ready(function () {
         location.reload();
       },
       error: function(xhr) {
-        var msg = '删除失败';
+        var msg = t('viewJs.js33');
         try {
           var r = JSON.parse(xhr.responseText);
           if (r && r.message) msg = r.message;
         } catch(e) {}
         $('#delete-confirm-error').text(msg).show();
-        $btn.prop('disabled', false).text('确认删除');
+        $btn.prop('disabled', false).text(t('viewJs.js32'));
       }
     });
   });
@@ -792,7 +792,7 @@ $(document).ready(function () {
             contentType: 'application/json',
             data: payload,
             error: function(xhr) {
-              alert.error('移动失败', { percent: '280px', title: '操作提示', closable: true });
+              alert.error(t('viewJs.js34'), { percent: '280px', title: t('viewJs.js2'), closable: true });
               window.location.reload();
             }
           });

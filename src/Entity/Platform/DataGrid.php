@@ -27,7 +27,7 @@ class DataGrid
   private $name;
 
   /**
-   * 描述
+ * 描述 / Description
    */
   #[ORM\Column(type: "text", nullable: true)]
   private $description;

@@ -1,6 +1,6 @@
 {% extends 'admin/layout.html.twig' %}
 
-{% block title %}定时任务管理{% endblock %}
+{% block title %}{{ "task.title1"|trans }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -1328,9 +1328,9 @@
             <div class="task-search-row">
                 <input type="text" class="task-search-input" id="search-keyword" placeholder="{{ 'admin.task.search_placeholder'|trans({}, 'messages')|default('搜索任务名称、Cron或类名...') }}" oninput="debounceSearch()">
                 <select class="task-filter-select" id="filter-enabled" onchange="loadTasks()">
-                    <option value="">全部状态</option>
-                    <option value="1">已启用</option>
-                    <option value="0">已禁用</option>
+                    <option value="">{{ "task.7"|trans }}</option>
+                    <option value="1">{{ "task.8"|trans }}</option>
+                    <option value="0">{{ "task.9"|trans }}</option>
                 </select>
                 <select class="task-filter-select" id="filter-category" onchange="loadTasks()">
                     <option value="">{{ 'admin.task.all_categories'|trans({}, 'messages')|default('全部分类') }}</option>
@@ -1338,7 +1338,7 @@
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
                 <button class="btn btn-default" onclick="loadTasks()">
-                    <i class="fa-solid fa-rotate-right"></i> 刷新
+                    <i class="fa-solid fa-rotate-right"></i> {{ "task.10"|trans }}
                 </button>
             </div>
         </div>
@@ -1364,7 +1364,7 @@
                         <td colspan="9">
                             <div class="task-empty">
                                 <i class="fa-solid fa-clock-rotate-left"></i>
-                                <p>加载中...</p>
+                                <p>{{ "task.11"|trans }}</p>
                             </div>
                         </td>
                     </tr>
@@ -1389,13 +1389,13 @@
             </div>
             <div class="calendar-body">
                 <div class="cal-weekday-row">
-                    <div class="cal-dow-cell">一</div>
-                    <div class="cal-dow-cell">二</div>
-                    <div class="cal-dow-cell">三</div>
-                    <div class="cal-dow-cell">四</div>
-                    <div class="cal-dow-cell">五</div>
-                    <div class="cal-dow-cell">六</div>
-                    <div class="cal-dow-cell">日</div>
+                    <div class="cal-dow-cell">{{ "task.12"|trans }}</div>
+                    <div class="cal-dow-cell">{{ "task.13"|trans }}</div>
+                    <div class="cal-dow-cell">{{ "task.14"|trans }}</div>
+                    <div class="cal-dow-cell">{{ "task.15"|trans }}</div>
+                    <div class="cal-dow-cell">{{ "task.16"|trans }}</div>
+                    <div class="cal-dow-cell">{{ "task.17"|trans }}</div>
+                    <div class="cal-dow-cell">{{ "task.18"|trans }}</div>
                 </div>
                 <div class="cal-month-grid" id="calendar-grid"></div>
             </div>
@@ -1449,7 +1449,7 @@
 <div class="task-drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 <div class="task-drawer" id="task-drawer">
     <div class="task-drawer-header">
-        <div class="task-drawer-title" id="drawer-title">新建定时任务</div>
+        <div class="task-drawer-title" id="drawer-title">{{ "task.19"|trans }}</div>
         <button class="task-drawer-close" onclick="closeDrawer()"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="task-drawer-body">
@@ -1457,97 +1457,97 @@
             <input type="hidden" id="task-id">
 
             <div class="form-group">
-                <label class="form-label">任务名称 <span class="required">*</span></label>
-                <input type="text" class="form-control" id="f-name" placeholder="例：每日数据汇总报告">
+                <label class="form-label">{{ "task.20"|trans }} <span class="required">*</span></label>
+                <input type="text" class="form-control" id="f-name" placeholder="{{ "task.1"|trans }}">
                 <div class="form-error" id="e-name"></div>
             </div>
 
             <div class="form-group">
-                <label class="form-label">描述</label>
-                <textarea class="form-control" id="f-description" placeholder="可选，简述任务用途..."></textarea>
+                <label class="form-label">{{ "task.21"|trans }}</label>
+                <textarea class="form-control" id="f-description" placeholder="{{ "task.2"|trans }}"></textarea>
             </div>
 
             <div class="form-group">
-                <label class="form-label">执行方式 <span class="required">*</span></label>
+                <label class="form-label">{{ "task.22"|trans }} <span class="required">*</span></label>
                 <div class="task-type-tabs" id="task-type-tabs">
                     <button class="task-type-tab active" type="button" data-type="recurring" onclick="switchTaskType('recurring')">
-                        <i class="fa-solid fa-rotate"></i> 循环执行
+                        <i class="fa-solid fa-rotate"></i> {{ "task.23"|trans }}
                     </button>
                     <button class="task-type-tab" type="button" data-type="once" onclick="switchTaskType('once')">
-                        <i class="fa-solid fa-clock"></i> 单次执行
+                        <i class="fa-solid fa-clock"></i> {{ "task.24"|trans }}
                     </button>
                     <button class="task-type-tab" type="button" data-type="ai" onclick="switchTaskType('ai')">
-                        <i class="fa-solid fa-magic-wand-sparkles"></i> AI 表达
+                        <i class="fa-solid fa-magic-wand-sparkles"></i> {{ "task.25"|trans }}
                     </button>
                 </div>
             </div>
 
             {# 循环执行：可视化 Cron 构建器 #}
             <div class="form-group" id="cron-group">
-                <label class="form-label">执行规则 <span class="required">*</span></label>
+                <label class="form-label">{{ "task.26"|trans }} <span class="required">*</span></label>
                 <input type="hidden" id="f-cron">
                 <div class="cron-builder">
                     <div class="cron-period-row" id="cron-period-row">
-                        <button class="cron-period-btn active" type="button" data-period="second" onclick="switchCronPeriod('second')">每隔N秒</button>
-                        <button class="cron-period-btn" type="button" data-period="interval" onclick="switchCronPeriod('interval')">每隔N分钟</button>
-                        <button class="cron-period-btn" type="button" data-period="hour" onclick="switchCronPeriod('hour')">每隔N小时</button>
-                        <button class="cron-period-btn" type="button" data-period="day" onclick="switchCronPeriod('day')">每隔N天</button>
-                        <button class="cron-period-btn" type="button" data-period="week" onclick="switchCronPeriod('week')">每隔N周</button>
-                        <button class="cron-period-btn" type="button" data-period="month" onclick="switchCronPeriod('month')">每隔N月</button>
-                        <button class="cron-period-btn" type="button" data-period="quarter" onclick="switchCronPeriod('quarter')">每隔N季度</button>
+                        <button class="cron-period-btn active" type="button" data-period="second" onclick="switchCronPeriod('second')">{{ "task.27"|trans }}</button>
+                        <button class="cron-period-btn" type="button" data-period="interval" onclick="switchCronPeriod('interval')">{{ "task.28"|trans }}</button>
+                        <button class="cron-period-btn" type="button" data-period="hour" onclick="switchCronPeriod('hour')">{{ "task.29"|trans }}</button>
+                        <button class="cron-period-btn" type="button" data-period="day" onclick="switchCronPeriod('day')">{{ "task.30"|trans }}</button>
+                        <button class="cron-period-btn" type="button" data-period="week" onclick="switchCronPeriod('week')">{{ "task.31"|trans }}</button>
+                        <button class="cron-period-btn" type="button" data-period="month" onclick="switchCronPeriod('month')">{{ "task.32"|trans }}</button>
+                        <button class="cron-period-btn" type="button" data-period="quarter" onclick="switchCronPeriod('quarter')">{{ "task.33"|trans }}</button>
                     </div>
 
                     {# 每隔N秒 #}
                     <div class="cron-sub-panel" id="cron-sub-second">
-                        每隔
+                        {{ "task.34"|trans }}
                         <input type="number" id="cron-second" min="1" max="3600" value="30" oninput="buildCronFromUI()">
-                        秒执行一次
-                        <span style="color:#b0b5cc;font-size:11px;">（需运行时支持秒级调度）</span>
+                        {{ "task.35"|trans }}
+                        <span style="color:#b0b5cc;font-size:11px;">{{ "task.36"|trans }}</span>
                     </div>
 
                     {# 每隔N分钟 #}
                     <div class="cron-sub-panel" id="cron-sub-interval" style="display:none;">
-                        每隔
+                        {{ "task.34"|trans }}
                         <input type="number" id="cron-interval" min="1" max="59" value="5" oninput="buildCronFromUI()">
-                        分钟执行一次
+                        {{ "task.37"|trans }}
                     </div>
 
                     {# 每隔N小时 #}
                     <div class="cron-sub-panel" id="cron-sub-hour" style="display:none;">
-                        每隔
+                        {{ "task.34"|trans }}
                         <input type="number" id="cron-hour-n" min="1" max="23" value="1" oninput="buildCronFromUI()">
-                        小时，第
+                        {{ "task.38"|trans }}
                         <input type="number" id="cron-hour-min" min="0" max="59" value="0" oninput="buildCronFromUI()">
-                        分钟执行
+                        {{ "task.39"|trans }}
                     </div>
 
                     {# 每隔N天 #}
                     <div class="cron-sub-panel" id="cron-sub-day" style="display:none;">
-                        每隔
+                        {{ "task.34"|trans }}
                         <input type="number" id="cron-day-n" min="1" max="365" value="1" oninput="buildCronFromUI()">
-                        天的
+                        {{ "task.40"|trans }}
                         <input type="time" id="cron-day-time" value="00:00" onchange="buildCronFromUI()">
-                        执行
+                        {{ "task.41"|trans }}
                     </div>
 
                     {# 每隔N周 #}
                     <div class="cron-sub-panel" id="cron-sub-week" style="display:none; flex-direction: column; align-items:flex-start;">
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                            每隔
+                            {{ "task.34"|trans }}
                             <input type="number" id="cron-week-n" min="1" max="52" value="1" oninput="buildCronFromUI()">
-                            周，选择周几：
+                            {{ "task.42"|trans }}
                             <div class="cron-week-days" id="cron-week-days">
-                                <button class="cron-week-day-btn" type="button" data-day="1" onclick="toggleWeekDay(this)">一</button>
-                                <button class="cron-week-day-btn" type="button" data-day="2" onclick="toggleWeekDay(this)">二</button>
-                                <button class="cron-week-day-btn" type="button" data-day="3" onclick="toggleWeekDay(this)">三</button>
-                                <button class="cron-week-day-btn" type="button" data-day="4" onclick="toggleWeekDay(this)">四</button>
-                                <button class="cron-week-day-btn" type="button" data-day="5" onclick="toggleWeekDay(this)">五</button>
-                                <button class="cron-week-day-btn" type="button" data-day="6" onclick="toggleWeekDay(this)">六</button>
-                                <button class="cron-week-day-btn" type="button" data-day="0" onclick="toggleWeekDay(this)">日</button>
+                                <button class="cron-week-day-btn" type="button" data-day="1" onclick="toggleWeekDay(this)">{{ "task.12"|trans }}</button>
+                                <button class="cron-week-day-btn" type="button" data-day="2" onclick="toggleWeekDay(this)">{{ "task.13"|trans }}</button>
+                                <button class="cron-week-day-btn" type="button" data-day="3" onclick="toggleWeekDay(this)">{{ "task.14"|trans }}</button>
+                                <button class="cron-week-day-btn" type="button" data-day="4" onclick="toggleWeekDay(this)">{{ "task.15"|trans }}</button>
+                                <button class="cron-week-day-btn" type="button" data-day="5" onclick="toggleWeekDay(this)">{{ "task.16"|trans }}</button>
+                                <button class="cron-week-day-btn" type="button" data-day="6" onclick="toggleWeekDay(this)">{{ "task.17"|trans }}</button>
+                                <button class="cron-week-day-btn" type="button" data-day="0" onclick="toggleWeekDay(this)">{{ "task.18"|trans }}</button>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-                            执行时间
+                            {{ "task.43"|trans }}
                             <input type="time" id="cron-week-time" value="00:00" onchange="buildCronFromUI()">
                         </div>
                     </div>
@@ -1555,20 +1555,20 @@
                     {# 每隔N月 #}
                     <div class="cron-sub-panel" id="cron-sub-month" style="display:none; flex-direction:column; align-items:flex-start;">
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                            每隔
+                            {{ "task.34"|trans }}
                             <input type="number" id="cron-month-n" min="1" max="12" value="1" oninput="buildCronFromUI()">
-                            个月，执行日：
+                            {{ "task.44"|trans }}
                             <select id="cron-month-day-type" onchange="toggleMonthDayInput(); buildCronFromUI()">
-                                <option value="first">月初（1日）</option>
-                                <option value="specific" selected>指定日</option>
-                                <option value="last">月末</option>
+                                <option value="first">{{ "task.45"|trans }}</option>
+                                <option value="specific" selected>{{ "task.46"|trans }}</option>
+                                <option value="last">{{ "task.47"|trans }}</option>
                             </select>
                             <span id="cron-month-specific-wrap">
-                                第 <input type="number" id="cron-month-day" min="1" max="31" value="15" oninput="buildCronFromUI()"> 天
+                                {{ "task.48"|trans }} <input type="number" id="cron-month-day" min="1" max="31" value="15" oninput="buildCronFromUI()"> {{ "task.49"|trans }}
                             </span>
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-                            执行时间
+                            {{ "task.43"|trans }}
                             <input type="time" id="cron-month-time" value="00:00" onchange="buildCronFromUI()">
                         </div>
                     </div>
@@ -1576,16 +1576,16 @@
                     {# 每隔N季度 #}
                     <div class="cron-sub-panel" id="cron-sub-quarter" style="display:none; flex-direction:column; align-items:flex-start; gap:8px;">
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                            每隔
+                            {{ "task.34"|trans }}
                             <input type="number" id="cron-quarter-n" min="1" max="4" value="1" oninput="buildCronFromUI()">
-                            个季度，第
+                            {{ "task.50"|trans }}
                             <input type="number" id="cron-quarter-month" min="1" max="3" value="1" oninput="buildCronFromUI()">
-                            月第
+                            {{ "task.51"|trans }}
                             <input type="number" id="cron-quarter-day" min="1" max="31" value="1" oninput="buildCronFromUI()">
-                            天执行
+                            {{ "task.52"|trans }}
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;">
-                            执行时间
+                            {{ "task.43"|trans }}
                             <input type="time" id="cron-quarter-time" value="09:00" onchange="buildCronFromUI()">
                         </div>
                     </div>
@@ -1596,26 +1596,26 @@
 
             {# 单次执行：具体日期时间选择器 #}
             <div class="form-group" id="once-group" style="display:none;">
-                <label class="form-label">执行时间 <span class="required">*</span></label>
-                <input type="text" class="form-control datetime-picker" id="f-once-datetime" placeholder="选择执行日期和时间" style="cursor:pointer;" readonly>
-                <div class="form-hint">任务将在指定时间执行一次，之后自动禁用</div>
+                <label class="form-label">{{ "task.43"|trans }} <span class="required">*</span></label>
+                <input type="text" class="form-control datetime-picker" id="f-once-datetime" placeholder="{{ "task.3"|trans }}" style="cursor:pointer;" readonly>
+                <div class="form-hint">{{ "task.53"|trans }}</div>
                 <div class="form-error" id="e-once"></div>
             </div>
 
             {# AI 表达：自然语言描述 #}
             <div class="form-group" id="ai-group" style="display:none;">
-                <label class="form-label">用自然语言描述执行规则 <span class="required">*</span></label>
-                <textarea class="form-control" id="f-ai-text" placeholder="例：每天早上9点执行 / 每周一下午3点 / 每隔5分钟 / 每月最后一天凌晨..." style="height:80px;resize:vertical;"></textarea>
+                <label class="form-label">{{ "task.54"|trans }} <span class="required">*</span></label>
+                <textarea class="form-control" id="f-ai-text" placeholder="{{ "task.4"|trans }}" style="height:80px;resize:vertical;"></textarea>
                 <button class="btn btn-primary" type="button" onclick="parseAiSchedule()" id="btn-ai-parse" style="margin-top:8px;">
-                    <i class="fa-solid fa-magic-wand-sparkles"></i> 智能解析
+                    <i class="fa-solid fa-magic-wand-sparkles"></i> {{ "task.55"|trans }}
                 </button>
                 <div id="ai-parse-result" style="margin-top:10px;display:none;">
                     <div class="ai-result-card">
-                        <div style="font-size:12px;color:#16a34a;margin-bottom:6px;"><i class="fa-solid fa-circle-check"></i> 解析成功</div>
+                        <div style="font-size:12px;color:#16a34a;margin-bottom:6px;"><i class="fa-solid fa-circle-check"></i> {{ "task.56"|trans }}</div>
                         <div id="ai-result-human" style="font-size:14px;font-weight:600;color:#1a1d2e;"></div>
                         <div id="ai-result-cron" style="font-size:11px;color:#b0b5cc;font-family:monospace;margin-top:3px;"></div>
                         <button class="btn btn-default" type="button" onclick="applyAiResult()" style="margin-top:8px;height:30px;font-size:12px;">
-                            <i class="fa-solid fa-check"></i> 应用此配置
+                            <i class="fa-solid fa-check"></i> {{ "task.57"|trans }}
                         </button>
                     </div>
                 </div>
@@ -1623,42 +1623,42 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Handler 类名 <span class="required">*</span></label>
-                <input type="text" class="form-control" id="f-handler" placeholder="例：App\Task\SendEmailTask">
-                <div class="form-hint">实现 TaskHandlerInterface 并通过 app.task_handler tag 注册的服务</div>
+                <label class="form-label">{{ "task.58"|trans }} <span class="required">*</span></label>
+                <input type="text" class="form-control" id="f-handler" placeholder="{{ "task.5"|trans }}">
+                <div class="form-hint">{{ "task.59"|trans }}</div>
                 <div class="form-error" id="e-handler"></div>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Payload 参数（JSON）</label>
+                <label class="form-label">{{ "task.60"|trans }}</label>
                 <textarea class="form-control" id="f-payload" placeholder='{"key":"value"}' style="height:100px;font-family:monospace;font-size:12px;"></textarea>
                 <div class="form-error" id="e-payload"></div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">分类标签</label>
-                    <input type="text" class="form-control" id="f-category" placeholder="例：report / data / notify">
+                    <label class="form-label">{{ "task.61"|trans }}</label>
+                    <input type="text" class="form-control" id="f-category" placeholder="{{ "task.6"|trans }}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">排序权重</label>
+                    <label class="form-label">{{ "task.62"|trans }}</label>
                     <input type="number" class="form-control" id="f-sort" value="0" min="0">
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">最大重试次数</label>
+                    <label class="form-label">{{ "task.63"|trans }}</label>
                     <input type="number" class="form-control" id="f-retries" value="3" min="0" max="10">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">超时时间（秒，0=不限）</label>
+                    <label class="form-label">{{ "task.64"|trans }}={{ "task.65"|trans }}</label>
                     <input type="number" class="form-control" id="f-timeout" value="0" min="0">
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label">启用状态</label>
+                <label class="form-label">{{ "task.66"|trans }}</label>
                 <div style="margin-top:4px;">
                     <button type="button" id="f-enabled" role="switch" aria-checked="true"
                         class="ef-switch ef-switch-type-circle ef-switch-checked"
@@ -1670,9 +1670,9 @@
         </form>
     </div>
     <div class="task-drawer-footer">
-        <button class="btn btn-default" onclick="closeDrawer()">取消</button>
+        <button class="btn btn-default" onclick="closeDrawer()">{{ "task.67"|trans }}</button>
         <button class="btn btn-primary" onclick="submitTask()">
-            <i class="fa-solid fa-floppy-disk"></i> 保存
+            <i class="fa-solid fa-floppy-disk"></i> {{ "task.68"|trans }}
         </button>
     </div>
 </div>
@@ -1683,19 +1683,19 @@
 <div class="log-modal-overlay" id="log-modal-overlay" onclick="closeLogModal()">
     <div class="log-modal" onclick="event.stopPropagation()">
         <div class="log-modal-header">
-            <div class="log-modal-title" id="log-modal-title">执行日志</div>
+            <div class="log-modal-title" id="log-modal-title">{{ "task.69"|trans }}</div>
             <button class="task-drawer-close" onclick="closeLogModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="log-modal-body">
             <table class="log-table">
                 <thead>
                     <tr>
-                        <th class="log-col-status">状态</th>
-                        <th class="log-col-started">开始时间</th>
-                        <th>耗时</th>
-                        <th class="log-col-memory">内存</th>
-                        <th>节点</th>
-                        <th class="log-col-output">输出</th>
+                        <th class="log-col-status">{{ "task.70"|trans }}</th>
+                        <th class="log-col-started">{{ "task.71"|trans }}</th>
+                        <th>{{ "task.72"|trans }}</th>
+                        <th class="log-col-memory">{{ "task.73"|trans }}</th>
+                        <th>{{ "task.74"|trans }}</th>
+                        <th class="log-col-output">{{ "task.75"|trans }}</th>
                     </tr>
                 </thead>
                 <tbody id="log-table-body"></tbody>
@@ -1711,7 +1711,7 @@
 <div class="log-modal-overlay" id="log-output-modal-overlay" onclick="closeLogOutputModal()">
     <div class="log-output-modal" onclick="event.stopPropagation()">
         <div class="log-modal-header">
-            <div class="log-modal-title">日志输出详情</div>
+            <div class="log-modal-title">{{ "task.76"|trans }}</div>
             <button class="task-drawer-close" onclick="closeLogOutputModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="log-output-modal-body">
@@ -1784,7 +1784,7 @@ const TaskMgr = (function($) {
             return res;
         }).fail((xhr) => {
             const body = xhr.responseJSON;
-            const err = body?.message || body?.error || '请求失败，请稍后重试';
+            const err = body?.message || body?.error || t('task.js27');
             toast(err, 'error');
         });
     }
@@ -1823,10 +1823,10 @@ const TaskMgr = (function($) {
     }
 
     const CATEGORY_LABELS = {
-        'system':  '系统',
-        'report':  '报表',
-        'data':    '数据',
-        'notify':  '通知',
+        'system':  t('task.js28'),
+        'report':  t('task.js29'),
+        'data':    t('task.js30'),
+        'notify':  t('task.js31'),
     };
 
     function catLabel(cat) {
@@ -1895,7 +1895,7 @@ const TaskMgr = (function($) {
     function renderTaskTable(tasks) {
         const $tbody = $('#task-table-body');
         if (!tasks.length) {
-            $tbody.html(`<tr><td colspan="9"><div class="task-empty"><i class="fa-solid fa-clock-rotate-left"></i><p>{{ 'admin.task.empty'|trans({}, 'messages')|default('暂无任务') }}</p></div></td></tr>`);
+            $tbody.html(`<tr><td colspan="9"><div class="task-empty"><i class="fa-solid fa-clock-rotate-left"></i><p>{{ 'admin.task.empty'|trans({}, 'messages')|default(t('task.js32')) }}</p></div></td></tr>`);
             return;
         }
 
@@ -1903,7 +1903,7 @@ const TaskMgr = (function($) {
             const isEnabled = normalizeBool(t.enabled);
             const statusHtml = t.latestStatus
                 ? `<span class="status-badge ${t.latestStatus}">${statusLabel(t.latestStatus)}</span>`
-                : `<span class="status-badge none">未执行</span>`;
+                : t('task.noStatus');
 
             const catHtml = t.category
                 ? `<span class="task-category-badge ${catClass(t.category)}" style="background:inherit;font-size:13px;">${catLabel(t.category)}</span>`
@@ -1937,16 +1937,16 @@ const TaskMgr = (function($) {
                 </td>
                 <td>
                     <div class="task-actions">
-                        <button class="task-action-btn run" data-tip="立即执行" onclick="runNow('${t.id}', '${escHtml(t.name)}')">
+                        <button class="task-action-btn run" data-tip=t('task.js33') onclick="runNow('${t.id}', '${escHtml(t.name)}')">
                             <i class="fa-solid fa-play"></i>
                         </button>
-                        <button class="task-action-btn" data-tip="编辑任务" onclick="openEditDrawer('${t.id}')">
+                        <button class="task-action-btn" data-tip=t('task.js34') onclick="openEditDrawer('${t.id}')">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button class="task-action-btn logs" data-tip="执行日志" onclick="openLogs('${t.id}', '${escHtml(t.name)}')">
+                        <button class="task-action-btn logs" data-tip=t('task.js35') onclick="openLogs('${t.id}', '${escHtml(t.name)}')">
                             <i class="fa-solid fa-scroll"></i>
                         </button>
-                        <button class="task-action-btn del" data-tip="删除任务" onclick="deleteTask('${t.id}', '${escHtml(t.name)}')">
+                        <button class="task-action-btn del" data-tip=t('task.js36') onclick="deleteTask('${t.id}', '${escHtml(t.name)}')">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -1991,7 +1991,7 @@ const TaskMgr = (function($) {
             const enabled = res.enabled;
             btn.setAttribute('aria-checked', enabled ? 'true' : 'false');
             enabled ? btn.classList.add('ef-switch-checked') : btn.classList.remove('ef-switch-checked');
-            toast(enabled ? '任务已启用' : '任务已禁用', 'info');
+            toast(enabled ? t('task.js37') : t('task.js38'), 'info');
         }).fail(() => {
             // 回滚
             const cur = btn.getAttribute('aria-checked') === 'true';
@@ -2003,7 +2003,7 @@ const TaskMgr = (function($) {
     //  立即执行
     // ================================================================
     function runNow(id, name) {
-        if (!confirm(`确定立即执行任务「${name}」？`)) return;
+        if (!confirm(t('task.js2', {p1: name}))) return;
         request('POST', `${BASE}/${id}/run-now`).then(res => {
             toast(res.message, 'success');
         });
@@ -2013,9 +2013,9 @@ const TaskMgr = (function($) {
     //  删除任务
     // ================================================================
     function deleteTask(id, name) {
-        if (!confirm(`确定删除任务「${name}」？此操作不可撤销，关联日志也将被删除。`)) return;
+        if (!confirm(t('task.js3', {p1: name}))) return;
         request('DELETE', `${BASE}/${id}/delete`).then(() => {
-            toast(`任务「${name}」已删除`, 'success');
+            toast(t('task.js4', {p1: name}), 'success');
             loadTasks();
             loadStats();
         });
@@ -2026,17 +2026,17 @@ const TaskMgr = (function($) {
     // ================================================================
     function openCreateDrawer() {
         state.editingId = null;
-        $('#drawer-title').text('新建定时任务');
+        $('#drawer-title').text(t('task.js39'));
         resetForm();
         openDrawer();
     }
 
     function openEditDrawer(id) {
         const task = state.tasks.find(t => t.id === id);
-        if (!task) { toast('任务数据不存在，请刷新', 'error'); return; }
+        if (!task) { toast(t('task.js40'), 'error'); return; }
 
         state.editingId = id;
-        $('#drawer-title').text('编辑定时任务');
+        $('#drawer-title').text(t('task.js41'));
         resetForm();
         fillForm(task);
         openDrawer();
@@ -2133,20 +2133,20 @@ const TaskMgr = (function($) {
         if (!datePart) return s;
         const [y, mo, dd] = datePart.split('-');
         const year = parseInt(y, 10);
-        const prefix = Number.isFinite(year) ? `${year}年` : '';
-        return `${prefix}${parseInt(mo, 10)}月${parseInt(dd, 10)}日 ${timePart ? timePart.substring(0, 5) : ''}`;
+        const prefix = Number.isFinite(year) ? t('task.js5', {p1: year}) : '';
+        return t('task.js6', {p1: prefix, p2: parseInt(mo, 10), p3: parseInt(dd, 10), p4: timePart ? timePart.substring(0, 5) : ''});
     }
 
     /** 将单次执行 Cron 转成可读的日期时间用于徽章显示 */
     function formatOnceExpr(expr, nextRunAt) {
         const dt = onceCronToDatetime(expr, nextRunAt);
-        if (!dt) return '单次执行';
+        if (!dt) return t('task.js42');
         const [datePart, timePart] = dt.replace('T', ' ').split(' ');
         if (!datePart) return dt;
         const [y, mo, dd] = datePart.split('-');
         const year = parseInt(y, 10);
-        const prefix = Number.isFinite(year) ? `${year}年` : '';
-        return `${prefix}${parseInt(mo, 10)}月${parseInt(dd, 10)}日 ${timePart ? timePart.substring(0, 5) : ''}`;
+        const prefix = Number.isFinite(year) ? t('task.js5', {p1: year}) : '';
+        return t('task.js6', {p1: prefix, p2: parseInt(mo, 10), p3: parseInt(dd, 10), p4: timePart ? timePart.substring(0, 5) : ''});
     }
 
     /** 切换任务类型：recurring（循环）| once（单次）| ai（AI 表达） */
@@ -2355,12 +2355,12 @@ const TaskMgr = (function($) {
         let   nextRunAt = null;
         let   payload  = {};
 
-        if (!name)    { $('#e-name').text('任务名称不能为空');        valid = false; }
-        if (!handler) { $('#e-handler').text('Handler 类名不能为空'); valid = false; }
+        if (!name)    { $('#e-name').text(t('task.js43'));        valid = false; }
+        if (!handler) { $('#e-handler').text(t('task.js44')); valid = false; }
 
         if (taskType === 'once') {
             const dt = $('#f-once-datetime').val().trim();
-            if (!dt) { $('#e-once').text('请选择执行时间'); valid = false; }
+            if (!dt) { $('#e-once').text(t('task.js45')); valid = false; }
             else {
                 const d = new Date(dt.replace(' ', 'T'));
                 cron = `${d.getMinutes()} ${d.getHours()} ${d.getDate()} ${d.getMonth() + 1} *`;
@@ -2368,16 +2368,16 @@ const TaskMgr = (function($) {
             }
         } else if (taskType === 'ai') {
             cron = state.aiResultCron || '';
-            if (!cron) { $('#e-ai').text('请先点击“智能解析”并应用解析结果'); valid = false; }
+            if (!cron) { $('#e-ai').text(t('task.js2')); valid = false; }
         } else {
             cron = $('#f-cron').val().trim();
-            if (!cron) { $('#e-cron').text('Cron 表达式不能为空'); valid = false; }
+            if (!cron) { $('#e-cron').text(t('task.js46')); valid = false; }
         }
 
         try {
             payload = JSON.parse($('#f-payload').val() || '{}');
         } catch(e) {
-            $('#e-payload').text('Payload 必须是合法的 JSON 格式');
+            $('#e-payload').text(t('task.js47'));
             valid = false;
         }
 
@@ -2409,7 +2409,7 @@ const TaskMgr = (function($) {
         const url    = isEdit ? `${BASE}/${state.editingId}/update` : `${BASE}/create`;
 
         request(method, url, data).then(() => {
-            toast(isEdit ? '任务已更新' : '任务已创建', 'success');
+            toast(isEdit ? t('task.js48') : t('task.js49'), 'success');
             closeDrawer();
             loadTasks();
             loadStats();
@@ -2420,25 +2420,25 @@ const TaskMgr = (function($) {
     //  Cron 人工可读化
     // ================================================================
     function cronToHuman(expr) {
-        if (!expr) return '未配置';
+        if (!expr) return t('task.js50');
         const p2 = n => String(parseInt(n)||0).padStart(2,'0');
-        const WDAYS = {'0':'日','1':'一','2':'二','3':'三','4':'四','5':'五','6':'六'};
+        const WDAYS = {'0':t('task.js51'),'1':t('task.js52'),'2':t('task.js53'),'3':t('task.js54'),'4':t('task.js55'),'5':t('task.js56'),'6':t('task.js57')};
 
         if (expr.startsWith('@seconds:'))
-            return `每隔 ${expr.substring(9)} 秒`;
+            return t('task.js7', {p1: expr.substring(9)});
 
         if (expr.startsWith('@weekly:')) {
             const [, n, dows, h, m] = expr.split(':');
-            const dayStr = (dows||'1').split(',').map(d => `周${WDAYS[d]||d}`).join('、');
-            return `每隔 ${n} 周，${dayStr}，${p2(h)}:${p2(m)}`;
+            const dayStr = (dows||'1').split(',').map(d => t('task.js8', {p1: WDAYS[d]||d})).join('、');
+            return t('task.js9', {p1: n, p2: dayStr, p3: p2(h), p4: p2(m)});
         }
         if (expr.startsWith('@monthly-last:')) {
             const [, n, h, m] = expr.split(':');
-            return `每隔 ${n} 个月，月末，${p2(h)}:${p2(m)}`;
+            return t('task.js10', {p1: n, p2: p2(h), p3: p2(m)});
         }
         if (expr.startsWith('@quarterly:')) {
             const [n, mon, day, h, m] = expr.substring(11).split(':');
-            return `每隔 ${n} 季度，第 ${mon} 月第 ${day} 天，${p2(h)}:${p2(m)}`;
+            return t('task.js11', {p1: n, p2: mon, p3: day, p4: p2(h), p5: p2(m)});
         }
 
         const parts = expr.trim().split(/\s+/);
@@ -2446,21 +2446,21 @@ const TaskMgr = (function($) {
         const [min, hour, day, month, dow] = parts;
 
         if (/^\*\/\d+$/.test(min) && hour==='*' && day==='*' && month==='*' && dow==='*')
-            return `每隔 ${min.substring(2)} 分钟`;
+            return t('task.js12', {p1: min.substring(2)});
         if (/^\d+$/.test(min) && /^\*\/\d+$/.test(hour) && day==='*' && month==='*' && dow==='*')
-            return `每隔 ${hour.substring(2)} 小时，:${p2(min)}`;
+            return t('task.js13', {p1: hour.substring(2), p2: p2(min)});
         if (/^\d+$/.test(min) && /^\d+$/.test(hour) && /^\*\/\d+$/.test(day) && month==='*' && dow==='*')
-            return `每隔 ${day.substring(2)} 天，${p2(hour)}:${p2(min)}`;
+            return t('task.js14', {p1: day.substring(2), p2: p2(hour), p3: p2(min)});
         if (/^\d+$/.test(min) && /^\d+$/.test(hour) && day==='*' && month==='*' && dow==='*')
-            return `每天 ${p2(hour)}:${p2(min)}`;
+            return t('task.js15', {p1: p2(hour), p2: p2(min)});
         if (/^\d+$/.test(min) && /^\d+$/.test(hour) && day==='*' && month==='*' && /^[\d,]+$/.test(dow)) {
-            const dayStr = dow.split(',').map(d => `周${WDAYS[d]||d}`).join('、');
-            return `每周 ${dayStr}，${p2(hour)}:${p2(min)}`;
+            const dayStr = dow.split(',').map(d => t('task.js8', {p1: WDAYS[d]||d})).join('、');
+            return t('task.js16', {p1: dayStr, p2: p2(hour), p3: p2(min)});
         }
         if (/^\d+$/.test(min) && /^\d+$/.test(hour) && /^\d+$/.test(day) && /^\*\/\d+$/.test(month) && dow==='*')
-            return `每隔 ${month.substring(2)} 个月，第 ${day} 天，${p2(hour)}:${p2(min)}`;
+            return t('task.js17', {p1: month.substring(2), p2: day, p3: p2(hour), p4: p2(min)});
         if (/^\d+$/.test(min) && /^\d+$/.test(hour) && /^\d+$/.test(day) && month==='*' && dow==='*')
-            return `每月第 ${day} 天，${p2(hour)}:${p2(min)}`;
+            return t('task.js18', {p1: day, p2: p2(hour), p3: p2(min)});
 
         return expr;
     }
@@ -2468,21 +2468,21 @@ const TaskMgr = (function($) {
     function updateCronDesc(expr) {
         if (!expr) { $('#cron-desc').text('-'); return; }
         const e = expr.trim().split(/\s+/);
-        if (e.length < 5) { $('#cron-desc').text('格式不正确（需5段：分 时 日 月 周）'); return; }
+        if (e.length < 5) { $('#cron-desc').text(t('task.js58')); return; }
 
         const map = [
-            [e[0], '分'], [e[1], '时'], [e[2], '日'], [e[3], '月'], [e[4], '周'],
+            [e[0], t('task.js59')], [e[1], t('task.js60')], [e[2], t('task.js51')], [e[3], t('task.js61')], [e[4], t('task.js62')],
         ];
         const readable = {
-            '* * * * *':    '每分钟执行一次',
-            '*/5 * * * *':  '每5分钟执行一次',
-            '0 * * * *':    '每小时整点执行',
-            '0 0 * * *':    '每天凌晨0点执行',
-            '0 2 * * *':    '每天凌晨2点执行',
-            '0 0 * * 1':    '每周一凌晨0点执行',
-            '0 0 1 * *':    '每月1日凌晨0点执行',
+            '* * * * *':    t('task.js63'),
+            '*/5 * * * *':  t('task.js64'),
+            '0 * * * *':    t('task.js65'),
+            '0 0 * * *':    t('task.js66'),
+            '0 2 * * *':    t('task.js67'),
+            '0 0 * * 1':    t('task.js68'),
+            '0 0 1 * *':    t('task.js69'),
         };
-        $('#cron-desc').text(readable[expr.trim()] || `分:${e[0]} 时:${e[1]} 日:${e[2]} 月:${e[3]} 周:${e[4]}`);
+        $('#cron-desc').text(readable[expr.trim()] || t('task.js19', {p1: e[0], p2: e[1], p3: e[2], p4: e[3], p5: e[4]}));
     }
 
     // ================================================================
@@ -2490,10 +2490,10 @@ const TaskMgr = (function($) {
     // ================================================================
     function parseAiSchedule() {
         const text = $('#f-ai-text').val().trim();
-        if (!text) { $('#e-ai').text('请输入调度规则描述'); return; }
+        if (!text) { $('#e-ai').text(t('task.js70')); return; }
         $('#e-ai').text('');
         const $btn = $('#btn-ai-parse');
-        $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 解析中...');
+        $btn.prop('disabled', true).html(t('task.js71'));
         $('#ai-parse-result').hide();
 
         $.ajax({
@@ -2509,12 +2509,12 @@ const TaskMgr = (function($) {
                 state.aiResultCron = d.cronExpression || '';
                 $('#ai-parse-result').show();
             } else {
-                $('#e-ai').text('解析失败，请尝试重新描述');
+                $('#e-ai').text(t('task.js72'));
             }
         }).fail(xhr => {
-            $('#e-ai').text(xhr.responseJSON?.message || '解析服务异常，请稍后重试');
+            $('#e-ai').text(xhr.responseJSON?.message || t('task.js73'));
         }).always(() => {
-            $btn.prop('disabled', false).html('<i class="fa-solid fa-magic-wand-sparkles"></i> 智能解析');
+            $btn.prop('disabled', false).html(t('task.js74'));
         });
     }
 
@@ -2522,7 +2522,7 @@ const TaskMgr = (function($) {
         if (!state.aiResultCron) return;
         switchTaskType('recurring');
         parseCronToUI(state.aiResultCron);
-        toast('配置已应用', 'success');
+        toast(t('task.js75'), 'success');
     }
 
     // ================================================================
@@ -2532,7 +2532,7 @@ const TaskMgr = (function($) {
         state.logTaskId   = taskId;
         state.logPage     = 1;
         state.logTotal    = 0;
-        $('#log-modal-title').text(`执行日志 — ${taskName}`);
+        $('#log-modal-title').text(t('task.js20', {p1: taskName}));
         $('#log-modal-overlay').addClass('open');
         loadLogPage(1);
     }
@@ -2540,7 +2540,7 @@ const TaskMgr = (function($) {
     function loadLogPage(page) {
         state.logPage = page;
         state.logOutputMap = {};
-        $('#log-table-body').html('<tr><td colspan="6" style="text-align:center;padding:24px;color:#b0b5cc;">加载中...</td></tr>');
+        $('#log-table-body').html('<tr><td colspan="6" style="text-align:center;padding:24px;color:#b0b5cc;">{{ "task.loading"|trans }}</td></tr>');
         $('#log-pagination-btns').empty();
         $('#log-pagination-info').text('');
 
@@ -2550,7 +2550,7 @@ const TaskMgr = (function($) {
             // 分页信息
             const start = res.total ? (page - 1) * state.logPageSize + 1 : 0;
             const end   = Math.min(page * state.logPageSize, res.total);
-            $('#log-pagination-info').text(res.total > 0 ? `第 ${start}–${end} 条，共 ${res.total} 条` : '暂无日志');
+            $('#log-pagination-info').text(res.total > 0 ? t('task.js1', {p1: start, p2: end, p3: res.total}) : t('task.js3'));
 
             // 分页按钮
             const $btns = $('#log-pagination-btns').empty();
@@ -2568,7 +2568,7 @@ const TaskMgr = (function($) {
 
             // 日志行
             if (!res.items.length) {
-                $('#log-table-body').html('<tr><td colspan="6" style="text-align:center;padding:24px;color:#b0b5cc;">暂无日志</td></tr>');
+                $('#log-table-body').html('<tr><td colspan="6" style="text-align:center;padding:24px;color:#b0b5cc;">{{ "task.noLog"|trans }}</td></tr>');
                 return;
             }
             const rows = res.items.map(l => {
@@ -2580,13 +2580,13 @@ const TaskMgr = (function($) {
                     <td style="font-size:12px;">${l.executionMs != null ? l.executionMs + ' ms' : '-'}</td>
                     <td class="log-col-memory" style="font-size:12px;">${l.memoryPeak || '-'}</td>
                     <td style="font-size:12px;">${escHtml(l.hostName || '-')}</td>
-                    <td class="log-col-output">${l.output ? `<button type="button" class="btn btn-default log-output-view-btn" onclick="openLogOutputById('${l.id}')">查看</button>` : '<span style="color:#b0b5cc;">-</span>'}</td>
+                    <td class="log-col-output">${l.output ? t('task.js21', {p1: l.id}) : '<span style="color:#b0b5cc;">-</span>'}</td>
                 </tr>
             `;
             });
             $('#log-table-body').html(rows.join(''));
         }).fail((xhr) => {
-            const msg = xhr.responseJSON?.message || '加载失败，请稍后重试';
+            const msg = xhr.responseJSON?.message || t('task.js76');
             $('#log-table-body').html(`<tr><td colspan="6" style="text-align:center;padding:24px;color:#ef4444;"><i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i>${escHtml(msg)}</td></tr>`);
             $('#log-pagination-info').text('');
             $('#log-pagination-btns').empty();
@@ -2740,7 +2740,7 @@ const TaskMgr = (function($) {
             });
 
             if (merged.length > MAX_VISIBLE) {
-                html += `<div class="cal-event-more">+${merged.length - MAX_VISIBLE} 更多</div>`;
+                html += t('task.js22', {p1: merged.length - MAX_VISIBLE});
             }
 
             html += '</div>';
@@ -2781,13 +2781,13 @@ const TaskMgr = (function($) {
         $head.append('<div class="fc-time-col-head"></div>');
         const $dayColsHead = $('<div class="fc-day-cols"></div>');
         
-        const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+        const weekDays = [t('task.js51'), t('task.js52'), t('task.js53'), t('task.js54'), t('task.js55'), t('task.js56'), t('task.js57')];
         const todayStrLocal = new Date().toDateString();
 
         dates.forEach(d => {
             const isToday = d.toDateString() === todayStrLocal;
             const $dayCol = $(`<div class="fc-day-col-head${isToday ? ' fc-today' : ''}">
-                <a style="font-size:11px;font-weight:500;">周${weekDays[d.getDay()]}</a>
+                <a style="font-size:11px;font-weight:500;">{{ "task.week"|trans }}${weekDays[d.getDay()]}</a>
                 <a style="font-size:18px;line-height:1.2;">${d.getDate()}</a>
             </div>`);
             $dayColsHead.append($dayCol);
@@ -2797,7 +2797,7 @@ const TaskMgr = (function($) {
 
         // 2. All Day 行
         const $allDayRow = $('<div class="fc-all-day-row"></div>');
-        $allDayRow.append('<div class="fc-all-day-label">全天</div>');
+        $allDayRow.append(t('task.js77'));
         const $allDayContent = $('<div class="fc-all-day-content"></div>');
         dates.forEach((d, i) => {
             const isToday = d.toDateString() === todayStrLocal;
@@ -3051,17 +3051,17 @@ const TaskMgr = (function($) {
     //  工具函数
     // ================================================================
     function statusLabel(s) {
-        return { success: '成功', error: '失败', running: '执行中', pending: '计划中', none: '未执行' }[s] || s;
+        return { success: t('task.js78'), error: t('task.js79'), running: t('task.js80'), pending: t('task.js81'), none: t('task.js82') }[s] || s;
     }
 
     function buildTaskTipText(item) {
         const lines = [];
-        lines.push(`任务: ${item.name || '-'}`);
-        lines.push(`状态: ${statusLabel(item.status || 'none')}`);
-        lines.push(`分类: ${catLabel(item.category)}`);
+        lines.push(t('task.js23', {p1: item.name || '-'}));
+        lines.push(t('task.js24', {p1: statusLabel(item.status || 'none')}));
+        lines.push(t('task.js25', {p1: catLabel(item.category)}));
         if (item.date) {
             const timePart = item.time ? ` ${item.time.slice(0, 5)}` : '';
-            lines.push(`时间: ${item.date}${timePart}`);
+            lines.push(t('task.js26', {p1: item.date, p2: timePart}));
         }
         return lines.join('\n');
     }

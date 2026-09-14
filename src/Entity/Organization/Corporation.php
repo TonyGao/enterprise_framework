@@ -4,7 +4,6 @@ namespace App\Entity\Organization;
 
 use App\Repository\Organization\CorporationRepository;
 use App\Annotation\Ef;
-use App\Annotation\EfGroup;
 use App\Entity\CommonTrait;
 use App\Entity\Platform\OptionValue;
 use Doctrine\ORM\Mapping as ORM;
@@ -27,118 +26,103 @@ class Corporation
 	private $id;
 
 	/**
-	 * 集团名称
-	 * @Ef(
-   *     group="corporation_base_info",
-   *     isBF=true
-   * )
+	 * 集团名称 / Group name
 	 */
+	#[Ef(group: 'corporation_base_info', isBF: true)]
 	#[ORM\Column(type: 'string', length: 180)]
 	private $name;
 
 	/**
-	 * 简称
-	 * @Ef(
-   *     group="corporation_base_info",
-   *     isBF=true
-   * )
+	 * 简称 / Short name / alias
 	 */
+	#[Ef(group: 'corporation_base_info', isBF: true)]
 	#[ORM\Column(type: "string", length: 80, nullable: true)]
 	private $alias;
 
 	/**
-	 * 编码
-	 * @Ef(
-     *     group="corporation_base_info",
-     *     isBF=true
-     * )
+	 * 编码 / Code
 	 */
+	#[Ef(group: 'corporation_base_info', isBF: true)]
 	#[ORM\Column(type: "string", length: 180, nullable: true)]
 	private $code;
 
 	/**
-	 * 描述
-	 * @Ef(
-     *     group="corporation_base_info",
-     *     isBF=true
-     * )
+	 * 描述 / Description
 	 */
+	#[Ef(group: 'corporation_base_info', isBF: true)]
 	#[ORM\Column(type: 'text', nullable: true)]
 	private $remark;
 
 	/**
 	 * 单位类型 国有企业、国有控股企业、外资企业、合资企业、私营企业
-	 * @Ef(
-     *     group="corporation_base_info",
-     *     isBF=true
-     * )
 	 */
+	#[Ef(group: 'corporation_base_info', isBF: true)]
 	#[ORM\OneToOne(targetEntity: 'App\Entity\Platform\OptionValue')]
 	#[ORM\JoinColumn(name: "type_id", referencedColumnName: "id", nullable: true)]
 	private $type = null;
 
 	/**
-	 * 负责人
-	 * @Ef(
-     *     group="corporation_base_info",
-     *     isBF=true
-     * )
+	 * 负责人 / Head
 	 */
+	#[Ef(group: 'corporation_base_info', isBF: true)]
 	#[ORM\Column(type: 'string', length: 80, nullable: true)]
 	private $president;
 
 	/**
-	 * 地址
-	 * @Ef(
-     *     group="corporation_base_info",
-     *     isBF=true
-     * )
+	 * 地址 / Address
 	 */
+	#[Ef(group: 'corporation_base_info', isBF: true)]
 	#[ORM\Column(type: 'string', length: 180, nullable: true)]
 	private $address;
 
 	/**
-	 * 电话
-	 * @Ef(
-     *     group="corporation_base_info",
-     *     isBF=true
-     * )
+	 * 电话 / Phone
 	 */
+	#[Ef(group: 'corporation_base_info', isBF: true)]
 	#[ORM\Column(type: 'string', length: 40, nullable: true)]
 	private $phone;
 
 	/**
-	 * 网址
-	 * @Ef(
-     *     group="corporation_base_info",
-     *     isBF=true
-     * )
+	 * 网址 / Website
 	 */
+	#[Ef(group: 'corporation_base_info', isBF: true)]
 	#[ORM\Column(type: "string", length: 180, nullable: true)]
 	private $website;
 
 	/**
-	 * 邮件地址
-	 * @Ef(
-     *     group="corporation_base_info",
-     *     isBF=true
-     * )
+	 * 邮件地址 / Email
 	 */
+	#[Ef(group: 'corporation_base_info', isBF: true)]
 	#[ORM\Column(type: 'string', length: 180, nullable: true)]
 	private $email;
 
     /**
-     * 状态
-     * @Ef(
-     *     group="corporation_base_info",
-     *     isBF=true
-     * )
+     * 状态 / Status
      */
+    #[Ef(group: 'corporation_base_info', isBF: true)]
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private $state = true;
 
     #[ORM\Column(type: 'integer', nullable: true)]
     private $sortOrder;
+
+    /**
+     * 国家代码（ISO 3166-1）/ Country code (ISO 3166-1)
+     */
+    #[ORM\Column(type: 'string', length: 2, nullable: true)]
+    private $countryCode;
+
+    /**
+     * 默认语言 / Default locale
+     */
+    #[ORM\Column(type: 'string', length: 16, nullable: true)]
+    private $defaultLocale;
+
+    /**
+     * 默认币种（ISO 4217）/ Default currency (ISO 4217)
+     */
+    #[ORM\Column(type: 'string', length: 3, nullable: true)]
+    private $defaultCurrency;
 
 	public function __construct()
 	{
@@ -413,6 +397,57 @@ class Corporation
 	{
 		$this->email = $email;
 
+		return $this;
+	}
+
+	/**
+	 * 国家代码 Getter / Country code getter
+	 */
+	public function getCountryCode(): ?string
+	{
+		return $this->countryCode;
+	}
+
+	/**
+	 * 国家代码 Setter / Country code setter
+	 */
+	public function setCountryCode(?string $countryCode)
+	{
+		$this->countryCode = $countryCode ? strtoupper($countryCode) : null;
+		return $this;
+	}
+
+	/**
+	 * 默认语言 Getter / Default locale getter
+	 */
+	public function getDefaultLocale(): ?string
+	{
+		return $this->defaultLocale;
+	}
+
+	/**
+	 * 默认语言 Setter / Default locale setter
+	 */
+	public function setDefaultLocale(?string $defaultLocale)
+	{
+		$this->defaultLocale = $defaultLocale;
+		return $this;
+	}
+
+	/**
+	 * 默认币种 Getter / Default currency getter
+	 */
+	public function getDefaultCurrency(): ?string
+	{
+		return $this->defaultCurrency;
+	}
+
+	/**
+	 * 默认币种 Setter / Default currency setter
+	 */
+	public function setDefaultCurrency(?string $defaultCurrency)
+	{
+		$this->defaultCurrency = $defaultCurrency ? strtoupper($defaultCurrency) : null;
 		return $this;
 	}
 }

@@ -1,6 +1,6 @@
 {% extends 'admin/layout.html.twig' %}
 
-{% block title %}{{ 'admin_email.editor.title'|trans }}{% endblock %}
+{% block title %}{{ "admin_email.editor.title"|trans }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -200,15 +200,27 @@
     <div id="testAlertContainer" style="max-width: 400px; margin: 0 auto; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999;"></div>
     <div class="outside-wrapper" style="padding: 40px; max-width: 100%; margin: 0; background: #fff; min-height: calc(100vh - 60px);">
         
-        <div class="email-title">{{ 'admin_email.editor.title'|trans }}</div>
+        <div class="email-title">{{ "admin_email.editor.title"|trans }}</div>
         
         <form action="{{ path('admin_email_template_save') }}" method="post" id="editorForm" style="display: flex; flex-direction: column; height: 100%;">
             <input type="hidden" name="id" id="templateId" value="{{ editingTemplate.id|default('') }}">
             <input type="hidden" name="subject" id="editorSubjectHidden" value="{{ editingTemplate.subject|default('') }}">
+            <input type="hidden" name="locale" id="editorLocaleHidden" value="{{ currentLocale|default('zh_CN') }}">
 
             <div class="ef-space ef-space-horizontal ef-space-align-center" style="margin-bottom: 24px; justify-content: flex-start;">
                 <div class="page-title" style="margin-bottom: 0; margin-right: 32px; white-space: nowrap;">
-                    {{ 'admin_email.editor.title'|trans }}
+                    {{ "admin_email.editor.title"|trans }}
+                </div>
+
+                {# 邮件模板多语言切换：默认用户 locale，可自由切换其他语言 / Email template language switcher #}
+                <div class="form-group" style="margin-bottom: 0; margin-right: 20px;">
+                    <label style="font-size: 12px; color: #64748b; margin-right: 6px;">{{ "admin_email.editor.language"|trans }}</label>
+                    <select id="editorLocale" class="ef-select ef-select-view ef-select-view-size-medium ef-input-rounded" style="height: 36px; min-width: 120px; padding: 0 10px; border: 1px solid #d1d5db; border-radius: 8px;"
+                            onchange="if(this.value){ var u = new URL(window.location.href); u.searchParams.set('locale', this.value); u.searchParams.delete('id'); window.location.href = u.toString(); }">
+                        {% for code, label in supportedLocales %}
+                            <option value="{{ code }}" {% if code == currentLocale %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 
                 <div class="top-form-fields" style="margin-bottom: 0; width: 600px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -227,18 +239,18 @@
 
             <div class="grid" id="mainGrid">
                 <div id="presetPanel" class="preset-panel-container">
-                <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{ 'admin_email.editor.preset.title'|trans }}</div>
-                <div style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">{{ 'admin_email.editor.preset.desc'|trans }}</div>
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{ "admin_email.editor.preset.title"|trans }}</div>
+                <div style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">{{ "admin_email.editor.preset.desc"|trans }}</div>
 
                 <div class="preset-scroll-area">
                     <div class="preset-grid">
                         <div class="preset-card" id="presetWelcome">
                             <div class="preset-thumb"><div id="presetWelcomeThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.welcome'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.welcome.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.welcome"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.welcome.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('welcome')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('welcome')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -246,10 +258,10 @@
                         <div class="preset-card" id="presetVerification">
                             <div class="preset-thumb"><div id="presetVerificationThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.verification_code'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.verification.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.verification_code"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.verification.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('verification_code')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('verification_code')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -257,10 +269,10 @@
                         <div class="preset-card" id="presetReset">
                             <div class="preset-thumb"><div id="presetResetThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.password_reset'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.reset.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.password_reset"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.reset.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('password_reset')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('password_reset')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -268,10 +280,10 @@
                         <div class="preset-card" id="presetAnnouncement">
                             <div class="preset-thumb"><div id="presetAnnouncementThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.announcement'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.announcement.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.announcement"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.announcement.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('announcement')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('announcement')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -279,10 +291,10 @@
                         <div class="preset-card" id="presetMeetingInvite">
                             <div class="preset-thumb"><div id="presetMeetingInviteThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.meeting_invite'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.meeting_invite.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.meeting_invite"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.meeting_invite.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('meeting_invite')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('meeting_invite')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -290,10 +302,10 @@
                         <div class="preset-card" id="presetNewsletter">
                             <div class="preset-thumb"><div id="presetNewsletterThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.newsletter'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.newsletter.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.newsletter"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.newsletter.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('newsletter')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('newsletter')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -301,10 +313,10 @@
                         <div class="preset-card" id="presetInvoice">
                             <div class="preset-thumb"><div id="presetInvoiceThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.invoice'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.invoice.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.invoice"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.invoice.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('invoice')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('invoice')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -312,10 +324,10 @@
                         <div class="preset-card" id="presetSystemAlert">
                             <div class="preset-thumb"><div id="presetSystemAlertThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.system_alert'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.system_alert.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.system_alert"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.system_alert.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('system_alert')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('system_alert')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -323,10 +335,10 @@
                         <div class="preset-card" id="presetSurvey">
                             <div class="preset-thumb"><div id="presetSurveyThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.survey'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.survey.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.survey"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.survey.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('survey')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('survey')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -334,10 +346,10 @@
                         <div class="preset-card" id="presetAccountLocked">
                             <div class="preset-thumb"><div id="presetAccountLockedThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.account_locked'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.account_locked.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.account_locked"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.account_locked.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('account_locked')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('account_locked')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -345,10 +357,10 @@
                         <div class="preset-card" id="presetPromotion">
                             <div class="preset-thumb"><div id="presetPromotionThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.promotion'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.promotion.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.promotion"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.promotion.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('promotion')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('promotion')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -356,10 +368,10 @@
                         <div class="preset-card" id="presetWeeklyReport">
                             <div class="preset-thumb"><div id="presetWeeklyReportThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.weekly_report'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.weekly_report.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.weekly_report"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.weekly_report.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('weekly_report')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('weekly_report')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -367,10 +379,10 @@
                         <div class="preset-card" id="presetOrderShipped">
                             <div class="preset-thumb"><div id="presetOrderShippedThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.order_shipped'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.order_shipped.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.order_shipped"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.order_shipped.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('order_shipped')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('order_shipped')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -378,10 +390,10 @@
                         <div class="preset-card" id="presetEventReminder">
                             <div class="preset-thumb"><div id="presetEventReminderThumb"></div></div>
                             <div class="preset-body">
-                                <div class="preset-title">{{ 'admin_email.templates.preset.option.event_reminder'|trans }}</div>
-                                <div class="preset-desc">{{ 'admin_email.editor.preset.event_reminder.desc'|trans }}</div>
+                                <div class="preset-title">{{ "admin_email.templates.preset.option.event_reminder"|trans }}</div>
+                                <div class="preset-desc">{{ "admin_email.editor.preset.event_reminder.desc"|trans }}</div>
                                 <div class="ef-space ef-space-horizontal">
-                                    <button type="button" class="btn outline small" onclick="applyPreset('event_reminder')">{{ 'admin_email.editor.preset.apply'|trans }}</button>
+                                    <button type="button" class="btn outline small" onclick="applyPreset('event_reminder')">{{ "admin_email.editor.preset.apply"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -390,7 +402,7 @@
             </div>
 
             <div class="editor-form-area">
-                <button type="button" class="preset-toggle-btn" onclick="togglePresetPanel()" title="收起/展开预置模版">
+                <button type="button" class="preset-toggle-btn" onclick="togglePresetPanel()" title="{{ "emailEditor.1"|trans }}">
                     <svg id="presetToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
                         <polyline points="15 18 9 12 15 6"></polyline>
                     </svg>
@@ -402,10 +414,10 @@
                 <input type="hidden" name="bodyHtml" id="editorBodyHtml" value="{{ editingTemplate.bodyHtml|default('') }}">
                 <input type="hidden" name="description" id="editorDescription" value="{{ editingTemplate.description|default('') }}">
                 <div class="ef-space ef-space-horizontal ef-space-align-center" style="margin-top: 24px; justify-content: flex-end;">
-                    <button class="btn outline medium" type="button" onclick="previewEmail()">预览</button>
-                    <button class="btn outline medium" type="button" onclick="testTemplateEmail()">发送测试邮件</button>
-                    <button class="btn outline medium" type="button" onclick="window.open('{{ path('admin_email_index') }}', '_self')">{{ 'action.cancel'|trans }}</button>
-                    <button class="btn primary medium" type="button" onclick="promptForSubjectAndSubmit()">{{ 'admin_email.btn.add_template'|trans }}</button>
+                    <button class="btn outline medium" type="button" onclick="previewEmail()">{{ "emailEditor.2"|trans }}</button>
+                    <button class="btn outline medium" type="button" onclick="testTemplateEmail()">{{ "emailEditor.3"|trans }}</button>
+                    <button class="btn outline medium" type="button" onclick="window.open('{{ path('admin_email_index') }}', '_self')">{{ "action.cancel"|trans }}</button>
+                    <button class="btn primary medium" type="button" onclick="promptForSubjectAndSubmit()">{{ "admin_email.btn.add_template"|trans }}</button>
                 </div>
             </div>
         </div>
@@ -415,18 +427,18 @@
     {# Subject Modal #}
     {% set subjectModalBody %}
         <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label required">{{ 'admin_email.editor.form.subject'|trans }}</label>
-            {{ ui.input('templateSubjectInput', 'text', '如: 您的验证码是 {{ \'{{ code }}\' }}', editingTemplate.subject|default(''), 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'required': 'required', 'style': 'width: 100%;'}) }}
+            <label class="form-label required">{{ "admin_email.editor.form.subject"|trans }}</label>
+            {{ ui.input('templateSubjectInput', 'text', '{{ "emailEditor.placeholderSubject"|trans }} {{ \'{{ code }}\' }}', editingTemplate.subject|default(''), 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'required': 'required', 'style': 'width: 100%;'}) }}
         </div>
     {% endset %}
 
     {% set subjectModalFooter %}
         <div class="ef-space ef-space-horizontal ef-space-align-center" style="justify-content: flex-end; width: 100%;">
             <div class="ef-space-item" style="margin-right: 8px;">
-                <button class="btn outline medium" type="button" onclick="closeSubjectModal()">{{ 'action.cancel'|trans }}</button>
+                <button class="btn outline medium" type="button" onclick="closeSubjectModal()">{{ "action.cancel"|trans }}</button>
             </div>
             <div class="ef-space-item">
-                <button class="btn primary medium" type="button" onclick="confirmSubjectAndSubmit()">{{ 'action.confirm'|trans }}</button>
+                <button class="btn primary medium" type="button" onclick="confirmSubjectAndSubmit()">{{ "action.confirm"|trans }}</button>
             </div>
         </div>
     {% endset %}
@@ -436,23 +448,23 @@
     {# Test Template Email Modal #}
     {% set testTemplateEmailBody %}
         <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label required">测试接收邮箱</label>
-            {{ ui.input('templateTestEmailInput', 'email', '请输入接收测试邮件的邮箱地址', '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'required': 'required', 'style': 'width: 100%;'}) }}
+            <label class="form-label required">{{ "emailEditor.4"|trans }}</label>
+            {{ ui.input('templateTestEmailInput', 'email', '{{ "emailEditor.placeholderTestEmail"|trans }}', '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'required': 'required', 'style': 'width: 100%;'}) }}
         </div>
     {% endset %}
 
     {% set testTemplateEmailFooter %}
         <div class="ef-space ef-space-horizontal ef-space-align-center" style="justify-content: flex-end; width: 100%;">
             <div class="ef-space-item" style="margin-right: 8px;">
-                <button class="btn outline medium" type="button" onclick="closeTestTemplateEmailModal()">取消</button>
+                <button class="btn outline medium" type="button" onclick="closeTestTemplateEmailModal()">{{ "emailEditor.5"|trans }}</button>
             </div>
             <div class="ef-space-item">
-                <button class="btn primary medium" type="button" onclick="executeTestTemplateEmail()" id="confirmTestTemplateEmailBtn">发送</button>
+                <button class="btn primary medium" type="button" onclick="executeTestTemplateEmail()" id="confirmTestTemplateEmailBtn">{{ "emailEditor.6"|trans }}</button>
             </div>
         </div>
     {% endset %}
 
-    {{ ui.modal('testTemplateEmailModal', '发送测试邮件', testTemplateEmailBody, testTemplateEmailFooter, {
+    {{ ui.modal('testTemplateEmailModal', 'emailEditor.3'|trans, testTemplateEmailBody, testTemplateEmailFooter, {
         'width': '500px',
         'onClose': 'closeTestTemplateEmailModal()'
     }) }}
@@ -467,14 +479,14 @@
         let editor;
         class InsertVariableMenu {
             constructor() {
-                this.title = '插入变量';
+                this.title = t('emailEditor.js1');
                 this.iconSvg = '<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"/><path d="M686.7 348.7c-3.1-3.1-8.2-3.1-11.3 0L512 512.1l-163.4-163.4c-3.1-3.1-8.2-3.1-11.3 0l-42.4 42.4c-3.1 3.1-3.1 8.2 0 11.3L458.3 565.8c3.1 3.1 8.2 3.1 11.3 0L686.7 402.4c3.1-3.1 3.1-8.2 0-11.3l-42.4-42.4z"/></svg>';
                 this.tag = 'select';
                 this.width = 120;
             }
             getOptions(editor) {
                 if (typeof templateVariables === 'undefined' || templateVariables.length === 0) {
-                    return [{ value: '', text: '暂无变量' }];
+                    return [{ value: '', text: t('emailEditor.js2') }];
                 }
                 return templateVariables.map(v => ({
                     value: v.name,
@@ -499,16 +511,16 @@
         function sampleRender(text) {
             if (!text) return '';
             const mockData = {
-                username: '张三 (John Doe)',
+                username: t('emailEditor.js3'),
                 login_url: 'https://example.com/login',
                 code: '123456',
                 expire_minutes: '15',
                 reset_url: 'https://example.com/reset?token=abc',
-                announcement_title: '系统升级维护通知',
-                announcement_body: '为了提供更优质的服务，我们将于本周末进行系统升级维护，届时部分功能可能短暂不可用。感谢您的理解与支持。',
-                meeting_topic: 'Q3 季度产品规划及研发进度同步会议',
+                announcement_title: t('emailEditor.js4'),
+                announcement_body: t('emailEditor.js5'),
+                meeting_topic: t('emailEditor.js6'),
                 meeting_time: '2023-10-25 14:00 - 15:30',
-                meeting_location: '第一会议室 / 线上腾讯会议',
+                meeting_location: t('emailEditor.js7'),
                 meeting_link: 'https://meeting.example.com/join/123456',
                 update_url: 'https://example.com/updates',
                 invoice_number: 'INV-20231024-001',
@@ -516,11 +528,11 @@
                 due_date: '2023-11-01',
                 payment_link: 'https://example.com/pay',
                 download_link: 'https://example.com/download/invoice',
-                alert_message: '生产环境主数据库 CPU 使用率持续 5 分钟超过 90%',
+                alert_message: t('emailEditor.js8'),
                 alert_time: '2023-10-24 10:30:45',
                 survey_link: 'https://example.com/survey/nps',
                 unlock_link: 'https://example.com/unlock/abc',
-                discount_rate: '8折',
+                discount_rate: t('emailEditor.js9'),
                 promo_code: 'AUTUMN2023',
                 shop_link: 'https://example.com/shop',
                 new_users: '1,245',
@@ -528,10 +540,10 @@
                 task_completion: '92.1%',
                 report_link: 'https://example.com/report/weekly',
                 order_number: 'ORD987654321',
-                logistics_company: '顺丰速运',
+                logistics_company: t('emailEditor.js10'),
                 tracking_number: 'SF1234567890123',
                 tracking_link: 'https://example.com/track',
-                event_name: '2023 年度开发者大会',
+                event_name: t('emailEditor.js11'),
                 event_time: '2023-11-15 09:00',
                 join_link: 'https://example.com/event/join'
             };
@@ -541,6 +553,8 @@
             });
         }
         function renderPresetPreview(key, mountId) {
+            const tpl = pickTemplates()[key];
+            if (tpl) presetTemplates[key] = emailWrapperStart + tpl + pickWrapperEnd();
             if (!presetTemplates[key]) return;
             const mount = document.getElementById(mountId);
             if (!mount) return;
@@ -550,8 +564,9 @@
         }
 
         function applyPreset(key) {
-            if (!innerTemplates[key]) return;
-            const html = innerTemplates[key];
+            const tpl = pickTemplates()[key];
+            if (!tpl) return;
+            const html = tpl;
             if (editor) {
                 editor.setHtml(html);
                 document.getElementById('editorBodyHtml').value = editor.getHtml();
@@ -604,7 +619,7 @@
             
             if (!testEmailInput) {
                 let alert = new Alert($('#testTemplateEmailModal .ef-modal-body'));
-                alert.error('无法找到测试邮箱输入框', { title: "错误", closable: true });
+                alert.error(t('emailEditor.js12'), { title: t('emailEditor.js13'), closable: true });
                 return;
             }
             
@@ -612,14 +627,14 @@
             
             if (testEmail.trim() === '') {
                 let alert = new Alert($('#testTemplateEmailModal .ef-modal-body'));
-                alert.error('测试接收邮箱不能为空', { title: "错误", closable: true });
+                alert.error(t('emailEditor.js14'), { title: t('emailEditor.js13'), closable: true });
                 return;
             }
             
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(testEmail.trim())) {
                 let alert = new Alert($('#testTemplateEmailModal .ef-modal-body'));
-                alert.error('请输入有效的邮箱地址', { title: "错误", closable: true });
+                alert.error(t('emailEditor.js15'), { title: t('emailEditor.js13'), closable: true });
                 return;
             }
 
@@ -631,7 +646,7 @@
             
             const btn = document.getElementById('confirmTestTemplateEmailBtn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 发送中...';
+            btn.innerHTML = t('emailEditor.js16');
             btn.disabled = true;
 
             $.ajax({
@@ -646,10 +661,10 @@
                     if (response.code === 200) {
                         closeTestTemplateEmailModal();
                         let alert = new Alert($('#testAlertContainer'));
-                        alert.success(response.message || '测试邮件发送成功', { title: "成功", closable: true });
+                        alert.success(response.message || t('emailEditor.js17'), { title: t('emailEditor.js18'), closable: true });
                     } else {
                         let alert = new Alert($('#testTemplateEmailModal .ef-modal-body'));
-                        alert.error(response.message || '发送失败', { title: "错误", closable: true });
+                        alert.error(response.message || t('emailEditor.js19'), { title: t('emailEditor.js13'), closable: true });
                     }
                 },
                 error: function (xhr, status, errorMsg) {
@@ -657,7 +672,7 @@
                     btn.disabled = false;
                     const errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : errorMsg;
                     let alert = new Alert($('#testTemplateEmailModal .ef-modal-body'));
-                    alert.error(errorMessage || '请求发生错误', { title: "错误", closable: true });
+                    alert.error(errorMessage || t('emailEditor.js20'), { title: t('emailEditor.js13'), closable: true });
                 }
             });
         }
@@ -687,7 +702,7 @@
             
             if (!subjectInput || !subjectInput.value.trim()) {
                 let alert = new Alert($('#subjectModal .ef-drawer-body'));
-                alert.error('请输入邮件主题', { title: "错误", closable: true });
+                alert.error(t('emailEditor.js21'), { title: t('emailEditor.js13'), closable: true });
                 return;
             }
             document.getElementById('editorSubjectHidden').value = subjectInput.value.trim();
@@ -740,6 +755,28 @@
             event_reminder: '<h2>活动即将开始：{{ event_name }}</h2><p>您好 {{ username }}，</p><p>提醒您，您报名的活动即将在 <strong>{{ event_time }}</strong> 开始。</p><p>请提前做好准备。如果是线上活动，请使用下方链接准时加入：</p><p style="text-align: center;"><a href="{{ join_link }}" target="_blank"><span style="font-size: 16px; color: rgb(37, 99, 235);"><strong>加入活动 &gt;</strong></span></a></p><p>期待与您相见！</p>'
         };
 
+        const innerTemplatesEn = {
+            verification_code: '<p style="text-align: center;"><h2 style="text-align: center;">Verify Your Email</h2><p style="text-align: center;"><span style="color: rgb(75, 85, 99);">Thank you for registering! Use the one-time code below to complete your email verification.</span></p><p style="text-align: center;"><span style="font-family: monospace; font-size: 32px; color: rgb(31, 41, 55); background-color: rgb(243, 244, 246);"><strong> &nbsp;{{ code }}&nbsp; </strong></span></p><p style="text-align: center;"><span style="font-size: 13px; color: rgb(107, 114, 128);">Security note: this code is valid for 15 minutes. Do not share it with anyone.</span></p>',
+            welcome: '<p style="text-align: center;"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" width="100%" alt="Welcome"></p><h2>Welcome aboard, {{ username }}!</h2><p>We are thrilled to have you join us. To help you get started, we have prepared some onboarding guides. Please click the link below to enter your dedicated workspace.</p><p style="text-align: center;"><a href="{{ login_url }}" target="_blank"><span style="font-size: 18px; color: rgb(37, 99, 235);"><strong>Get Started Now &gt;</strong></span></a></p><p><span style="font-size: 14px; color: rgb(107, 114, 128);">If you run into any issues while signing in, please contact our IT support team or the HR department.</span></p>',
+            password_reset: '<h2 style="text-align: center;">Reset Your Password</h2><p style="text-align: center;"><span style="color: rgb(75, 85, 99);">We received a request to reset your account password. If you made this request, click the link below to reset it.</span></p><p style="text-align: center;"><a href="{{ reset_url }}" target="_blank"><span style="font-size: 18px; color: rgb(239, 68, 68);"><strong>Reset Password &gt;</strong></span></a></p><p style="text-align: center;"><span style="font-size: 13px; color: rgb(107, 114, 128);">If you did not request a password reset, you can safely ignore this email. Your password will not be changed.</span></p>',
+            announcement: '<p style="text-align: center;"><img src="https://images.unsplash.com/photo-1557683316-973673baf926?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" width="100%" alt="Announcement"></p><h2><span style="color: rgb(37, 99, 235);">{{ announcement_title }}</span></h2><p><span style="color: rgb(55, 65, 81);">{{ announcement_body }}</span></p><hr/><p><span style="color: rgb(107, 114, 128);">Best regards,<br>The Team</span></p>',
+            meeting_invite: '<h2>Invitation: {{ meeting_topic }}</h2><p>Hello {{ username }},</p><p>You have been invited to the following meeting. Please see the details below:</p><p><strong>Time:</strong>{{ meeting_time }}<br><strong>Location/Link:</strong><a href="{{ meeting_link }}" target="_blank">{{ meeting_link }}</a></p><p>We look forward to your participation!</p>',
+            newsletter: '<p style="text-align: center;"><img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" width="100%" alt="Newsletter"></p><h2>This Month\'s Highlights</h2><p>Hello {{ username }},</p><p>Here are the latest news and product updates we have prepared for you this month.</p><ul><li><strong>Feature A:</strong> A productivity booster</li><li><strong>Feature B:</strong> Improved data analytics</li></ul><p style="text-align: center;"><a href="{{ update_url }}" target="_blank"><span style="font-size: 16px; color: rgb(37, 99, 235);">Read More &gt;</span></a></p>',
+            invoice: '<h2>Invoice Ready: {{ invoice_number }}</h2><p>Dear Customer,</p><p>Your latest invoice has been generated for <strong>{{ invoice_amount }}</strong>. Please complete payment by {{ due_date }}.</p><p style="text-align: center;"><a href="{{ payment_link }}" target="_blank"><span style="font-size: 16px; color: rgb(37, 99, 235);"><strong>Pay Now &gt;</strong></span></a></p><p>To download the invoice, click <a href="{{ download_link }}" target="_blank">here</a>.</p>',
+            system_alert: '<h2><span style="color: rgb(239, 68, 68);">System Alert</span></h2><p>Dear Administrator,</p><p>The system detected the following issue. Please address it as soon as possible:</p><p style="padding: 10px; background-color: rgb(254, 242, 242); border-left: 4px solid rgb(239, 68, 68); color: rgb(153, 27, 27);"><strong>Alert:</strong>{{ alert_message }}<br><strong>Occurred:</strong>{{ alert_time }}</p><p>You can sign in to the console to view detailed logs.</p>',
+            survey: '<h2>We Need Your Feedback</h2><p>Hello {{ username }},</p><p>To continuously improve our service, we sincerely invite you to spend a few minutes filling out a short survey.</p><p style="text-align: center;"><a href="{{ survey_link }}" target="_blank"><span style="font-size: 16px; color: rgb(37, 99, 235);"><strong>Start Survey &gt;</strong></span></a></p><p>Your opinion matters to us. Thank you for your support!</p>',
+            account_locked: '<h2><span style="color: rgb(245, 158, 11);">Security Alert: Account Locked</span></h2><p>Hello {{ username }},</p><p>Due to repeated failed login attempts or unusual activity, your account has been temporarily locked to protect it.</p><p>To unlock and restore access, click the link below to reset your password or verify your identity:</p><p style="text-align: center;"><a href="{{ unlock_link }}" target="_blank"><span style="font-size: 16px; color: rgb(245, 158, 11);"><strong>Unlock Account &gt;</strong></span></a></p><p>If this was not you, please contact our support team immediately.</p>',
+            promotion: '<p style="text-align: center;"><img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" width="100%" alt="Promotion"></p><h2 style="text-align: center;">Limited-Time Offer, Don\'t Miss Out!</h2><p style="text-align: center;">Dear customer, here is an exclusive discount code for you. Enjoy <strong>{{ discount_rate }}</strong> off across the store.</p><p style="text-align: center;"><span style="font-family: monospace; font-size: 24px; color: rgb(31, 41, 55); background-color: rgb(254, 243, 199);"><strong> &nbsp;{{ promo_code }}&nbsp; </strong></span></p><p style="text-align: center;"><a href="{{ shop_link }}" target="_blank"><span style="font-size: 18px; color: rgb(239, 68, 68);"><strong>Shop Now &gt;</strong></span></a></p>',
+            weekly_report: '<h2>This Week\'s Data Summary</h2><p>Hello {{ username }},</p><p>Here is how your team performed over the past week:</p><ul><li><strong>New users:</strong>{{ new_users }}</li><li><strong>Activity:</strong>{{ active_rate }}</li><li><strong>Task completion:</strong>{{ task_completion }}</li></ul><p style="text-align: center;"><a href="{{ report_link }}" target="_blank"><span style="font-size: 16px; color: rgb(37, 99, 235);">View Full Report &gt;</span></a></p>',
+            order_shipped: '<h2>Your Order Has Shipped!</h2><p>Hello {{ username }},</p><p>Good news! Your order <strong>#{{ order_number }}</strong> has been packed and is on its way to you.</p><p><strong>Carrier:</strong>{{ logistics_company }}<br><strong>Tracking number:</strong>{{ tracking_number }}</p><p style="text-align: center;"><a href="{{ tracking_link }}" target="_blank"><span style="font-size: 16px; color: rgb(37, 99, 235);">Track Your Package &gt;</span></a></p><p>Thank you for your purchase!</p>',
+            event_reminder: '<h2>Upcoming Event: {{ event_name }}</h2><p>Hello {{ username }},</p><p>This is a reminder that the event you registered for will start at <strong>{{ event_time }}</strong>.</p><p>Please prepare in advance. For online events, use the link below to join on time:</p><p style="text-align: center;"><a href="{{ join_link }}" target="_blank"><span style="font-size: 16px; color: rgb(37, 99, 235);"><strong>Join Event &gt;</strong></span></a></p><p>We look forward to seeing you!</p>'
+        };
+        const emailWrapperEndEn = '</td></tr><tr><td style="padding: 30px 40px; background-color: #f9f9f9; text-align: center; font-size: 12px; color: #999999; border-top: 1px solid #eeeeee;"><p style="margin: 0 0 10px 0;">© 2025 Your Company Name. All rights reserved.</p><p style="margin: 0;">This email was sent automatically by the system. Please do not reply directly.</p></td></tr></table></div>';
+
+        function pickTemplates() { return (window.__LOCALE__ === 'en') ? innerTemplatesEn : innerTemplates; }
+        function pickWrapperEnd() { return (window.__LOCALE__ === 'en') ? emailWrapperEndEn : emailWrapperEnd; }
+        
+
         const presetTemplates = {
             verification_code: emailWrapperStart + innerTemplates.verification_code + emailWrapperEnd,
             welcome: emailWrapperStart + innerTemplates.welcome + emailWrapperEnd,
@@ -769,7 +806,7 @@
                 selector: '#editorContainer',
                 html: document.getElementById('editorBodyHtml').value || '',
                 config: {
-                    placeholder: '请输入内容...',
+                    placeholder: t('emailEditor.js22'),
                     onChange(editorInst) {
                         document.getElementById('editorBodyHtml').value = editorInst.getHtml();
                     }

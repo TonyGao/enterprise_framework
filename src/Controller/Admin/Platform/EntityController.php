@@ -306,7 +306,7 @@ html
         return $this->redirectToRoute('platform_entity');
       };
 
-      $this->addFlash('success', '添加文件夹成功');
+      $this->addFlash('success', 'flash.folder_added');
       return $this->redirectToRoute('platform_entity');
     }
 
@@ -359,7 +359,7 @@ html
 
       try {
         $es->addEntity($post);
-        $this->addFlash('success', '添加模型Entity成功');
+        $this->addFlash('success', 'flash.entity_added');
         return $this->redirectToRoute('platform_entity');
       } catch (\Exception $e) {
         $this->addFlash('error', sprintf('添加模型Entity失败：%s', $e->getMessage()));

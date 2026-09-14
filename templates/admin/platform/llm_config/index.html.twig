@@ -7,10 +7,10 @@
 
     {# Page header #}
     <div class="llm-config-header">
-      <h1>LLM 配置</h1>
+      <h1>{{ "llmIndex.1"|trans }}</h1>
       <div class="header-actions">
         <a href="{{ path('admin_llm_provider_create') }}" class="btn primary medium">
-          <i class="fa-solid fa-plus"></i> 新增服务商
+          <i class="fa-solid fa-plus"></i> {{ "llmIndex.2"|trans }}
         </a>
       </div>
     </div>
@@ -33,28 +33,28 @@
         <div class="llm-stat-icon blue"><i class="fa-solid fa-cubes"></i></div>
         <div>
           <div class="llm-stat-number">{{ providers|length }}</div>
-          <div class="llm-stat-label">服务商总数</div>
+          <div class="llm-stat-label">{{ "llmIndex.3"|trans }}</div>
         </div>
       </div>
       <div class="llm-stat-card">
         <div class="llm-stat-icon green"><i class="fa-solid fa-toggle-on"></i></div>
         <div>
           <div class="llm-stat-number">{{ enabledCount }}</div>
-          <div class="llm-stat-label">已启用</div>
+          <div class="llm-stat-label">{{ "llmIndex.4"|trans }}</div>
         </div>
       </div>
       <div class="llm-stat-card">
         <div class="llm-stat-icon purple"><i class="fa-solid fa-tag"></i></div>
         <div>
           <div class="llm-stat-number">{{ roles|length }}</div>
-          <div class="llm-stat-label">角色定义</div>
+          <div class="llm-stat-label">{{ "llmIndex.5"|trans }}</div>
         </div>
       </div>
       <div class="llm-stat-card">
         <div class="llm-stat-icon orange"><i class="fa-solid fa-link"></i></div>
         <div>
           <div class="llm-stat-number">{{ boundRoles|length }}</div>
-          <div class="llm-stat-label">已绑定服务商</div>
+          <div class="llm-stat-label">{{ "llmIndex.6"|trans }}</div>
         </div>
       </div>
     </div>
@@ -62,8 +62,8 @@
     {# Provider cards #}
     <div class="llm-section-header">
       <div>
-        <div class="section-title">服务商配置</div>
-        <div class="section-subtitle">管理 LLM 模型接入信息</div>
+        <div class="section-title">{{ "llmIndex.7"|trans }}</div>
+        <div class="section-subtitle">{{ "llmIndex.8"|trans }}</div>
       </div>
     </div>
 
@@ -73,9 +73,9 @@
       {% else %}
         <div class="llm-empty-state">
           <div class="empty-icon"><i class="fa-solid fa-robot"></i></div>
-          <p>尚未添加任何服务商配置</p>
+          <p>{{ "llmIndex.9"|trans }}</p>
           <a href="{{ path('admin_llm_provider_create') }}" class="btn primary medium">
-            <i class="fa-solid fa-plus"></i> 立即添加
+            <i class="fa-solid fa-plus"></i> {{ "llmIndex.10"|trans }}
           </a>
         </div>
       {% endfor %}
@@ -85,11 +85,11 @@
     <div class="llm-role-section">
       <div class="llm-section-header">
         <div>
-          <div class="section-title">模型分配</div>
-          <div class="section-subtitle">按能力类型为不同任务分配对应的模型</div>
+          <div class="section-title">{{ "llmIndex.11"|trans }}</div>
+          <div class="section-subtitle">{{ "llmIndex.12"|trans }}</div>
         </div>
         <button type="button" class="btn outline small icon" id="btn-batch-bind" disabled>
-          <i class="fa-solid fa-layer-group"></i> 批量修改
+          <i class="fa-solid fa-layer-group"></i> {{ "llmIndex.13"|trans }}
         </button>
       </div>
 
@@ -97,22 +97,22 @@
       <div class="llm-batch-panel" id="batch-panel" style="display: none;">
         <div class="batch-panel-left">
           <i class="fa-solid fa-check-circle" style="color: #0066cc;"></i>
-          <span>已选择 <strong><span id="batch-count">0</span></strong> 个模型功能</span>
+          <span>{{ "llmIndex.14"|trans }} <strong><span id="batch-count">0</span></strong> {{ "llmIndex.15"|trans }}</span>
         </div>
         <div class="batch-panel-right">
           <div class="batch-select-wrapper">
             <select id="batch-provider">
-              <option value="">— 解除绑定 —</option>
+              <option value="">— {{ "llmIndex.16"|trans }} —</option>
               {% for p in providers %}
                 <option value="{{ p.id }}">{{ p.name }}（{{ p.provider }}）</option>
               {% endfor %}
             </select>
           </div>
           <button type="button" class="btn primary small icon" id="btn-batch-confirm">
-            <i class="fa-solid fa-check"></i> 应用
+            <i class="fa-solid fa-check"></i> {{ "llmIndex.17"|trans }}
           </button>
           <button type="button" class="btn secondary small icon" id="btn-batch-cancel">
-            <i class="fa-solid fa-xmark"></i> 取消
+            <i class="fa-solid fa-xmark"></i> {{ "llmIndex.18"|trans }}
           </button>
         </div>
       </div>
@@ -122,16 +122,16 @@
         {% if role.provider %}
           {% set providerHtml = '<span class="llm-tag llm-tag-bound">' ~ role.provider.name ~ '</span>' %}
         {% else %}
-          {% set providerHtml = '<span class="llm-tag llm-tag-unbound">未配置</span>' %}
+          {% set providerHtml %}<span class="llm-tag llm-tag-unbound">{{ "llmIndex.unbound"|trans }}</span>{% endset %}
         {% endif %}
 
         {% if role.isEnabled %}
-          {% set statusHtml = '<span class="llm-tag llm-tag-enabled">启用</span>' %}
+          {% set statusHtml %}<span class="llm-tag llm-tag-enabled">{{ "llmIndex.enabled"|trans }}</span>{% endset %}
         {% else %}
-          {% set statusHtml = '<span class="llm-tag llm-tag-disabled">停用</span>' %}
+          {% set statusHtml %}<span class="llm-tag llm-tag-disabled">{{ "llmIndex.disabled"|trans }}</span>{% endset %}
         {% endif %}
 
-        {% set editBtn = '<a href="' ~ path('admin_llm_role_edit', {code: role.code}) ~ '" class="ef-link" style="font-size: 15px;" title="编辑"><i class="fa-solid fa-pen"></i></a>' %}
+        {% set editBtn %}<a href="{{ path('admin_llm_role_edit', {code: role.code}) }}" class="ef-link" style="font-size: 15px;" title="{{ "llmIndex.edit"|trans }}"><i class="fa-solid fa-pen"></i></a>{% endset %}
 
         {% set roleRows = roleRows|merge([{
           id: role.code,
@@ -170,26 +170,26 @@
     {# Info cards row #}
     <div class="llm-info-cards">
       <div class="side-card">
-        <div class="side-card-title"><i class="fa-solid fa-info-circle" style="color: #0066cc;"></i> 什么是 LLM 配置？</div>
+        <div class="side-card-title"><i class="fa-solid fa-info-circle" style="color: #0066cc;"></i> {{ "llmIndex.19"|trans }}</div>
         <div class="side-card-text">
-          在这里配置您的 AI 模型接入信息，包括 API Key、模型名称和接口地址。
-          配置完成后，可在视图设计器等场景中使用 AI 辅助功能。
+          {{ "llmIndex.20"|trans }}
+          {{ "llmIndex.21"|trans }}
         </div>
       </div>
 
       <div class="side-card">
-        <div class="side-card-title"><i class="fa-solid fa-shield-halved" style="color: #16a34a;"></i> 安全提醒</div>
+        <div class="side-card-title"><i class="fa-solid fa-shield-halved" style="color: #16a34a;"></i> {{ "llmIndex.22"|trans }}</div>
         <div class="side-card-text">
-          API Key 将使用 AES-256-GCM 加密存储，编辑时仅显示掩码。
-          所有 AI 调用经服务端代理，前端不接触密钥。
+          {{ "llmIndex.23"|trans }}
+          {{ "llmIndex.24"|trans }}
         </div>
       </div>
 
       <div class="side-card" style="background: #f5f3ff;">
-        <div class="side-card-title" style="color: #7c3aed;"><i class="fa-solid fa-wand-magic-sparkles"></i> 模型分配</div>
+        <div class="side-card-title" style="color: #7c3aed;"><i class="fa-solid fa-wand-magic-sparkles"></i> {{ "llmIndex.11"|trans }}</div>
         <div class="side-card-text">
-          每个能力分类可绑定不同的模型：多模态模型处理图片识别，
-          轻量模型处理快速对话，向量模型处理 RAG 知识库检索等。
+          {{ "llmIndex.25"|trans }}
+          {{ "llmIndex.26"|trans }}
         </div>
       </div>
     </div>
@@ -226,7 +226,7 @@
       $('#btn-batch-confirm').on('click', function () {
         var ids = window.efDataGrid.getSelectedIds('llm-role-grid');
         var providerId = $('#batch-provider').val();
-        var $btn = $(this).prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> 处理中...');
+        var $btn = $(this).prop('disabled', true).html(t('llmIndex.js1'));
 
         $.post('/admin/platform/llm-config/role/batch-bind', {
           role_codes: ids,
@@ -235,13 +235,13 @@
           if (res.success) {
             location.reload();
           } else {
-            alert(res.error || '操作失败');
+            alert(res.error || t('llmIndex.js2'));
           }
         }).fail(function (xhr) {
-          var err = (xhr.responseJSON && xhr.responseJSON.error) || '操作失败';
+          var err = (xhr.responseJSON && xhr.responseJSON.error) || t('llmIndex.js2');
           alert(err);
         }).always(function () {
-          $btn.prop('disabled', false).html('<i class="fa-solid fa-check"></i> 应用');
+          $btn.prop('disabled', false).html(t('llmIndex.js3'));
         });
       });
     });

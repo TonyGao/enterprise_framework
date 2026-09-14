@@ -64,6 +64,12 @@
 		{% endblock %}
 
 		{% block javascripts %}
+			<script>
+  // 国际化：注入当前语言与前端文案字典（head 顶部，早于所有内联脚本）/ i18n: inject current locale & frontend dictionary (top of head, before all inline scripts)
+  window.__LOCALE__ = '{{ app.request.locale }}';
+  window.__I18N__ = {{ i18n_js()|json_encode|raw }};
+			</script>
+			<script src="{{ asset('i18n/translator.js', 'admin') }}"></script>
 			<script src="{{ asset('lib/jQuery/jquery-3.6.1.min.js', 'static') }}"></script>
 			<script src="{{ asset('lib/jquery-ui/jquery-ui.min.js', 'static') }}"></script>
 			<script src="{{ asset('lib/jquery-validation/jquery.validate.min.js', 'static') }}"></script>

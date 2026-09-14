@@ -86,7 +86,7 @@ class SecurityConfigController extends AbstractController
 
         $em->flush();
 
-        $this->addFlash('success', '密码策略配置已更新');
+        $this->addFlash('success', 'flash.policy_updated');
 
         return $this->redirectToRoute('admin_security_password_policy');
     }

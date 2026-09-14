@@ -167,8 +167,8 @@ class UndoRedoManager {
         </button>
         <div class="section active" id="${sectionId}">
           <div class="section-controls">
-            <button class="btn-toggle-header" title="显示/隐藏标题栏"><i class="fa-solid fa-eye"></i></button>
-            <button class="btn-toggle-collapse" title="折叠/展开"><i class="fa-solid fa-chevron-up"></i></button>
+            <button class="btn-toggle-header" title=t('undoRedoJs.js1')><i class="fa-solid fa-eye"></i></button>
+            <button class="btn-toggle-collapse" title=t('undoRedoJs.js2')><i class="fa-solid fa-chevron-up"></i></button>
           </div>
           <div class="section-header">
             <button class="btn-add">

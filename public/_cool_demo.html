@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cool Demo - GSAP + three.js</title>
+<style>html,body{margin:0;padding:0;background:#0b1120;}</style>
+</head><body>
+<section class="section">
+  <div class="section-content">
+<div id="nexus-root" style="width:100%; position:relative; background:#05070f; color:#e8eefc; font-family:'Segoe UI',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif; overflow:hidden;">
+
+  <!-- ===== 全局装饰：网格 + 光晕 ===== -->
+  <div style="position:absolute; inset:0; pointer-events:none; background-image:linear-gradient(rgba(56,189,248,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,.07) 1px, transparent 1px); background-size:64px 64px; z-index:0;"></div>
+  <div style="position:absolute; top:-180px; left:-140px; width:620px; height:620px; border-radius:50%; background:radial-gradient(circle, rgba(34,211,238,.30), rgba(34,211,238,0) 68%); filter:blur(20px); z-index:0; pointer-events:none;"></div>
+  <div style="position:absolute; top:340px; right:-200px; width:700px; height:700px; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,.28), rgba(139,92,246,0) 70%); filter:blur(24px); z-index:0; pointer-events:none;"></div>
+
+  <!-- ===== 顶部导航条 ===== -->
+  <div style="position:relative; z-index:5; width:100%; border-bottom:1px solid rgba(56,189,248,.16); backdrop-filter:blur(8px); background:linear-gradient(180deg, rgba(8,12,26,.92), rgba(8,12,26,.55));">
+    <div style="max-width:1240px; margin:0 auto; padding:18px 28px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <svg width="34" height="34" viewBox="0 0 48 48" fill="none" style="flex:0 0 auto;">
+          <defs>
+            <linearGradient id="lgMark" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#8b5cf6"/>
+            </linearGradient>
+          </defs>
+          <path d="M24 3 L43 14 V34 L24 45 L5 34 V14 Z" stroke="url(#lgMark)" stroke-width="2.2" fill="rgba(34,211,238,.08)"/>
+          <path d="M24 14 L33 19.5 V30.5 L24 36 L15 30.5 V19.5 Z" fill="url(#lgMark)" opacity=".85"/>
+        </svg>
+        <span style="font-size:19px; font-weight:800; letter-spacing:3px; background:linear-gradient(90deg,#22d3ee,#a78bfa); -webkit-background-clip:text; background-clip:text; color:transparent;">NEXUS&nbsp;CMS</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:26px; font-size:14px; color:#9fb3d1; letter-spacing:.5px;">
+        <span data-navlink style="cursor:pointer;">架构</span>
+        <span data-navlink style="cursor:pointer;">渲染引擎</span>
+        <span data-navlink style="cursor:pointer;">数据面板</span>
+        <span style="padding:8px 20px; border-radius:999px; color:#04101c; font-weight:700; background:linear-gradient(90deg,#22d3ee,#7c3aed); box-shadow:0 0 22px rgba(34,211,238,.45); cursor:pointer;">进入控制台</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HERO：three.js 3D 背景 + GSAP 入场 ===== -->
+  <div id="hero-wrap" style="position:relative; z-index:2; width:100%; min-height:660px; display:flex; align-items:center; overflow:hidden; background:radial-gradient(ellipse at 70% 20%, rgba(124,58,237,.22), rgba(5,7,15,0) 60%), radial-gradient(ellipse at 20% 80%, rgba(34,211,238,.18), rgba(5,7,15,0) 62%);">
+    <canvas id="hero-3d-canvas" style="position:absolute; inset:0; width:100%; height:100%; display:block; z-index:1;"></canvas>
+    <div style="position:absolute; inset:0; z-index:2; background:linear-gradient(90deg, rgba(5,7,15,.92) 0%, rgba(5,7,15,.72) 42%, rgba(5,7,15,.15) 100%); pointer-events:none;"></div>
+
+    <div style="position:relative; z-index:3; max-width:1240px; margin:0 auto; padding:90px 28px; width:100%; display:flex; gap:48px; align-items:center; flex-wrap:wrap;">
+      <div style="flex:1 1 460px; min-width:300px;">
+        <div id="hero-badge" style="display:inline-flex; align-items:center; gap:10px; padding:7px 16px; border-radius:999px; border:1px solid rgba(34,211,238,.4); background:rgba(34,211,238,.08); font-size:12.5px; letter-spacing:2px; color:#67e8f9; margin-bottom:26px;">
+          <span style="width:7px; height:7px; border-radius:50%; background:#22d3ee; box-shadow:0 0 12px #22d3ee;"></span>
+          REALTIME&nbsp;·&nbsp;3D&nbsp;·&nbsp;MOTION
+        </div>
+        <h1 id="hero-title" style="margin:0 0 20px; font-size:clamp(38px,6vw,74px); line-height:1.06; font-weight:900; letter-spacing:-1px;">
+          <span style="display:block; color:#f2f7ff;">你好，</span>
+          <span style="display:block; background:linear-gradient(100deg,#22d3ee 0%,#60a5fa 42%,#a78bfa 100%); -webkit-background-clip:text; background-clip:text; color:transparent;">世界 World</span>
+        </h1>
+        <div id="hero-sub" style="font-size:17px; line-height:1.9; color:#a8bcd8; max-width:560px; margin-bottom:34px;">
+          一个由 <span style="color:#67e8f9; font-weight:600;">GSAP</span> 驱动动效、由 <span style="color:#c4b5fd; font-weight:600;">three.js</span> 构建三维空间的沉浸式内容平台。以像素级的布局引擎，把每一次渲染都变成一次视觉冲击。
+        </div>
+        <div id="hero-cta" style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+          <span data-hover-btn style="display:inline-flex; align-items:center; gap:10px; padding:15px 34px; border-radius:999px; font-weight:700; font-size:15px; color:#04101c; background:linear-gradient(95deg,#22d3ee,#7c3aed); box-shadow:0 10px 40px rgba(34,211,238,.4); cursor:pointer;">
+            开始构建
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#04101c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </span>
+          <span data-hover-btn style="display:inline-flex; align-items:center; gap:10px; padding:15px 32px; border-radius:999px; font-weight:600; font-size:15px; color:#cfe0f5; border:1px solid rgba(148,180,220,.35); background:rgba(255,255,255,.03); cursor:pointer;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#cfe0f5"><path d="M8 5v14l11-7z"/></svg>
+            观看演示
+          </span>
+        </div>
+      </div>
+
+      <div id="hero-panel" style="flex:1 1 320px; min-width:280px;">
+        <div style="position:relative; padding:1px; border-radius:22px; background:linear-gradient(140deg, rgba(34,211,238,.55), rgba(139,92,246,.35), rgba(34,211,238,.05)); box-shadow:0 30px 80px rgba(0,0,0,.55);">
+          <div style="border-radius:21px; background:rgba(9,13,26,.82); backdrop-filter:blur(14px); padding:26px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+              <span style="font-size:12px; letter-spacing:2px; color:#7f95b5;">SYSTEM&nbsp;MONITOR</span>
+              <span style="display:flex; gap:6px;">
+                <span style="width:9px; height:9px; border-radius:50%; background:#f87171;"></span>
+                <span style="width:9px; height:9px; border-radius:50%; background:#fbbf24;"></span>
+                <span style="width:9px; height:9px; border-radius:50%; background:#34d399;"></span>
+              </span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:18px;">
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:#9fb3d1; margin-bottom:7px;"><span>渲染帧率</span><span style="color:#67e8f9;">120 FPS</span></div>
+                <div style="height:6px; border-radius:99px; background:rgba(148,180,220,.16); overflow:hidden;"><div data-bar style="height:100%; width:92%; border-radius:99px; background:linear-gradient(90deg,#22d3ee,#60a5fa);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:#9fb3d1; margin-bottom:7px;"><span>三维面数</span><span style="color:#c4b5fd;">2.4 M</span></div>
+                <div style="height:6px; border-radius:99px; background:rgba(148,180,220,.16); overflow:hidden;"><div data-bar style="height:100%; width:76%; border-radius:99px; background:linear-gradient(90deg,#8b5cf6,#e879f9);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:#9fb3d1; margin-bottom:7px;"><span>动效时间轴</span><span style="color:#5eead4;">GSAP</span></div>
+                <div style="height:6px; border-radius:99px; background:rgba(148,180,220,.16); overflow:hidden;"><div data-bar style="height:100%; width:64%; border-radius:99px; background:linear-gradient(90deg,#34d399,#22d3ee);"></div></div>
+              </div>
+            </div>
+            <div style="margin-top:22px; padding-top:18px; border-top:1px dashed rgba(148,180,220,.2); display:flex; justify-content:space-between; text-align:center;">
+              <div><div data-count="24" style="font-size:26px; font-weight:800; color:#67e8f9;">0</div><div style="font-size:11px; color:#7f95b5; letter-spacing:1px;">内核</div></div>
+              <div><div data-count="128" style="font-size:26px; font-weight:800; color:#c4b5fd;">0</div><div style="font-size:11px; color:#7f95b5; letter-spacing:1px;">组件</div></div>
+              <div><div data-count="999" style="font-size:26px; font-weight:800; color:#5eead4;">0</div><div style="font-size:11px; color:#7f95b5; letter-spacing:1px;">节点</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 数据带 ===== -->
+  <div style="position:relative; z-index:3; width:100%; border-top:1px solid rgba(56,189,248,.14); border-bottom:1px solid rgba(56,189,248,.14); background:linear-gradient(90deg, rgba(34,211,238,.07), rgba(139,92,246,.09), rgba(34,211,238,.07));">
+    <div style="max-width:1240px; margin:0 auto; padding:34px 28px; display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:24px; text-align:center;">
+      <div data-reveal><div style="font-size:40px; font-weight:900; background:linear-gradient(90deg,#22d3ee,#60a5fa); -webkit-background-clip:text; background-clip:text; color:transparent;">60 FPS</div><div style="font-size:13px; color:#8ba2c0; letter-spacing:1.5px; margin-top:6px;">稳定渲染</div></div>
+      <div data-reveal><div style="font-size:40px; font-weight:900; background:linear-gradient(90deg,#a78bfa,#e879f9); -webkit-background-clip:text; background-clip:text; color:transparent;">3D 场景</div><div style="font-size:13px; color:#8ba2c0; letter-spacing:1.5px; margin-top:6px;">WebGL 实时</div></div>
+      <div data-reveal><div style="font-size:40px; font-weight:900; background:linear-gradient(90deg,#34d399,#22d3ee); -webkit-background-clip:text; background-clip:text; color:transparent;">0.8 s</div><div style="font-size:13px; color:#8ba2c0; letter-spacing:1.5px; margin-top:6px;">首屏动效</div></div>
+      <div data-reveal><div style="font-size:40px; font-weight:900; background:linear-gradient(90deg,#fbbf24,#f472b6); -webkit-background-clip:text; background-clip:text; color:transparent;">100%</div><div style="font-size:13px; color:#8ba2c0; letter-spacing:1.5px; margin-top:6px;">响应式布局</div></div>
+    </div>
+  </div>
+
+  <!-- ===== 核心能力（非对称图文混排） ===== -->
+  <div style="position:relative; z-index:3; max-width:1240px; margin:0 auto; padding:96px 28px 40px;">
+    <div data-reveal style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:52px;">
+      <div>
+        <div style="font-size:12.5px; letter-spacing:4px; color:#22d3ee; margin-bottom:14px;">// CORE ENGINE</div>
+        <h2 style="margin:0; font-size:clamp(28px,4vw,44px); font-weight:900; color:#f2f7ff; line-height:1.2;">四郎探母 · 隋唐演义 · 五代十国<br><span style="color:#8ba2c0; font-size:.62em; font-weight:600;">经典叙事，交给未来引擎来渲染</span></h2>
+      </div>
+      <div style="font-size:14.5px; color:#8ba2c0; line-height:1.9; max-width:400px;">把传统内容搬进三维空间：布局、动效、数据三条流水线并行，实时合成最终画面。</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:26px;">
+      <div data-reveal style="position:relative; border-radius:20px; overflow:hidden; min-height:340px; border:1px solid rgba(148,180,220,.16); background:#0a0f1e;">
+        <img src="/uploads/2026/09/f404a7a68a93d994affaaf563963d77a.jpg" alt="科技网络地球" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.55;">
+        <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(5,7,15,.15), rgba(5,7,15,.94));"></div>
+        <div style="position:relative; padding:28px; height:100%; display:flex; flex-direction:column; justify-content:flex-end; min-height:340px;">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.8" style="margin-bottom:14px;"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18M12 3C9 6.5 9 17.5 12 21"/></svg>
+          <div style="font-size:21px; font-weight:800; color:#f2f7ff; margin-bottom:10px;">全球节点网络</div>
+          <div style="font-size:14px; line-height:1.85; color:#a8bcd8;">边缘节点就近渲染，跨区域内容毫秒级同步，三维资产随取随用。</div>
+        </div>
+      </div>
+
+      <div data-reveal style="position:relative; border-radius:20px; overflow:hidden; min-height:340px; border:1px solid rgba(148,180,220,.16); background:#0a0f1e;">
+        <img src="/uploads/2026/09/537d2e183750412d6a28ab6fbecc5573.jpg" alt="数据矩阵" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.5;">
+        <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(5,7,15,.15), rgba(5,7,15,.94));"></div>
+        <div style="position:relative; padding:28px; height:100%; display:flex; flex-direction:column; justify-content:flex-end; min-height:340px;">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" style="margin-bottom:14px;"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <div style="font-size:21px; font-weight:800; color:#f2f7ff; margin-bottom:10px;">数据矩阵引擎</div>
+          <div style="font-size:14px; line-height:1.85; color:#a8bcd8;">结构化字段实时映射到视觉层，数据一变，画面即刻重绘。</div>
+        </div>
+      </div>
+
+      <div data-reveal style="position:relative; border-radius:20px; overflow:hidden; min-height:340px; border:1px solid rgba(148,180,220,.16); background:#0a0f1e;">
+        <img src="/uploads/2026/09/f2cb7e3dedf2d3355a5907963baa6624.jpg" alt="芯片电路" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.5;">
+        <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(5,7,15,.15), rgba(5,7,15,.94));"></div>
+        <div style="position:relative; padding:28px; height:100%; display:flex; flex-direction:column; justify-content:flex-end; min-height:340px;">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5eead4" stroke-width="1.8" style="margin-bottom:14px;"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/></svg>
+          <div style="font-size:21px; font-weight:800; color:#f2f7ff; margin-bottom:10px;">渲染内核</div>
+          <div style="font-size:14px; line-height:1.85; color:#a8bcd8;">GPU 加速的布局与合成管线，复杂页面也能保持顺滑帧率。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 三维实验室：第二个 three.js 画布 + 特性列表 ===== -->
+  <div style="position:relative; z-index:3; max-width:1240px; margin:0 auto; padding:60px 28px 40px;">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:44px; align-items:center;">
+      <div data-reveal>
+        <div style="font-size:12.5px; letter-spacing:4px; color:#a78bfa; margin-bottom:14px;">// 3D LAB</div>
+        <h2 style="margin:0 0 22px; font-size:clamp(26px,3.4vw,38px); font-weight:900; color:#f2f7ff; line-height:1.25;">实时三维实验室</h2>
+        <div style="font-size:15px; line-height:1.95; color:#a8bcd8; margin-bottom:30px;">右侧的几何体由 three.js 实时计算：光照、材质、旋转全部在浏览器端完成，随鼠标移动产生视差反馈。</div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div data-reveal style="display:flex; gap:14px; align-items:flex-start; padding:16px 18px; border-radius:14px; border:1px solid rgba(148,180,220,.14); background:rgba(255,255,255,.025);">
+            <span style="flex:0 0 auto; width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#22d3ee,#3b82f6); color:#04101c; font-weight:800; font-size:13px;">01</span>
+            <div><div style="font-weight:700; color:#e8eefc; margin-bottom:4px;">GSAP 时间轴</div><div style="font-size:13.5px; color:#8ba2c0; line-height:1.75;">入场、滚动、悬停动效统一编排，支持时间轴回溯。</div></div>
+          </div>
+          <div data-reveal style="display:flex; gap:14px; align-items:flex-start; padding:16px 18px; border-radius:14px; border:1px solid rgba(148,180,220,.14); background:rgba(255,255,255,.025);">
+            <span style="flex:0 0 auto; width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#8b5cf6,#e879f9); color:#0b0416; font-weight:800; font-size:13px;">02</span>
+            <div><div style="font-weight:700; color:#e8eefc; margin-bottom:4px;">WebGL 渲染</div><div style="font-size:13.5px; color:#8ba2c0; line-height:1.75;">三维几何体、线框与粒子，全部由 GPU 实时绘制。</div></div>
+          </div>
+          <div data-reveal style="display:flex; gap:14px; align-items:flex-start; padding:16px 18px; border-radius:14px; border:1px solid rgba(148,180,220,.14); background:rgba(255,255,255,.025);">
+            <span style="flex:0 0 auto; width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#34d399,#22d3ee); color:#04140f; font-weight:800; font-size:13px;">03</span>
+            <div><div style="font-weight:700; color:#e8eefc; margin-bottom:4px;">响应式画布</div><div style="font-size:13.5px; color:#8ba2c0; line-height:1.75;">画布随容器尺寸自适应，移动端同样流畅。</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div data-reveal style="position:relative; border-radius:24px; padding:1px; background:linear-gradient(150deg, rgba(34,211,238,.5), rgba(139,92,246,.4), rgba(34,211,238,.05)); box-shadow:0 30px 90px rgba(0,0,0,.6);">
+        <div style="position:relative; border-radius:23px; overflow:hidden; background:radial-gradient(circle at 50% 45%, rgba(34,211,238,.16), rgba(6,9,20,.98) 70%);">
+          <canvas id="lab-3d-canvas" style="width:100%; height:400px; display:block;"></canvas>
+          <div style="position:absolute; left:18px; bottom:16px; font-size:11.5px; letter-spacing:2px; color:#6b83a4;">THREE.JS&nbsp;/&nbsp;WEBGL&nbsp;RENDERER</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 沉浸式图片带（视差） ===== -->
+  <div style="position:relative; z-index:3; margin-top:60px; width:100%; height:420px; overflow:hidden; border-top:1px solid rgba(56,189,248,.14); border-bottom:1px solid rgba(56,189,248,.14);">
+    <img id="parallax-img" src="/uploads/2026/09/634d4d5552183463b605f403db4821fa.jpg" alt="深色服务器机房" style="position:absolute; top:-12%; left:0; width:100%; height:124%; object-fit:cover; opacity:.42; will-change:transform;">
+    <div style="position:absolute; inset:0; background:linear-gradient(90deg, rgba(5,7,15,.95), rgba(5,7,15,.45) 55%, rgba(5,7,15,.9));"></div>
+    <div style="position:relative; max-width:1240px; margin:0 auto; height:100%; padding:0 28px; display:flex; flex-direction:column; justify-content:center;">
+      <div data-reveal style="font-size:12.5px; letter-spacing:4px; color:#22d3ee; margin-bottom:16px;">// INFRASTRUCTURE</div>
+      <div data-reveal style="font-size:clamp(24px,3.6vw,40px); font-weight:900; color:#f2f7ff; line-height:1.3; max-width:680px;">从内核到画面，<span style="background:linear-gradient(90deg,#22d3ee,#a78bfa); -webkit-background-clip:text; background-clip:text; color:transparent;">每一层都经过重写</span></div>
+      <div data-reveal style="margin-top:18px; font-size:15px; color:#a8bcd8; max-width:560px; line-height:1.9;">分布式渲染集群 + 边缘缓存，让三维内容在任意终端保持一致的观感。</div>
+    </div>
+  </div>
+
+  <!-- ===== 工作流时间线 ===== -->
+  <div style="position:relative; z-index:3; max-width:1240px; margin:0 auto; padding:96px 28px 30px;">
+    <div data-reveal style="text-align:center; margin-bottom:56px;">
+      <div style="font-size:12.5px; letter-spacing:4px; color:#a78bfa; margin-bottom:14px;">// WORKFLOW</div>
+      <h2 style="margin:0; font-size:clamp(26px,3.6vw,40px); font-weight:900; color:#f2f7ff;">四步构建你的三维页面</h2>
+    </div>
+    <div style="position:relative; display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:26px;">
+      <div data-reveal style="text-align:center;">
+        <div style="width:54px; height:54px; margin:0 auto 18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; color:#04101c; background:linear-gradient(135deg,#22d3ee,#3b82f6); box-shadow:0 0 30px rgba(34,211,238,.5);">1</div>
+        <div style="font-weight:800; color:#e8eefc; margin-bottom:8px;">接入数据</div>
+        <div style="font-size:13.5px; color:#8ba2c0; line-height:1.8;">绑定实体字段，实时同步到视觉层。</div>
+      </div>
+      <div data-reveal style="text-align:center;">
+        <div style="width:54px; height:54px; margin:0 auto 18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; color:#0b0416; background:linear-gradient(135deg,#8b5cf6,#e879f9); box-shadow:0 0 30px rgba(139,92,246,.5);">2</div>
+        <div style="font-weight:800; color:#e8eefc; margin-bottom:8px;">编排动效</div>
+        <div style="font-size:13.5px; color:#8ba2c0; line-height:1.8;">用 GSAP 时间轴定义入场与滚动节奏。</div>
+      </div>
+      <div data-reveal style="text-align:center;">
+        <div style="width:54px; height:54px; margin:0 auto 18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; color:#04140f; background:linear-gradient(135deg,#34d399,#22d3ee); box-shadow:0 0 30px rgba(52,211,153,.5);">3</div>
+        <div style="font-weight:800; color:#e8eefc; margin-bottom:8px;">注入三维</div>
+        <div style="font-size:13.5px; color:#8ba2c0; line-height:1.8;">three.js 场景挂载到任意画布容器。</div>
+      </div>
+      <div data-reveal style="text-align:center;">
+        <div style="width:54px; height:54px; margin:0 auto 18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; color:#1a1004; background:linear-gradient(135deg,#fbbf24,#f472b6); box-shadow:0 0 30px rgba(251,191,36,.5);">4</div>
+        <div style="font-weight:800; color:#e8eefc; margin-bottom:8px;">发布上线</div>
+        <div style="font-size:13.5px; color:#8ba2c0; line-height:1.8;">一键发布，全端自适应呈现。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 光轨配图 + 引用 ===== -->
+  <div style="position:relative; z-index:3; max-width:1240px; margin:0 auto; padding:60px 28px;">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:36px; align-items:center;">
+      <div data-reveal style="border-radius:22px; overflow:hidden; border:1px solid rgba(148,180,220,.16); box-shadow:0 24px 70px rgba(0,0,0,.55);">
+        <img src="/uploads/2026/09/258f560f1609a2614d6c789052458047.jpg" alt="光轨抽象" style="width:100%; height:300px; object-fit:cover; display:block;">
+      </div>
+      <div data-reveal>
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.6" style="margin-bottom:20px;"><path d="M7 7H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2"/><path d="M11 3h10v10M21 3l-9 9"/></svg>
+        <div style="font-size:clamp(20px,2.6vw,28px); font-weight:800; color:#f2f7ff; line-height:1.6; margin-bottom:18px;">「把内容交给三维引擎，剩下的交给时间轴。」</div>
+        <div style="font-size:14.5px; color:#8ba2c0; line-height:1.9;">NEXUS CMS 让非技术人员也能搭建出电影级的页面动效，无需一行渲染代码。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 最终 CTA ===== -->
+  <div style="position:relative; z-index:3; max-width:1240px; margin:0 auto; padding:40px 28px 100px;">
+    <div data-reveal style="position:relative; border-radius:28px; overflow:hidden; padding:1px; background:linear-gradient(120deg, rgba(34,211,238,.6), rgba(139,92,246,.5), rgba(236,72,153,.4)); box-shadow:0 34px 100px rgba(34,211,238,.18);">
+      <div style="position:relative; border-radius:27px; background:linear-gradient(140deg, rgba(9,13,26,.97), rgba(14,10,30,.97)); padding:64px 40px; text-align:center; overflow:hidden;">
+        <div style="position:absolute; top:-120px; left:50%; transform:translateX(-50%); width:520px; height:320px; border-radius:50%; background:radial-gradient(circle, rgba(34,211,238,.28), rgba(34,211,238,0) 70%); pointer-events:none;"></div>
+        <div style="position:relative;">
+          <h2 style="margin:0 0 18px; font-size:clamp(26px,4vw,44px); font-weight:900; color:#f2f7ff; line-height:1.25;">准备好进入三维内容时代了吗？</h2>
+          <div style="font-size:15.5px; color:#a8bcd8; line-height:1.9; max-width:560px; margin:0 auto 34px;">免费开启你的第一个 3D 页面，GSAP 与 three.js 已内置就绪。</div>
+          <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+            <span data-hover-btn style="display:inline-flex; align-items:center; gap:10px; padding:16px 40px; border-radius:999px; font-weight:800; font-size:15.5px; color:#04101c; background:linear-gradient(95deg,#22d3ee,#7c3aed); box-shadow:0 12px 44px rgba(34,211,238,.45); cursor:pointer;">立即免费使用</span>
+            <span data-hover-btn style="display:inline-flex; align-items:center; gap:10px; padding:16px 36px; border-radius:999px; font-weight:600; font-size:15.5px; color:#cfe0f5; border:1px solid rgba(148,180,220,.35); background:rgba(255,255,255,.03); cursor:pointer;">预约产品演示</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 页脚 ===== -->
+  <div style="position:relative; z-index:3; border-top:1px solid rgba(56,189,248,.14); background:rgba(4,6,14,.9);">
+    <div style="max-width:1240px; margin:0 auto; padding:44px 28px; display:flex; justify-content:space-between; gap:24px; flex-wrap:wrap; align-items:center;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <svg width="26" height="26" viewBox="0 0 48 48" fill="none"><path d="M24 3 L43 14 V34 L24 45 L5 34 V14 Z" stroke="#22d3ee" stroke-width="2.2" fill="rgba(34,211,238,.08)"/><path d="M24 14 L33 19.5 V30.5 L24 36 L15 30.5 V19.5 Z" fill="#8b5cf6" opacity=".85"/></svg>
+        <span style="font-weight:800; letter-spacing:2px; color:#cfe0f5;">NEXUS CMS</span>
+      </div>
+      <div style="display:flex; gap:26px; font-size:13.5px; color:#7f95b5; flex-wrap:wrap;">
+        <span>文档中心</span><span>开发者 API</span><span>状态监控</span><span>联系我们</span>
+      </div>
+      <div style="font-size:12.5px; color:#647c9c; letter-spacing:1px;">© 2026 NEXUS CMS · Built with GSAP &amp; three.js</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== 库引入（站内本地） ===== -->
+<script src="/lib/three/three.min.js"></script>
+<script src="/lib/gsap/gsap.min.js"></script>
+<script src="/lib/gsap/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  /* ---------- GSAP ---------- */
+  if (window.gsap) {
+    if (window.ScrollTrigger && gsap.registerPlugin) { gsap.registerPlugin(ScrollTrigger); }
+
+    gsap.from('#hero-badge', { y:-18, opacity:0, duration:.7, ease:'power3.out' });
+    gsap.from('#hero-title', { y:34, opacity:0, duration:.9, delay:.1, ease:'power3.out' });
+    gsap.from('#hero-sub',   { y:26, opacity:0, duration:.8, delay:.28, ease:'power3.out' });
+    gsap.from('#hero-cta',   { y:22, opacity:0, duration:.8, delay:.42, ease:'power3.out' });
+    gsap.from('#hero-panel', { x:40, opacity:0, duration:1, delay:.35, ease:'power3.out' });
+
+    gsap.from('[data-bar]', { width:0, duration:1.2, delay:.6, stagger:.12, ease:'power2.out' });
+
+    gsap.utils.toArray('[data-reveal]').forEach(function(el, i){
+      var cfg = { y:34, opacity:0, duration:.75, ease:'power3.out' };
+      if (window.ScrollTrigger) { cfg.scrollTrigger = { trigger: el, start:'top 88%' }; }
+      else { cfg.delay = i * .08; }
+      gsap.from(el, cfg);
+    });
+
+    /* 数字滚动 */
+    gsap.utils.toArray('[data-count]').forEach(function(el){
+      var target = parseFloat(el.getAttribute('data-count')) || 0;
+      var obj = { v: 0 };
+      var run = function(){
+        gsap.to(obj, { v: target, duration: 1.6, ease:'power2.out', onUpdate: function(){
+          el.textContent = Math.round(obj.v);
+        }});
+      };
+      if (window.ScrollTrigger) { ScrollTrigger.create({ trigger: el, start:'top 92%', once:true, onEnter: run }); }
+      else { run(); }
+    });
+
+    /* 视差图片 */
+    if (window.ScrollTrigger) {
+      var pimg = document.getElementById('parallax-img');
+      if (pimg) {
+        gsap.to(pimg, { yPercent: 12, ease:'none',
+          scrollTrigger: { trigger: pimg.parentNode, start:'top bottom', end:'bottom top', scrub:true } });
+      }
+    }
+
+    /* 悬停微交互 */
+    gsap.utils.toArray('[data-hover-btn]').forEach(function(btn){
+      btn.addEventListener('mouseenter', function(){ gsap.to(btn, { scale:1.06, duration:.25, ease:'power2.out' }); });
+      btn.addEventListener('mouseleave', function(){ gsap.to(btn, { scale:1, duration:.25, ease:'power2.out' }); });
+    });
+    gsap.utils.toArray('[data-navlink]').forEach(function(n){
+      n.addEventListener('mouseenter', function(){ gsap.to(n, { color:'#67e8f9', duration:.2 }); });
+      n.addEventListener('mouseleave', function(){ gsap.to(n, { color:'#9fb3d1', duration:.2 }); });
+    });
+  }
+
+  /* ---------- three.js：Hero 3D 场景 ---------- */
+  if (window.THREE) {
+    var canvas = document.getElementById('hero-3d-canvas');
+    if (canvas) {
+      var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha:true, antialias:true });
+      var wrap = canvas.parentNode;
+      var scene = new THREE.Scene();
+      var camera = new THREE.PerspectiveCamera(58, 1, 0.1, 1000);
+      camera.position.z = 6.4;
+      function sizeIt(){
+        var w = wrap.clientWidth || 1200, h = wrap.clientHeight || 660;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h; camera.updateProjectionMatrix();
+      }
+      sizeIt();
+
+      /* 主几何体：二十面体线框 + 内核 */
+      var group = new THREE.Group();
+      scene.add(group);
+
+      var geo = new THREE.IcosahedronGeometry(2.05, 1);
+      var wire = new THREE.LineSegments(
+        new THREE.WireframeGeometry(geo),
+        new THREE.LineBasicMaterial({ color:0x22d3ee, transparent:true, opacity:.55 })
+      );
+      group.add(wire);
+
+      var core = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1.25, 0),
+        new THREE.MeshBasicMaterial({ color:0x8b5cf6, transparent:true, opacity:.22 })
+      );
+      group.add(core);
+
+      /* 环绕粒子 */
+      var pGeo = new THREE.BufferGeometry();
+      var N = 900, pos = new Float32Array(N * 3);
+      for (var i = 0; i < N; i++){
+        var r = 3.2 + Math.random() * 4.2;
+        var t = Math.random() * Math.PI * 2;
+        var ph = Math.acos(2 * Math.random() - 1);
+        pos[i*3]   = r * Math.sin(ph) * Math.cos(t);
+        pos[i*3+1] = r * Math.sin(ph) * Math.sin(t) * .6;
+        pos[i*3+2] = r * Math.cos(ph);
+      }
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      var points = new THREE.Points(pGeo, new THREE.PointsMaterial({ color:0x60a5fa, size:.045, transparent:true, opacity:.85 }));
+      scene.add(points);
+
+      /* 次级小几何体 */
+      var sat = new THREE.Mesh(
+        new THREE.OctahedronGeometry(.34, 0),
+        new THREE.MeshBasicMaterial({ color:0x5eead4, wireframe:true, transparent:true, opacity:.75 })
+      );
+      sat.position.set(3.1, 1.2, .4); scene.add(sat);
+      var sat2 = new THREE.Mesh(
+        new THREE.TetrahedronGeometry(.42, 0),
+        new THREE.MeshBasicMaterial({ color:0xa78bfa, wireframe:true, transparent:true, opacity:.7 })
+      );
+      sat2.position.set(-3.2, -1.3, -.6); scene.add(sat2);
+
+      var mx = 0, my = 0;
+      window.addEventListener('mousemove', function(e){
+        mx = (e.clientX / window.innerWidth - .5);
+        my = (e.clientY / window.innerHeight - .5);
+      });
+      window.addEventListener('resize', sizeIt);
+
+      var clock = new THREE.Clock();
+      (function loop(){
+        requestAnimationFrame(loop);
+        var t = clock.getElapsedTime();
+        group.rotation.y = t * .28 + mx * .7;
+        group.rotation.x = Math.sin(t * .22) * .22 + my * .5;
+        core.rotation.z = -t * .5;
+        points.rotation.y = -t * .05;
+        sat.rotation.x = t * .9; sat.rotation.y = t * .7;
+        sat2.rotation.y = -t * .8; sat2.rotation.z = t * .6;
+        sat.position.y = 1.2 + Math.sin(t * 1.1) * .25;
+        sat2.position.y = -1.3 + Math.cos(t * .9) * .25;
+        camera.position.x = mx * .6;
+        camera.position.y = -my * .5;
+        camera.lookAt(0, 0, 0);
+        renderer.render(scene, camera);
+      })();
+    }
+
+    /* ---------- three.js：实验室画布 ---------- */
+    var lab = document.getElementById('lab-3d-canvas');
+    if (lab) {
+      var lr = new THREE.WebGLRenderer({ canvas: lab, alpha:true, antialias:true });
+      var ls = new THREE.Scene();
+      var lc = new THREE.PerspectiveCamera(50, 1, .1, 1000);
+      lc.position.set(0, 0, 5.2);
+      function sizeLab(){
+        var w = lab.clientWidth || 560, h = lab.clientHeight || 400;
+        lr.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        lr.setSize(w, h, false);
+        lc.aspect = w / h; lc.updateProjectionMatrix();
+      }
+      sizeLab();
+
+      var knot = new THREE.Mesh(
+        new THREE.TorusKnotGeometry(1.15, .34, 160, 24),
+        new THREE.MeshBasicMaterial({ color:0x22d3ee, wireframe:true, transparent:true, opacity:.6 })
+      );
+      ls.add(knot);
+      var halo = new THREE.Mesh(
+        new THREE.SphereGeometry(1.9, 28, 20),
+        new THREE.MeshBasicMaterial({ color:0x8b5cf6, wireframe:true, transparent:true, opacity:.16 })
+      );
+      ls.add(halo);
+
+      var lp = new THREE.BufferGeometry();
+      var M = 420, lp2 = new Float32Array(M * 3);
+      for (var j = 0; j < M; j++){
+        lp2[j*3]   = (Math.random() - .5) * 7;
+        lp2[j*3+1] = (Math.random() - .5) * 5;
+        lp2[j*3+2] = (Math.random() - .5) * 5;
+      }
+      lp.setAttribute('position', new THREE.BufferAttribute(lp2, 3));
+      ls.add(new THREE.Points(lp, new THREE.PointsMaterial({ color:0x5eead4, size:.05, transparent:true, opacity:.7 })));
+
+      window.addEventListener('resize', sizeLab);
+      var lclock = new THREE.Clock();
+      (function lloop(){
+        requestAnimationFrame(lloop);
+        var t = lclock.getElapsedTime();
+        knot.rotation.x = t * .45; knot.rotation.y = t * .32;
+        halo.rotation.y = -t * .2; halo.rotation.x = Math.sin(t * .3) * .3;
+        lr.render(ls, lc);
+      })();
+    }
+  }
+})();
+</script>
+  </div>
+</section>
+</body></html>

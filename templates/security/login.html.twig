@@ -610,7 +610,12 @@
                 let errorMessage = error.message;
                 
                 // Map specific error messages to neutral user-friendly messages
-                if (errorMessage.includes('The credential ID is invalid') || 
+                if (error.name === 'NotAllowedError' || 
+                    errorMessage.includes('timed out or was not allowed') ||
+                    errorMessage.includes('not allowed') ||
+                    errorMessage.includes('The user cancelled')) {
+                    errorMessage = '{{ "login.form.error.passkey_not_allowed"|trans }}';
+                } else if (errorMessage.includes('The credential ID is invalid') || 
                     errorMessage.includes('The public key credential source is not present') ||
                     errorMessage.includes('User handle not found')) {
                     errorMessage = '{{ "login.form.error.passkey_invalid"|trans }}';

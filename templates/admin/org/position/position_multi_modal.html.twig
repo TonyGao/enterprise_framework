@@ -3,14 +3,14 @@
     <div class="ef-modal-wrapper">
         <div class="ef-modal-container">
             <div class="ef-modal-header">
-                <div class="ef-modal-title">选择岗位</div>
+                <div class="ef-modal-title">{{ "posMulti.2"|trans }}</div>
                 <button class="ef-modal-close" id="position-multi-modal-close">
                     <i class="fa-solid fa-times"></i>
                 </button>
             </div>
             <div class="ef-modal-body">
                 <div class="ef-search-box mb-3">
-                    <input type="text" class="ef-input" id="position-multi-search-input" placeholder="搜索岗位名称">
+                    <input type="text" class="ef-input" id="position-multi-search-input" placeholder="{{ "posMulti.1"|trans }}">
                     <button class="ef-button ef-button-primary" id="position-multi-search-button">
                         <i class="fa-solid fa-search"></i>
                     </button>
@@ -29,9 +29,9 @@
                                             </span>
                                         </label>
                                     </th>
-                                    <th class="ef-table-th">岗位名称</th>
-                                    <th class="ef-table-th">所属部门</th>
-                                    <th class="ef-table-th">岗位级别</th>
+                                    <th class="ef-table-th">{{ "posMulti.3"|trans }}</th>
+                                    <th class="ef-table-th">{{ "posMulti.4"|trans }}</th>
+                                    <th class="ef-table-th">{{ "posMulti.5"|trans }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -56,13 +56,13 @@
                 </div>
                 
                 <div class="ef-selected-items mt-3">
-                    <div class="ef-selected-title">已选岗位：<span id="selected-count">0</span>个</div>
+                    <div class="ef-selected-title">{{ "posMulti.6"|trans }}<span id="selected-count">0</span>{{ "posMulti.7"|trans }}</div>
                     <div class="ef-selected-list" id="selected-positions-list"></div>
                 </div>
             </div>
             <div class="ef-modal-footer">
-                <button class="ef-button ef-button-default" id="position-multi-cancel-button">取消</button>
-                <button class="ef-button ef-button-primary" id="position-multi-confirm-button">确定</button>
+                <button class="ef-button ef-button-default" id="position-multi-cancel-button">{{ "posMulti.8"|trans }}</button>
+                <button class="ef-button ef-button-primary" id="position-multi-confirm-button">{{ "posMulti.9"|trans }}</button>
             </div>
         </div>
     </div>
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('position-multi-confirm-button').addEventListener('click', function() {
         const selectedCheckboxes = document.querySelectorAll('.position-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
-            alert('请至少选择一个岗位');
+            alert(t('posMulti.js1'));
             return;
         }
         

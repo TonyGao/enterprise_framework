@@ -24,7 +24,7 @@ class ViewAiTaskApiController extends AbstractController
     {
         $task = $em->getRepository(AiViewEnhanceTask::class)->find($id);
         if (!$task) {
-            return ApiResponse::error('', 404, '任务不存在');
+            return ApiResponse::error('', 404, 'msg.ai_task.not_found');
         }
 
         return ApiResponse::success(json_encode([
@@ -46,7 +46,7 @@ class ViewAiTaskApiController extends AbstractController
     {
         $task = $em->getRepository(AiViewEnhanceTask::class)->find($id);
         if (!$task) {
-            return ApiResponse::error('', 404, '任务不存在');
+            return ApiResponse::error('', 404, 'msg.ai_task.not_found');
         }
 
         $task->setStatus('pending');
@@ -59,7 +59,7 @@ class ViewAiTaskApiController extends AbstractController
 
         $view = $task->getView();
         if (!$view) {
-            return ApiResponse::error('', 400, '任务关联的视图不存在');
+            return ApiResponse::error('', 400, 'msg.ai_task.view_not_found');
         }
 
         $bus->dispatch(new EnhanceViewMessage(

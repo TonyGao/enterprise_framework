@@ -112,7 +112,7 @@ class TaskController extends AbstractController
         }
 
         if ($to < $from) {
-            return ApiResponse::error(json_encode([]), 400, '时间范围无效：to 不能早于 from');
+            return ApiResponse::error(json_encode([]), 400, 'msg.calendar.time_range_invalid');
         }
 
         $rawTasks = $this->taskRepository->findEnabledForCalendar();
@@ -328,7 +328,7 @@ private function buildTaskScheduleEvents(array $tasks, \DateTimeImmutable $from,
         $data = json_decode($request->getContent(), true);
 
         if (!$this->isValidTaskData($data)) {
-            return ApiResponse::error(json_encode([]), 400, '参数不完整');
+            return ApiResponse::error(json_encode([]), 400, 'msg.calendar.params_incomplete');
         }
 
         $task = new Task();
@@ -337,7 +337,7 @@ private function buildTaskScheduleEvents(array $tasks, \DateTimeImmutable $from,
         $this->em->persist($task);
         $this->em->flush();
 
-        return ApiResponse::success(json_encode(['task' => $this->serializeTask($task)]), 201, '任务创建成功');
+        return ApiResponse::success(json_encode(['task' => $this->serializeTask($task)]), 201, 'msg.task.created');
     }
 
     /** API：更新任务 */
@@ -358,7 +358,7 @@ private function buildTaskScheduleEvents(array $tasks, \DateTimeImmutable $from,
         $this->em->remove($id);
         $this->em->flush();
 
-        return ApiResponse::success(json_encode([]), 200, '任务已删除');
+        return ApiResponse::success(json_encode([]), 200, 'msg.task.deleted');
     }
 
     /** API：启用/禁用任务 */
@@ -427,7 +427,7 @@ private function buildTaskScheduleEvents(array $tasks, \DateTimeImmutable $from,
         $text = trim($data['text'] ?? '');
 
         if (empty($text)) {
-            return ApiResponse::error(json_encode(['message' => '请输入调度规则描述']), 400, 'task.error.missing_text');
+            return ApiResponse::error(json_encode(['message' => 'task.error.missing_text']), 400, 'task.error.missing_text');
         }
 
         $result = $this->parseScheduleText($text);

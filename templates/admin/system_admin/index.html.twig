@@ -2,11 +2,29 @@
 {% import 'components/datagrid.html.twig' as grid %}
 {% import 'ui/template/ui.html.twig' as ui %}
 
-{% block title %}系统管理员管理{% endblock %}
+{% block title %}{{ "sysAdminIndex.title1"|trans }}{% endblock %}
 
 {% block javascripts %}
 	{{ parent() }}
 	<script>
+		// 轻量 toast（本页自包含，避免依赖其它页面定义的 toast）/
+		// self-contained toast helper for this page
+		function toast(msg, type) {
+			type = type || 'success';
+			var bg = type === 'error' ? '#ef4444' : (type === 'warning' ? '#f59e0b' : '#16a34a');
+			var el = document.createElement('div');
+			el.textContent = msg;
+			el.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:99999;'
+				+ 'padding:10px 18px;border-radius:8px;color:#fff;font-size:13px;'
+				+ 'box-shadow:0 6px 20px rgba(0,0,0,.2);background:' + bg + ';';
+			document.body.appendChild(el);
+			setTimeout(function () {
+				el.style.transition = 'opacity .3s';
+				el.style.opacity = '0';
+				setTimeout(function () { el.remove(); }, 300);
+			}, 2600);
+		}
+
 		function openSystemAdminViewDrawer(adminId) {
 			$('#system-admin-drawer-' + adminId).remove();
 			$('[id^="system-admin-drawer-"]').remove();
@@ -26,7 +44,7 @@
 				},
 				error: function(xhr, status, error) {
 					console.error('Error loading system admin drawer:', error);
-					alert('加载管理员详情失败，请重试');
+					alert(t('sysAdminIndex.js1'));
 				}
 			});
 		}
@@ -50,7 +68,7 @@
 				},
 				error: function(xhr, status, error) {
 					console.error('Error loading system admin edit drawer:', error);
-					alert('加载管理员编辑失败，请重试');
+					alert(t('sysAdminIndex.js2'));
 				}
 			});
 		}
@@ -72,7 +90,7 @@
 				},
 				error: function(xhr, status, error) {
 					console.error('Error loading system admin create drawer:', error);
-					alert('加载新增管理员失败，请重试');
+					alert(t('sysAdminIndex.js3'));
 				}
 			});
 		}
@@ -97,7 +115,153 @@
 					openSystemAdminEditDrawer(id);
 				}
 			});
+
+			$(document).on('click', '.reset-button', function(e) {
+				e.preventDefault();
+				const id = $(this).data('id');
+				if (id && sysAdminMap[id]) {
+					openResetPasswordModal(id, sysAdminMap[id]);
+				}
+			});
+
+			$('#reset-password-submit').on('click', function() {
+				var newPw = $('#reset-new-password').val();
+				var confirmPw = $('#reset-confirm-password').val();
+				var errEl = document.getElementById('reset-password-error');
+				errEl.style.display = 'none';
+				if (!resetVerified) { errEl.textContent = t('sysAdminIndex.reset.passkey_required'); errEl.style.display = 'block'; return; }
+				if (newPw.length < 8) { errEl.textContent = t('sysAdminIndex.reset.err_weak'); errEl.style.display = 'block'; return; }
+				if (newPw !== confirmPw) { errEl.textContent = t('sysAdminIndex.reset.err_mismatch'); errEl.style.display = 'block'; return; }
+				if (!resetPasswordAdminId) return;
+
+				var $btn = $(this).prop('disabled', true);
+				fetch('{{ path("admin_system_admin_reset_password", {"id": "__ID__"}) }}'.replace('__ID__', resetPasswordAdminId), {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+					body: new URLSearchParams({ new_password: newPw, reset_token: resetToken })
+				}).then(function(r) { return r.json(); }).then(function(json) {
+					$btn.prop('disabled', false);
+					if (json.code === 200) {
+						toast(json.message ? t(json.message) : t('sysAdminIndex.reset.success'), 'success');
+						closeResetPasswordModal();
+					} else {
+						errEl.textContent = json.message ? t(json.message) : t('sysAdminIndex.reset.fail');
+						errEl.style.display = 'block';
+					}
+				}).catch(function() {
+					$btn.prop('disabled', false);
+					errEl.textContent = t('sysAdminIndex.reset.fail');
+					errEl.style.display = 'block';
+				});
+			});
+
+			// Passkey 二次验证：生成断言选项 → navigator.credentials.get → 服务端校验
+			$('#reset-passkey-verify').on('click', function() {
+				if (!resetPasswordAdminId) return;
+				var $btn = $(this).prop('disabled', true);
+				var st = document.getElementById('reset-passkey-status');
+				st.style.color = '#6b7280';
+				st.textContent = t('sysAdminIndex.reset.passkey_verifying');
+				fetch('{{ path("admin_system_admin_reset_passkey_options") }}', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id: resetPasswordAdminId })
+				}).then(function(r) { return r.json(); }).then(function(json) {
+					if (json.code !== 200 || !json.options) {
+						$btn.prop('disabled', false);
+						st.style.color = '#ef4444';
+						st.textContent = json.message ? t(json.message) : t('sysAdminIndex.reset.passkey_failed');
+						return;
+					}
+					return runPasskeyAssertion(json.options).then(function(credential) {
+						return fetch('{{ path("admin_system_admin_reset_passkey_verify") }}?id=' + encodeURIComponent(resetPasswordAdminId), {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify(credential)
+						});
+					}).then(function(r) { return r.json(); }).then(function(json2) {
+						$btn.prop('disabled', false);
+						if (json2.code === 200) {
+							resetVerified = true;
+							resetToken = json2.reset_token || '';
+							st.style.color = '#16a34a';
+							st.textContent = '✓ ' + (json2.message ? t(json2.message) : t('sysAdminIndex.reset.passkey_ok'));
+							$btn.hide();
+							$('#reset-password-submit').prop('disabled', false);
+						} else {
+							st.style.color = '#ef4444';
+							st.textContent = json2.message ? t(json2.message) : t('sysAdminIndex.reset.passkey_failed');
+						}
+					});
+				}).catch(function(e) {
+					$btn.prop('disabled', false);
+					var st2 = document.getElementById('reset-passkey-status');
+					st2.style.color = '#ef4444';
+					st2.textContent = t('sysAdminIndex.reset.passkey_failed');
+					console.error(e);
+				});
+			});
 		});
+
+		// base64url 编解码（WebAuthn 二进制）
+		function bufferEncode(value) {
+			return btoa(String.fromCharCode.apply(null, new Uint8Array(value))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+		}
+		function bufferDecode(value) {
+			value = value.replace(/-/g, '+').replace(/_/g, '/');
+			var pad = value.length % 4; if (pad) value += '='.repeat(4 - pad);
+			var raw = atob(value), arr = new Uint8Array(raw.length);
+			for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+			return arr.buffer;
+		}
+		function runPasskeyAssertion(options) {
+			options.challenge = bufferDecode(options.challenge);
+			if (options.allowCredentials) {
+				options.allowCredentials = options.allowCredentials.map(function(c) { c.id = bufferDecode(c.id); return c; });
+			}
+			return navigator.credentials.get({ publicKey: options }).then(function(credential) {
+				return {
+					id: credential.id,
+					rawId: bufferEncode(credential.rawId),
+					type: credential.type,
+					response: {
+						authenticatorData: bufferEncode(credential.response.authenticatorData),
+						clientDataJSON: bufferEncode(credential.response.clientDataJSON),
+						signature: bufferEncode(credential.response.signature),
+						userHandle: credential.response.userHandle ? bufferEncode(credential.response.userHandle) : null
+					}
+				};
+			});
+		}
+
+		var sysAdminMap = {};
+		{% for a in admins %}
+		{% if a.id is defined %}
+		sysAdminMap['{{ a.id }}'] = { name: '{{ a.name|e('js') }}', username: '{{ a.username|e('js') }}' };
+		{% endif %}
+		{% endfor %}
+
+		var resetPasswordAdminId = null;
+		var resetVerified = false;
+		var resetToken = '';
+		function openResetPasswordModal(adminId, info) {
+			resetPasswordAdminId = adminId;
+			resetVerified = false;
+			resetToken = '';
+			var label = info ? (info.name + ' (' + info.username + ')') : adminId;
+			document.getElementById('reset-password-target').textContent = label;
+			document.getElementById('reset-new-password').value = '';
+			document.getElementById('reset-confirm-password').value = '';
+			document.getElementById('reset-password-error').style.display = 'none';
+			var st = document.getElementById('reset-passkey-status');
+			st.textContent = ''; st.style.color = '#6b7280';
+			$('#reset-passkey-verify').show().prop('disabled', false);
+			$('#reset-password-submit').prop('disabled', true);
+			$('#resetPasswordModal').show();
+		}
+		function closeResetPasswordModal() {
+			$('#resetPasswordModal').hide();
+		}
 	</script>
 {% endblock %}
 
@@ -107,24 +271,25 @@
 		{{ grid.dataGrid(
 			admins|default([]),
 			[
-				{field: 'username', label: '用户名'},
-				{field: 'name', label: '姓名'},
-				{field: 'email', label: '邮箱'},
-				{field: 'mobile', label: '手机号'},
-				{field: 'roles', label: '角色'},
-				{field: 'isActive', label: '状态', raw: true},
-				{field: 'lastLoginAt', label: '最后登录'},
+				{field: 'username', label: 'sysAdminIndex.lbl1'|trans},
+				{field: 'name', label: 'sysAdminIndex.lbl2'|trans},
+				{field: 'email', label: 'sysAdminIndex.lbl3'|trans},
+				{field: 'mobile', label: 'sysAdminIndex.lbl4'|trans},
+				{field: 'roles', label: 'sysAdminIndex.lbl5'|trans},
+				{field: 'isActive', label: 'sysAdminIndex.lbl6'|trans, raw: true},
+				{field: 'lastLoginAt', label: 'sysAdminIndex.lbl7'|trans},
 			],
 			{
 				createUrl: '#',
 				toolbarButtons: [
-					{ type: 'create', text: '新增管理员', icon: 'fa-solid fa-plus-circle', id: 'add-admin-button' },
+					{ type: 'create', text: 'sysAdminIndex.create', icon: 'fa-solid fa-plus-circle', id: 'add-admin-button' },
 				],
 				actionButtons: [
-					{ type: 'view', text: '查看', icon: 'fa-solid fa-eye' },
-					{ type: 'edit', text: '编辑', icon: 'fa-solid fa-edit' },
+					{ type: 'view', text: 'btn.view', icon: 'fa-solid fa-eye' },
+					{ type: 'edit', text: 'btn.edit', icon: 'fa-solid fa-edit' },
+					{ type: 'reset', text: 'sysAdminIndex.reset.btn', icon: 'fa-solid fa-key' },
 				],
-				emptyText: '暂无系统管理员',
+				emptyText: 'sysAdminIndex.empty',
 				sortable: true,
 				maxWidth: '100%',
 				minHeight: '500px',
@@ -137,4 +302,36 @@
 		) }}
 	</div>
 </div>
+
+{% set resetPasswordModalBody %}
+<div style="display:flex;flex-direction:column;gap:12px;">
+	<p style="margin:0;font-size:13px;color:#4b5563;">{{ "sysAdminIndex.reset.target"|trans }}：<strong id="reset-password-target"></strong></p>
+	<div style="border:1px solid #e2e8f0;border-radius:8px;padding:12px;background:#f8fafc;">
+		<label style="display:block;font-size:12px;color:#374151;margin-bottom:6px;font-weight:600;">{{ "sysAdminIndex.reset.passkey_step"|trans }}</label>
+		<button class="btn primary medium" type="button" id="reset-passkey-verify"><i class="fa-solid fa-fingerprint"></i> {{ "sysAdminIndex.reset.passkey_verify"|trans }}</button>
+		<div id="reset-passkey-status" style="margin-top:6px;font-size:12px;color:#6b7280;"></div>
+		<p style="margin:6px 0 0;font-size:11px;color:#9ca3af;">{{ "sysAdminIndex.reset.passkey_hint"|trans }}</p>
+	</div>
+	<div>
+		<label style="display:block;font-size:12px;color:#374151;margin-bottom:4px;">{{ "sysAdminIndex.reset.new_password"|trans }}</label>
+		{{ ui.input('reset-new-password', 'password', '', '', 'ef-input-wrapper-full-width', 'ef-input-size-medium', '', {'autocomplete': 'new-password'}) }}
+	</div>
+	<div>
+		<label style="display:block;font-size:12px;color:#374151;margin-bottom:4px;">{{ "sysAdminIndex.reset.confirm_password"|trans }}</label>
+		{{ ui.input('reset-confirm-password', 'password', '', '', 'ef-input-wrapper-full-width', 'ef-input-size-medium', '', {'autocomplete': 'new-password'}) }}
+	</div>
+	<div id="reset-password-error" style="display:none;color:#ef4444;font-size:12px;"></div>
+</div>
+{% endset %}
+{% set resetPasswordModalFooter %}
+<div class="ef-space ef-space-horizontal ef-space-align-center" style="justify-content:flex-end;width:100%;">
+	<div class="ef-space-item" style="margin-right:8px;">
+		<button class="btn outline medium" type="button" onclick="closeResetPasswordModal()">{{ "action.cancel"|trans }}</button>
+	</div>
+	<div class="ef-space-item">
+		<button class="btn primary medium" type="button" id="reset-password-submit" disabled>{{ "sysAdminIndex.reset.submit"|trans }}</button>
+	</div>
+</div>
+{% endset %}
+{{ ui.modal('resetPasswordModal', 'sysAdminIndex.reset.title'|trans, resetPasswordModalBody, resetPasswordModalFooter, {'width': '420px', 'onClose': 'closeResetPasswordModal()'}) }}
 {% endblock %}

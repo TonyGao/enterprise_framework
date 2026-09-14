@@ -267,8 +267,8 @@ $(document).ready(function () {
     const newSectionHtml = `
           <div class="section" id="${Str.generateRandomString(9)}">
               <div class="section-controls">
-                  <button class="btn-toggle-header" title="显示/隐藏标题栏"><i class="fa-solid fa-eye"></i></button>
-                  <button class="btn-toggle-collapse" title="折叠/展开"><i class="fa-solid fa-chevron-up"></i></button>
+                  <button class="btn-toggle-header" title=t('viewEditorCoreJs.js1')><i class="fa-solid fa-eye"></i></button>
+                  <button class="btn-toggle-collapse" title=t('viewEditorCoreJs.js2')><i class="fa-solid fa-chevron-up"></i></button>
               </div>
               <div class="section-header">
                   <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
@@ -380,11 +380,11 @@ $(document).ready(function () {
       if ($header.is(':visible')) {
         $header.hide();
         $icon.removeClass('fa-eye').addClass('fa-eye-slash');
-        $(this).attr('title', '显示标题栏');
+        $(this).attr('title', t('viewEditorCoreJs.js3'));
       } else {
         $header.show();
         $icon.removeClass('fa-eye-slash').addClass('fa-eye');
-        $(this).attr('title', '隐藏标题栏');
+        $(this).attr('title', t('viewEditorCoreJs.js4'));
       }
     });
     
@@ -402,7 +402,7 @@ $(document).ready(function () {
         });
         $section.removeClass('collapsed');
         $icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
-        $(this).attr('title', '折叠');
+        $(this).attr('title', t('viewEditorCoreJs.js5'));
       } else {
         // 折叠：设置为手风琴效果的高度
         $content.css({
@@ -411,7 +411,7 @@ $(document).ready(function () {
         });
         $section.addClass('collapsed');
         $icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
-        $(this).attr('title', '展开');
+        $(this).attr('title', t('viewEditorCoreJs.js6'));
       }
     });
   }
@@ -425,8 +425,8 @@ $(document).ready(function () {
     if ($section.find('.section-controls').length === 0) {
       const controlsHtml = `
         <div class="section-controls">
-            <button class="btn-toggle-header" title="显示/隐藏标题栏"><i class="fa-solid fa-eye"></i></button>
-            <button class="btn-toggle-collapse" title="折叠/展开"><i class="fa-solid fa-chevron-up"></i></button>
+            <button class="btn-toggle-header" title=t('viewEditorCoreJs.js1')><i class="fa-solid fa-eye"></i></button>
+            <button class="btn-toggle-collapse" title=t('viewEditorCoreJs.js2')><i class="fa-solid fa-chevron-up"></i></button>
         </div>`;
       $section.prepend(controlsHtml);
     }

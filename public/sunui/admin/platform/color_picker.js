@@ -101,7 +101,7 @@ class ColorPicker {
     // 创建标题
     const title = document.createElement('div');
     title.className = 'color-picker-title';
-    title.textContent = '选择颜色';
+    title.textContent = t('colorPicker.js1');
     this.element.appendChild(title);
     
     // 框架主题色快捷选择（置于最上方，独立区域）
@@ -117,7 +117,7 @@ class ColorPicker {
       themeSection.appendChild(themeBtn);
       const themeLabel = document.createElement('span');
       themeLabel.className = 'theme-color-label';
-      themeLabel.textContent = '框架主题色';
+      themeLabel.textContent = t('colorPicker.js2');
       themeSection.appendChild(themeLabel);
       const themeValue = document.createElement('span');
       themeValue.className = 'theme-color-value';
@@ -202,7 +202,7 @@ class ColorPicker {
     opacityRow.className = 'opacity-row';
     const opacityLabel = document.createElement('span');
     opacityLabel.className = 'opacity-label';
-    opacityLabel.textContent = '透明';
+    opacityLabel.textContent = t('colorPicker.js3');
     const opacitySlider = document.createElement('input');
     opacitySlider.type = 'range';
     opacitySlider.className = 'opacity-slider';
@@ -231,7 +231,7 @@ class ColorPicker {
     // 确定按钮
     const applyButton = document.createElement('button');
     applyButton.className = 'apply-button';
-    applyButton.textContent = '确定';
+    applyButton.textContent = t('colorPicker.js4');
     applyButton.addEventListener('click', () => {
       this.onChange(this._resolveColor());
       this.close();
@@ -240,7 +240,7 @@ class ColorPicker {
     // 取消按钮
     const cancelButton = document.createElement('button');
     cancelButton.className = 'cancel-button';
-    cancelButton.textContent = '取消';
+    cancelButton.textContent = t('colorPicker.js5');
     cancelButton.addEventListener('click', () => this.close());
     
     buttonContainer.appendChild(applyButton);

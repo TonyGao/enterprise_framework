@@ -215,7 +215,7 @@ class EmployeeController extends AbstractController
             ]);
         }
 
-        $this->addFlash('success', '导出任务已提交，系统将在后台处理。生成完毕后会自动发送通知。');
+        $this->addFlash('success', 'flash.export_submitted');
         return $this->redirectToRoute('employee_list');
     }
 
@@ -506,7 +506,7 @@ class EmployeeController extends AbstractController
     }
 
     #[Route('/employee/import/process', name: 'employee_import_process')]
-    public function importProcess(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, PasswordPolicyRepository $policyRepo, LoggerInterface $logger): Response
+    public function importProcess(TranslatorInterface $translator, Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, PasswordPolicyRepository $policyRepo, LoggerInterface $logger): Response
     {
         $taskId = $request->query->get('taskId');
         if (!$taskId) {
@@ -574,7 +574,7 @@ class EmployeeController extends AbstractController
                     }
                 }
                 if (!empty($missingHeaders)) {
-                    echo "data: " . json_encode(['error' => '缺少必需列: ' . implode(', ', $missingHeaders)]) . "\n\n";
+                    echo "data: " . json_encode(['error' => $translator->trans('msg.employee.missing_columns') . implode(', ', $missingHeaders)]) . "\n\n";
                     if (ob_get_level() > 0) ob_flush(); flush();
                     return;
                 }

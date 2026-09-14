@@ -1,5 +1,9 @@
 parameters:
   app.key_debug: '%env(KEY_DEBUG)%'
+  # 国际化支持的语言列表 / Supported locales (internationalization)
+  app.supported_locales:
+    - 'zh_CN'
+    - 'en'
   page_limit: 12
   # 缓存监听器配置
   app.cache_watched_entities:

@@ -27,12 +27,12 @@ class ViewPageController extends AbstractController
     {
         $view = $this->em->getRepository(View::class)->find($id);
         if (!$view) {
-            return $this->json(['error' => '视图不存在'], 404);
+            return $this->json(['error' => 'msg.view.not_found'], 404);
         }
 
         $mode = (string) ($request->toArray()['mode'] ?? '');
         if (!in_array($mode, ['page', 'fragment'], true)) {
-            return $this->json(['error' => '无效形态，应为 page 或 fragment'], 400);
+            return $this->json(['error' => 'msg.view.invalid_render_mode'], 400);
         }
 
         $sc = $view->getSectionConfig() ?? [];
@@ -74,5 +74,39 @@ class ViewPageController extends AbstractController
         $html = $this->formLayoutService->renderFragment($view, $data, ['width' => 800]);
 
         return new Response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+    }
+
+    /**
+     * 独立整页预览：不加后台布局/宽度限制，裸页面呈现视图设计（脚本、全宽、3D 均可正常）。
+     * 适用于任何视图（表单或普通视图）。可刷新、可收藏。
+     */
+    #[Route('/views/{id}/preview', name: 'platform_view_preview', methods: ['GET'])]
+    public function preview(string $id): Response
+    {
+        $view = $this->em->getRepository(View::class)->find($id);
+        if (!$view) {
+            throw $this->createNotFoundException('视图不存在');
+        }
+
+        $data = (object) [];
+        if ($view->getFormEntity()) {
+            $fqn = $view->getFormEntity()->getFqn();
+            if ($fqn && class_exists($fqn)) {
+                $data = new $fqn();
+            }
+        }
+
+        $content = $this->formLayoutService->renderPage($view, $data);
+
+        return new Response(
+            '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">'
+            . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            . '<title>' . htmlspecialchars($view->getLabel() ?: $view->getName() ?: 'View Preview', ENT_QUOTES) . '</title>'
+            . '<style>html,body{margin:0;padding:0;}</style></head><body>'
+            . $content
+            . '</body></html>',
+            200,
+            ['Content-Type' => 'text/html; charset=UTF-8']
+        );
     }
 }

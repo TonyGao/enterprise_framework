@@ -73,50 +73,50 @@
       <div id="table-context-menu" class="context-menu" style="display: none;">
         <div class="menu-item" data-action="cut">
             <i class="fa-solid fa-scissors"></i>
-            <span>剪切</span>
+            <span>${t('ctxMenu.m1')}</span>
         </div>
         <div class="menu-item" data-action="copy">
             <i class="fa-solid fa-copy"></i>
-            <span>复制</span>
+            <span>${t('ctxMenu.m2')}</span>
         </div>
         <div class="menu-item" data-action="paste">
             <i class="fa-solid fa-paste"></i>
-            <span>粘贴</span>
+            <span>${t('ctxMenu.m3')}</span>
         </div>
         <div class="menu-separator"></div>
         <div class="menu-item" data-action="insert-row-above">
             <i class="fa-solid fa-arrow-up"></i>
-            <span>在上方插入 <input type="number" value="1" min="1" max="10" class="row-count"> 行</span>
+            <span>' + t('ctxMenu.insertAbove') + ' <input type="number" value="1" min="1" max="10" class="row-count">${t('ctxMenu.m4')}</span>
         </div>
         <div class="menu-item" data-action="insert-row-below">
             <i class="fa-solid fa-arrow-down"></i>
-            <span>在下方插入 <input type="number" value="1" min="1" max="10" class="row-count"> 行</span>
+            <span>' + t('ctxMenu.insertBelow') + ' <input type="number" value="1" min="1" max="10" class="row-count">${t('ctxMenu.m5')}</span>
         </div>
         <div class="menu-item" data-action="insert-col-left">
             <i class="fa-solid fa-arrow-left"></i>
-            <span>在左侧插入 <input type="number" value="1" min="1" max="10" class="col-count"> 列</span>
+            <span>' + t('ctxMenu.insertLeft') + ' <input type="number" value="1" min="1" max="10" class="col-count">${t('ctxMenu.m6')}</span>
         </div>
         <div class="menu-item" data-action="insert-col-right">
             <i class="fa-solid fa-arrow-right"></i>
-            <span>在右侧插入 <input type="number" value="1" min="1" max="10" class="col-count"> 列</span>
+            <span>' + t('ctxMenu.insertRight') + ' <input type="number" value="1" min="1" max="10" class="col-count">${t('ctxMenu.m7')}</span>
         </div>
         <div class="menu-separator"></div>
         <div class="menu-item" data-action="delete-row">
             <i class="fa-solid fa-minus"></i>
-            <span>删除行</span>
+            <span>${t('ctxMenu.m8')}</span>
         </div>
         <div class="menu-item" data-action="delete-col">
             <i class="fa-solid fa-minus"></i>
-            <span>删除列</span>
+            <span>${t('ctxMenu.m9')}</span>
         </div>
         <div class="menu-separator"></div>
         <div class="menu-item" data-action="clear-content">
             <i class="fa-solid fa-eraser"></i>
-            <span>清除内容</span>
+            <span>${t('ctxMenu.m10')}</span>
         </div>
         <div class="menu-item" data-action="clear-format">
             <i class="fa-solid fa-broom"></i>
-            <span>清除格式</span>
+            <span>${t('ctxMenu.m11')}</span>
         </div>
       </div>
     `;
@@ -252,11 +252,11 @@
               $(this).contents().not('.td-handle').remove();
             });
             if (window.$.alert) {
-              window.$.alert.success(`已剪切 ${$targetCells.length} 个单元格到剪贴板`);
+              window.$.alert.success(t('viewEditorTableCtxJs.js1', {p1: $targetCells.length}));
             }
           }).catch(() => {
             if (window.$.alert) {
-              window.$.alert.error('剪切失败');
+              window.$.alert.error(t('viewEditorTableCtxJs.js8'));
             }
           });
         }
@@ -276,11 +276,11 @@
         
         navigator.clipboard.writeText(combinedCopyContent).then(() => {
           if (window.$.alert) {
-            window.$.alert.success(`已复制 ${$targetCells.length} 个单元格`);
+            window.$.alert.success(t('viewEditorTableCtxJs.js2', {p1: $targetCells.length}));
           }
         }).catch(() => {
           if (window.$.alert) {
-            window.$.alert.error('复制失败');
+            window.$.alert.error(t('viewEditorTableCtxJs.js9'));
           }
         });
         break;
@@ -307,11 +307,11 @@
           });
           
           if (window.$.alert) {
-            window.$.alert.success(`已粘贴到 ${$targetCells.length} 个单元格`);
+            window.$.alert.success(t('viewEditorTableCtxJs.js3', {p1: $targetCells.length}));
           }
         }).catch(() => {
           if (window.$.alert) {
-            window.$.alert.error('粘贴失败，请检查剪贴板权限');
+            window.$.alert.error(t('viewEditorTableCtxJs.js10'));
           }
         });
         break;
@@ -358,7 +358,7 @@
           }
         });
         if (window.$.alert) {
-          window.$.alert.success(`已清除 ${$targetCells.length} 个单元格的内容`);
+          window.$.alert.success(t('viewEditorTableCtxJs.js4', {p1: $targetCells.length}));
         }
         break;
         
@@ -368,7 +368,7 @@
           $(this).removeAttr('style').removeClass();
         });
         if (window.$.alert) {
-          window.$.alert.success(`已清除 ${$targetCells.length} 个单元格的格式`);
+          window.$.alert.success(t('viewEditorTableCtxJs.js5', {p1: $targetCells.length}));
         }
         break;
     }
@@ -465,7 +465,7 @@
     }
     
     if (window.$.alert) {
-      window.$.alert.success(`已插入 ${count} 行`);
+      window.$.alert.success(t('viewEditorTableCtxJs.js6', {p1: count}));
     }
   }
   
@@ -590,7 +590,7 @@
     }
     
     if (window.$.alert) {
-      window.$.alert.success(`已插入 ${count} 列`);
+      window.$.alert.success(t('viewEditorTableCtxJs.js7', {p1: count}));
     }
   }
   
@@ -599,7 +599,7 @@
     const $row = $table.find('tr').eq(rowIndex);
     if ($table.find('tr').length <= 1) {
       if (window.$.alert) {
-        window.$.alert.warning('无法删除最后一行');
+        window.$.alert.warning(t('viewEditorTableCtxJs.js11'));
       }
       return;
     }
@@ -612,7 +612,7 @@
     }
     
     if (window.$.alert) {
-      window.$.alert.success('行已删除');
+      window.$.alert.success(t('viewEditorTableCtxJs.js12'));
     }
   }
   
@@ -621,7 +621,7 @@
     const firstRow = $table.find('tr').first();
     if (firstRow.find('td, th').length <= 1) {
       if (window.$.alert) {
-        window.$.alert.warning('无法删除最后一列');
+        window.$.alert.warning(t('viewEditorTableCtxJs.js13'));
       }
       return;
     }
@@ -636,7 +636,7 @@
     }
     
     if (window.$.alert) {
-      window.$.alert.success('列已删除');
+      window.$.alert.success(t('viewEditorTableCtxJs.js14'));
     }
   }
   

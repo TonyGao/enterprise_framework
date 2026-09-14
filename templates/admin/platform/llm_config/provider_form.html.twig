@@ -2,19 +2,19 @@
 
 {% block app_content_container %}
 <div class="org-structure-container llm-config-page">
-  <div class="outside-wrapper" style="padding: 40px 48px; max-width: 1280px; margin: 0; background: #fff; min-height: calc(100vh - 60px);">
+  <div class="outside-wrapper" style="padding: 40px 48px; max-width: 680px; margin: 0; background: #fff; min-height: calc(100vh - 60px);">
 
     <div class="page-title-row" style="margin-bottom: 12px;">
       <h1>{{ provider.id ? '编辑服务商' : '新增服务商' }}</h1>
       <a href="{{ path('admin_llm_config_index') }}" class="back-link">
-        <i class="fa-solid fa-arrow-left"></i> 返回
+        <i class="fa-solid fa-arrow-left"></i> {{ "llmProviderForm.1"|trans }}
       </a>
     </div>
 
     <div class="form-card">
       {{ form_start(form, {attr: {class: 'llm-provider-form'}}) }}
 
-        <div class="form-section-title">基本信息</div>
+        <div class="form-section-title">{{ "llmProviderForm.2"|trans }}</div>
 
         <div class="form-row">
           <div class="form-label">{{ form_label(form.name) }}</div>
@@ -40,18 +40,18 @@
           <div class="form-label">{{ form_label(form.apiEndpoint) }}</div>
           <div class="form-control">
             {{ form_widget(form.apiEndpoint) }}
-            <div style="font-size: 12px; color: #86868b; margin-top: 4px;">选择知名服务商后自动填入，可手动修改</div>
+            <div style="font-size: 12px; color: #86868b; margin-top: 4px;">{{ "llmProviderForm.3"|trans }}</div>
             {{ form_errors(form.apiEndpoint) }}
           </div>
         </div>
 
-        <div class="form-section-title" id="thinking-section-title">模型能力</div>
+        <div class="form-section-title" id="thinking-section-title">{{ "llmProviderForm.4"|trans }}</div>
 
         <div class="form-row thinking-option">
           <div class="form-label">{{ form_label(form.thinkingEnabled) }}</div>
           <div class="form-control">
             {{ form_widget(form.thinkingEnabled) }}
-            <div style="font-size: 12px; color: #86868b; margin-top: 4px;">DeepSeek V4 默认开启深度思考，关闭后响应更快</div>
+            <div style="font-size: 12px; color: #86868b; margin-top: 4px;">{{ "llmProviderForm.5"|trans }}</div>
             {{ form_errors(form.thinkingEnabled) }}
           </div>
         </div>
@@ -68,9 +68,9 @@
 
         <div class="form-actions">
           <button type="submit" class="btn primary medium">
-            <i class="fa-solid fa-save"></i> 保存
+            <i class="fa-solid fa-save"></i> {{ "llmProviderForm.6"|trans }}
           </button>
-          <a href="{{ path('admin_llm_config_index') }}" class="btn medium">取消</a>
+          <a href="{{ path('admin_llm_config_index') }}" class="btn medium">{{ "llmProviderForm.7"|trans }}</a>
         </div>
       {{ form_end(form) }}
     </div>

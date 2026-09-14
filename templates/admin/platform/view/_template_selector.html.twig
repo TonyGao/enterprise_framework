@@ -26,14 +26,14 @@
 <div class="template-selector-field" style="margin-bottom: 16px;">
     <div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
         <div class="ef-col ef-col-8 ef-form-item-label-col">
-            <label class="ef-form-item-label">模板文件</label>
+            <label class="ef-form-item-label">{{ "templateSelector.1"|trans }}</label>
         </div>
         <div class="ef-col ef-col-16 ef-form-item-wrapper-col">
             <div class="ef-form-item-content-wrapper">
                 <div class="ef-form-item-content ef-form-item-content-flex">
                     <span class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium template-tree-trigger" style="height: 36px; line-height: 36px; cursor: pointer;">
                         <span class="ef-input" style="border:none; width: 100%; height: 100%; outline: none; background: transparent; padding: 0 12px; display: flex; align-items: center; justify-content: space-between;">
-                            <span class="template-display-text" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;{% if not form.template.vars.value %}color: #999;{% endif %}">{% if form.template.vars.value %}{{ form.template.vars.value }}{% else %}请选择模板{% endif %}</span>
+                            <span class="template-display-text" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;{% if not form.template.vars.value %}color: #999;{% endif %}">{% if form.template.vars.value %}{{ form.template.vars.value }}{% else %}{{ "templateSelector.2"|trans }}{% endif %}</span>
                             <i class="fa-solid fa-chevron-down" style="color: #999; flex-shrink: 0; margin-left: 4px;"></i>
                         </span>
                     </span>
@@ -55,7 +55,7 @@ function openTemplateTreeModal() {
             '<div class="ef-modal-wrapper ef-modal-wrapper-align-center" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 2001;">',
                 '<div class="ef-modal" style="width: 500px; max-height: 80vh; background: #fff; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; flex-direction: column;">',
                     '<div class="ef-modal-header" style="padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between;">',
-                        '<div class="ef-modal-title"><i class="fa-solid fa-file-code"></i> 选择模板文件</div>',
+                        t('templateSelector.js1'),
                         '<div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" style="cursor: pointer;" onclick="closeTemplateTreeModal(\'' + modalId + '\')">',
                             '<span class="ef-icon-hover"><svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter" style="width: 16px; height: 16px;"><path d="M9.857 9.858 24 24m0 0 14.142 14.142M24 24 38.142 9.858M24 24 9.857 38.142"></path></svg></span>',
                         '</div>',
@@ -64,8 +64,8 @@ function openTemplateTreeModal() {
                         '<div class="common-tree-wrapper template-tree" style="min-height: 60px;"></div>',
                     '</div>',
                     '<div class="ef-modal-footer" style="padding: 12px 20px; border-top: 1px solid #eee; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">',
-                        '<button class="btn secondary small" type="button" onclick="closeTemplateTreeModal(\'' + modalId + '\')">取消</button>',
-                        '<button class="btn primary small" type="button" onclick="confirmTemplateSelection(\'' + modalId + '\')">确定</button>',
+                        '<button class="btn secondary small" type="button" onclick="closeTemplateTreeModal(\'' + modalId + '\')">' + t('templateSelector.js2') + '</button>',
+                        '<button class="btn primary small" type="button" onclick="confirmTemplateSelection(\'' + modalId + '\')">' + t('templateSelector.js3') + '</button>',
                     '</div>',
                 '</div>',
             '</div>',
@@ -79,7 +79,7 @@ function openTemplateTreeModal() {
 
 function loadTemplateTree(modalId) {
     var $tree = $('#' + modalId + ' .template-tree');
-    $tree.html('<div style="text-align: center; padding: 20px; color: #999;"><i class="fa-solid fa-spinner fa-spin"></i> 加载模板列表...</div>');
+    $tree.html('<div style="text-align: center; padding: 20px; color: #999;"><i class="fa-solid fa-spinner fa-spin"></i> {{ "templateSelector.loading"|trans }}</div>');
 
     $.ajax({
         url: '{{ path("api_platform_templates_tree") }}',
@@ -90,7 +90,7 @@ function loadTemplateTree(modalId) {
             renderTemplateTree(data, modalId);
         },
         error: function() {
-            $tree.html('<div style="text-align: center; padding: 20px; color: #ff4d4f;">加载模板列表失败</div>');
+            $tree.html('<div style="text-align: center; padding: 20px; color: #ff4d4f;">{{ "templateSelector.fail"|trans }}</div>');
         }
     });
 }
@@ -98,7 +98,7 @@ function loadTemplateTree(modalId) {
 function renderTemplateTree(entries, modalId) {
     var $tree = $('#' + modalId + ' .template-tree');
     if (!entries || entries.length === 0) {
-        $tree.html('<div style="text-align: center; padding: 20px; color: #999;">没有可用的模板文件</div>');
+        $tree.html('<div style="text-align: center; padding: 20px; color: #999;">{{ "templateSelector.empty"|trans }}</div>');
         return;
     }
     var html = renderTemplateTreeNodes(entries);

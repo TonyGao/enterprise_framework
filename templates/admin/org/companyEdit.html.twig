@@ -3,6 +3,17 @@
 {% block stylesheets %}
 	{{ parent() }}
 	<link rel="stylesheet" type="text/css" href="{{ asset('corporation.css', 'admin') }}">
+	<style>
+		/* 本页只保留一个纵向滚动条：内容区滚动；隐藏左侧菜单的滚动条（仍可滚轮滚动）/
+		   keep a single vertical scrollbar: content scrolls; hide the sidebar menu scrollbar (still scrollable) */
+		html, body { overflow: hidden; height: 100%; }
+		.org-structure-container > .outside-wrapper,
+		.org-structure-container > .outside-wrapper > .inside-wrapper {
+			overflow: visible;
+		}
+		.side-menu-one { scrollbar-width: none; -ms-overflow-style: none; }
+		.side-menu-one::-webkit-scrollbar { width: 0; height: 0; }
+	</style>
 {% endblock %}
 
 {% block javascripts %}
@@ -32,10 +43,10 @@
                   <div class="ef-form-item-content ef-form-item-content-flex">
                     <div class="ef-space ef-space-horizontal ef-space-align-center">
                       <div class="ef-space-item" style="margin-right: 8px;">
-                        <button class="btn primary medium" type="submit">提交</button>
+                        <button class="btn primary medium" type="submit">{{ "companyEdit.1"|trans }}</button>
                       </div>
                       <div class="ef-space-item">
-                        <a href="{{ path('org_corporation') }}" class="btn primary medium">返回</a>
+                        <a href="{{ path('org_corporation') }}" class="btn primary medium">{{ "companyEdit.2"|trans }}</a>
                       </div>
                     </div>
                   </div>

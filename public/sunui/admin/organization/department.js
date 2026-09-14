@@ -5,7 +5,7 @@ $(document).ready(function () {
   let t = chosedEle.text();
   if (type === "company") {
     let company = t;
-    $(`.ef-trigger-popup[for='所属公司'] li:contains(${company})`).click();
+    $(`.ef-trigger-popup[for=t('deptJs.js1')] li:contains(${company})`).click();
   }
 
   // 如果选中的是部门，创建该部门的子部门

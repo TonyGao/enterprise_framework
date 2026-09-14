@@ -31,10 +31,46 @@ abstract class AbstractViewSubAgent implements ViewSubAgentInterface
 
 ## 硬性技术要求（必须遵守，否则样式会损坏）
 
-0. **禁止使用任何 CSS 类名（class 属性）** —— 所有样式必须用 inline style (`style="..."`) 实现。页面存在未知的类名 hash 机制，任何 class 都会被破坏导致样式丢失。也不能依赖外部 CSS/JS。
+0. **禁止使用任何 CSS 类名（class 属性）** —— 所有样式必须用 inline style (`style="..."`) 实现。页面存在未知的类名 hash 机制，任何 class 都会被破坏导致样式丢失。**不要依赖外部 CDN 的 CSS/JS**；但可使用**站内 `/lib/` 下的本地库**（GSAP、three.js 等，见下）。
 1. **最外层 div 必须包含 `width:100%`** —— `.section-content` 是 `display:flex`，子元素不加 width 会收缩包裹内容。
 2. 输出必须是结构完整、标签闭合、可直接作为视图内容呈现的 HTML。
 3. 全部内容完成后**必须调用** `viewfile_renderHtml(viewId)` 生成可执行模板。
+
+## 富媒体与动效（让页面尽善尽美）
+
+设计里可用下列手段，把页面做到极致（脚本会随服务端渲染进页面执行，编辑器画布与服务页都会运行）：
+
+- **内联 SVG**：直接写 `<svg>...</svg>`（图标、插图、分隔、装饰），可加 `stroke-dasharray`/`<animate>` 做矢量动效。
+- **位图**：需要真实图片时用 `viewfile_downloadImage(url, alt)` 下载到本站，再以 `/uploads/...` 本地引用（不要外链）。
+- **GSAP 动画**：先引入站内库，再写内联脚本（用**唯一 ID** 选择元素，脚本用 IIFE 包裹）：
+  ```html
+  <script src="/lib/gsap/gsap.min.js"></script>
+  <script src="/lib/gsap/ScrollTrigger.min.js"></script>
+  <script>(function(){ if(!window.gsap) return;
+    gsap.from('#hero-title', {y:24, opacity:0, duration:.8, ease:'power3.out'});
+    gsap.utils.toArray('[data-reveal]').forEach(function(el,i){
+      gsap.from(el,{y:30,opacity:0,duration:.7,delay:i*.08,
+        scrollTrigger:{trigger:el,start:'top 85%'}});
+    });
+  })();</script>
+  ```
+  可用入场/滚动/悬停/数字滚动等动效；滚动动效需 `gsap.registerPlugin(ScrollTrigger)`（在新版 gsap 中 `ScrollTrigger` 已随文件全局注册）。
+- **three.js 3D**：引入站内库 + 一个 `<canvas>` + 内联脚本初始化（同样用唯一 ID）：
+  ```html
+  <canvas id="hero-3d" style="width:100%;height:360px;display:block;"></canvas>
+  <script src="/lib/three/three.min.js"></script>
+  <script>(function(){ if(!window.THREE) return;
+    var el=document.getElementById('hero-3d'); if(!el) return;
+    var r=new THREE.WebGLRenderer({canvas:el, alpha:true, antialias:true});
+    r.setSize(el.clientWidth, el.clientHeight, false);
+    var s=new THREE.Scene(), c=new THREE.PerspectiveCamera(60, el.clientWidth/el.clientHeight, .1, 1000);
+    c.position.z=4;
+    /* ...建几何/材质/灯光... */
+    (function loop(){ requestAnimationFrame(loop); /* 旋转/动画 */ r.render(s,c); })();
+  })();</script>
+  ```
+- **通用**：脚本一律 `(function(){ ... })()` 包裹；选择器用**唯一 ID 或 data-* attribute**（不要用 class）；库缺失时安全退出（`if(!window.gsap) return`）。
+- **渐进增强**：即使 JS 未执行，布局与内容也必须完整可读（**不要**只靠 JS 渲染正文内容）。
 
 ## 布局宽度（重要）
 
@@ -78,7 +114,7 @@ MD;
 
 ## 硬性技术要求（必须遵守，否则样式会损坏）
 
-0. **禁止使用任何 CSS 类名（class 属性）** —— 所有样式必须用 inline style (`style="..."`) 实现。页面存在未知的类名 hash 机制，任何 class 都会被破坏导致样式丢失。也不能依赖外部 CSS/JS。
+0. **禁止使用任何 CSS 类名（class 属性）** —— 所有样式必须用 inline style (`style="..."`) 实现。页面存在未知的类名 hash 机制，任何 class 都会被破坏导致样式丢失。**不要依赖外部 CDN 的 CSS/JS**；可用站内 `/lib/` 本地库（GSAP `/lib/gsap/gsap.min.js`、three.js `/lib/three/three.min.js`）与内联 `<svg>`/`<script>`（IIFE + 唯一 ID）实现动画与 3D。
 1. **最外层 div 必须包含 `width:100%`** —— `.section-content` 是 `display:flex`，子元素不加 width 会收缩包裹内容。
 2. 输出必须是结构完整、标签闭合、可直接作为视图内容呈现的 HTML。
 3. 修改完成后必须 `cdp_save()` 保存，让修改持久化。
@@ -125,11 +161,30 @@ MD;
 1. `viewfile_getDesign(viewId)` 读取原视图的设计内容（`.section-content` 内部 HTML），并从中**提取有意义的文字与信息**（标题、称谓、字段、正文、文案、数据等）——这些是要保留的内容
 2. **放弃修改原 HTML，全新生成**：根据用户的加工需求 + 第一步提取出的内容，用 `viewfile_writeDesign(viewId, html)` 生成一套**全新的完整页面**（一次性整体替换 design 文件，不做任何增量修改）
    - **整体构成必须与旧版明显不同**：通栏 Hero、左右分栏、非对称构图、时间线、杂志式、沉浸式长页、大幅留白极简中选一种
+   - **表单视图尤其如此**：不仅换配色/背景/卡片皮肤，**字段的排列构成、分组方式、视觉记忆点都必须换**——禁止把上一版的"表格行式 50% 双列 + 浅灰表头"换个背景就算重构（见下方表单领域指南第四节）
    - **主题/节日的真实元素必须落地到 HTML**（用 Unicode 图标、SVG、渐变、装饰 div），不能只在文字里提
+   - **需要真实图片时**（Hero 大图、背景图、产品图、头像、示意图等）：用 `viewfile_downloadImage(url, alt)` 从公网下载到本站（返回 `/uploads/...` 本地地址），再以 `<img src="/uploads/...">` 或 `background-image:url(/uploads/...)` 引用——**不要直接外链第三方图片**（易失效/防盗链）。可下载参考网页里出现的图片，或用稳定的图源（如 `https://images.unsplash.com/...`）
    - 禁止"白底圆角卡片盒"（`background:#fff` + `border-radius:8px`）呈现信息区
    - `.section-content` 内只能有一个页面容器（一个 max-width 外层 div），禁止重复
 3. 用 `view_updateSectionConfig(...)` 调整布局宽度
 4. `viewfile_renderHtml(viewId)` 生成可执行模板
+MD;
+
+    protected const STYLE_MIMIC_WORKFLOW = <<<MD
+## 工作流程（网页风格模仿——文件重写模式）
+
+用户给了一个喜欢的网页链接，希望当前视图**模仿该网页的视觉风格**重构。内容（文字/字段/数据）保持不变，只换风格。
+
+1. `viewfile_getDesign(viewId)` 读取当前视图设计内容（`.section-content` 内部 HTML），提取要保留的文字与信息（标题、称谓、字段、正文、文案、数据）——这些内容原样保留，只换风格
+2. **优先用 `cdp_analyzeUrlStyle(URL)`** 分析参考网页（会打开该网页**整体截图 + 视觉模型识别**，返回结构化设计规格 JSON：布局构成/风格/配色/字段排列/视觉细节）。这是最准的方式，直接给出 style 规格；若 CDP 不可用（返回 error 需 Chrome 远程调试），则退回 `cdp_fetchWebPage(URL)` / `viewfile_fetchWebPage(URL)` 抓 HTML/CSS，再手动提炼风格
+3. **结合风格规格/分析结果**，明确参考网页的具体取值：主色/辅色/背景/渐变、字体、按钮样式、卡片样式（圆角/阴影/边框）、间距、布局构成
+4. 用 `viewfile_writeDesign(viewId, html)` 全新生成设计：**布局沿用当前视图的信息层次，视觉风格严格模仿参考网页**——配色、字体、按钮、卡片、间距、圆角、阴影、装饰元素都要体现参考页的风格，让用户一眼看出"就是这个风格"
+   - 参考页里的**图片/配图**（Hero、背景、产品图等）：用 `viewfile_downloadImage(url, alt)` 下载到本站后以本地 `/uploads/...` 引用，**不要直接外链**
+   - 禁止用"白底圆角卡片盒"（`background:#fff` + `border-radius:8px`）敷衍呈现
+   - `.section-content` 内只能有一个页面容器（一个 max-width 外层 div）
+   - 表单视图必须用 `{{ form_widget(form.x) }}` 等标准控件输出字段（见下方领域指南），字段保真，不得手写 `<input>`
+5. 用 `view_updateSectionConfig(...)` 调整布局宽度适配新设计
+6. `viewfile_renderHtml(viewId)` 生成可执行模板
 MD;
 
     protected const FORM_LAYOUT_WORKFLOW = <<<MD
@@ -168,6 +223,25 @@ MD;
         #[Autowire('%kernel.project_dir%')] protected readonly string $projectDir,
     ) {}
 
+    protected const FILE_WORKFLOW_REFINE = <<<MD
+## 工作流程（就地修改——文件重写模式）
+
+当前视图是**自定义 Twig 表单设计**，画布只是渲染预览，**不能靠画布保存**（会被保护拦截）。所有修改都必须改设计源码。
+
+1. `viewfile_getDesign(viewId)` 读取当前设计**源码**（Twig），看清现有结构与字段
+2. **保持其余部分不变**，只按用户需求就地修改设计源码：
+   - 表单视图必须**原样保留** `{{ form_start }}`/`{{ form_widget(form.x) }}`/`{{ form_label }}`/`{{ form_rest }}`/`{{ form_end }}` 等指令与全部绑定字段，不得新增/删除/改名字段
+   - 风格/配色/布局/文案按需求调整；`.section-content` 内仍只保留一个页面容器
+   - **精确替换选中元素（重要）**：若消息以 `[Element]: …/[Selector]: …/[Style]: …` 开头（用户已在画布选中某元素），且要求"替换/修改这块/把这里改成…"，你**必须用其中的 inline style / 结构特征在源码里定位到该元素，并替换它本身**——**不要**在它旁边/下方新增一个新区块。替换后页面其余部分保持不变。
+   - **图片的用法（重要）**：
+     - 用户要"图片做背景 / 换成图片 / 这里用一张图"→ 用**一张** `<img>` 铺满该容器（`position:absolute;inset:0;width:100%;height:100%;object-fit:cover`）+ 线性渐变遮罩 + 叠加必要文字（hero 横幅式），呈现"整块就是一张图"的观感。
+     - **不要**把"图片做背景"做成带标题/英文角标/多张缩略图+说明的**图集/相册**——除非用户明确要"图集/相册/多图展示/团队风采墙"。
+     - 需要图片时用 `viewfile_downloadImage(url, alt)` 下载到站内 `/uploads/...` 引用，不要外链。
+3. `viewfile_writeDesign(viewId, 修改后的完整设计)` 写回（一次性整体替换设计文件）
+4. 若需调整外层布局宽度 → `view_updateSectionConfig(viewId, contentWidth, width, unit, columns)`
+5. `viewfile_renderHtml(viewId)` 生成可执行模板
+MD;
+
     public function systemPrompt(): string
     {
         $domain = (string) file_get_contents($this->projectDir . '/' . $this->promptPath());
@@ -196,11 +270,154 @@ MD;
      * 整体重构使用"文件重写"模式：提取原内容 → 用指令+原内容全新生成整份 design 文件。
      * 文件直写是一次性全量替换，比 CDP 增量编辑可靠（同样的模型用文件工具能产出真正不同的视图）。
      */
-    public function systemPromptForFileRedesign(): string
+    public function systemPromptForFileRedesign(?array $designSpec = null, ?string $plan = null): string
     {
         $domain = (string) file_get_contents($this->projectDir . '/' . $this->promptPath());
 
-        return self::SHARED_CONSTRAINTS . "\n\n" . self::FILE_WORKFLOW_REDESIGN . "\n\n" . $domain;
+        $dynamic = self::buildDesignSpecBlock($designSpec, $plan);
+
+        return $dynamic
+            . "\n\n" . self::SHARED_CONSTRAINTS
+            . "\n\n" . self::FILE_WORKFLOW_REDESIGN
+            . "\n\n" . $domain;
+    }
+
+    /**
+     * 把"参考图片"分析出的设计规格编译成最高优先级指令块，
+     * 供控制器在 classifyTurn 之后附加上 / compile image-derived design spec into a directive block.
+     */
+    public static function imageSpecBlock(array $spec): string
+    {
+        $layoutMap = [
+            'cards' => '卡片分组', 'split' => '左右分栏', 'sidebar' => '左侧导航+主区',
+            'steps' => '分步向导', 'hero_flow' => 'Hero+字段区', 'single' => '单列',
+            'immersive' => '通栏沉浸', 'table' => '表格行式',
+        ];
+        $styleMap = [
+            'cool' => '酷炫现代', 'enterprise' => '企业稳重', 'minimal' => '极简',
+            'dark' => '深色', 'light' => '浅色', 'luxury' => '质感高级',
+        ];
+        $degreeMap = ['full' => '彻底重构', 'skin' => '保留结构只换皮', 'refine' => '局部微调'];
+        $compactMap = ['compact' => '紧凑', 'spacious' => '宽松'];
+
+        $lines = ['## 🖼 参考图片风格（最高优先级，按此还原图片的视觉风格）', ''];
+        $d = [];
+        if (!empty($spec['layout_mode'])) $d[] = '布局构成：' . ($layoutMap[$spec['layout_mode']] ?? $spec['layout_mode']);
+        if (!empty($spec['style'])) $d[] = '视觉风格：' . ($styleMap[$spec['style']] ?? $spec['style']);
+        if (!empty($spec['degree'])) $d[] = '重构程度：' . ($degreeMap[$spec['degree']] ?? $spec['degree']);
+        if (!empty($spec['compact'])) $d[] = '紧凑度：' . ($compactMap[$spec['compact']] ?? $spec['compact']);
+        if (!empty($spec['colors'])) $d[] = '配色：' . $spec['colors'];
+        if (!empty($spec['fields_arrangement'])) $d[] = '字段排列：' . $spec['fields_arrangement'];
+        foreach ($d as $x) $lines[] = '- ' . $x;
+        if (!empty($spec['content_hints'])) { $lines[] = ''; $lines[] = '图片中的内容线索（可还原为卡片/标题/文案）：' . $spec['content_hints']; }
+        if (!empty($spec['notes'])) { $lines[] = ''; $lines[] = '其它视觉细节：' . $spec['notes']; }
+        $lines[] = '';
+        $lines[] = '要求：布局与视觉要明显贴近这张参考图片（配色、卡片、圆角、阴影、装饰、字体层级），但**只保留本视图自身的字段/文案/数据**，不要照抄图片里的无关内容。';
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * 把用户的设计规格（layout/style/degree/compact/colors/notes）与 plan 编译成
+     * 一段"最高优先级"的执行指令，置于提示词最前，让子代理严格按用户意图执行，
+     * 而不是从一句自然语言里猜测。spec 为空的字段忽略。/
+     * compile the user's parsed design spec + plan into a top-priority directive block.
+     */
+    private static function buildDesignSpecBlock(?array $spec, ?string $plan): string
+    {
+        if (empty($spec) && empty($plan)) {
+            return '';
+        }
+
+        $lines = ["## 🔒 用户设计规格（最高优先级，严格按此执行）", ""];
+        $spec = $spec ?? [];
+
+        $layoutMap = [
+            'cards' => '卡片分组（按信息类别拆成多个卡片区块）',
+            'split' => '左右分栏（左侧主表单，右侧辅助/操作/信息面板）',
+            'sidebar' => '左侧导航 + 右侧主表单区',
+            'steps' => '分步向导（顶部步骤条，字段按步骤分区）',
+            'hero_flow' => '顶部 Hero 品牌区 + 下方字段区（非对称网格）',
+            'single' => '单列垂直、大留白极简',
+            'immersive' => '通栏沉浸式（全宽色带 + 场景装饰）',
+            'table' => '传统表格行式（标签左、控件右、可双列）',
+            'free' => '自由发挥（由你判断最合适的构成）',
+        ];
+        $styleMap = [
+            'cool' => '酷炫现代（强对比、渐变、光晕、图标、装饰几何）',
+            'enterprise' => '企业稳重（简洁、克制的配色与边框）',
+            'minimal' => '极简（大留白、少装饰、强调留白与字体层级）',
+            'dark' => '深色主题',
+            'light' => '浅色清爽',
+            'luxury' => '质感高级（细腻投影、渐变、精致细节）',
+        ];
+        $degreeMap = [
+            'full' => '彻底重构（改变布局构成与字段排列，与旧版明显不同）',
+            'skin' => '保留现有结构，只换配色/皮肤/装饰',
+            'refine' => '局部微调优化',
+        ];
+        $compactMap = [
+            'compact' => '布局紧凑（压缩间距、行高、留白）',
+            'spacious' => '布局宽松（留白充足）',
+        ];
+
+        $directives = [];
+        if (!empty($spec['layout_mode'])) {
+            $directives[] = '布局构成：' . ($layoutMap[$spec['layout_mode']] ?? $spec['layout_mode']);
+        }
+        if (!empty($spec['style'])) {
+            $directives[] = '视觉风格：' . ($styleMap[$spec['style']] ?? $spec['style']);
+        }
+        if (!empty($spec['degree'])) {
+            $directives[] = '重构程度：' . ($degreeMap[$spec['degree']] ?? $spec['degree']);
+        }
+        if (!empty($spec['compact'])) {
+            $directives[] = '紧凑度：' . ($compactMap[$spec['compact']] ?? $spec['compact']);
+        }
+        if (!empty($spec['colors'])) {
+            $directives[] = '配色倾向：' . $spec['colors'];
+        }
+        if (!empty($spec['fields_arrangement'])) {
+            $directives[] = '字段排列：' . $spec['fields_arrangement'];
+        }
+
+        foreach ($directives as $d) {
+            $lines[] = '- ' . $d;
+        }
+        if (!empty($spec['notes'])) {
+            $lines[] = '';
+            $lines[] = '补充说明：' . $spec['notes'];
+        }
+        if (!empty($plan)) {
+            $lines[] = '';
+            $lines[] = '执行要点（plan）：' . $plan;
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * 网页风格模仿模式：抓取参考网页并严格模仿其视觉风格重构当前视图 /
+     * style-mimic mode: fetch a reference webpage and rewrite the current view to mimic its visual style
+     */
+    /**
+     * 就地修改模式（文件重写）：自定义 Twig 表单设计的画布不可保存，小改动也走设计源码 /
+     * in-place edit via design source (canvas save is blocked for custom Twig form designs).
+     */
+    public function systemPromptForFileRefine(): string
+    {
+        $domain = (string) file_get_contents($this->projectDir . '/' . $this->promptPath());
+
+        return self::SHARED_CONSTRAINTS . "\n\n" . self::FILE_WORKFLOW_REFINE . "\n\n" . $domain;
+    }
+
+    public function systemPromptForStyleMimic(string $url): string
+    {
+        $domain = (string) file_get_contents($this->projectDir . '/' . $this->promptPath());
+
+        return self::SHARED_CONSTRAINTS
+            . "\n\n## 参考网页链接\n\n参考网页：{$url}\n\n"
+            . self::STYLE_MIMIC_WORKFLOW . "\n\n" . $domain;
     }
 
     /**

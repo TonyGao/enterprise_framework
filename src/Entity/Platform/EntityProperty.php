@@ -23,7 +23,7 @@ class EntityProperty
     private $id;
 
     /**
-     * 编码
+ * 编码 / Code
      */
     #[ORM\Column(type: "string", length: 80, nullable: true)]
     private $code = null;

@@ -69,7 +69,7 @@ class ResetPasswordController extends AbstractController
                     }
                 }
             } else {
-                $this->addFlash('error', '未找到该用户。');
+                $this->addFlash('error', 'flash.user_not_found');
             }
         }
 

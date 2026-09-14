@@ -25,72 +25,51 @@ class PositionLevel
     private $id;
 
     /**
-     * 级别名称
-     * @Ef(
-     *     group="position_level_info",
-     *     isBF=true
-     * )
+     * 级别名称 / Level name
      */
+    #[Ef(group: 'position_level_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 100)]
     private $name;
 
     /**
-     * 级别编码
-     * @Ef(
-     *     group="position_level_info",
-     *     isBF=true
-     * )
+     * 级别编码 / Level code
      */
+    #[Ef(group: 'position_level_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private $code;
 
     /**
      * 级别序号（数字越小级别越高）
-     * @Ef(
-     *     group="position_level_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'position_level_info', isBF: true)]
     #[ORM\Column(type: 'integer')]
     private $levelOrder;
 
     /**
-     * 级别描述
-     * @Ef(
-     *     group="position_level_info",
-     *     isBF=true
-     * )
+     * 级别描述 / Level description
      */
+    #[Ef(group: 'position_level_info', isBF: true)]
     #[ORM\Column(type: 'text', nullable: true)]
     private $description;
 
     /**
-     * 薪资范围下限
-     * @Ef(
-     *     group="position_level_salary",
-     *     isBF=true
-     * )
+     * 薪资范围下限 / Salary range min
      */
+    #[Ef(group: 'position_level_salary', isBF: true)]
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private $salaryMin;
 
     /**
-     * 薪资范围上限
-     * @Ef(
-     *     group="position_level_salary",
-     *     isBF=true
-     * )
+     * 薪资范围上限 / Salary range max
      */
+    #[Ef(group: 'position_level_salary', isBF: true)]
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     private $salaryMax;
 
     /**
-     * 状态（启用/停用）
-     * @Ef(
-     *     group="position_level_info",
-     *     isBF=true
-     * )
+     * 状态（启用/停用） / Status (enabled/disabled)
      */
+    #[Ef(group: 'position_level_info', isBF: true)]
     #[ORM\Column(type: 'boolean', options: ['default' => 1])]
     private $state = true;
 

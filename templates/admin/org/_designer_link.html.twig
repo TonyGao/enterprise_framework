@@ -5,13 +5,13 @@
          style="padding: 6px 12px; background: #fff; border: 1px solid #ddd; border-radius: 20px;
                 font-size: 13px; color: #999; white-space: nowrap;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer;">
-        <i class="fa-solid fa-unlink"></i> 解除绑定
+        <i class="fa-solid fa-unlink"></i> {{ "designerLink.1"|trans }}
       </button>
       <a href="{{ path('platform_view_editor', {id: designerViewId}) }}" target="_blank"
          style="padding: 6px 12px; background: #f0f7ff; border: 1px solid #cce5ff; border-radius: 20px;
                 font-size: 13px; color: #0066cc; text-decoration: none; white-space: nowrap;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: inline-flex; align-items: center; gap: 6px;">
-        <i class="fa-solid fa-pen-to-square"></i> 视图设计器
+        <i class="fa-solid fa-pen-to-square"></i> {{ "designerLink.2"|trans }}
       </a>
     </div>
     <script>
@@ -22,13 +22,13 @@
         '<div class="ef-modal-wrapper ef-modal-wrapper-align-center">' +
           '<div class="ef-modal" style="width:400px">' +
             '<div class="ef-modal-header">' +
-              '<div class="ef-modal-title">解除绑定</div>' +
+              t('designerLink.js1') +
               '<div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="closeModal(\'' + modalId + '\')"><span class="ef-icon-hover"><svg viewBox="0 0 48 48" width="16" height="16"><path d="M39.486 12.456a1.5 1.5 0 0 0-2.022-2.197l-.1.092L24 23.778 10.636 10.35a1.5 1.5 0 0 0-2.228 1.998l.092.1L21.864 25.9 8.5 39.352a1.5 1.5 0 0 0 2.022 2.197l.1-.092L24 28.022l13.364 13.428a1.5 1.5 0 0 0 2.228-1.998l-.092-.1L26.136 25.9l13.35-13.444Z" fill="currentColor"/></svg></span></div>' +
             '</div>' +
-            '<div class="ef-modal-body"><p>确认解除绑定？解除后模板关联也会清除。</p></div>' +
+            t('designerLink.js2') +
             '<div class="ef-modal-footer">' +
-              '<button class="btn secondary small" onclick="closeModal(\'' + modalId + '\')">取消</button>' +
-              '<button class="btn red small" onclick="doUnbind(\'' + modalId + '\')">解除绑定</button>' +
+              '<button class="btn secondary small" onclick="closeModal(\'' + modalId + '\')">' + t('designerLink.js3') + '</button>' +
+              '<button class="btn red small" onclick="doUnbind(\'' + modalId + '\')">' + t('designerLink.js4') + '</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -43,7 +43,7 @@
         body: '{}'
       }).then(function(r) {
         if (r.ok) location.reload();
-        else r.text().then(function(t) { alert('解除绑定失败: ' + t); closeModal(modalId); });
+        else r.text().then(function(text) { alert(t('designerLink.js5') + text); closeModal(modalId); });
       });
     }
     </script>
@@ -54,7 +54,7 @@
               font-size: 13px; color: #856404; white-space: nowrap;
               box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: inline-flex; align-items: center; gap: 6px;
               cursor: pointer;">
-      <i class="fa-solid fa-link"></i> 绑定视图设计器
+      <i class="fa-solid fa-link"></i> {{ "designerLink.3"|trans }}
     </button>
     <script>
     document.getElementById('btn-bind-designer')?.addEventListener('click', function() {
@@ -64,13 +64,13 @@
         '<div class="ef-modal-wrapper ef-modal-wrapper-align-center">' +
           '<div class="ef-modal" style="width:400px">' +
             '<div class="ef-modal-header">' +
-              '<div class="ef-modal-title">绑定视图设计器</div>' +
+              t('designerLink.js6') +
               '<div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="closeModal(\'' + modalId + '\')"><span class="ef-icon-hover"><svg viewBox="0 0 48 48" width="16" height="16"><path d="M39.486 12.456a1.5 1.5 0 0 0-2.022-2.197l-.1.092L24 23.778 10.636 10.35a1.5 1.5 0 0 0-2.228 1.998l.092.1L21.864 25.9 8.5 39.352a1.5 1.5 0 0 0 2.022 2.197l.1-.092L24 28.022l13.364 13.428a1.5 1.5 0 0 0 2.228-1.998l-.092-.1L26.136 25.9l13.35-13.444Z" fill="currentColor"/></svg></span></div>' +
             '</div>' +
-            '<div class="ef-modal-body"><p>确认绑定「{{ designerViewLabel }}」？绑定后将使用视图设计器管理表单布局。</p></div>' +
+            '<div class="ef-modal-body"><p>{{ "designerLink.confirmBind"|trans({label: designerViewLabel}) }}</p></div>' +
             '<div class="ef-modal-footer">' +
-              '<button class="btn secondary small" onclick="closeModal(\'' + modalId + '\')">取消</button>' +
-              '<button class="btn primary small" onclick="doBind(\'' + modalId + '\')">确认绑定</button>' +
+              '<button class="btn secondary small" onclick="closeModal(\'' + modalId + '\')">' + t('designerLink.js3') + '</button>' +
+              '<button class="btn primary small" onclick="doBind(\'' + modalId + '\')">' + t('designerLink.js7') + '</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -85,7 +85,7 @@
         body: '{}'
       }).then(function(r) {
         if (r.ok) location.reload();
-        else r.text().then(function(t) { alert('绑定失败: ' + t); closeModal(modalId); });
+        else r.text().then(function(text) { alert(t('designerLink.js8') + text); closeModal(modalId); });
       });
     }
     </script>

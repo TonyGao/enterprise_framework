@@ -159,7 +159,7 @@
 			<div class="ef-col-12" style="margin-bottom: 20px;">
 				<div class="ef-form-item ef-form-item-layout-horizontal">
 					<div class="ef-col ef-col-10 ef-form-item-label-col">
-						<label class="ef-form-item-label">行数</label>
+						<label class="ef-form-item-label">{{ "viewEditor.1"|trans }}</label>
 					</div>
 					<div class="ef-col ef-col-14 ef-form-item-wrapper-col">
 						<div class="ef-form-item-content-wrapper">
@@ -173,7 +173,7 @@
 			<div class="ef-col-12">
 				<div class="ef-form-item ef-form-item-layout-horizontal">
 					<div class="ef-col ef-col-10 ef-form-item-label-col">
-						<label class="ef-form-item-label">列数</label>
+						<label class="ef-form-item-label">{{ "viewEditor.2"|trans }}</label>
 					</div>
 					<div class="ef-col ef-col-14 ef-form-item-wrapper-col">
 						<div class="ef-form-item-content-wrapper">
@@ -190,10 +190,10 @@
 		{% set tableModalFooter %}
 		<div class="ef-space ef-space-horizontal ef-space-align-center">
 			<div class="ef-space-item" style="margin-right: 8px;">
-				<button class="btn primary medium" id="create-table-btn">确定</button>
+				<button class="btn primary medium" id="create-table-btn">{{ "viewEditor.3"|trans }}</button>
 			</div>
 			<div class="ef-space-item">
-				<button class="btn outline medium" id="cancel-table-btn">取消</button>
+				<button class="btn outline medium" id="cancel-table-btn">{{ "viewEditor.4"|trans }}</button>
 			</div>
 		</div>
 		{% endset %}
@@ -219,12 +219,12 @@
 							</li>
 							<li class="" id="{{ propTabId2 }}">
 								<span class="tabs-inner">
-									<span class="tabs-title">组件</span>
+									<span class="tabs-title">{{ "viewEditor.5"|trans }}</span>
 								</span>
 							</li>
 							<li class="" id="{{ propTabId3 }}">
 								<span class="tabs-inner">
-									<span class="tabs-title">高级</span>
+									<span class="tabs-title">{{ "viewEditor.6"|trans }}</span>
 								</span>
 							</li>
 							<li class="tabs-last" id="{{ propTabId4 }}">
@@ -244,7 +244,7 @@
 					<div class="panel panel-htop component-panel" style="display: none;" liid="{{ propTabId2 }}">
 						<div class="panel-body panel-body-noheader panel-body-noborder" style="padding: 10px;">
 							<div id="default-component-message">
-								<p>组件属性将根据选中的组件类型显示</p>
+								<p>{{ "viewEditor.7"|trans }}</p>
 							</div>
 							
 							<!-- 表格组件属性面板将由 table_component_properties.js 动态生成 -->
@@ -252,30 +252,30 @@
 					</div>
 					<div class="panel panel-htop advanced-panel" style="display: none;" liid="{{ propTabId3 }}">
 						<div class="panel-body panel-body-noheader panel-body-noborder" style="padding: 10px;">
-							<p>高级属性配置</p>
+							<p>{{ "viewEditor.8"|trans }}</p>
 						</div>
 					</div>
 					<div class="panel panel-htop css-panel" style="display: none;" liid="{{ propTabId4 }}">
 						<div class="panel-body panel-body-noheader panel-body-noborder" style="padding: 10px;">
 							<div id="css-properties-placeholder">
-								<p style="color:#94a3b8;font-size:12px;text-align:center;padding:20px 0">点击画布中的元素查看和编辑 CSS 属性</p>
+								<p style="color:#94a3b8;font-size:12px;text-align:center;padding:20px 0">{{ "viewEditor.9"|trans }}</p>
 							</div>
 							<div id="css-properties-content" style="display:none">
 								<div id="css-selected-info" style="font-size:11px;color:#64748b;margin-bottom:8px;padding:4px 8px;background:#f8fafc;border-radius:4px;word-break:break-all;border:1px solid #e2e8f0"></div>
 								<div id="css-inline-editor" style="margin-bottom:8px">
-									<label style="font-size:11px;color:#475569;font-weight:600;display:block;margin-bottom:4px">内联样式 (inline style)</label>
+									<label style="font-size:11px;color:#475569;font-weight:600;display:block;margin-bottom:4px">{{ "viewEditor.10"|trans }} (inline style)</label>
 									<textarea id="css-inline-textarea" rows="4" style="width:100%;font-family:monospace;font-size:11px;padding:6px 8px;border:1px solid #e2e8f0;border-radius:4px;resize:vertical;outline:none" placeholder="property: value; property: value;"></textarea>
-									<button id="css-apply-btn" style="margin-top:4px;padding:3px 12px;background:#2563eb;color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer">应用</button>
-									<button id="css-clear-btn" style="margin-top:4px;padding:3px 12px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:4px;font-size:11px;cursor:pointer;margin-left:4px">清除</button>
+									<button id="css-apply-btn" style="margin-top:4px;padding:3px 12px;background:#2563eb;color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer">{{ "viewEditor.11"|trans }}</button>
+									<button id="css-clear-btn" style="margin-top:4px;padding:3px 12px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:4px;font-size:11px;cursor:pointer;margin-left:4px">{{ "viewEditor.12"|trans }}</button>
 								</div>
 								<div id="css-property-list" style="max-height:400px;overflow-y:auto"></div>
 								<div id="css-add-property" style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9">
-									<button id="css-add-prop-btn" style="font-size:11px;padding:3px 10px;background:#fff;color:#2563eb;border:1px solid #2563eb;border-radius:4px;cursor:pointer">+ 添加属性</button>
+									<button id="css-add-prop-btn" style="font-size:11px;padding:3px 10px;background:#fff;color:#2563eb;border:1px solid #2563eb;border-radius:4px;cursor:pointer">+ {{ "viewEditor.13"|trans }}</button>
 								</div>
 								<div id="css-selection-actions" style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0">
-									<div style="font-size:11px;color:#475569;font-weight:600;margin-bottom:6px">选择操作</div>
-									<button id="css-select-parent" style="font-size:11px;padding:3px 10px;background:#fff;color:#475569;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;margin-right:4px">← 选中父元素</button>
-									<button id="css-select-children" style="font-size:11px;padding:3px 10px;background:#fff;color:#475569;border:1px solid #d1d5db;border-radius:4px;cursor:pointer">→ 选中子元素</button>
+									<div style="font-size:11px;color:#475569;font-weight:600;margin-bottom:6px">{{ "viewEditor.14"|trans }}</div>
+									<button id="css-select-parent" style="font-size:11px;padding:3px 10px;background:#fff;color:#475569;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;margin-right:4px">← {{ "viewEditor.15"|trans }}</button>
+									<button id="css-select-children" style="font-size:11px;padding:3px 10px;background:#fff;color:#475569;border:1px solid #d1d5db;border-radius:4px;cursor:pointer">→ {{ "viewEditor.16"|trans }}</button>
 								</div>
 							</div>
 						</div>
@@ -295,7 +295,7 @@
 			<div class="ef-modal">
 				<div class="ef-modal-header">
 					<div class="ef-modal-title ef-modal-title-align-left">
-						确认删除
+						{{ "viewEditor.17"|trans }}
 					</div>
 					<div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="closeDeleteModal()">
 						<span class="ef-icon-hover">
@@ -306,11 +306,11 @@
 					</div>
 				</div>
 				<div class="ef-modal-body">
-					<div>确定要删除选中的组件吗？此操作不可撤销。</div>
+					<div>{{ "viewEditor.18"|trans }}</div>
 				</div>
 				<div class="ef-modal-footer">
-					<button class="btn secondary small" type="button" onclick="closeDeleteModal()">取消</button>
-					<button class="btn red small" type="button" id="confirm-delete-btn">确定删除</button>
+					<button class="btn secondary small" type="button" onclick="closeDeleteModal()">{{ "viewEditor.4"|trans }}</button>
+					<button class="btn red small" type="button" id="confirm-delete-btn">{{ "viewEditor.19"|trans }}</button>
 				</div>
 			</div>
 		</div>
@@ -325,7 +325,7 @@
   window.__VIEW_VERSIONS__ = {{ viewVersions is defined ? viewVersions|json_encode|raw : [] }};
   window.__SECTION_CONFIG__ = {{ sectionConfig is defined and sectionConfig ? sectionConfig|json_encode|raw : {contentWidth: '', width: 100, unit: '%'}|json_encode|raw }};
   window.__FORM_VIEW__ = {{ formEntity is defined and formEntity ? 'true' : 'false' }};
-  window.__RENDER_MODE__ = {{ sectionConfig is defined and sectionConfig.render_mode is defined ? sectionConfig.render_mode|json_encode|raw : 'page' }};
+  window.__RENDER_MODE__ = {{ (sectionConfig is defined and sectionConfig.render_mode is defined ? sectionConfig.render_mode : 'page')|json_encode|raw }};
   window.__AI_CONTEXT__ = {
       name: 'view_editor',
       pageId: {{ id is defined ? id|json_encode|raw : 'null' }},
@@ -338,7 +338,7 @@
               if (empty && !el.getAttribute('data-view-form-styled')) {
                   el.setAttribute('data-view-form-styled', '1');
                   el.setAttribute('style', (el.getAttribute('style') || '') + ';border:2px dashed #6366f1;border-radius:8px;padding:28px;text-align:center;color:#6366f1;background:#eef2ff;font-size:13px;min-height:60px;');
-                  el.textContent = '📋 表单区域（页面渲染时注入绑定表单，可在 AI 对话中继续美化）';
+                  el.textContent = '{{ "viewEditor.formArea"|trans }}';
               }
           });
       }

@@ -9,48 +9,48 @@
         return `
             <div id="text-properties" style="display: none;">
                 <div class="tp-section">
-                    <div class="tp-section-title">文字排版</div>
+                    <div class="tp-section-title">${t('textComp.m50')}</div>
                     <div class="tp-grid tp-grid-2">
                         <div class="tp-field">
-                            <label class="tp-label">字号</label>
+                            <label class="tp-label">${t('textComp.m51')}</label>
                             <div class="tp-input-group">
                                 <input type="number" id="text-font-size" class="tp-input" min="8" max="72" value="14">
                                 <span class="tp-unit">px</span>
                             </div>
                         </div>
                         <div class="tp-field">
-                            <label class="tp-label">字重</label>
+                            <label class="tp-label">${t('textComp.m52')}</label>
                             <div class="tp-btn-group" id="text-font-weight-select">
-                                <button class="tp-btn" data-value="lighter">细</button>
-                                <button class="tp-btn tp-btn-active" data-value="400">标准</button>
-                                <button class="tp-btn" data-value="bold">粗</button>
+                                <button class="tp-btn" data-value="lighter">${t('textComp.m53')}</button>
+                                <button class="tp-btn tp-btn-active" data-value="400">${t('textComp.m54')}</button>
+                                <button class="tp-btn" data-value="bold">${t('textComp.m55')}</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="tp-section">
-                    <div class="tp-section-title">颜色与对齐</div>
+                    <div class="tp-section-title">${t('textComp.m56')}</div>
                     <div class="tp-field">
-                        <label class="tp-label">颜色</label>
+                        <label class="tp-label">${t('textComp.m57')}</label>
                         <span class="tp-color-swatch" id="text-color-trigger">
                             <span id="text-color-preview" style="background:#000000"></span>
                         </span>
                     </div>
                     <div class="tp-field tp-align-row">
-                        <label class="tp-label">对齐</label>
+                        <label class="tp-label">${t('textComp.m58')}</label>
                         <div class="tp-align-row-group">
                             <div class="tp-align-group" id="text-align-select-h">
-                                <button class="tp-btn tp-btn-icon" data-value="left" title="左对齐"><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm0 3.5h8v1.5H1V5.5zM1 9h12v1.5H1V9zm0 3.5h8V14H1v-1.5z"/></svg></button>
-                                <button class="tp-btn tp-btn-icon" data-value="center" title="居中"><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm3 3.5h8v1.5H4V5.5zM1 9h12v1.5H1V9zm3 3.5h8V14H4v-1.5z"/></svg></button>
-                                <button class="tp-btn tp-btn-icon" data-value="right" title="右对齐"><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm4 3.5h8v1.5H5V5.5zM1 9h12v1.5H1V9zm4 3.5h8V14H5v-1.5z"/></svg></button>
-                                <button class="tp-btn tp-btn-icon" data-value="justify" title="两端对齐"><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm0 3.5h12v1.5H1V5.5zM1 9h12v1.5H1V9zm0 3.5h12V14H1v-1.5z"/></svg></button>
+                                <button class="tp-btn tp-btn-icon" data-value="left" title=t('textComponentPropsJs.js1')><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm0 3.5h8v1.5H1V5.5zM1 9h12v1.5H1V9zm0 3.5h8V14H1v-1.5z"/></svg></button>
+                                <button class="tp-btn tp-btn-icon" data-value="center" title=t('textComponentPropsJs.js2')><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm3 3.5h8v1.5H4V5.5zM1 9h12v1.5H1V9zm3 3.5h8V14H4v-1.5z"/></svg></button>
+                                <button class="tp-btn tp-btn-icon" data-value="right" title=t('textComponentPropsJs.js3')><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm4 3.5h8v1.5H5V5.5zM1 9h12v1.5H1V9zm4 3.5h8V14H5v-1.5z"/></svg></button>
+                                <button class="tp-btn tp-btn-icon" data-value="justify" title=t('textComponentPropsJs.js4')><svg viewBox="0 0 14 14" fill="currentColor"><path d="M1 2h12v1.5H1V2zm0 3.5h12v1.5H1V5.5zM1 9h12v1.5H1V9zm0 3.5h12V14H1v-1.5z"/></svg></button>
                             </div>
                             <span class="tp-align-divider"></span>
                             <div class="tp-align-group" id="text-v-align-select">
-                                <button class="tp-btn tp-btn-icon" data-value="top" title="顶部对齐"><i class="fa-solid fa-align-left fa-rotate-90"></i></button>
-                                <button class="tp-btn tp-btn-icon" data-value="middle" title="垂直居中"><i class="fa-solid fa-align-center fa-rotate-90"></i></button>
-                                <button class="tp-btn tp-btn-icon" data-value="bottom" title="底部对齐"><i class="fa-solid fa-align-right fa-rotate-90"></i></button>
+                                <button class="tp-btn tp-btn-icon" data-value="top" title=t('textComponentPropsJs.js5')><i class="fa-solid fa-align-left fa-rotate-90"></i></button>
+                                <button class="tp-btn tp-btn-icon" data-value="middle" title=t('textComponentPropsJs.js6')><i class="fa-solid fa-align-center fa-rotate-90"></i></button>
+                                <button class="tp-btn tp-btn-icon" data-value="bottom" title=t('textComponentPropsJs.js7')><i class="fa-solid fa-align-right fa-rotate-90"></i></button>
                             </div>
                         </div>
                     </div>
@@ -59,7 +59,7 @@
                 <div class="tp-section tp-section-danger">
                     <button class="tp-delete-btn" id="delete-component-btn">
                         <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M5.5 1a.5.5 0 0 0-.5.5V2H2.5a.5.5 0 0 0 0 1h.257l.547 9.846A1.5 1.5 0 0 0 4.8 14.5h6.4a1.5 1.5 0 0 0 1.497-1.654l.546-9.846h.257a.5.5 0 0 0 0-1H11v-.5a.5.5 0 0 0-.5-.5h-5zM6 2h4v1H6V2zM4.05 4h7.9l-.535 9.634a.5.5 0 0 1-.5.466H5.085a.5.5 0 0 1-.5-.466L4.05 4z"/></svg>
-                        删除组件
+                        t('textCompProps.delete')
                     </button>
                 </div>
             </div>
@@ -187,7 +187,7 @@
         // 纵向对齐选择器
         initVAlignSelect();
         
-        // 删除组件按钮
+        // t('textCompProps.delete')按钮
         $(document).on('click', '#delete-component-btn', function() {
             if (window.ComponentProperties?.getSelectedComponent()) {
                 showDeleteModal();

@@ -359,7 +359,7 @@
 
 <div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal ef-ai-component">
   <div class="ef-col ef-col-8 ef-form-item-label-col">
-    <label class="ef-form-item-label ef-ai-label">AI 加工<span class="ef-ai-label-tag">可选</span></label>
+    <label class="ef-form-item-label ef-ai-label">{{ "aiEnhance.3"|trans }}<span class="ef-ai-label-tag">{{ "aiEnhance.4"|trans }}</span></label>
   </div>
   <div class="ef-col ef-col-16 ef-form-item-wrapper-col">
     <div class="ef-form-item-content-wrapper">
@@ -371,11 +371,11 @@
           <div class="ef-ai-box-inner">
             <button type="button" class="ef-ai-toggle-btn" id="ef-ai-toggle">
               <span class="ef-ai-spark">✨</span>
-              <span id="ef-ai-toggle-text">AI 二次加工</span>
+              <span id="ef-ai-toggle-text">{{ "aiEnhance.5"|trans }}</span>
             </button>
             <div class="ef-ai-hint">
-              <span id="ef-ai-hint-text">创建视图后，由 AI 助手按你的要求自动美化页面</span>
-              <button type="button" class="ef-ai-reset" id="ef-ai-reset" style="display:none">移除</button>
+              <span id="ef-ai-hint-text">{{ "aiEnhance.6"|trans }}</span>
+              <button type="button" class="ef-ai-reset" id="ef-ai-reset" style="display:none">{{ "aiEnhance.7"|trans }}</button>
             </div>
           </div>
         </div>
@@ -384,15 +384,15 @@
         <div id="ef-ai-progress" style="display:none">
           <div class="ef-ai-progress-status" id="ef-ai-progress-status">
             <span class="ef-ai-status-dot"></span>
-            <span id="ef-ai-progress-text">AI 加工中…</span>
+            <span id="ef-ai-progress-text">{{ "aiEnhance.8"|trans }}…</span>
           </div>
           <div class="ef-ai-progress-bar">
             <div class="ef-ai-progress-bar-inner is-running" id="ef-ai-progress-bar"></div>
           </div>
           <div class="ef-ai-progress-actions" id="ef-ai-progress-actions" style="display:none">
-            <a class="btn primary medium" id="ef-ai-open-editor" href="#" target="_blank">在编辑器中查看</a>
-            <button type="button" class="btn outline primary medium" id="ef-ai-retry" style="display:none">重试</button>
-            <button type="button" class="btn outline primary medium" id="ef-ai-reload">刷新视图管理</button>
+            <a class="btn primary medium" id="ef-ai-open-editor" href="#" target="_blank">{{ "aiEnhance.9"|trans }}</a>
+            <button type="button" class="btn outline primary medium" id="ef-ai-retry" style="display:none">{{ "aiEnhance.10"|trans }}</button>
+            <button type="button" class="btn outline primary medium" id="ef-ai-reload">{{ "aiEnhance.11"|trans }}</button>
             <span class="ef-ai-error-msg" id="ef-ai-error-msg"></span>
           </div>
         </div>
@@ -404,29 +404,26 @@
             <div class="ef-ai-modal-head">
               <div class="ef-ai-modal-title">
                 <span class="ef-ai-modal-icon">✨</span>
-                <span>AI 二次加工需求</span>
-                <span class="ef-ai-editor-badge">可选</span>
+                <span>{{ "aiEnhance.12"|trans }}</span>
+                <span class="ef-ai-editor-badge">{{ "aiEnhance.4"|trans }}</span>
               </div>
-              <button type="button" class="ef-ai-modal-close" id="ef-ai-modal-close" aria-label="关闭">✕</button>
+              <button type="button" class="ef-ai-modal-close" id="ef-ai-modal-close" aria-label="{{ "aiEnhance.1"|trans }}">✕</button>
             </div>
             <div class="ef-ai-modal-body">
               <div class="ef-ai-textarea-wrap">
                 <div class="ef-ai-input">
                   <textarea id="ai_requirement" rows="6"
-                    placeholder="在这里描述你对视图的期望，描述越具体，生成效果越好。例如：
-· 期望的页面结构（卡片 / 表格 / 左右分栏…）
-· 期望的配色与整体风格
-· 需要突出展示的字段或信息"></textarea>
+                    placeholder="{{ "aiEnhance.2"|trans }}"></textarea>
                   <span class="ef-ai-input-icon">✨</span>
                 </div>
               </div>
             </div>
             <div class="ef-ai-modal-foot">
-              <div class="ef-ai-counter"><strong id="ef-ai-count">0</strong> 字</div>
+              <div class="ef-ai-counter"><strong id="ef-ai-count">0</strong> {{ "aiEnhance.13"|trans }}</div>
               <div class="ef-ai-tools-right">
-                <button type="button" class="ef-ai-clear" id="ef-ai-clear">清空</button>
-                <button type="button" class="ef-ai-cancel" id="ef-ai-cancel">取消</button>
-                <button type="button" class="ef-ai-confirm" id="ef-ai-confirm">确定</button>
+                <button type="button" class="ef-ai-clear" id="ef-ai-clear">{{ "aiEnhance.14"|trans }}</button>
+                <button type="button" class="ef-ai-cancel" id="ef-ai-cancel">{{ "aiEnhance.15"|trans }}</button>
+                <button type="button" class="ef-ai-confirm" id="ef-ai-confirm">{{ "aiEnhance.16"|trans }}</button>
               </div>
             </div>
           </div>
@@ -474,13 +471,13 @@
   function applyFilledState() {
     var val = $.trim($requirement.val());
     if (val) {
-      $("#ef-ai-toggle-text").text("重新编辑需求");
+      $("#ef-ai-toggle-text").text(t('aiEnhance.js1'));
       var snippet = val.length > 42 ? val.substring(0, 42) + "…" : val;
-      $("#ef-ai-hint-text").text("已填写：" + snippet);
+      $("#ef-ai-hint-text").text(t('aiEnhance.js2') + snippet);
       $("#ef-ai-reset").show();
     } else {
-      $("#ef-ai-toggle-text").text("AI 二次加工");
-      $("#ef-ai-hint-text").text("创建视图后，由 AI 助手按你的要求自动美化页面");
+      $("#ef-ai-toggle-text").text(t('aiEnhance.js3'));
+      $("#ef-ai-hint-text").text(t('aiEnhance.js4'));
       $("#ef-ai-reset").hide();
     }
   }
@@ -556,7 +553,7 @@
       return;
     }
     if (data.status === "success") {
-      setStatus("AI 加工完成", "success");
+      setStatus(t('aiEnhance.js5'), "success");
       showActions(currentTaskId, currentViewId);
       $("#ef-ai-retry").hide();
       stopPolling();
@@ -564,12 +561,12 @@
         window.location.reload();
       }, 1200);
     } else if (data.status === "error") {
-      setStatus("AI 加工失败", "error");
+      setStatus(t('aiEnhance.js6'), "error");
       showActions(currentTaskId, currentViewId);
       $("#ef-ai-error-msg").text(data.error || "");
       stopPolling();
     } else if (data.status === "running") {
-      setStatus(data.progress || "AI 加工中…", "running");
+      setStatus(data.progress || t('aiEnhance.js7'), "running");
       $("#ef-ai-progress-actions").hide();
     }
   }
@@ -609,7 +606,7 @@
     $("#ef-ai-trigger-box").hide();
     $progress.show();
     $("#ef-ai-progress-actions").hide();
-    setStatus("AI 加工中…", "running");
+    setStatus(t('aiEnhance.js7'), "running");
 
     if (window.EF && window.EF.Mercure && window.EF.Mercure.subscribe) {
       if (!handlerRegistered) {
@@ -631,7 +628,7 @@
     }
     var taskId = currentTaskId;
     $("#ef-ai-progress-actions").hide();
-    setStatus("正在重新执行…", "running");
+    setStatus(t('aiEnhance.js8'), "running");
     $.ajax({
       url: "/api/admin/platform/view/ai-task/" + encodeURIComponent(taskId) + "/retry",
       method: "POST",
@@ -642,7 +639,7 @@
         }
       },
       error: function () {
-        setStatus("重试失败，请稍后再试", "error");
+        setStatus(t('aiEnhance.js9'), "error");
         showActions(currentTaskId, currentViewId);
       }
     });

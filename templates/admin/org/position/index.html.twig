@@ -2,8 +2,7 @@
 {% import 'components/datagrid.html.twig' as grid %}
 {% import 'ui/template/ui.html.twig' as ui %}
 
-{% block title %}岗位管理
-{% endblock %}
+{% block title %}{{ "posIndex.title1"|trans }}{% endblock %}
 
 {% block stylesheets %}
 	{{ parent() }}
@@ -37,7 +36,7 @@
 				},
 				error: function(xhr, status, error) {
 					console.error('Error loading position drawer:', error);
-					alert('加载岗位详情失败，请重试');
+					alert(t('posIndex.js1'));
 				}
 			});
 		}
@@ -66,7 +65,7 @@
 				},
 				error: function(xhr, status, error) {
 					console.error('Error loading position edit drawer:', error);
-					alert('加载岗位编辑失败，请重试');
+					alert(t('posIndex.js2'));
 				}
 			});
 		}
@@ -92,7 +91,7 @@
 				},
 				error: function(xhr, status, error) {
 					console.error('Error loading position create drawer:', error);
-					alert('加载新增岗位失败，请重试');
+					alert(t('posIndex.js3'));
 				}
 			});
 		}
@@ -114,7 +113,7 @@
 
 				if (!isSelectAll && ids.length === 0) {
                     let alert = new Alert($('.org-structure-container'));
-					alert.warning('请至少选择一项进行删除', { percent: '40%', title: "提示", closable: true });
+					alert.warning(t('posIndex.js4'), { percent: '40%', title: t('posIndex.js5'), closable: true });
 					return;
 				}
 
@@ -152,9 +151,9 @@
                     success: function(res) {
                         if (res.code === 200) {
                             if (res.status === 'warning') {
-                                alert.warning(res.message, { percent: '40%', title: "警告", closable: true });
+                                alert.warning(res.message, { percent: '40%', title: t('posIndex.js6'), closable: true });
                             } else {
-                                alert.success(res.message || '删除成功', {
+                                alert.success(res.message || t('posIndex.js7'), {
                                     percent: '40%',
                                     callback: function () {
                                         // 刷新表格
@@ -177,12 +176,12 @@
                                 });
                             }
                         } else {
-                            alert.error(res.message || '删除失败', { percent: '40%', title: "错误", closable: true });
+                            alert.error(res.message || t('posIndex.js8'), { percent: '40%', title: t('posIndex.js9'), closable: true });
                         }
                     },
                     error: function(xhr, status, error) {
                         let errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : error;
-                        alert.error('请求失败：' + errorMessage, { percent: '40%', title: "错误", closable: true });
+                        alert.error(t('posIndex.js10') + errorMessage, { percent: '40%', title: t('posIndex.js9'), closable: true });
                     }
                 });
             });
@@ -232,16 +231,16 @@
                         deleteUrlPrefix: path('org_position_delete', {'id': 'placeholder'})|replace({'placeholder': ''}),
                         batchDeleteUrl: path('org_position_batch_delete'),
                         toolbarButtons: [
-                            { type: 'create', text: '新增岗位', icon: 'fa-solid fa-plus-circle', id: 'add-position-button' },
-                            { type: 'delete', text: '批量删除', icon: 'fa-solid fa-minus-circle', id: 'batch-delete-button' },
-                            { type: 'filter', text: '高级搜索', icon: 'fa-solid fa-filter', id: 'filter-button', classes: 'search' }
+                            { type: 'create', text: 'posIndex.newPos'|trans, icon: 'fa-solid fa-plus-circle', id: 'add-position-button' },
+                            { type: 'delete', text: 'posIndex.batchDelete'|trans, icon: 'fa-solid fa-minus-circle', id: 'batch-delete-button' },
+                            { type: 'filter', text: 'posIndex.advancedSearch'|trans, icon: 'fa-solid fa-filter', id: 'filter-button', classes: 'search' }
                         ],
                         actionButtons: [
-                            { type: 'view', text: '查看', icon: 'fa-solid fa-eye' },
-                            { type: 'edit', text: '编辑', icon: 'fa-solid fa-edit' },
-                            { type: 'delete', text: '删除', icon: 'fa-solid fa-trash' }
+                            { type: 'view', text: 'posIndex.view'|trans, icon: 'fa-solid fa-eye' },
+                            { type: 'edit', text: 'posIndex.edit'|trans, icon: 'fa-solid fa-edit' },
+                            { type: 'delete', text: 'posIndex.delete'|trans, icon: 'fa-solid fa-trash' }
                         ],
-                        emptyText: '暂无岗位数据',
+                        emptyText: 'posIndex.emptyData'|trans,
                         sortable: true,
                         maxWidth: '100%',
                         minHeight: '500px',
@@ -269,7 +268,7 @@
             <div class="ef-modal" style="width: 400px">
                 <div class="ef-modal-header">
                     <div class="ef-modal-title ef-modal-title-align-left">
-                        确认删除
+                        {{ "posIndex.2"|trans }}
                     </div>
                     <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn">
                         <span class="ef-icon-hover">
@@ -280,11 +279,11 @@
                     </div>
                 </div>
                 <div class="ef-modal-body">
-                    <div>确定要删除选中的岗位吗？此操作将标记岗位为停用状态，不可恢复。</div>
+                    <div>{{ "posIndex.3"|trans }}</div>
                 </div>
                 <div class="ef-modal-footer">
-                    <button class="btn secondary small cancel-btn" type="button">取消</button>
-                    <button class="btn primary small confirm-btn" type="button">确定</button>
+                    <button class="btn secondary small cancel-btn" type="button">{{ "posIndex.4"|trans }}</button>
+                    <button class="btn primary small confirm-btn" type="button">{{ "posIndex.5"|trans }}</button>
                 </div>
             </div>
         </div>
@@ -295,7 +294,7 @@
         <div class="ef-ai-search-container" style="display: flex; height: 500px; padding: 0;">
             {# Left Sidebar: Available Fields #}
             <div class="ef-ai-search-sidebar" style="width: 200px; border-right: 1px solid #eee; padding: 15px; background: #fafafa; overflow-y: auto;">
-                <div style="font-weight: bold; margin-bottom: 10px; color: #666;">可用字段</div>
+                <div style="font-weight: bold; margin-bottom: 10px; color: #666;">{{ "posIndex.6"|trans }}</div>
                 <div class="ef-field-list">
                     {% for col in columns %}
                         {% if col.field is defined %}
@@ -317,8 +316,8 @@
                             <i class="fa-solid fa-robot" style="color: #1890ff;"></i>
                         </div>
                         <div class="ai-content" style="background: #f0f2f5; padding: 8px 12px; border-radius: 8px; max-width: 80%;">
-                            你好！我是您的 AI 搜索助手。请告诉我您想查找什么？<br>
-                            例如：“查找IT部门的经理”
+                            {{ "posIndex.7"|trans }}<br>
+                            {{ "posIndex.8"|trans }}
                         </div>
                     </div>
                 </div>
@@ -327,17 +326,17 @@
                 <div class="ef-ai-input-area" style="display: flex; margin-bottom: 15px;">
                     <textarea id="ai-search-input" class="ef-input clear-btn-disabled" 
                         style="flex: 1; height: 60px; padding: 10px; resize: none; border-radius: 8px 0 0 8px; border-right: none;" 
-                        placeholder="请输入您的搜索条件..."></textarea>
+                        placeholder="{{ "posIndex.1"|trans }}"></textarea>
                     <button id="ai-send-btn" class="ef-button ef-button-primary" style="height: 60px; border-radius: 0 8px 8px 0; padding: 0 20px;" onclick="executeAiSearch()">
-                        <i class="fa-solid fa-paper-plane"></i> 发送
+                        <i class="fa-solid fa-paper-plane"></i> {{ "posIndex.9"|trans }}
                     </button>
                 </div>
 
                 {# Current Filters Display #}
                 <div class="ef-ai-current-filters" style="border-top: 1px solid #eee; padding-top: 10px;">
-                    <div style="font-size: 13px; color: #999; margin-bottom: 5px;">当前已识别条件 (待确认):</div>
+                    <div style="font-size: 13px; color: #999; margin-bottom: 5px;">{{ "posIndex.10"|trans }} ({{ "posIndex.11"|trans }}):</div>
                     <div id="ai-filter-tags" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 30px; align-items: center;">
-                        <span style="color: #ccc; font-size: 12px; line-height: 30px;">(暂无条件)</span>
+                        <span style="color: #ccc; font-size: 12px; line-height: 30px;">({{ "posIndex.12"|trans }})</span>
                     </div>
                 </div>
             </div>
@@ -384,12 +383,12 @@
                 container.empty();
                 
                 if (currentAiFilters.length === 0) {
-                    container.html('<span style="color: #ccc; font-size: 12px; line-height: 30px;">(暂无条件)</span>');
+                    container.html('<span style="color: #ccc; font-size: 12px; line-height: 30px;">{{ "posIndex.noCond"|trans }}</span>');
                     return;
                 }
                 
                 // Clear All Button
-                container.append('<button class="ef-button small danger" style="margin-right: 10px; padding: 0 8px; height: 24px; line-height: 22px; font-size: 12px; border-radius: 4px; border: 1px solid #ffccc7; background: #fff1f0; color: #ff4d4f; cursor: pointer;" onclick="currentAiFilters=[]; renderAiFilters(); appendMessage(\'ai\', \'已清空所有条件。\');">清空</button>');
+                container.append('<button class="ef-button small danger" style="margin-right: 10px; padding: 0 8px; height: 24px; line-height: 22px; font-size: 12px; border-radius: 4px; border: 1px solid #ffccc7; background: #fff1f0; color: #ff4d4f; cursor: pointer;" onclick="currentAiFilters=[]; renderAiFilters(); appendMessage(\'ai\', \'' + t('posIndex.cleared') + '\');">{{ "posIndex.clear"|trans }}</button>');
 
                 container.append(renderRecursive(currentAiFilters, 'AND', []));
             }
@@ -444,17 +443,17 @@
                 const map = {
                     'equals': '=',
                     'not_equals': '!=',
-                    'contains': '包含',
-                    'not_contains': '不包含',
-                    'begins_with': '开头是',
-                    'ends_with': '结尾是',
+                    'contains': t('posIndex.js11'),
+                    'not_contains': t('posIndex.js12'),
+                    'begins_with': t('posIndex.js13'),
+                    'ends_with': t('posIndex.js14'),
                     'greater_than': '>',
                     'less_than': '<',
                     'greater_than_or_equal': '>=',
                     'less_than_or_equal': '<=',
-                    'is_null': '为空',
-                    'is_not_null': '不为空',
-                    'in': '是'
+                    'is_null': t('posIndex.js15'),
+                    'is_not_null': t('posIndex.js16'),
+                    'in': t('posIndex.js17')
                 };
                 return map[op] || op;
             }
@@ -485,7 +484,7 @@
                 }
                 
                 renderAiFilters();
-                appendMessage('ai', '已移除该条件。');
+                appendMessage('ai', t('posIndex.js18'));
             }
 
             // Main Action
@@ -521,18 +520,18 @@
                             
                             // Show thought process if available
                             if (response.thought_process) {
-                                appendMessage('ai', '<div style="color: #666; font-style: italic; font-size: 12px; margin-bottom: 5px; border-left: 2px solid #ccc; padding-left: 8px;">' + response.thought_process + '</div>已更新搜索条件，请确认。');
+                                appendMessage('ai', '<div style="color: #666; font-style: italic; font-size: 12px; margin-bottom: 5px; border-left: 2px solid #ccc; padding-left: 8px;">' + response.thought_process + '</div>');
                             } else {
-                                appendMessage('ai', '已更新搜索条件，请确认。');
+                                appendMessage('ai', t('posIndex.js20'));
                             }
                         } else {
-                            appendMessage('ai', '未能识别出有效的查询条件，请换个说法试试。');
+                            appendMessage('ai', t('posIndex.js21'));
                         }
                     },
                     error: function(xhr) {
                          $btn.prop('disabled', false).html(originalText);
-                         const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '未知错误';
-                         appendMessage('ai', '解析失败: ' + errorMsg);
+                         const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : t('posIndex.js22');
+                         appendMessage('ai', t('posIndex.js23') + errorMsg);
                     }
                 });
             }
@@ -540,7 +539,7 @@
             // Confirm & Apply
             function applyAiFilters() {
                 if (currentAiFilters.length === 0) {
-                     new Alert().warning('当前没有有效的搜索条件');
+                     new Alert().warning(t('posIndex.js24'));
                      return;
                 }
 
@@ -564,10 +563,12 @@
     {% endmacro %}
 
     {% set modalContent = _self.filterBodyContent(columns|default([])) %}
-    {% set modalFooter = '<button class="btn secondary small" type="button" onclick="closeModal(\'modalposition-grid\')">取消</button>
-                      <button id="ai-apply-btn" class="btn primary small" type="button" onclick="applyAiFilters()">
-                        <i class="fa-solid fa-check"></i> 确认并搜索
-                      </button>' %}
+    {% set modalFooter %}
+<button class="btn secondary small" type="button" onclick="closeModal('modalposition-grid')">{{ "posIndex.cancel"|trans }}</button>
+<button id="ai-apply-btn" class="btn primary small" type="button" onclick="applyAiFilters()">
+  <i class="fa-solid fa-check"></i> {{ "posIndex.confirmSearch"|trans }}
+</button>
+    {% endset %}
     {% set modalOptions = {
         zIndex: 1002,
         wrapperClass: 'ai-search-modal-wrapper',
@@ -577,7 +578,7 @@
 
     {{ ui.modal(
         'modalposition-grid',
-        '高级搜索 (AI 助手)',
+        'posIndex.aiSearch'|trans,
         modalContent,
         modalFooter,
         modalOptions

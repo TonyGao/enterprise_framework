@@ -4,7 +4,7 @@
 				<div class="ef-modal" style="width: 784px">
 					<div class="ef-modal-header">
 						<div class="ef-modal-title ef-modal-title-align-left">
-							单部门选择
+							{{ "deptModal.2"|trans }}
 						</div>
 						<div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" inputid="{{ departmentInputId }}">
 							<span class="ef-icon-hover">
@@ -19,7 +19,7 @@
 							<div class="left-tree-wrapper">
 								<div class="search-department-wrapper">
 									<span class="ef-input-wrapper">
-										<input class="ef-input ef-input-size-mini text" type="text" clearable="true" placeholder="请输入部门名称">
+										<input class="ef-input ef-input-size-mini text" type="text" clearable="true" placeholder="{{ "deptModal.1"|trans }}">
 										<span class="ef-input-suffix">
 											<i class="fa-solid fa-magnifying-glass"></i>
 										</span>
@@ -33,47 +33,47 @@
 								<div id="department">
 									<div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
 										<div class="ef-col ef-col-6 ef-form-item-label-col">
-											<label class="ef-form-item-label" for="department_name">部门全称</label>
+											<label class="ef-form-item-label" for="department_name">{{ "deptModal.3"|trans }}</label>
 										</div>
 										<div class="ef-col ef-col-18 ef-form-item-wrapper-col">
 											<div class="ef-form-item-content-wrapper">
-												<div class="ef-form-item-content ef-form-item-content-flex">行业解决方案部三</div>
+												<div class="ef-form-item-content ef-form-item-content-flex">{{ "deptModal.4"|trans }}</div>
 											</div>
 										</div>
 									</div>
 									<div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
 										<div class="ef-col ef-col-6 ef-form-item-label-col">
-											<label class="ef-form-item-label" for="department_alias">部门简称</label>
+											<label class="ef-form-item-label" for="department_alias">{{ "deptModal.5"|trans }}</label>
 										</div>
 										<div class="ef-col ef-col-18 ef-form-item-wrapper-col">
 											<div class="ef-form-item-content-wrapper">
-												<div class="ef-form-item-content ef-form-item-content-flex">行业解决方案部三</div>
+												<div class="ef-form-item-content ef-form-item-content-flex">{{ "deptModal.4"|trans }}</div>
 											</div>
 										</div>
 									</div>
 									<div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
 										<div class="ef-col ef-col-6 ef-form-item-label-col">
-											<label class="ef-form-item-label" for="department_company">所属公司</label>
+											<label class="ef-form-item-label" for="department_company">{{ "deptModal.6"|trans }}</label>
 										</div>
 										<div class="ef-col ef-col-18 ef-form-item-wrapper-col">
 											<div class="ef-form-item-content-wrapper">
-												<div class="ef-form-item-content ef-form-item-content-flex">天津港公司2</div>
+												<div class="ef-form-item-content ef-form-item-content-flex">{{ "deptModal.7"|trans }}</div>
 											</div>
 										</div>
 									</div>
 									<div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
 										<div class="ef-col ef-col-6 ef-form-item-label-col">
-											<label class="ef-form-item-label" for="department_owner">部门负责人</label>
+											<label class="ef-form-item-label" for="department_owner">{{ "deptModal.8"|trans }}</label>
 										</div>
 										<div class="ef-col ef-col-18 ef-form-item-wrapper-col">
 											<div class="ef-form-item-content-wrapper">
-												<div class="ef-form-item-content ef-form-item-content-flex">高强</div>
+												<div class="ef-form-item-content ef-form-item-content-flex">{{ "deptModal.9"|trans }}</div>
 											</div>
 										</div>
 									</div>
 									<div class="ef-row ef-row-align-start ef-row-justify-start ef-form-item ef-form-item-layout-horizontal">
 										<div class="ef-col ef-col-6 ef-form-item-label-col">
-											<label class="ef-form-item-label" for="department_parent">上级部门</label>
+											<label class="ef-form-item-label" for="department_parent">{{ "deptModal.10"|trans }}</label>
 										</div>
 										<div class="ef-col ef-col-18 ef-form-item-wrapper-col">
 											<div class="ef-form-item-content-wrapper">
@@ -86,8 +86,8 @@
 						</div>
 					</div>
 					<div class="ef-modal-footer">
-						<button class="btn secondary small cancelDepartment" type="button" inputid="{{ departmentInputId }}">取消</button>
-						<button class="btn primary small confirmDepartment" type="button" inputid="{{ departmentInputId }}">确定</button>
+						<button class="btn secondary small cancelDepartment" type="button" inputid="{{ departmentInputId }}">{{ "deptModal.11"|trans }}</button>
+						<button class="btn primary small confirmDepartment" type="button" inputid="{{ departmentInputId }}">{{ "deptModal.12"|trans }}</button>
 					</div>
 				</div>
 			</div>

@@ -9,35 +9,35 @@ class FontSelectorModal {
         this.onFontSelect = null;
         this.fonts = {
             chinese: [
-                { name: '阿里妈妈东方大楷', family: '阿里妈妈东方大楷', weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
-                { name: '阿里妈妈刀隶体', family: '阿里妈妈刀隶体', weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
-                { name: '阿里妈妈方圆体', family: '阿里妈妈方圆体', weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
-                { name: '阿里妈妈数黑体', family: '阿里妈妈数黑体', weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
-                { name: '钉钉进步体', family: '钉钉进步体', weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
-                { name: '阿里巴巴普惠体', family: '阿里巴巴普惠体', weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
-                { name: '思源黑体简体中文', family: '思源黑体简体中文', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '思源黑体香港', family: '思源黑体简体中文', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '思源宋体简体中文', family: '思源宋体简体中文', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '思源宋体香港', family: '思源宋体香港', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '钟齐流江毛草', family: '钟齐流江毛草', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '龙藏体', family: '龙藏体', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '钟齐马善政毛笔楷书', family: '钟齐马善政毛笔楷书', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '站酷快乐体', family: '站酷快乐体', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '站酷庆科黄油体', family: '站酷庆科黄油体', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '站酷小薇', family: '站酷小薇', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '志莽行书', family: '志莽行书', weights: [100, 300, 400, 500, 700, 900] },
-                { name: 'Noto宋体简体中文', family: 'Noto宋体简体中文', weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js1'), family: t('fontSelectorJs.js1'), weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
+                { name: t('fontSelectorJs.js2'), family: t('fontSelectorJs.js2'), weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
+                { name: t('fontSelectorJs.js3'), family: t('fontSelectorJs.js3'), weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
+                { name: t('fontSelectorJs.js4'), family: t('fontSelectorJs.js4'), weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
+                { name: t('fontSelectorJs.js5'), family: t('fontSelectorJs.js5'), weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
+                { name: t('fontSelectorJs.js6'), family: t('fontSelectorJs.js6'), weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
+                { name: t('fontSelectorJs.js7'), family: t('fontSelectorJs.js7'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js8'), family: t('fontSelectorJs.js7'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js9'), family: t('fontSelectorJs.js9'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js10'), family: t('fontSelectorJs.js10'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js11'), family: t('fontSelectorJs.js11'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js12'), family: t('fontSelectorJs.js12'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js13'), family: t('fontSelectorJs.js13'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js14'), family: t('fontSelectorJs.js14'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js15'), family: t('fontSelectorJs.js15'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js16'), family: t('fontSelectorJs.js16'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js17'), family: t('fontSelectorJs.js17'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js18'), family: t('fontSelectorJs.js18'), weights: [100, 300, 400, 500, 700, 900] },
                 // Windows/macOS 中文字体
-                { name: '微软雅黑', family: 'Microsoft YaHei', weights: [300, 400, 700] },
-                { name: '宋体', family: 'SimSun', weights: [400] },
-                { name: '黑体', family: 'SimHei', weights: [400] },
-                { name: '楷体', family: 'KaiTi', weights: [400] },
-                { name: '仿宋', family: 'FangSong', weights: [400] },
-                { name: '苹方', family: 'PingFang SC', weights: [100, 200, 300, 400, 500, 600, 700] },
-                { name: '华文黑体', family: 'STHeiti', weights: [400] },
-                { name: '华文楷体', family: 'STKaiti', weights: [400] },
-                { name: '华文宋体', family: 'STSong', weights: [400] },
-                { name: '华文仿宋', family: 'STFangsong', weights: [400] },
+                { name: t('fontSelectorJs.js19'), family: 'Microsoft YaHei', weights: [300, 400, 700] },
+                { name: t('fontSelectorJs.js20'), family: 'SimSun', weights: [400] },
+                { name: t('fontSelectorJs.js21'), family: 'SimHei', weights: [400] },
+                { name: t('fontSelectorJs.js22'), family: 'KaiTi', weights: [400] },
+                { name: t('fontSelectorJs.js23'), family: 'FangSong', weights: [400] },
+                { name: t('fontSelectorJs.js24'), family: 'PingFang SC', weights: [100, 200, 300, 400, 500, 600, 700] },
+                { name: t('fontSelectorJs.js25'), family: 'STHeiti', weights: [400] },
+                { name: t('fontSelectorJs.js26'), family: 'STKaiti', weights: [400] },
+                { name: t('fontSelectorJs.js27'), family: 'STSong', weights: [400] },
+                { name: t('fontSelectorJs.js28'), family: 'STFangsong', weights: [400] },
             ],
             english: [
                 { name: 'AlimamaAgile', family: 'AlimamaAgile', weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
@@ -72,8 +72,8 @@ class FontSelectorModal {
                 { name: 'Hoefler Text', family: 'Hoefler Text', weights: [400, 700] },
             ],
             korean: [
-                { name: '思源黑体韩国', family: '思源黑体韩国', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '思源宋体韩国', family: '思源宋体韩国', weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js29'), family: t('fontSelectorJs.js29'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js30'), family: t('fontSelectorJs.js30'), weights: [100, 300, 400, 500, 700, 900] },
                 { name: 'Noto Sans KR', family: 'Noto Sans KR', weights: [100, 300, 400, 500, 700, 900] },
                 { name: 'Malgun Gothic', family: 'Malgun Gothic', weights: [400, 700] },
                 { name: 'Dotum', family: 'Dotum', weights: [400] },
@@ -83,8 +83,8 @@ class FontSelectorModal {
                 { name: 'Apple SD Gothic Neo', family: 'Apple SD Gothic Neo', weights: [100, 200, 300, 400, 500, 600, 700, 800, 900] },
             ],
             japanese: [
-                { name: '思源黑体日本', family: '思源黑体日本', weights: [100, 300, 400, 500, 700, 900] },
-                { name: '思源宋体日本', family: '思源宋体日本', weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js31'), family: t('fontSelectorJs.js31'), weights: [100, 300, 400, 500, 700, 900] },
+                { name: t('fontSelectorJs.js32'), family: t('fontSelectorJs.js32'), weights: [100, 300, 400, 500, 700, 900] },
                 { name: 'Noto Sans JP', family: 'Noto Sans JP', weights: [100, 300, 400, 500, 700, 900] },
                 { name: 'Yu Gothic', family: 'Yu Gothic', weights: [300, 400, 500, 600, 700] },
                 { name: 'Meiryo', family: 'Meiryo', weights: [400, 700] },
@@ -115,33 +115,33 @@ class FontSelectorModal {
                 <div class="font-category-tabs">
                     <div class="font-tab active" data-category="chinese">
                         <i class="fa-solid fa-font"></i>
-                        <span>中文</span>
+                        <span>${t('fontSel.m59')}</span>
                     </div>
                     <div class="font-tab" data-category="english">
                         <i class="fa-solid fa-font"></i>
-                        <span>英文</span>
+                        <span>${t('fontSel.m60')}</span>
                     </div>
                     <div class="font-tab" data-category="korean">
                         <i class="fa-solid fa-font"></i>
-                        <span>韩文</span>
+                        <span>${t('fontSel.m61')}</span>
                     </div>
                     <div class="font-tab" data-category="japanese">
                         <i class="fa-solid fa-font"></i>
-                        <span>日文</span>
+                        <span>${t('fontSel.m62')}</span>
                     </div>
                     <div class="font-tab" data-category="emoji">
                         <i class="fa-solid fa-smile"></i>
-                        <span>表情</span>
+                        <span>${t('fontSel.m63')}</span>
                     </div>
                 </div>
                 <div class="font-selector-content">
                     <div class="font-selector-header">
-                        <h3 class="font-selector-title">选择字体</h3>
+                        <h3 class="font-selector-title">${t('fontSel.m64')}</h3>
                         <button class="font-selector-close" id="fontSelectorClose">&times;</button>
                     </div>
                     <div class="font-selector-body">
                         <div class="font-search-container">
-                            <input type="text" class="font-search-input" placeholder="搜索字体..." id="fontSearchInput">
+                            <input type="text" class="font-search-input" placeholder=t('fontSelectorJs.js33') id="fontSearchInput">
                         </div>
                         <div class="font-selector-main">
                             <div class="font-content-area">
@@ -164,8 +164,8 @@ class FontSelectorModal {
                         </div>
                     </div>
                     <div class="font-selector-footer">
-                        <button class="btn secondary" id="fontSelectorCancel"><i class="fa-solid fa-times"></i> 取消</button>
-                        <button class="btn primary" id="fontSelectorConfirm" disabled><i class="fa-solid fa-check"></i> 确定</button>
+                        <button class="btn secondary" id="fontSelectorCancel"><i class="fa-solid fa-times"></i> ' + t('fontSel.cancel') + '</button>
+                        <button class="btn primary" id="fontSelectorConfirm" disabled><i class="fa-solid fa-check"></i> ' + t('fontSel.confirm') + '</button>
                     </div>
                 </div>
             </div>
@@ -198,7 +198,7 @@ class FontSelectorModal {
             
             let chineseText, englishText;
             if (category === 'chinese') {
-                chineseText = '中文字体预览效果';
+                chineseText = t('fontSelectorJs.js34');
                 englishText = 'English Font Preview';
             } else if (category === 'korean') {
                 chineseText = '한국어 글꼴 미리보기';
@@ -245,22 +245,22 @@ class FontSelectorModal {
 
     getWeightName(weight) {
         const weightNames = {
-            100: '极细',
-            200: '特细',
-            300: '细体',
-            400: '正常',
-            500: '中等',
-            600: '半粗',
-            700: '粗体',
-            800: '特粗',
-            900: '极粗'
+            100: t('fontSelectorJs.js35'),
+            200: t('fontSelectorJs.js36'),
+            300: t('fontSelectorJs.js37'),
+            400: t('fontSelectorJs.js38'),
+            500: t('fontSelectorJs.js39'),
+            600: t('fontSelectorJs.js40'),
+            700: t('fontSelectorJs.js41'),
+            800: t('fontSelectorJs.js42'),
+            900: t('fontSelectorJs.js43')
         };
         return weightNames[weight] || weight.toString();
     }
 
     isWebFont(fontName, fontFamily) {
         const webFonts = [
-            '阿里妈妈', '钉钉', '阿里巴巴', '思源', '钟齐', '龙藏', '站酷', '志莽', 'noto',
+            t('fontSelectorJs.js44'), t('fontSelectorJs.js45'), t('fontSelectorJs.js46'), t('fontSelectorJs.js47'), t('fontSelectorJs.js48'), t('fontSelectorJs.js49'), t('fontSelectorJs.js50'), t('fontSelectorJs.js51'), 'noto',
             'alimamaagile', 'noto sans mono', 'noto sans symbols2', 'noto sans kr', 'noto sans jp', 
             'noto color emoji', 'twemoji', 'emojione', 'symbola'
         ];
@@ -269,8 +269,8 @@ class FontSelectorModal {
 
     isWindowsFont(fontName, fontFamily) {
         const windowsFonts = [
-            'microsoft yahei', '微软雅黑', 'simsun', '宋体', 'simhei', '黑体', 'kaiti', '楷体', 
-            'fangsong', '仿宋', 'calibri', 'cambria', 'consolas', 'courier new', 'tahoma', 
+            'microsoft yahei', t('fontSelectorJs.js19'), 'simsun', t('fontSelectorJs.js20'), 'simhei', t('fontSelectorJs.js21'), 'kaiti', t('fontSelectorJs.js22'), 
+            'fangsong', t('fontSelectorJs.js23'), 'calibri', 'cambria', 'consolas', 'courier new', 'tahoma', 
             'trebuchet ms', 'comic sans ms', 'impact', 'lucida console', 'palatino linotype',
             'malgun gothic', 'dotum', 'gulim', 'batang', 'gungsuh', 'yu gothic', 'meiryo', 
             'ms gothic', 'ms mincho', 'segoe ui emoji'
@@ -280,8 +280,8 @@ class FontSelectorModal {
 
     isMacOSFont(fontName, fontFamily) {
         const macosFonts = [
-            'pingfang sc', '苹方', 'stheiti', '华文黑体', 'stkaiti', '华文楷体', 'stsong', '华文宋体', 
-            'stfangsong', '华文仿宋', '-apple-system', 'san francisco', 'helvetica neue', 'avenir', 
+            'pingfang sc', t('fontSelectorJs.js24'), 'stheiti', t('fontSelectorJs.js25'), 'stkaiti', t('fontSelectorJs.js26'), 'stsong', t('fontSelectorJs.js27'), 
+            'stfangsong', t('fontSelectorJs.js28'), '-apple-system', 'san francisco', 'helvetica neue', 'avenir', 
             'menlo', 'monaco', 'optima', 'futura', 'gill sans', 'baskerville', 'hoefler text',
             'apple sd gothic neo', 'hiragino kaku gothic pro', 'hiragino mincho pro', 'osaka',
             'apple color emoji'

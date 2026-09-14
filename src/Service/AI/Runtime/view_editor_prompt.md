@@ -28,7 +28,7 @@
 
 ## 硬性技术要求（必须遵守）
 
-0. **禁止使用任何 CSS 类名（class 属性）** —— 所有样式必须用 inline style (`style="..."`) 实现。页面存在未知的类名 hash 机制，任何 class 都会被破坏导致样式丢失。也不能依赖外部 CSS/JS。
+0. **禁止使用任何 CSS 类名（class 属性）** —— 所有样式必须用 inline style (`style="..."`) 实现。页面存在未知的类名 hash 机制，任何 class 都会被破坏导致样式丢失。**不要依赖外部 CDN 的 CSS/JS**；可用站内 `/lib/` 下的本地库（如 GSAP `/lib/gsap/gsap.min.js`、three.js `/lib/three/three.min.js`）与内联 `<svg>`、内联 `<script>`（IIFE 包裹、用唯一 ID 选择元素）来实现动画与 3D。
 1. **最外层 div 必须包含 `width:100%`** —— `.section-content` 是 `display:flex`，子元素不加 width 会收缩包裹内容。
 2. 输出必须是结构完整、标签闭合、可直接作为视图内容呈现的 HTML。
 3. 修改完成后必须 `cdp_save()` 保存，让修改持久化。

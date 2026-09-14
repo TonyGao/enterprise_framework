@@ -30,10 +30,19 @@
  6. `needs_clarification` 字段：当需求**存在明显的执行歧义**，不澄清无法可靠执行时 → `true`，并给出 `clarification_question` 与 2~4 个具体可选的 `clarification_options`。典型场景：
    - "重构"但没说清是**改版式（布局构成）**还是**只换配色主题**
    - 需求提到多种可能方向、互斥选项
-   - **当 `redesign=true` 且用户只指定了主题/风格、没有明确说明布局/版式方向时**（如"按元宵节风格重构""换春节主题""添加够多元宵元素"），也应 `needs_clarification=true`——整体重构是高成本操作，执行前先与用户对齐"重构程度"，避免生成后不符合预期
-   - **`intent=form` 且用户没说清表单的"形态"时**（是要**独立成一个完整页面**，还是**作为可复用的表单片段**被其它页面引入），也应澄清形态
-   - 反之，若用户已明确布局方向（如"改成左右分栏""清空重排""保留版式只换配色""做成整页""做成可复用片段"），则 `needs_clarification=false`
+   - 当 `redesign=true` 且 `design_spec.layout_mode` 为空、用户也没说清布局方向时（如"按元宵节风格重构""换春节主题"），也应 `needs_clarification=true`——整体重构是高成本操作，执行前先对齐"重构程度/布局方向"
+   - `intent=form` 且用户没说清表单"形态"（独立整页 vs 可复用片段）时，也应澄清形态
+   - 反之，若用户已明确布局方向/spec（如"改成左右分栏""卡片分组""清空重排""保留版式只换配色"），则 `needs_clarification=false`
    - 非重构的普通需求：拿不准时倾向 `false`（不要频繁打扰用户）
+
+7. `design_spec` 字段：**从用户的措辞里最大程度抽取出他们的具体设计诉求**，这就是下游执行的"设计规格书"。这是最重要的一步——用户想让 AI"彻底重构、卡片分组、要很酷"，你要把它翻译成明确的 spec，而不是让子代理从一句自然语言里猜。尽量填充，能确定的字段就填，拿不准的留 `null`：
+   - `layout_mode`：布局构成（枚举：`cards`卡片分组 / `split`左右分栏 / `sidebar`左侧导航+主区 / `steps`分步向导 / `hero_flow`顶部Hero+字段区 / `single`单列 / `immersive`通栏沉浸 / `table`传统表格行式 / `free`自由发挥）
+   - `style`：视觉风格（枚举：`cool`酷炫现代 / `enterprise`企业稳重 / `minimal`极简 / `dark`深色 / `light`浅色清爽 / `luxury`质感高级 / `null`）
+   - `degree`：重构程度（`full`彻底重构换构成 / `skin`保留结构只换皮肤配色 / `refine`局部微调）
+   - `compact`：紧凑度（`compact`紧凑 / `spacious`宽松 / `null`）
+   - `colors`：若用户提了配色/色彩倾向（字符串，如"蓝紫渐变""莫兰迪灰""深色+金"），否则 `null`
+   - `fields_arrangement`：字段排列偏好（如"50%双列""单列""分两组""按步骤"）或 `null`
+   - `notes`：其它具体细节（字符串，如"表单要很酷、布局紧凑"）；没有则空字符串
 
 ## 输出格式
 
@@ -41,26 +50,32 @@
 
 ```json
 {
-  "intent": "email",
+  "intent": "form",
   "redesign": true,
-  "needs_clarification": true,
-  "clarification_question": "你希望这次重构做到什么程度？",
-  "clarification_options": [
-    "彻底换一套全新的版式（改变布局构成，如左右分栏改为通栏/非对称等）",
-    "保留现有版式，只把配色主题换成春节红金风格",
-    "我来描述具体要求"
-  ],
-  "confidence": 0.7,
-  "plan": "春节风格重构",
-  "reason": "需求提到重构但未明确是改版式还是只换配色，需要澄清"
+  "needs_clarification": false,
+  "clarification_question": null,
+  "clarification_options": [],
+  "design_spec": {
+    "layout_mode": "cards",
+    "style": "cool",
+    "degree": "full",
+    "compact": "compact",
+    "colors": "蓝紫渐变",
+    "fields_arrangement": null,
+    "notes": "表单要非常酷，布局紧凑"
+  },
+  "confidence": 0.85,
+  "plan": "用卡片分组构成重构表单：按信息类别分成两张卡片，深色 Hero + 蓝紫渐变背景，字段用图标化外壳，布局紧凑，整体现代酷炫",
+  "reason": "用户明确要彻底重构、卡片分组、很酷，布局与风格诉求清晰"
 }
 ```
 
 - `intent`：必须是上述列表中的值
 - `redesign`：布尔值，是否整体重构
 - `needs_clarification`：布尔值，是否需要用户澄清
-- `clarification_question`：澄清问题（字符串）
-- `clarification_options`：2~4 个可选方案（字符串数组）
+- `clarification_question`：澄清问题（字符串，可为 null）
+- `clarification_options`：2~4 个可选方案（字符串数组，可为空数组）
+- `design_spec`：对象，见第 7 条字段说明（**尽量填满**）
 - `confidence`：0~1 的数字，表示判断把握
-- `plan`：字符串，执行要点
+- `plan`：字符串，执行要点（**要把 design_spec 翻译成可操作的设计要点**，供执行 Agent 直接参考）
 - `reason`：字符串，简短说明归类理由

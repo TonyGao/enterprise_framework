@@ -73,7 +73,7 @@
 				</div>
 				<div class="admin-header-right">
 					<div class="header-helper">
-						<a href="javascript:void(0)" class="admin-help-link" id="view-info-btn" title="查看当前视图信息">
+						<a href="javascript:void(0)" class="admin-help-link" id="view-info-btn" title="{{ "viewEditorLayout.1"|trans }}">
 							<div>
 								<span class="universe-icon helper">
 									<i class="fa-regular fa-circle-question"></i>
@@ -111,11 +111,11 @@
 document.getElementById('view-info-btn')?.addEventListener('click', function(e) {
 	e.preventDefault();
 	var lines = [];
-	if (window.__VIEW_ID__) lines.push('视图ID: ' + window.__VIEW_ID__);
-	if (window.__VIEW_NAME__) lines.push('视图名称: ' + window.__VIEW_NAME__);
-	if (window.__VIEW_PATH__) lines.push('路径: ' + window.__VIEW_PATH__);
-	if (window.__VIEW_DESIGN_PATH__) lines.push('设计文件: ' + window.__VIEW_DESIGN_PATH__);
-	if (lines.length === 0) { lines.push('视图信息暂未加载'); }
+	if (window.__VIEW_ID__) lines.push(t('viewEditorLayout.js1') + window.__VIEW_ID__);
+	if (window.__VIEW_NAME__) lines.push(t('viewEditorLayout.js2') + window.__VIEW_NAME__);
+	if (window.__VIEW_PATH__) lines.push(t('viewEditorLayout.js3') + window.__VIEW_PATH__);
+	if (window.__VIEW_DESIGN_PATH__) lines.push(t('viewEditorLayout.js4') + window.__VIEW_DESIGN_PATH__);
+	if (lines.length === 0) { lines.push(t('viewEditorLayout.js5')); }
 
 	var old = document.getElementById('ai-view-info-popup');
 	if (old) old.remove();
@@ -125,7 +125,7 @@ document.getElementById('view-info-btn')?.addEventListener('click', function(e) 
 	popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#1e293b;padding:20px 24px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:99999;font-size:14px;line-height:1.6;min-width:320px;max-width:90vw;';
 
 	var title = document.createElement('div');
-	title.textContent = '当前视图信息';
+	title.textContent = t('viewEditorLayout.js6');
 	title.style.cssText = 'font-size:16px;font-weight:700;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;';
 	popup.appendChild(title);
 
@@ -137,7 +137,7 @@ document.getElementById('view-info-btn')?.addEventListener('click', function(e) 
 	});
 
 	var close = document.createElement('button');
-	close.textContent = '关闭';
+	close.textContent = t('viewEditorLayout.js7');
 	close.style.cssText = 'margin-top:14px;padding:6px 16px;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;';
 	close.onclick = function() { popup.remove(); };
 	popup.appendChild(close);

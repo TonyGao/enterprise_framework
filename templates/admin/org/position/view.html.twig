@@ -1,18 +1,18 @@
 {% extends "admin/base.html.twig" %}
 
-{% block title %}岗位详情{% endblock %}
+{% block title %}{{ "posView.title1"|trans }}{% endblock %}
 
 {% block body %}
     <div class="ef-page-header">
         <div class="ef-page-title">
-            <h1>岗位详情</h1>
+            <h1>{{ "posView.1"|trans }}</h1>
         </div>
         <div class="ef-page-breadcrumb">
             <ol class="ef-breadcrumb">
-                <li class="ef-breadcrumb-item"><a href="{{ path('admin_dashboard') }}">首页</a></li>
-                <li class="ef-breadcrumb-item"><a href="{{ path('org_corporation') }}">组织架构</a></li>
-                <li class="ef-breadcrumb-item"><a href="{{ path('org_position') }}">岗位管理</a></li>
-                <li class="ef-breadcrumb-item active">岗位详情</li>
+                <li class="ef-breadcrumb-item"><a href="{{ path('admin_dashboard') }}">{{ "posView.2"|trans }}</a></li>
+                <li class="ef-breadcrumb-item"><a href="{{ path('org_corporation') }}">{{ "posView.3"|trans }}</a></li>
+                <li class="ef-breadcrumb-item"><a href="{{ path('org_position') }}">{{ "posView.4"|trans }}</a></li>
+                <li class="ef-breadcrumb-item active">{{ "posView.1"|trans }}</li>
             </ol>
         </div>
     </div>
@@ -20,53 +20,53 @@
     <div class="ef-page-content">
         <div class="ef-card">
             <div class="ef-card-header">
-                <div class="ef-card-title">基本信息</div>
+                <div class="ef-card-title">{{ "posView.5"|trans }}</div>
                 <div class="ef-card-actions">
                     <a href="{{ path('org_position_edit', {'id': position.id}) }}" class="ef-button ef-button-primary">
-                        <i class="fa-solid fa-edit"></i> 编辑
+                        <i class="fa-solid fa-edit"></i> {{ "posView.6"|trans }}
                     </a>
                     <a href="{{ path('org_position') }}" class="ef-button ef-button-default">
-                        <i class="fa-solid fa-arrow-left"></i> 返回
+                        <i class="fa-solid fa-arrow-left"></i> {{ "posView.7"|trans }}
                     </a>
                 </div>
             </div>
             <div class="ef-card-body">
                 <div class="ef-detail-view">
                     <div class="ef-detail-row">
-                        <div class="ef-detail-label">岗位名称</div>
+                        <div class="ef-detail-label">{{ "posView.8"|trans }}</div>
                         <div class="ef-detail-value">{{ position.name }}</div>
                     </div>
                     <div class="ef-detail-row">
-                        <div class="ef-detail-label">岗位编码</div>
+                        <div class="ef-detail-label">{{ "posView.9"|trans }}</div>
                         <div class="ef-detail-value">{{ position.code }}</div>
                     </div>
                     <div class="ef-detail-row">
-                        <div class="ef-detail-label">所属部门</div>
+                        <div class="ef-detail-label">{{ "posView.10"|trans }}</div>
                         <div class="ef-detail-value">{{ position.department ? position.department.name : '无' }}</div>
                     </div>
                     <div class="ef-detail-row">
-                        <div class="ef-detail-label">岗位类型</div>
+                        <div class="ef-detail-label">{{ "posView.11"|trans }}</div>
                         <div class="ef-detail-value">{{ position.type ? position.type.name : '无' }}</div>
                     </div>
                     <div class="ef-detail-row">
-                        <div class="ef-detail-label">岗位级别</div>
+                        <div class="ef-detail-label">{{ "posView.12"|trans }}</div>
                         <div class="ef-detail-value">{{ position.level ? position.level.name : '无' }}</div>
                     </div>
                     <div class="ef-detail-row">
-                        <div class="ef-detail-label">上级岗位</div>
+                        <div class="ef-detail-label">{{ "posView.13"|trans }}</div>
                         <div class="ef-detail-value">{{ position.parent ? position.parent.name : '无' }}</div>
                     </div>
                     <div class="ef-detail-row">
-                        <div class="ef-detail-label">编制人数</div>
+                        <div class="ef-detail-label">{{ "posView.14"|trans }}</div>
                         <div class="ef-detail-value">{{ position.headcount ?: '未设置' }}</div>
                     </div>
                     <div class="ef-detail-row">
-                        <div class="ef-detail-label">状态</div>
+                        <div class="ef-detail-label">{{ "posView.15"|trans }}</div>
                         <div class="ef-detail-value">
                             {% if position.state %}
-                                <span class="ef-badge ef-badge-success">启用</span>
+                                <span class="ef-badge ef-badge-success">{{ "posView.16"|trans }}</span>
                             {% else %}
-                                <span class="ef-badge ef-badge-danger">停用</span>
+                                <span class="ef-badge ef-badge-danger">{{ "posView.17"|trans }}</span>
                             {% endif %}
                         </div>
                     </div>
@@ -76,7 +76,7 @@
 
         <div class="ef-card mt-4">
             <div class="ef-card-header">
-                <div class="ef-card-title">岗位职责</div>
+                <div class="ef-card-title">{{ "posView.18"|trans }}</div>
             </div>
             <div class="ef-card-body">
                 <div class="ef-detail-content">
@@ -87,7 +87,7 @@
 
         <div class="ef-card mt-4">
             <div class="ef-card-header">
-                <div class="ef-card-title">任职要求</div>
+                <div class="ef-card-title">{{ "posView.19"|trans }}</div>
             </div>
             <div class="ef-card-body">
                 <div class="ef-detail-content">
@@ -98,7 +98,7 @@
 
         <div class="ef-card mt-4">
             <div class="ef-card-header">
-                <div class="ef-card-title">岗位人员 ({{ employees|length }}人)</div>
+                <div class="ef-card-title">{{ "posView.20"|trans }} ({{ employees|length }}{{ "posView.21"|trans }})</div>
             </div>
             <div class="ef-card-body">
                 {% if employees|length > 0 %}
@@ -107,11 +107,11 @@
                             <table class="ef-table-element">
                                 <thead>
                                     <tr class="ef-table-tr">
-                                        <th class="ef-table-th">员工姓名</th>
-                                        <th class="ef-table-th">工号</th>
-                                        <th class="ef-table-th">入职日期</th>
-                                        <th class="ef-table-th">状态</th>
-                                        <th class="ef-table-th">操作</th>
+                                        <th class="ef-table-th">{{ "posView.22"|trans }}</th>
+                                        <th class="ef-table-th">{{ "posView.23"|trans }}</th>
+                                        <th class="ef-table-th">{{ "posView.24"|trans }}</th>
+                                        <th class="ef-table-th">{{ "posView.15"|trans }}</th>
+                                        <th class="ef-table-th">{{ "posView.25"|trans }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -134,7 +134,7 @@
                                                 </span>
                                             </td>
                                             <td class="ef-table-td">
-                                                <a href="#" class="ef-button ef-button-text">查看</a>
+                                                <a href="#" class="ef-button ef-button-text">{{ "posView.26"|trans }}</a>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -147,7 +147,7 @@
                         <div class="ef-empty-state-icon">
                             <i class="fa-solid fa-users-slash"></i>
                         </div>
-                        <div class="ef-empty-state-text">该岗位暂无人员</div>
+                        <div class="ef-empty-state-text">{{ "posView.27"|trans }}</div>
                     </div>
                 {% endif %}
             </div>

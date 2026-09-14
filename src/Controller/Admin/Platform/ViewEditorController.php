@@ -54,12 +54,12 @@ class ViewEditorController extends BaseController
   {
     $id = $request->query->get('id');
     if (!$id) {
-      return new JsonResponse(['message' => '视图ID不能为空'], 400);
+      return new JsonResponse(['message' => 'msg.view.id_required'], 400);
     }
 
     $view = $em->getRepository(View::class)->find($id);
     if (!$view || $view->getType() !== 'view') {
-      return new JsonResponse(['message' => '视图不存在'], 404);
+      return new JsonResponse(['message' => 'msg.view.not_found'], 404);
     }
 
     $fields = $em->getRepository(\App\Entity\Platform\ViewField::class)
@@ -121,7 +121,7 @@ class ViewEditorController extends BaseController
       if ($parent && ($parent->getType() === 'folder' || $parent->getType() === 'root')) {
         $view->setParent($parent);
       } else {
-        return new JsonResponse(['message' => '上级目录无效或不是文件夹'], 400);
+        return new JsonResponse(['message' => 'msg.view.invalid_parent'], 400);
       }
     } else {
       // 如果没有父目录，创建根目录
@@ -155,7 +155,7 @@ class ViewEditorController extends BaseController
       ]);
 
       if ($existingFolder) {
-        return new JsonResponse(['message' => '同级目录下已存在同名文件夹'], 400);
+        return new JsonResponse(['message' => 'msg.view.folder_name_exists'], 400);
       }
 
       // 构建文件夹路径
@@ -165,13 +165,13 @@ class ViewEditorController extends BaseController
       
       // 检查文件系统中是否已存在该目录
       if (file_exists($folderPath) && is_dir($folderPath)) {
-        return new JsonResponse(['message' => '文件系统中已存在同名文件夹'], 400);
+        return new JsonResponse(['message' => 'msg.view.folder_fs_exists'], 400);
       }
       
       // 创建文件夹
       if (!file_exists($folderPath)) {
         if (!mkdir($folderPath, 0755, true)) {
-          return new JsonResponse(['message' => '创建文件夹失败，请检查权限'], 500);
+          return new JsonResponse(['message' => 'msg.view.folder_create_failed'], 500);
         }
       }
       
@@ -181,7 +181,7 @@ class ViewEditorController extends BaseController
       $em->persist($view);
       $em->flush();
 
-      $this->addFlash('success', '文件夹创建成功');
+      $this->addFlash('success', 'flash.folder_created');
       return $this->redirectToRoute('platform_view'); // 重定向到视图管理页面
     }
 
@@ -222,7 +222,7 @@ class ViewEditorController extends BaseController
       if ($parent && ($parent->getType() === 'folder' || $parent->getType() === 'root')) {
         $view->setParent($parent);
       } else {
-        return new JsonResponse(['message' => '上级目录无效或不是文件夹'], 400);
+        return new JsonResponse(['message' => 'msg.view.invalid_parent'], 400);
       }
     } else {
       // 如果没有父目录，创建根目录
@@ -258,7 +258,7 @@ class ViewEditorController extends BaseController
       ]);
 
       if ($existingView) {
-        return new JsonResponse(['message' => '同级目录下已存在同名视图'], 400);
+        return new JsonResponse(['message' => 'msg.view.view_name_exists'], 400);
       }
 
       if ($view->isBuiltIn()) {
@@ -282,14 +282,14 @@ class ViewEditorController extends BaseController
         // 确保视图目录存在
         if (!file_exists($viewFolderPath)) {
           if (!mkdir($viewFolderPath, 0755, true)) {
-            return new JsonResponse(['message' => '创建视图目录失败，请检查权限'], 500);
+            return new JsonResponse(['message' => 'msg.view.dir_create_failed'], 500);
           }
         }
         
         // 创建版本目录
         if (!file_exists($versionFolderPath)) {
           if (!mkdir($versionFolderPath, 0755, true)) {
-            return new JsonResponse(['message' => '创建版本目录失败，请检查权限'], 500);
+            return new JsonResponse(['message' => 'msg.view.version_dir_failed'], 500);
           }
         }
         
@@ -299,12 +299,12 @@ class ViewEditorController extends BaseController
         
         // 随机后缀已规避同名冲突，此处仅作兜底
         if (file_exists($htmlTwigPath) || file_exists($designTwigPath)) {
-          return new JsonResponse(['message' => '文件系统中已存在同名视图文件'], 400);
+          return new JsonResponse(['message' => 'msg.view.view_fs_exists'], 400);
         }
         
         // 创建视图文件
         if (file_put_contents($htmlTwigPath, '{# ' . $view->getLabel() . ' 视图模板 #}\n{% extends "base.html.twig" %}\n\n{% block body %}\n  {# 视图内容 #}\n{% endblock %}') === false) {
-          return new JsonResponse(['message' => '创建视图HTML文件失败'], 500);
+          return new JsonResponse(['message' => 'msg.view.html_create_failed'], 500);
         }
         
         if (file_put_contents($designTwigPath, '') === false) {
@@ -312,7 +312,7 @@ class ViewEditorController extends BaseController
           if (file_exists($htmlTwigPath)) {
             unlink($htmlTwigPath);
           }
-          return new JsonResponse(['message' => '创建视图设计文件失败'], 500);
+          return new JsonResponse(['message' => 'msg.view.design_create_failed'], 500);
         }
         
         // 视图目录基路径入库（不含版本段），当前版本 1_0
@@ -356,7 +356,7 @@ class ViewEditorController extends BaseController
         ]);
       }
 
-      $this->addFlash('success', '视图创建成功');
+      $this->addFlash('success', 'flash.view_created');
       return $this->redirectToRoute('platform_view'); // 重定向到视图管理页面
     }
 
@@ -373,12 +373,12 @@ class ViewEditorController extends BaseController
   {
     $viewId = $request->query->get('id');
     if (!$viewId) {
-      return new JsonResponse(['message' => '视图ID不能为空'], 400);
+      return new JsonResponse(['message' => 'msg.view.id_required'], 400);
     }
 
     $view = $em->getRepository(View::class)->find($viewId);
     if (!$view) {
-      return new JsonResponse(['message' => '视图不存在'], 404);
+      return new JsonResponse(['message' => 'msg.view.not_found'], 404);
     }
 
     $showBuiltIn = $this->isGranted('ROLE_SYS_ADMIN');
@@ -390,7 +390,7 @@ class ViewEditorController extends BaseController
 
     if ($form->isSubmitted() && $form->isValid()) {
       $em->flush();
-      $this->addFlash('success', '视图更新成功');
+      $this->addFlash('success', 'flash.view_updated');
       return $this->redirectToRoute('platform_view');
     }
 
@@ -408,12 +408,12 @@ class ViewEditorController extends BaseController
   {
     $folderId = $request->query->get('id');
     if (!$folderId) {
-      return new JsonResponse(['message' => '文件夹ID不能为空'], 400);
+      return new JsonResponse(['message' => 'msg.view.folder_id_required'], 400);
     }
 
     $folder = $em->getRepository(View::class)->find($folderId);
     if (!$folder || $folder->getType() !== 'folder') {
-      return new JsonResponse(['message' => '文件夹不存在'], 404);
+      return new JsonResponse(['message' => 'msg.view.folder_not_found'], 404);
     }
 
     $form = $this->createForm(\App\Form\Platform\ViewFolderRenameType::class, $folder, [
@@ -429,11 +429,11 @@ class ViewEditorController extends BaseController
         'type' => 'folder',
       ]);
       if ($existing && $existing->getId() !== $folder->getId()) {
-        return new JsonResponse(['message' => '同级目录下已存在同名文件夹'], 400);
+        return new JsonResponse(['message' => 'msg.view.folder_name_exists'], 400);
       }
 
       $em->flush();
-      $this->addFlash('success', '文件夹重命名成功');
+      $this->addFlash('success', 'flash.folder_renamed');
 
       if ($request->isXmlHttpRequest()) {
         return new JsonResponse(['success' => true]);
@@ -565,13 +565,14 @@ class ViewEditorController extends BaseController
           // 剥离外层 section 结构（设计文件包含完整的 canvas HTML: add-section-button + section 包裹器），
           // 只取 .section-content 内部的内容；编辑器模板自身已生成 section 包裹，避免层层嵌套
           $content = $this->extractSectionContentInnerHtml($content);
-          // 自定义 Twig 表单设计：画布需用 dummy form + 标准主题渲染，否则 {{ form_widget(...) }} 会显示为字面文本
+          // 自定义 Twig 表单设计：画布需用 dummy form 渲染（避免 {{ form_widget(...) }} 显示为字面文本），
+          // 并注入透明字段标记，让右侧"组件"面板可点击控件调整
           if (preg_match('/\{(form_start|form_end|form_rest|form_widget|form_label|form_errors|form_row)\}|\{\{\s*(form\b|form_)|form_start\(|form_end\(|form_widget\(|form_label\(|form_errors\(/', $content)) {
             try {
               $fqn = $view->getFormEntity()?->getFqn();
               $data = ($fqn && class_exists($fqn)) ? new $fqn() : (object) [];
               $built = $formFieldRenderer->build($view, $data, $tplVars['generalConfig'] ?? []);
-              $content = $formLayoutService->renderDesignFragment($content, $built['formView'], $data);
+              $content = $formLayoutService->renderDesignFragment($content, $built['formView'], $data, $built['fields'], true);
             } catch (\Throwable $e) {
               // 渲染失败时保留原始（展示 Twig 源码，供用户修正）
             }

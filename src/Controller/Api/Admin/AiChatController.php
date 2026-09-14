@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -30,6 +31,8 @@ class AiChatController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly ViewSubAgentChatRouter $subAgentChatRouter,
         private readonly HubInterface $hub,
+        private readonly TranslatorInterface $translator,
+        private readonly \App\Service\AI\ImageStyleAnalyzer $imageStyleAnalyzer,
     ) {}
 
     #[Route(
@@ -48,7 +51,7 @@ class AiChatController extends AbstractController
         $roleCode = '';
 
         if (!$context || !$message) {
-            return ApiResponse::error('context 和 message 不能为空', 400);
+            return ApiResponse::error('msg.ai.context_message_required', 400);
         }
 
         if (!$contextId) {
@@ -102,6 +105,21 @@ class AiChatController extends AbstractController
                 $systemPrompt = $turn['systemPrompt'];
                 $tools = $turn['tools'];
                 $redesignApplied = $turn['redesignApplied'];
+
+                // 若用户上传了图片：调用 vision 分析，把"参考图片风格"注入系统提示
+                $imageIds = $payload['image_ids'] ?? [];
+                $imagePaths = $this->resolveImagePaths($imageIds);
+                if ($imagePaths !== []) {
+                    try {
+                        $imageSpec = $this->imageStyleAnalyzer->analyze($imagePaths, $message);
+                        if ($imageSpec !== []) {
+                            $systemPrompt .= "\n\n" . \App\Service\AI\Orchestrator\SubAgent\AbstractViewSubAgent::imageSpecBlock($imageSpec);
+                        }
+                        $this->em->flush();
+                    } catch (\Throwable $ve) {
+                        // vision 未绑定或分析失败：不阻断主流程，仅提示（见回复注释）
+                    }
+                }
                 $this->em->flush();
             }
 
@@ -207,7 +225,10 @@ class AiChatController extends AbstractController
             $elapsedMs = (int) ((microtime(true) - $startTime) * 1000);
             $this->logOperation($context, $roleCode, $message, null, null, 'error', $e->getMessage(), $elapsedMs);
 
-            return ApiResponse::error('', 500, 'AI 响应失败: ' . $e->getMessage());
+            // 面向用户：给准确、可操作的提示（技术细节已在日志）
+            $key = \App\Service\Platform\Llm\LlmErrorFormatter::keyFor($e);
+
+            return ApiResponse::error('', 500, $this->translator->trans($key));
         }
     }
 
@@ -401,7 +422,7 @@ class AiChatController extends AbstractController
         $sessionId = $payload['session_id'] ?? null;
 
         if (!$context || !$contextId) {
-            return ApiResponse::error('context 和 context_id 不能为空', 400);
+            return ApiResponse::error('msg.ai.context_id_required', 400);
         }
 
         try {
@@ -441,7 +462,65 @@ class AiChatController extends AbstractController
                 'messages' => $messages,
             ]));
         } catch (\Exception $e) {
-            return ApiResponse::error('', 500, '获取历史记录失败: ' . $e->getMessage());
+            $key = \App\Service\Platform\Llm\LlmErrorFormatter::keyFor($e);
+
+            return ApiResponse::error('', 500, $this->translator->trans($key));
         }
+    }
+
+    /**
+     * 上传一张图片供 AI 风格分析。存放到 var/data/ai_uploads/{uuid}.{ext}，
+     * 上传成功后返回 imageId（uuid，不含扩展名），前端随后在消息里带 image_ids 提交。
+     */
+    #[Route('/api/admin/ai/chat/upload', name: 'api_admin_ai_chat_upload_image', methods: ['POST'])]
+    public function uploadImage(Request $request): ApiResponse
+    {
+        $file = $request->files->get('file');
+        if (!$file) {
+            return ApiResponse::error('msg.ai.image_required', 400);
+        }
+        if (!$file->isValid() || !str_starts_with($file->getMimeType() ?? '', 'image/')) {
+            return ApiResponse::error('msg.ai.image_invalid', 400);
+        }
+
+        $dir = $this->imageUploadDir();
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $imageId = bin2hex(random_bytes(16));
+        $ext = strtolower($file->guessExtension() ?: 'png');
+        $filename = $imageId . '.' . $ext;
+        $file->move($dir, $filename);
+
+        return ApiResponse::success(json_encode([
+            'imageId' => $imageId,
+            'name' => $request->request->get('name') ?: $file->getClientOriginalName(),
+        ]));
+    }
+
+    /** 把前端传来的 image_ids 解析成磁盘路径（var/data/ai_uploads/{id}.*） */
+    private function resolveImagePaths(array $imageIds): array
+    {
+        $paths = [];
+        $dir = $this->imageUploadDir();
+        if (!is_dir($dir)) {
+            return $paths;
+        }
+        foreach ($imageIds as $id) {
+            if (!is_string($id) || !preg_match('/^[a-f0-9]{32}$/', $id)) {
+                continue;
+            }
+            $found = glob($dir . '/' . $id . '.*');
+            if ($found) {
+                $paths[] = $found[0];
+            }
+        }
+        return $paths;
+    }
+
+    private function imageUploadDir(): string
+    {
+        return $this->getParameter('kernel.project_dir') . '/var/data/ai_uploads';
     }
 }

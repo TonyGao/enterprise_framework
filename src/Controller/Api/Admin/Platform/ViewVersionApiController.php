@@ -16,6 +16,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[IsGranted('ROLE_ADMIN')]
@@ -39,7 +40,7 @@ class ViewVersionApiController extends AbstractController
     {
         $view = $this->em->getRepository(View::class)->find($id);
         if (!$view || $view->getType() !== 'view') {
-            return ApiResponse::error('', 404, '视图不存在');
+            return ApiResponse::error('', 404, 'msg.view.not_found');
         }
 
         $this->reconcile($view);
@@ -69,7 +70,7 @@ class ViewVersionApiController extends AbstractController
     {
         $view = $this->em->getRepository(View::class)->find($id);
         if (!$view || $view->getType() !== 'view') {
-            return ApiResponse::error('', 404, '视图不存在');
+            return ApiResponse::error('', 404, 'msg.view.not_found');
         }
 
         $payload = $request->toArray();
@@ -101,16 +102,16 @@ class ViewVersionApiController extends AbstractController
         name: 'api_platform_view_versions_rename',
         methods: ['POST']
     )]
-    public function rename(string $id, string $version, Request $request): ApiResponse
+    public function rename(TranslatorInterface $translator, string $id, string $version, Request $request): ApiResponse
     {
         $view = $this->loadView($id);
         if (!$view) {
-            return ApiResponse::error('', 404, '视图不存在');
+            return ApiResponse::error('', 404, 'msg.view.not_found');
         }
 
         $label = trim((string) ($request->toArray()['label'] ?? ''));
         if ($label === '') {
-            return ApiResponse::error('', 400, '版本名称不能为空');
+            return ApiResponse::error('', 400, 'msg.version.name_required');
         }
 
         foreach ($view->getVersions() as $vv) {
@@ -122,12 +123,12 @@ class ViewVersionApiController extends AbstractController
                 return ApiResponse::success(json_encode([
                     'version' => $version,
                     'label' => $label,
-                    'message' => '已重命名',
+                    'message' => 'msg.version.renamed',
                 ]));
             }
         }
 
-        return ApiResponse::error('', 404, "版本 $version 不存在");
+        return ApiResponse::error('', 404, $translator->trans('msg.version.not_found', ['version' => $version]));
     }
 
     #[Route(
@@ -138,12 +139,12 @@ class ViewVersionApiController extends AbstractController
     public function activate(string $id, string $version): ApiResponse
     {
         if (!VersionNumber::isValid($version)) {
-            return ApiResponse::error('', 400, '版本号格式无效');
+            return ApiResponse::error('', 400, 'msg.version.invalid_format');
         }
 
         $view = $this->em->getRepository(View::class)->find($id);
         if (!$view || $view->getType() !== 'view') {
-            return ApiResponse::error('', 404, '视图不存在');
+            return ApiResponse::error('', 404, 'msg.view.not_found');
         }
 
         $found = null;
@@ -154,7 +155,7 @@ class ViewVersionApiController extends AbstractController
             $vv->setIsCurrent(false);
         }
         if (!$found) {
-            return ApiResponse::error('', 404, "版本 $version 不存在");
+            return ApiResponse::error('', 404, $translator->trans('msg.version.not_found', ['version' => $version]));
         }
 
         $found->setIsCurrent(true);
@@ -173,17 +174,17 @@ class ViewVersionApiController extends AbstractController
         name: 'api_platform_view_versions_undo',
         methods: ['POST']
     )]
-    public function undo(string $id, string $version): ApiResponse
+    public function undo(TranslatorInterface $translator, string $id, string $version): ApiResponse
     {
         $view = $this->loadView($id);
         if (!$view) {
-            return ApiResponse::error('', 404, '视图不存在');
+            return ApiResponse::error('', 404, 'msg.view.not_found');
         }
 
         if ($this->versionHistory->undo($view, $version)) {
-            return ApiResponse::success(json_encode(['message' => '已撤销', 'version' => $version]));
+            return ApiResponse::success(json_encode(['message' => 'msg.version.undone', 'version' => $version]));
         }
-        return ApiResponse::error('', 400, '没有可撤销的操作');
+        return ApiResponse::error('', 400, 'msg.version.nothing_undo');
     }
 
     #[Route(
@@ -191,17 +192,17 @@ class ViewVersionApiController extends AbstractController
         name: 'api_platform_view_versions_redo',
         methods: ['POST']
     )]
-    public function redo(string $id, string $version): ApiResponse
+    public function redo(TranslatorInterface $translator, string $id, string $version): ApiResponse
     {
         $view = $this->loadView($id);
         if (!$view) {
-            return ApiResponse::error('', 404, '视图不存在');
+            return ApiResponse::error('', 404, 'msg.view.not_found');
         }
 
         if ($this->versionHistory->redo($view, $version)) {
-            return ApiResponse::success(json_encode(['message' => '已重做', 'version' => $version]));
+            return ApiResponse::success(json_encode(['message' => 'msg.version.redone', 'version' => $version]));
         }
-        return ApiResponse::error('', 400, '没有可重做的操作');
+        return ApiResponse::error('', 400, 'msg.version.nothing_redo');
     }
 
     #[Route(
@@ -213,7 +214,7 @@ class ViewVersionApiController extends AbstractController
     {
         $view = $this->loadView($id);
         if (!$view) {
-            return ApiResponse::error('', 404, '视图不存在');
+            return ApiResponse::error('', 404, 'msg.view.not_found');
         }
 
         return ApiResponse::success(json_encode([
@@ -231,7 +232,7 @@ class ViewVersionApiController extends AbstractController
     {
         $view = $this->loadView($id);
         if (!$view) {
-            return ApiResponse::error('', 404, '视图不存在');
+            return ApiResponse::error('', 404, 'msg.view.not_found');
         }
 
         $payload = $request->toArray();
@@ -253,7 +254,7 @@ class ViewVersionApiController extends AbstractController
     {
         $view = $this->loadView($id);
         if (!$view) {
-            return ApiResponse::error('', 404, '视图不存在');
+            return ApiResponse::error('', 404, 'msg.view.not_found');
         }
 
         return ApiResponse::success(json_encode([
@@ -270,13 +271,13 @@ class ViewVersionApiController extends AbstractController
     {
         $view = $this->loadView($id);
         if (!$view) {
-            return ApiResponse::error('', 404, '视图不存在');
+            return ApiResponse::error('', 404, 'msg.view.not_found');
         }
 
         if ($this->checkpointService->restoreCheckpoint($view, $version, $checkpointId)) {
-            return ApiResponse::success(json_encode(['message' => '已恢复到该消息时的状态']));
+            return ApiResponse::success(json_encode(['message' => 'msg.version.restored']));
         }
-        return ApiResponse::error('', 400, '检查点不存在或不可恢复');
+        return ApiResponse::error('', 400, 'msg.version.checkpoint_invalid');
     }
 
     private function loadView(string $id): ?View

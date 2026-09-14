@@ -10,8 +10,6 @@ use App\Entity\Platform\EntityPropertyGroup;
 use App\Repository\Platform\EntityRepository;
 use App\Repository\Platform\EntityPropertyRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Annotations\AnnotationRegistry;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -241,17 +239,15 @@ class EfInitEntityCommand extends Command
                         foreach ($fields as $key => $field) {
                             $fieldName = $key;
                             $annotationField = $reflectionClass->getProperty($fieldName);
-                            $reader = new AnnotationReader();
-                            $anno = $reader->getPropertyAnnotation(
-                                $annotationField,
-                                Ef::class
-                            );
+                            $attributes = $annotationField->getAttributes(Ef::class);
 
                             $group = null;
                             $isBusinessField = false;
-                            if ($anno !== null) {
-                                $group = $anno->getValue()['group'];
-                                $isBusinessField = $anno->getValue()['bf'];
+                            if (!empty($attributes)) {
+                                /** @var Ef $anno */
+                                $anno = $attributes[0]->newInstance();
+                                $group = $anno->group;
+                                $isBusinessField = $anno->isBF;
                             }
 
                             if ($isBusinessField) {

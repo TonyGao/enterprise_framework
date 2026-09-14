@@ -1,6 +1,6 @@
 {% extends 'admin/layout.html.twig' %}
 
-{% block title %}系统日历{% endblock %}
+{% block title %}{{ "calendar.title1"|trans }}{% endblock %}
 
 {% block stylesheets %}
 {{ parent() }}
@@ -432,17 +432,17 @@
     <div class="cal-page-header">
         <h1>
             <i class="fa-solid fa-calendar-days"></i>
-            系统日历
+            {{ "calendar.10"|trans }}
         </h1>
         <div class="cal-header-actions">
             <button class="btn btn-default" onclick="CalMgr.openImportModal()">
-                <i class="fa-solid fa-cloud-arrow-down"></i> 导入假日
+                <i class="fa-solid fa-cloud-arrow-down"></i> {{ "calendar.11"|trans }}
             </button>
             <button class="btn btn-primary" onclick="CalMgr.openCreate()">
-                <i class="fa-solid fa-plus"></i> 添加事件
+                <i class="fa-solid fa-plus"></i> {{ "calendar.12"|trans }}
             </button>
             <button class="btn btn-default" onclick="CalMgr.openTypeManager()">
-                <i class="fa-solid fa-tags"></i> 事务类型
+                <i class="fa-solid fa-tags"></i> {{ "calendar.13"|trans }}
             </button>
         </div>
     </div>
@@ -453,28 +453,28 @@
             <div class="stat-card-icon red"><i class="fa-solid fa-umbrella-beach"></i></div>
             <div>
                 <div class="stat-card-value" id="stat-holiday">—</div>
-                <div class="stat-card-label">本月法定假日</div>
+                <div class="stat-card-label">{{ "calendar.14"|trans }}</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-card-icon orange"><i class="fa-solid fa-briefcase"></i></div>
             <div>
                 <div class="stat-card-value" id="stat-workday">—</div>
-                <div class="stat-card-label">本月补班上班</div>
+                <div class="stat-card-label">{{ "calendar.15"|trans }}</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-card-icon blue"><i class="fa-solid fa-bed"></i></div>
             <div>
                 <div class="stat-card-value" id="stat-makeup">—</div>
-                <div class="stat-card-label">本月调休休息</div>
+                <div class="stat-card-label">{{ "calendar.16"|trans }}</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-card-icon gray"><i class="fa-solid fa-tag"></i></div>
             <div>
                 <div class="stat-card-value" id="stat-custom">—</div>
-                <div class="stat-card-label">本月其他事务</div>
+                <div class="stat-card-label">{{ "calendar.17"|trans }}</div>
             </div>
         </div>
     </div>
@@ -485,21 +485,21 @@
         {# 工具栏 #}
         <div class="cal-toolbar">
             <div class="cal-nav-group">
-                <button class="cal-nav-btn" onclick="CalMgr.nav(-1)" data-tip="上一月">
+                <button class="cal-nav-btn" onclick="CalMgr.nav(-1)" data-tip="{{ "calendar.1"|trans }}">
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
-                <button class="cal-nav-btn" onclick="CalMgr.nav(1)" data-tip="下一月">
+                <button class="cal-nav-btn" onclick="CalMgr.nav(1)" data-tip="{{ "calendar.2"|trans }}">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
-                <button class="cal-today-btn" onclick="CalMgr.goToday()">今天</button>
+                <button class="cal-today-btn" onclick="CalMgr.goToday()">{{ "calendar.18"|trans }}</button>
                 <span class="cal-month-title" id="cal-month-title">—</span>
             </div>
             <div class="view-tabs">
                 <button class="view-tab-btn active" data-view="month" onclick="CalMgr.switchView('month')">
-                    <i class="fa-solid fa-calendar-days"></i> 月视图
+                    <i class="fa-solid fa-calendar-days"></i> {{ "calendar.19"|trans }}
                 </button>
                 <button class="view-tab-btn" data-view="agenda" onclick="CalMgr.switchView('agenda')">
-                    <i class="fa-solid fa-list"></i> 事务视图
+                    <i class="fa-solid fa-list"></i> {{ "calendar.20"|trans }}
                 </button>
             </div>
         </div>
@@ -507,29 +507,29 @@
         {# 图例 #}
         <div class="cal-legend-bar">
             <div class="cal-legend-item">
-                <div class="cal-legend-dot" style="background:#dc2626;"></div> 法定假日
+                <div class="cal-legend-dot" style="background:#dc2626;"></div> {{ "calendar.21"|trans }}
             </div>
             <div class="cal-legend-item">
-                <div class="cal-legend-dot" style="background:#ea580c;"></div> 补班上班
+                <div class="cal-legend-dot" style="background:#ea580c;"></div> {{ "calendar.22"|trans }}
             </div>
             <div class="cal-legend-item">
-                <div class="cal-legend-dot" style="background:#2563eb;"></div> 调休休息
+                <div class="cal-legend-dot" style="background:#2563eb;"></div> {{ "calendar.23"|trans }}
             </div>
             <div class="cal-legend-item">
-                <div class="cal-legend-dot" style="background:#6b7280;"></div> 自定义事务
+                <div class="cal-legend-dot" style="background:#6b7280;"></div> {{ "calendar.24"|trans }}
             </div>
         </div>
 
         {# 月视图 #}
         <div id="cal-month-view">
             <div class="cal-weekday-row">
-                <div class="cal-dow-cell">一</div>
-                <div class="cal-dow-cell">二</div>
-                <div class="cal-dow-cell">三</div>
-                <div class="cal-dow-cell">四</div>
-                <div class="cal-dow-cell">五</div>
-                <div class="cal-dow-cell">六</div>
-                <div class="cal-dow-cell">日</div>
+                <div class="cal-dow-cell">{{ "calendar.25"|trans }}</div>
+                <div class="cal-dow-cell">{{ "calendar.26"|trans }}</div>
+                <div class="cal-dow-cell">{{ "calendar.27"|trans }}</div>
+                <div class="cal-dow-cell">{{ "calendar.28"|trans }}</div>
+                <div class="cal-dow-cell">{{ "calendar.29"|trans }}</div>
+                <div class="cal-dow-cell">{{ "calendar.30"|trans }}</div>
+                <div class="cal-dow-cell">{{ "calendar.31"|trans }}</div>
             </div>
             <div class="cal-month-grid" id="cal-month-grid"></div>
         </div>
@@ -549,7 +549,7 @@
     <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
         <div class="ef-modal" style="width: 480px; max-width: 96vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
             <div class="ef-modal-header">
-                <div class="ef-modal-title ef-modal-title-align-left" id="cal-modal-title">添加事件</div>
+                <div class="ef-modal-title ef-modal-title-align-left" id="cal-modal-title">{{ "calendar.12"|trans }}</div>
                 <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="CalMgr.closeModal()">
                     <span class="ef-icon-hover">
                         <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
@@ -561,13 +561,13 @@
             <div class="ef-modal-body" style="overflow-y: auto; flex: 1;">
                 <input type="hidden" id="cal-event-id">
                 <div class="cal-form-group">
-                    <label class="cal-form-label">标题 <span class="req">*</span></label>
+                    <label class="cal-form-label">{{ "calendar.32"|trans }} <span class="req">*</span></label>
                     <span class="ef-input-wrapper ef-input-rounded" style="width: 100%;">
-                        <input type="text" class="ef-input ef-input-size-medium text" id="f-cal-title" placeholder="如：元旦假期、公司年会">
+                        <input type="text" class="ef-input ef-input-size-medium text" id="f-cal-title" placeholder="{{ "calendar.3"|trans }}">
                     </span>
                 </div>
                 <div class="cal-form-group">
-                    <label class="cal-form-label">类型</label>
+                    <label class="cal-form-label">{{ "calendar.33"|trans }}</label>
                     <input type="hidden" id="f-cal-type" value="custom" component="select">
                     <span
                         class="ef-select-view-single ef-select ef-select-view ef-select-view-size-medium ef-select-view-search ef-input-rounded"
@@ -576,7 +576,7 @@
                         id="f-cal-type-select"
                         contentId="f-cal-type-dropdown"
                     >
-                        <input class="ef-select-view-input" placeholder="请选择类型...">
+                        <input class="ef-select-view-input" placeholder="{{ "calendar.4"|trans }}">
                         <span class="ef-select-view-value ef-select-view-value-hidden"></span>
                         <span class="ef-select-view-suffix">
                             <span class="ef-select-view-icon">
@@ -607,9 +607,9 @@
                     </div>
                 </div>
                 <div class="cal-form-group">
-                    <label class="cal-form-label">日期 <span class="req">*</span></label>
+                    <label class="cal-form-label">{{ "calendar.34"|trans }} <span class="req">*</span></label>
                     <span class="ef-input-wrapper ef-input-rounded" style="width: 100%;">
-                        <input type="text" class="ef-input ef-input-size-medium text" id="f-cal-date" placeholder="请选择日期" autocomplete="off">
+                        <input type="text" class="ef-input ef-input-size-medium text" id="f-cal-date" placeholder="{{ "calendar.5"|trans }}" autocomplete="off">
                     </span>
                 </div>
                 <div class="cal-form-group">
@@ -618,13 +618,13 @@
                         <span class="ef-icon-hover ef-checkbox-icon-hover">
                             <div class="ef-checkbox-icon"></div>
                         </span>
-                        <span class="ef-checkbox-label">每年重复（适用于固定节假日）</span>
+                        <span class="ef-checkbox-label">{{ "calendar.35"|trans }}</span>
                     </label>
                 </div>
                 <div class="cal-form-group">
-                    <label class="cal-form-label">备注</label>
+                    <label class="cal-form-label">{{ "calendar.36"|trans }}</label>
                     <div class="ef-textarea-wrapper ef-textarea-rounded" style="width: 100%;">
-                        <textarea class="ef-textarea" id="f-cal-note" rows="3" placeholder="可选备注说明"></textarea>
+                        <textarea class="ef-textarea" id="f-cal-note" rows="3" placeholder="{{ "calendar.6"|trans }}"></textarea>
                     </div>
                 </div>
                 <div class="cal-form-error" id="cal-form-error"></div>
@@ -632,13 +632,13 @@
             <div class="ef-modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <button class="btn red medium" id="cal-btn-delete" onclick="CalMgr.deleteEvent()" style="display:none;">
-                        <i class="fa-solid fa-trash"></i> 删除
+                        <i class="fa-solid fa-trash"></i> {{ "calendar.37"|trans }}
                     </button>
                 </div>
                 <div>
-                    <button class="btn secondary medium" onclick="CalMgr.closeModal()">取消</button>
+                    <button class="btn secondary medium" onclick="CalMgr.closeModal()">{{ "calendar.38"|trans }}</button>
                     <button class="btn primary medium" onclick="CalMgr.saveEvent()">
-                        <i class="fa-solid fa-check"></i> 保存
+                        <i class="fa-solid fa-check"></i> {{ "calendar.39"|trans }}
                     </button>
                 </div>
             </div>
@@ -652,7 +652,7 @@
     <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
         <div class="ef-modal" style="width: 460px; max-width: 96vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
             <div class="ef-modal-header">
-                <div class="ef-modal-title ef-modal-title-align-left">导入法定假日</div>
+                <div class="ef-modal-title ef-modal-title-align-left">{{ "calendar.40"|trans }}</div>
                 <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="CalMgr.closeImportModal()">
                     <span class="ef-icon-hover">
                         <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
@@ -663,27 +663,27 @@
             </div>
             <div class="ef-modal-body" style="overflow-y: auto; flex: 1;">
                 <div class="cal-form-group">
-                    <label class="cal-form-label">年份 <span class="req">*</span></label>
+                    <label class="cal-form-label">{{ "calendar.41"|trans }} <span class="req">*</span></label>
                     <span class="ef-input-wrapper ef-input-rounded" style="width: 100%;">
-                        <input type="number" class="ef-input ef-input-size-medium text" id="f-import-year" min="2000" max="2100" step="1" placeholder="例如：2026">
+                        <input type="number" class="ef-input ef-input-size-medium text" id="f-import-year" min="2000" max="2100" step="1" placeholder="{{ "calendar.7"|trans }}">
                     </span>
                 </div>
                 <div class="cal-form-group">
-                    <label class="cal-form-label">数据源</label>
+                    <label class="cal-form-label">{{ "calendar.42"|trans }}</label>
                     <span class="ef-input-wrapper ef-input-rounded ef-input-h36" style="width: 100%;">
                         <select class="ef-input ef-input-size-medium text" id="f-import-source" style="width: 100%; border: none; background: transparent; padding: 0 12px; height: 36px; box-sizing: border-box;">
                             <option value="timor">TimOR API</option>
                             <option value="holiday_cn">Holiday CN</option>
                         </select>
                     </span>
-                    <div class="cal-import-tip">导入是幂等的：同一日期与同一类型的事件不会重复创建。</div>
+                    <div class="cal-import-tip">{{ "calendar.43"|trans }}</div>
                 </div>
-                <div class="cal-import-result cal-import-result-empty" id="cal-import-result">选择年份和数据源后开始导入</div>
+                <div class="cal-import-result cal-import-result-empty" id="cal-import-result">{{ "calendar.44"|trans }}</div>
             </div>
             <div class="ef-modal-footer">
-                <button class="btn secondary medium" onclick="CalMgr.closeImportModal()">关闭</button>
+                <button class="btn secondary medium" onclick="CalMgr.closeImportModal()">{{ "calendar.45"|trans }}</button>
                 <button class="btn primary medium" id="cal-import-submit" onclick="CalMgr.importHolidays()">
-                    <i class="fa-solid fa-cloud-arrow-down"></i> 开始导入
+                    <i class="fa-solid fa-cloud-arrow-down"></i> {{ "calendar.46"|trans }}
                 </button>
             </div>
         </div>
@@ -696,7 +696,7 @@
     <div class="ef-modal-wrapper ef-modal-wrapper-align-center">
         <div class="ef-modal" style="width: 720px; max-width: 96vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
             <div class="ef-modal-header">
-                <div class="ef-modal-title ef-modal-title-align-left">事务类型管理</div>
+                <div class="ef-modal-title ef-modal-title-align-left">{{ "calendar.47"|trans }}</div>
                 <div tabindex="-1" role="button" aria-label="Close" class="ef-modal-close-btn" onclick="$('#type-manager-modal').hide();">
                     <span class="ef-icon-hover">
                         <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
@@ -713,20 +713,20 @@
                                 <span class="field-label">Key</span>
                                 <div class="field-input">
                                     <span class="ef-input-wrapper ef-input-rounded" style="width: 140px;">
-                                        <input id="new-type-key" class="ef-input ef-input-size-medium text" placeholder="如：holiday">
+                                        <input id="new-type-key" class="ef-input ef-input-size-medium text" placeholder="{{ "calendar.8"|trans }}">
                                     </span>
                                 </div>
                             </div>
                             <div class="field-group">
-                                <span class="field-label">名称</span>
+                                <span class="field-label">{{ "calendar.48"|trans }}</span>
                                 <div class="field-input">
                                     <span class="ef-input-wrapper ef-input-rounded" style="width: 160px;">
-                                        <input id="new-type-label" class="ef-input ef-input-size-medium text" placeholder="如：法定假日">
+                                        <input id="new-type-label" class="ef-input ef-input-size-medium text" placeholder="{{ "calendar.9"|trans }}">
                                     </span>
                                 </div>
                             </div>
                             <div class="field-group">
-                                <span class="field-label">颜色</span>
+                                <span class="field-label">{{ "calendar.49"|trans }}</span>
                                 <div class="type-color-wrapper">
                                     <span class="ef-input-wrapper ef-input-rounded color-dot-trigger" id="new-type-color-trigger" style="padding: 4px; width: 42px;">
                                         <span id="new-type-color-preview" style="display: block; width: 34px; height: 22px; background: #6b7280; border-radius: 2px;"></span>
@@ -736,7 +736,7 @@
                             <div class="field-group" style="margin-left: auto;">
                                 <span class="field-label">&nbsp;</span>
                                 <div class="field-input">
-                                    <button class="btn primary medium" id="new-type-create"><i class="fa-solid fa-plus"></i> 添加</button>
+                                    <button class="btn primary medium" id="new-type-create"><i class="fa-solid fa-plus"></i> {{ "calendar.50"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -750,11 +750,11 @@
                                             <colgroup><col style="width: 80px;"><col style="width: 120px;"><col><col style="width: 100px;"><col style="width: 160px;"></colgroup>
                                             <thead>
                                                 <tr class="ef-table-tr">
-                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-center"><span class="ef-table-th-title">颜色</span></span></th>
+                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-center"><span class="ef-table-th-title">{{ "calendar.49"|trans }}</span></span></th>
                                                     <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-left"><span class="ef-table-th-title">Key</span></span></th>
-                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-left"><span class="ef-table-th-title">名称</span></span></th>
-                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-center"><span class="ef-table-th-title">类型</span></span></th>
-                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-center"><span class="ef-table-th-title">操作</span></span></th>
+                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-left"><span class="ef-table-th-title">{{ "calendar.48"|trans }}</span></span></th>
+                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-center"><span class="ef-table-th-title">{{ "calendar.33"|trans }}</span></span></th>
+                                                    <th class="ef-table-th"><span class="ef-table-cell ef-table-cell-align-center"><span class="ef-table-th-title">{{ "calendar.51"|trans }}</span></span></th>
                                                 </tr>
                                             </thead>
                                             <tbody id="type-manager-list"></tbody>
@@ -767,7 +767,7 @@
                 </div>
             </div>
             <div class="ef-modal-footer">
-                <button class="btn secondary medium" onclick="$('#type-manager-modal').hide();">关闭</button>
+                <button class="btn secondary medium" onclick="$('#type-manager-modal').hide();">{{ "calendar.45"|trans }}</button>
             </div>
         </div>
     </div>
@@ -783,7 +783,7 @@
 const CalMgr = (function ($) {
     'use strict';
     const BASE = '/admin/calendar/api';
-    const WEEK_DAYS = ['一', '二', '三', '四', '五', '六', '日'];
+    const WEEK_DAYS = [t('calendar.js1'), t('calendar.js2'), t('calendar.js3'), t('calendar.js4'), t('calendar.js5'), t('calendar.js6'), t('calendar.js7')];
     // 动态加载的类型映射：key -> {label,color,sort}
     let typesMap = {};
 
@@ -815,7 +815,7 @@ const CalMgr = (function ($) {
     function renderTypeManager(list) {
         if (!$('#type-manager-list').length) return;
         if (!list || list.length === 0) {
-            $('#type-manager-list').html('<tr class="ef-table-tr"><td colspan="5" class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-center" style="color:#8a8fa8;padding:40px;">暂无事务类型</span></td></tr>');
+            $('#type-manager-list').html('<tr class="ef-table-tr"><td colspan="5" class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-center" style="color:#8a8fa8;padding:40px;">{{ "calendar.noType"|trans }}</span></td></tr>');
             return;
         }
         var html = '';
@@ -831,11 +831,11 @@ const CalMgr = (function ($) {
                 + '<span class="type-label-view">' + esc(t.label) + '</span>'
                 + '<span class="ef-input-wrapper ef-input-rounded" style="display:none;"><input type="text" class="ef-input ef-input-size-medium text type-label-input" value="' + esc(t.label) + '"></span>'
                 + '</span></td>'
-                + '<td class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-center">' + (isSystem ? '<span class="type-system-badge">系统类型</span>' : '<span class="type-custom-badge">自定义</span>') + '</span></td>'
+                + '<td class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-center">' + (isSystem ? t('calendar.js8') : t('calendar.js9')) + '</span></td>'
                 + '<td class="ef-table-td"><span class="ef-table-cell ef-table-cell-align-center">'
-                + '<button class="btn secondary medium type-edit-btn"><i class="fa-solid fa-pen"></i> 编辑</button>'
-                + '<button class="btn primary medium type-save-btn" style="display:none;"><i class="fa-solid fa-check"></i> 保存</button>'
-                + '<button class="btn default medium type-cancel-btn" style="display:none;"><i class="fa-solid fa-xmark"></i> 取消</button>'
+                + '<button class="btn default medium type-edit-btn"><i class="fa-solid fa-pen"></i> ' + t('calendar.js10') + '</button>'
+                + '<button class="btn primary medium type-save-btn" style="display:none;"><i class="fa-solid fa-check"></i> {{ "calendar.save"|trans }}</button>'
+                + '<button class="btn default medium type-cancel-btn" style="display:none;"><i class="fa-solid fa-xmark"></i> {{ "calendar.cancel"|trans }}</button>'
                 + '</span></td>'
                 + '</tr>';
         });
@@ -879,8 +879,8 @@ const CalMgr = (function ($) {
             var key = $row.data('key');
             var label = $row.find('.type-label-input').val().trim();
             var color = $row.find('.type-color-dot').data('color') || '#6b7280';
-            if (!label) { toast('名称不能为空', 'error'); return; }
-            request('PUT', BASE + '/type/' + encodeURIComponent(key), { label: label, color: color }).then(function () { loadTypes(); toast('已保存', 'success'); });
+            if (!label) { toast(t('calendar.js11'), 'error'); return; }
+            request('PUT', BASE + '/type/' + encodeURIComponent(key), { label: label, color: color }).then(function () { loadTypes(); toast(t('calendar.js12'), 'success'); });
         });
         // 取消按钮
         $('#type-manager-list .type-cancel-btn').off('click').on('click', function () {
@@ -918,7 +918,7 @@ const CalMgr = (function ($) {
             return res.data !== undefined ? res.data : res;
         }).fail(function (xhr) {
             console.error('CalMgr request failed', xhr);
-            toast(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : '操作失败', 'error');
+            toast(xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : t('calendar.js13'), 'error');
         });
     }
 
@@ -946,7 +946,7 @@ const CalMgr = (function ($) {
     }
 
     function updateTitle() {
-        $('#cal-month-title').text(state.year + ' 年 ' + state.month + ' 月');
+        $('#cal-month-title').text(state.year + t('calendar.js14') + state.month + t('calendar.js15'));
     }
 
     // ─── 月视图 ────────────────────────────────────────────────────────────
@@ -996,7 +996,7 @@ const CalMgr = (function ($) {
                 html += '<div class="cal-event-tag ' + (ev.type || 'custom') + '" title="' + esc(ev.title) + '" onclick="event.stopPropagation();CalMgr.openEdit(\'' + ev.id + '\')">' + esc(ev.title) + '</div>';
             }
             if (evs.length > 3) {
-                html += '<div class="cal-day-more">+' + (evs.length - 3) + ' 更多</div>';
+                html += '<div class="cal-day-more">+' + (evs.length - 3) + t('calendar.js16');
             }
             html += '</div>';
         }
@@ -1015,7 +1015,7 @@ const CalMgr = (function ($) {
             return (a.date || '').localeCompare(b.date || '');
         });
         if (!sorted.length) {
-            $('#cal-agenda-list').html('<div class="cal-empty"><i class="fa-regular fa-calendar-xmark"></i><p>本月暂无事件</p></div>');
+            $('#cal-agenda-list').html(t('calendar.js17'));
             return;
         }
 
@@ -1029,14 +1029,14 @@ const CalMgr = (function ($) {
             html += '<div class="cal-agenda-item ' + (ev.type || 'custom') + '" onclick="CalMgr.openEdit(\'' + ev.id + '\')">';
             html += '<div class="cal-agenda-date-col">';
             html += '<div class="cal-agenda-day">' + day + '</div>';
-            html += '<div class="cal-agenda-weekday">周' + dow + '</div>';
+            html += t('calendar.js18') + dow + '</div>';
             html += '</div>';
             html += '<div class="cal-agenda-body">';
             html += '<div class="cal-agenda-title">' + esc(ev.title) + '</div>';
             html += '<div class="cal-agenda-sub">';
             html += '<span class="type-badge ' + (ev.type || 'custom') + '">' + label + '</span>';
             if (ev.note) html += '<span class="cal-agenda-note">' + esc(ev.note) + '</span>';
-            if (ev.recurring) html += '<i class="fa-solid fa-rotate" style="color:#9ca3af;font-size:11px;" data-tip="每年重复"></i>';
+            if (ev.recurring) html += '<i class="fa-solid fa-rotate" style="color:#9ca3af;font-size:11px;" data-tip="{{ "calendar.yearly"|trans }}"></i>';
             html += '</div>';
             html += '</div>';
             html += '</div>';
@@ -1073,7 +1073,7 @@ const CalMgr = (function ($) {
     function openCreate(date) {
         resetForm();
         initDatePickerOnce();
-        $('#cal-modal-title').text('添加事件');
+        $('#cal-modal-title').text(t('calendar.js19'));
         $('#cal-btn-delete').hide();
         if (date) $('#f-cal-date').val(date);
         $('#cal-event-modal').show();
@@ -1088,7 +1088,7 @@ const CalMgr = (function ($) {
         if (!ev) return;
         resetForm();
         initDatePickerOnce();
-        $('#cal-modal-title').text('编辑事件');
+        $('#cal-modal-title').text(t('calendar.js20'));
         $('#cal-btn-delete').show();
         $('#cal-event-id').val(ev.id);
         $('#f-cal-title').val(ev.title);
@@ -1172,8 +1172,8 @@ const CalMgr = (function ($) {
     function saveEvent() {
         var title = $('#f-cal-title').val().trim();
         var date  = $('#f-cal-date').val().trim();
-        if (!title) { showError('标题不能为空'); return; }
-        if (!date)  { showError('请选择日期');   return; }
+        if (!title) { showError(t('calendar.js21')); return; }
+        if (!date)  { showError(t('calendar.js22'));   return; }
 
         var id        = $('#cal-event-id').val();
         var recurring = $('#f-cal-recurring').is(':checked');
@@ -1197,17 +1197,17 @@ const CalMgr = (function ($) {
         request(method, url, payload).then(function () {
             closeModal();
             loadEvents();
-            toast(id ? '事件已更新' : '事件已添加', 'success');
+            toast(id ? t('calendar.js23') : t('calendar.js24'), 'success');
         });
     }
 
     function deleteEvent() {
         var id = $('#cal-event-id').val();
-        if (!id || !confirm('确认删除此事件？')) return;
+        if (!id || !confirm(t('calendar.js25'))) return;
         request('DELETE', BASE + '/event/' + id).then(function () {
             closeModal();
             loadEvents();
-            toast('事件已删除', 'success');
+            toast(t('calendar.js26'), 'success');
         });
     }
 
@@ -1255,7 +1255,7 @@ const CalMgr = (function ($) {
     function resetImportResult() {
         $('#cal-import-result')
             .addClass('cal-import-result-empty')
-            .html('选择年份和数据源后开始导入');
+            .html(t('calendar.js27'));
     }
 
     function setImportLoading(loading) {
@@ -1265,7 +1265,7 @@ const CalMgr = (function ($) {
         }
 
         $btn.prop('disabled', loading);
-        $btn.html(loading ? '<i class="fa-solid fa-spinner fa-spin"></i> 导入中...' : $btn.data('default-html'));
+        $btn.html(loading ? t('calendar.js28') : $btn.data('default-html'));
     }
 
     function renderImportResult(result) {
@@ -1274,9 +1274,9 @@ const CalMgr = (function ($) {
         var html = '';
 
         html += '<div class="cal-import-summary">';
-        html += '<div class="cal-import-chip success"><strong>' + esc(result.imported || 0) + '</strong><span>新增</span></div>';
-        html += '<div class="cal-import-chip info"><strong>' + esc(result.skipped || 0) + '</strong><span>跳过</span></div>';
-        html += '<div class="cal-import-chip warn"><strong>' + esc(result.errors || 0) + '</strong><span>错误</span></div>';
+        html += '<div class="cal-import-chip success"><strong>' + esc(result.imported || 0) + t('calendar.js29');
+        html += '<div class="cal-import-chip info"><strong>' + esc(result.skipped || 0) + t('calendar.js30');
+        html += '<div class="cal-import-chip warn"><strong>' + esc(result.errors || 0) + t('calendar.js31');
         html += '</div>';
 
         if (details.length) {
@@ -1295,7 +1295,7 @@ const CalMgr = (function ($) {
         var source = $('#f-import-source').val() || 'timor';
 
         if (!year || year < 2000 || year > 2100) {
-            new Alert($('#holiday-import-modal .ef-modal-body')).error('年份范围需在 2000-2100 之间', { percent: '320px', title: '提示', closable: true });
+            new Alert($('#holiday-import-modal .ef-modal-body')).error(t('calendar.js32'), { percent: '320px', title: t('calendar.js33'), closable: true });
             return;
         }
 
@@ -1306,7 +1306,7 @@ const CalMgr = (function ($) {
                 renderImportResult(result);
                 state.year = year;
                 loadEvents();
-                toast('法定假日已导入', 'success');
+                toast(t('calendar.js34'), 'success');
             })
             .always(function () {
                 setImportLoading(false);
@@ -1341,13 +1341,13 @@ const CalMgr = (function ($) {
             var label = $('#new-type-label').val().trim();
             var color = $('#new-type-color-preview').css('background-color');
             color = rgbToHex(color) || '#6b7280';
-            if (!key || !label) { new Alert($('#type-manager-modal .ef-modal-body')).error('请填写 key 和 名称', {percent: '320px', title: '提示', closable: true}); return; }
+            if (!key || !label) { new Alert($('#type-manager-modal .ef-modal-body')).error(t('calendar.js35'), {percent: '320px', title: t('calendar.js33'), closable: true}); return; }
             request('POST', BASE + '/type', { key: key, label: label, color: color }).then(function () {
                 $('#new-type-key, #new-type-label').val('');
                 $('#new-type-color-preview').css('background-color', '#6b7280');
                 if (window.newTypeColorPicker) window.newTypeColorPicker.setColor('#6b7280');
                 loadTypes();
-                toast('已添加', 'success');
+                toast(t('calendar.js36'), 'success');
             });
         });
     }

@@ -29,33 +29,24 @@ class Menu implements GedmoNode
 
     /**
      * 菜单名称
-     * @Ef(
-     *     group="menu_base_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'menu_base_info', isBF: true)]
     #[ORM\Column("menu_label", type: "string", length: 64)]
     private $label;
 
     /**
      * uri
      * type: system or custom
-     * @Ef(
-     *     group="menu_base_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'menu_base_info', isBF: true)]
     #[ORM\Column('menu_uri', type: 'string', length: 250)]
     private $uri;
 
     /**
      * Symfony route name
      * type: system or custom
-     * @Ef(
-     *     group="menu_base_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'menu_base_info', isBF: true)]
     #[ORM\Column('menu_routeName', type: 'string', length: 250, nullable: true)]
     private $routeName;
 
@@ -71,42 +62,30 @@ class Menu implements GedmoNode
 
     /**
      * 菜单图标
-     * @Ef(
-     *     group="menu_base_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'menu_base_info', isBF: true)]
     #[ORM\Column('icon', length: 255, nullable: true)]
     private $icon;
 
     /**
      * 菜单类型
      * 分为 system 系统菜单 custom 自定义菜单 outside 外部链接
-     * @Ef(
-     *     group="menu_base_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'menu_base_info', isBF: true)]
     #[ORM\Column("menu_type", type: "string", length: 64, nullable: true)]
     private $type = 'system';
 
     /**
      * 菜单描述
-     * @Ef(
-     *     group="menu_base_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'menu_base_info', isBF: true)]
     #[ORM\Column("menu_description", type: "string", length: 200, nullable: true)]
     private $description;
 
     /**
      * 是否启用
-     * @Ef(
-     *     group="menu_base_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'menu_base_info', isBF: true)]
     #[ORM\Column("enabled", type: "boolean", options: ["default" => true])]
     private $enabled = true;
 

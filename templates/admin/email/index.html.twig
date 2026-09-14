@@ -1,6 +1,6 @@
 {% extends 'admin/layout.html.twig' %}
 
-{% block title %}{{ 'admin_email.title'|trans }}{% endblock %}
+{% block title %}{{ "admin_email.title"|trans }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -176,12 +176,12 @@
 <div class="org-structure-container email-page">
     <div class="outside-wrapper" style="padding: 40px; max-width: 1200px; margin: 0; background: #fff; min-height: calc(100vh - 60px);">
         
-        <div class="email-title">{{ 'admin_email.title'|trans }}</div>
+        <div class="email-title">{{ "admin_email.title"|trans }}</div>
         
         <div class="email-tabs">
-            <div class="email-tab active" onclick="switchTab('config', this)">{{ 'admin_email.tabs.config'|trans }}</div>
-            <div class="email-tab" onclick="switchTab('templates', this)">{{ 'admin_email.tabs.templates'|trans }}</div>
-            <div class="email-tab" onclick="switchTab('bindings', this)">{{ 'admin_email.tabs.bindings'|trans }}</div>
+            <div class="email-tab active" onclick="switchTab('config', this)">{{ "admin_email.tabs.config"|trans }}</div>
+            <div class="email-tab" onclick="switchTab('templates', this)">{{ "admin_email.tabs.templates"|trans }}</div>
+            <div class="email-tab" onclick="switchTab('bindings', this)">{{ "admin_email.tabs.bindings"|trans }}</div>
         </div>
 
         <div class="ef-row ef-row-align-start ef-row-justify-start">
@@ -208,11 +208,11 @@
                 <div id="config-section" class="config-form active">
                     <div class="ef-row ef-row-align-center ef-row-justify-between" style="margin-bottom: 16px;">
                         <div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">{{ 'admin_email.config.title'|trans }}</div>
-                            <div style="font-size: 14px; color: #86868b;">{{ 'admin_email.config.desc'|trans }}</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">{{ "admin_email.config.title"|trans }}</div>
+                            <div style="font-size: 14px; color: #86868b;">{{ "admin_email.config.desc"|trans }}</div>
                         </div>
                         <div>
-                            <button class="btn primary medium" style="border-radius: 20px;" onclick="openConfigDrawerWithData()">{{ 'admin_email.config.add_server'|trans }}</button>
+                            <button class="btn primary medium" style="border-radius: 20px;" onclick="openConfigDrawerWithData()">{{ "admin_email.config.add_server"|trans }}</button>
                         </div>
                     </div>
 
@@ -226,16 +226,16 @@
                                 <div class="method-title">
                                     {{ config.name ?: ('admin_email.config.unnamed'|trans) }}
                                     {% if config.isDefault %}
-                                        <span style="font-size: 12px; background: #e5f0ff; color: #0066cc; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">{{ 'admin_email.config.default'|trans }}</span>
+                                        <span style="font-size: 12px; background: #e5f0ff; color: #0066cc; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">{{ "admin_email.config.default"|trans }}</span>
                                     {% endif %}
                                 </div>
-                                <div class="method-subtitle">主机: {{ config.host }}:{{ config.port }} ({{ config.protocol|upper }}) | 发件人: {{ config.senderAddress }}</div>
+                                <div class="method-subtitle">{{ "emailIndex.3"|trans }}: {{ config.host }}:{{ config.port }} ({{ config.protocol|upper }}) | {{ "emailIndex.4"|trans }}: {{ config.senderAddress }}</div>
                             </div>
                             <div class="method-actions">
                                 <button class="btn secondary medium only-icon circle" style="border:none; background:transparent; box-shadow:none; color: #1d1d1f; font-size: 18px;" onclick="openConfigDrawerWithData('{{ config.id }}', '{{ config.name|e('js') }}', '{{ config.isDefault ? 1 : 0 }}', '{{ config.protocol|e('js') }}', '{{ config.host|e('js') }}', '{{ config.port }}', '{{ config.encryption|e('js') }}', '{{ config.username|e('js') }}', '{{ config.senderName|e('js') }}', '{{ config.senderAddress|e('js') }}')">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
-                                <form action="{{ path('admin_email_config_delete', {id: config.id}) }}" method="post" style="display:inline;" onsubmit="return confirm('{{ 'admin_email.config.delete_confirm'|trans }}');">
+                                <form action="{{ path('admin_email_config_delete', {id: config.id}) }}" method="post" style="display:inline;" onsubmit="return confirm('{{ "admin_email.config.delete_confirm"|trans }}');">
                                     <button type="submit" class="btn secondary medium only-icon circle" style="border:none; background:transparent; box-shadow:none; color: #dc3545; font-size: 18px;">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>
@@ -244,7 +244,7 @@
                         </div>
                         {% else %}
                         <div style="padding: 40px 0; text-align: center; color: #86868b;">
-                            {{ 'admin_email.config.empty'|trans }}
+                            {{ "admin_email.config.empty"|trans }}
                         </div>
                         {% endfor %}
                     </div>
@@ -254,11 +254,11 @@
                 <div id="templates-section" class="template-list">
                     <div class="ef-row ef-row-align-center ef-row-justify-between" style="margin-bottom: 16px;">
                         <div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">{{ 'admin_email.templates.title'|trans }}</div>
-                            <div style="font-size: 14px; color: #86868b;">{{ 'admin_email.templates.desc'|trans }}</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">{{ "admin_email.templates.title"|trans }}</div>
+                            <div style="font-size: 14px; color: #86868b;">{{ "admin_email.templates.desc"|trans }}</div>
                         </div>
                         <div>
-                            <button class="btn primary medium" style="border-radius: 20px;" onclick="window.open('{{ path('admin_email_template_editor') }}', '_blank')">{{ 'admin_email.editor.open_full'|trans }}</button>
+                            <button class="btn primary medium" style="border-radius: 20px;" onclick="window.open('{{ path('admin_email_template_editor') }}', '_blank')">{{ "admin_email.editor.open_full"|trans }}</button>
                         </div>
                     </div>
 
@@ -270,13 +270,13 @@
                             </div>
                             <div class="method-content">
                                 <div class="method-title">{{ template.name }} ({{ template.code }})</div>
-                                <div class="method-subtitle">主题: {{ template.subject }}</div>
+                                <div class="method-subtitle">{{ "emailIndex.5"|trans }}: {{ template.subject }}</div>
                             </div>
                             <div class="method-actions">
                                 <button class="btn secondary medium only-icon circle" style="border:none; background:transparent; box-shadow:none; color: #1d1d1f; font-size: 18px;" onclick="openTemplateDrawerWithData('{{ template.id }}', '{{ template.name|e('js') }}', '{{ template.subject|e('js') }}', '{{ template.description|e('js') }}', '{{ template.bodyHtml|e('js')|replace({"\n": "\\n", "\r": "\\r"}) }}', '{{ template.emailConfig ? template.emailConfig.id : '' }}')">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
-                                <form action="{{ path('admin_email_template_delete', {id: template.id}) }}" method="post" style="display:inline;" onsubmit="return confirm('{{ 'admin_email.templates.delete_confirm'|trans }}');">
+                                <form action="{{ path('admin_email_template_delete', {id: template.id}) }}" method="post" style="display:inline;" onsubmit="return confirm('{{ "admin_email.templates.delete_confirm"|trans }}');">
                                     <button type="submit" class="btn secondary medium only-icon circle" style="border:none; background:transparent; box-shadow:none; color: #dc3545; font-size: 18px;">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>
@@ -285,7 +285,7 @@
                         </div>
                         {% else %}
                         <div style="padding: 40px 0; text-align: center; color: #86868b;">
-                            {{ 'admin_email.templates.empty'|trans }}
+                            {{ "admin_email.templates.empty"|trans }}
                         </div>
                         {% endfor %}
                     </div>
@@ -295,8 +295,8 @@
                 <div id="bindings-section" class="binding-list">
                     <div class="ef-row ef-row-align-center ef-row-justify-between" style="margin-bottom: 16px;">
                         <div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">{{ 'admin_email.bindings.title'|trans }}</div>
-                            <div style="font-size: 14px; color: #86868b;">{{ 'admin_email.bindings.desc'|trans }}</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">{{ "admin_email.bindings.title"|trans }}</div>
+                            <div style="font-size: 14px; color: #86868b;">{{ "admin_email.bindings.desc"|trans }}</div>
                         </div>
                     </div>
 
@@ -311,14 +311,14 @@
                                 </div>
                                 <div class="method-content" style="flex: 1; padding-right: 20px;">
                                     <div class="method-title">{{ ('function_binding.' ~ binding.functionCode)|trans }}</div>
-                                    <div class="method-subtitle">{{ 'function_binding.function_code'|trans }}: <code>{{ binding.functionCode }}</code></div>
+                                    <div class="method-subtitle">{{ "function_binding.function_code"|trans }}: <code>{{ binding.functionCode }}</code></div>
                                 </div>
                                 
                                 <div class="binding-selectors" style="display: flex; gap: 16px; align-items: center;">
                                     <div style="min-width: 200px;">
-                                        <div style="font-size:12px; color:#86868b; margin-bottom: 4px;">{{ 'function_binding.server'|trans }}</div>
+                                        <div style="font-size:12px; color:#86868b; margin-bottom: 4px;">{{ "function_binding.server"|trans }}</div>
                                         <select name="emailConfigId" class="ef-input-wrapper-full-width ef-input-rounded" style="padding: 8px 12px; outline: none; border: 1px solid #d1d5db; border-radius: 6px; background-color: white;">
-                                            <option value="">-- {{ 'function_binding.system_default'|trans }} --</option>
+                                            <option value="">-- {{ "function_binding.system_default"|trans }} --</option>
                                             {% for config in configs %}
                                                 <option value="{{ config.id }}" {% if binding.emailConfig and binding.emailConfig.id == config.id %}selected{% endif %}>{{ config.name }}</option>
                                             {% endfor %}
@@ -326,9 +326,9 @@
                                     </div>
                                     
                                     <div style="min-width: 200px;">
-                                        <div style="font-size:12px; color:#86868b; margin-bottom: 4px;">{{ 'function_binding.template'|trans }}</div>
+                                        <div style="font-size:12px; color:#86868b; margin-bottom: 4px;">{{ "function_binding.template"|trans }}</div>
                                         <select name="emailTemplateId" class="ef-input-wrapper-full-width ef-input-rounded" style="padding: 8px 12px; outline: none; border: 1px solid #d1d5db; border-radius: 6px; background-color: white;" required>
-                                            <option value="">-- {{ 'function_binding.select_template'|trans }} --</option>
+                                            <option value="">-- {{ "function_binding.select_template"|trans }} --</option>
                                             {% for template in templates %}
                                                 <option value="{{ template.id }}" {% if binding.emailTemplate and binding.emailTemplate.id == template.id %}selected{% endif %}>{{ template.name }}</option>
                                             {% endfor %}
@@ -336,14 +336,14 @@
                                     </div>
                                     
                                     <div style="padding-top: 20px;">
-                                        <button type="submit" class="btn primary small" style="border-radius: 6px;">{{ 'function_binding.save_binding'|trans }}</button>
+                                        <button type="submit" class="btn primary small" style="border-radius: 6px;">{{ "function_binding.save_binding"|trans }}</button>
                                     </div>
                                 </div>
                             </form>
                         </div>
                         {% else %}
                         <div style="padding: 40px 0; text-align: center; color: #86868b;">
-                            {{ 'admin_email.bindings.empty'|trans }}
+                            {{ "admin_email.bindings.empty"|trans }}
                         </div>
                         {% endfor %}
                     </div>
@@ -353,7 +353,7 @@
             
             <div class="ef-col-8">
                 <div class="side-card" style="background: #f5f5f7; border-radius: 16px; padding: 24px; margin-bottom: 16px;">
-                    <div class="side-card-title" style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{ 'admin_email.side_card.config.title'|trans }}</div>
+                    <div class="side-card-title" style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{ "admin_email.side_card.config.title"|trans }}</div>
                     <div class="side-card-text" style="font-size: 14px; color: #555; margin-bottom: 16px; line-height: 1.5;">
                         {{ 'admin_email.side_card.config.text'|trans|raw }}
                     </div>
@@ -368,7 +368,7 @@
     <div class="ef-drawer-mask" maskid="configDrawer"></div>
     <div class="ef-drawer" style="right: -600px; width: 600px;">
         <div class="ef-drawer-header">
-            <div class="ef-drawer-title" id="configDrawerTitle">{{ 'admin_email.drawer.add_title'|trans }}</div>
+            <div class="ef-drawer-title" id="configDrawerTitle">{{ "admin_email.drawer.add_title"|trans }}</div>
             <div tabindex="-1" role="button" aria-label="Close" class="ef-drawer-close-btn" onclick="$().hideDrawer('configDrawer')">
                 <span class="ef-icon-hover">
                     <svg viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
@@ -382,9 +382,9 @@
                 <input type="hidden" name="id" id="configId">
                 
                 <div class="settings-group">
-                    <div class="settings-group-title">{{ 'admin_email.drawer.basic_info'|trans }}</div>
+                    <div class="settings-group-title">{{ "admin_email.drawer.basic_info"|trans }}</div>
                     <div class="form-group">
-                        <label class="form-label">{{ 'admin_email.drawer.name'|trans }}</label>
+                        <label class="form-label">{{ "admin_email.drawer.name"|trans }}</label>
                         {{ ui.input('configName', 'text', 'admin_email.drawer.name_placeholder'|trans, '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'name': 'name', 'style': 'width: 100%;'}) }}
                     </div>
                     <div class="form-group" style="margin-top: 16px;">
@@ -394,18 +394,18 @@
                 </div>
 
                 <div class="settings-group">
-                    <div class="settings-group-title">{{ 'admin_email.drawer.conn_settings'|trans }}</div>
+                    <div class="settings-group-title">{{ "admin_email.drawer.conn_settings"|trans }}</div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">{{ 'admin_email.drawer.host'|trans }} *</label>
+                            <label class="form-label">{{ "admin_email.drawer.host"|trans }} *</label>
                             {{ ui.input('configHost', 'text', 'admin_email.drawer.host_placeholder'|trans, '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'name': 'host', 'required': 'required', 'style': 'width: 100%;'}) }}
                         </div>
                         <div class="form-group">
-                            <label class="form-label">{{ 'admin_email.drawer.port'|trans }} *</label>
+                            <label class="form-label">{{ "admin_email.drawer.port"|trans }} *</label>
                             {{ ui.inputNumber('configPort', null, null, 1, 0, '', 'ef-input-wrapper-full-width ef-input-rounded', 'port', '465', {'required': 'required', 'style': 'width: 100%;'}) }}
                         </div>
                         <div class="form-group">
-                            <label class="form-label">{{ 'admin_email.drawer.protocol'|trans }} *</label>
+                            <label class="form-label">{{ "admin_email.drawer.protocol"|trans }} *</label>
                             {% set protocol_options = [
                                 {'label': 'SMTP', 'value': 'smtp'},
                                 {'label': 'Sendgrid', 'value': 'sendgrid'},
@@ -415,7 +415,7 @@
                             {{ ui.select(protocol_options, 'admin_email.drawer.protocol_select'|trans, '120px', 'ef-input-rounded', 'protocol', 'configProtocol', 'smtp') }}
                         </div>
                         <div class="form-group">
-                            <label class="form-label">{{ 'admin_email.drawer.encryption'|trans }}</label>
+                            <label class="form-label">{{ "admin_email.drawer.encryption"|trans }}</label>
                             {% set encryption_options = [
                                 {'label': 'None', 'value': ''},
                                 {'label': 'SSL', 'value': 'ssl'},
@@ -427,28 +427,28 @@
                 </div>
 
                 <div class="settings-group">
-                    <div class="settings-group-title">{{ 'admin_email.drawer.auth'|trans }}</div>
+                    <div class="settings-group-title">{{ "admin_email.drawer.auth"|trans }}</div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">{{ 'admin_email.drawer.username'|trans }}</label>
+                            <label class="form-label">{{ "admin_email.drawer.username"|trans }}</label>
                             {{ ui.input('configUsername', 'text', 'admin_email.drawer.username_placeholder'|trans, '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'name': 'username', 'style': 'width: 100%;'}) }}
                         </div>
                         <div class="form-group">
-                            <label class="form-label">{{ 'admin_email.drawer.password'|trans }}</label>
+                            <label class="form-label">{{ "admin_email.drawer.password"|trans }}</label>
                             {{ ui.input('configPassword', 'password', 'admin_email.drawer.password_hint'|trans, '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'name': 'password', 'style': 'width: 100%;'}) }}
                         </div>
                     </div>
                 </div>
 
                 <div class="settings-group">
-                    <div class="settings-group-title">{{ 'admin_email.drawer.sender_info'|trans }}</div>
+                    <div class="settings-group-title">{{ "admin_email.drawer.sender_info"|trans }}</div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">{{ 'admin_email.drawer.sender_name'|trans }}</label>
+                            <label class="form-label">{{ "admin_email.drawer.sender_name"|trans }}</label>
                             {{ ui.input('configSenderName', 'text', 'admin_email.drawer.sender_name_placeholder'|trans, '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'name': 'senderName', 'style': 'width: 100%;'}) }}
                         </div>
                         <div class="form-group">
-                            <label class="form-label">{{ 'admin_email.drawer.sender_address'|trans }} *</label>
+                            <label class="form-label">{{ "admin_email.drawer.sender_address"|trans }} *</label>
                             {{ ui.input('configSenderAddress', 'text', 'admin_email.drawer.sender_address_placeholder'|trans, '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'name': 'senderAddress', 'required': 'required', 'style': 'width: 100%;'}) }}
                         </div>
                     </div>
@@ -456,9 +456,9 @@
             </form>
         </div>
         <div class="ef-drawer-footer">
-            <button class="btn outline medium" type="button" onclick="testConnection()" id="testConnectionBtn">{{ 'admin_email.drawer.test_conn'|trans }}</button>
-            <button class="cancelDrawer btn outline medium" type="button" onclick="$().hideDrawer('configDrawer')">{{ 'action.cancel'|trans }}</button>
-            <button type="submit" form="configForm" class="btn primary medium">{{ 'action.save'|trans }}</button>
+            <button class="btn outline medium" type="button" onclick="testConnection()" id="testConnectionBtn">{{ "admin_email.drawer.test_conn"|trans }}</button>
+            <button class="cancelDrawer btn outline medium" type="button" onclick="$().hideDrawer('configDrawer')">{{ "action.cancel"|trans }}</button>
+            <button type="submit" form="configForm" class="btn primary medium">{{ "action.save"|trans }}</button>
         </div>
     </div>
 </div>
@@ -468,7 +468,7 @@
     <div class="ef-drawer-mask" maskid="templateDrawer"></div>
     <div class="ef-drawer" style="right: -80% !important; width: 80% !important;">
         <div class="ef-drawer-header">
-            <div class="ef-drawer-title" id="templateDrawerTitle">{{ 'admin_email.drawer.add_template'|trans }}</div>
+            <div class="ef-drawer-title" id="templateDrawerTitle">{{ "admin_email.drawer.add_template"|trans }}</div>
             <div tabindex="-1" role="button" aria-label="Close" class="ef-drawer-close-btn" onclick="$().hideDrawer('templateDrawer')">
                 <span class="ef-icon-hover">
                     <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" class="ef-icon ef-icon-close" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter">
@@ -488,11 +488,11 @@
                         <div class="settings-group" style="padding: 0; margin: 0; background: transparent; border: none;">
                             <div class="grid-2">
                                 <div class="form-group">
-                                    <label class="form-label">{{ 'admin_email.form.name'|trans }}</label>
+                                    <label class="form-label">{{ "admin_email.form.name"|trans }}</label>
                                     {{ ui.input('templateName', 'text', 'admin_email.form.name_placeholder'|trans, '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'name': 'name', 'required': 'required', 'style': 'width: 100%;'}) }}
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">{{ 'admin_email.form.subject'|trans }}</label>
+                                    <label class="form-label">{{ "admin_email.form.subject"|trans }}</label>
                                     {{ ui.input('templateSubject', 'text', 'admin_email.form.subject_placeholder'|trans, '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'name': 'subject', 'required': 'required', 'style': 'width: 100%;'}) }}
                                 </div>
                             </div>
@@ -500,7 +500,7 @@
                     </div>
                     <div class="ef-col-8">
                         <div class="form-group">
-                            <label class="form-label">{{ 'admin_email.form.server'|trans }}</label>
+                            <label class="form-label">{{ "admin_email.form.server"|trans }}</label>
                             {% set server_options = [{'label': 'admin_email.form.default_server'|trans, 'value': ''}] %}
                             {% for config in configs %}
                                 {% set server_options = server_options|merge([{'label': config.name, 'value': config.id}]) %}
@@ -521,37 +521,37 @@
                 
                 <div style="margin-top: 24px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <div style="font-size: 14px; font-weight: 600; color: #1d1d1f;">{{ 'admin_email.editor.preset.title'|trans }}</div>
+                        <div style="font-size: 14px; font-weight: 600; color: #1d1d1f;">{{ "admin_email.editor.preset.title"|trans }}</div>
                         <div style="display: flex; gap: 8px;">
                             <select id="presetTemplate" class="ef-input-rounded" style="padding: 4px 8px; font-size: 13px; border: 1px solid #e5e7eb;">
-                                <option value="">{{ 'admin_email.templates.preset.select_label'|trans }}</option>
-                                <option value="welcome">{{ 'admin_email.templates.preset.option.welcome'|trans }}</option>
-                                <option value="verification_code">{{ 'admin_email.templates.preset.option.verification_code'|trans }}</option>
-                                <option value="password_reset">{{ 'admin_email.templates.preset.option.password_reset'|trans }}</option>
-                                <option value="announcement">{{ 'admin_email.templates.preset.option.announcement'|trans }}</option>
+                                <option value="">{{ "admin_email.templates.preset.select_label"|trans }}</option>
+                                <option value="welcome">{{ "admin_email.templates.preset.option.welcome"|trans }}</option>
+                                <option value="verification_code">{{ "admin_email.templates.preset.option.verification_code"|trans }}</option>
+                                <option value="password_reset">{{ "admin_email.templates.preset.option.password_reset"|trans }}</option>
+                                <option value="announcement">{{ "admin_email.templates.preset.option.announcement"|trans }}</option>
                             </select>
-                            <button type="button" class="btn secondary small" onclick="applyPresetTemplate()">{{ 'admin_email.templates.preset.apply'|trans }}</button>
+                            <button type="button" class="btn secondary small" onclick="applyPresetTemplate()">{{ "admin_email.templates.preset.apply"|trans }}</button>
                         </div>
                     </div>
                 </div>
 
                 <div style="margin-top: 16px;">
-                    <div style="font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 8px;">变量配置</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 8px;">{{ "emailIndex.6"|trans }}</div>
                     <div id="variablesList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
                         <!-- Variables will be rendered here -->
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="text" id="newVariableName" placeholder="变量名 (如: username)" class="ef-input-rounded" style="flex: 1; padding: 8px 12px; border: 1px solid #e5e7eb;">
-                        <input type="text" id="newVariableDesc" placeholder="描述 (如: 用户姓名)" class="ef-input-rounded" style="flex: 1; padding: 8px 12px; border: 1px solid #e5e7eb;">
-                        <button type="button" class="btn outline small" onclick="addVariable()">添加变量</button>
+                        <input type="text" id="newVariableName" placeholder="{{ "emailIndex.1"|trans }}" class="ef-input-rounded" style="flex: 1; padding: 8px 12px; border: 1px solid #e5e7eb;">
+                        <input type="text" id="newVariableDesc" placeholder="{{ "emailIndex.2"|trans }}" class="ef-input-rounded" style="flex: 1; padding: 8px 12px; border: 1px solid #e5e7eb;">
+                        <button type="button" class="btn outline small" onclick="addVariable()">{{ "emailIndex.7"|trans }}</button>
                     </div>
                 </div>
             </form>
         </div>
         <div class="ef-drawer-footer">
-            <button class="btn outline medium" type="button" onclick="testTemplateEmail()">{{ 'admin_email.btn.send_test'|trans }}</button>
-            <button class="cancelDrawer btn outline medium" type="button" onclick="$().hideDrawer('templateDrawer')">{{ 'action.cancel'|trans }}</button>
-            <button type="submit" form="templateForm" class="btn primary medium">{{ 'action.save'|trans }}</button>
+            <button class="btn outline medium" type="button" onclick="testTemplateEmail()">{{ "admin_email.btn.send_test"|trans }}</button>
+            <button class="cancelDrawer btn outline medium" type="button" onclick="$().hideDrawer('templateDrawer')">{{ "action.cancel"|trans }}</button>
+            <button type="submit" form="templateForm" class="btn primary medium">{{ "action.save"|trans }}</button>
         </div>
     </div>
 </div>
@@ -560,7 +560,7 @@
     {# Test Connection Modal #}
     {% set testConnectionBody %}
         <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label required">{{ 'admin_email.drawer.test_email_label'|trans }}</label>
+            <label class="form-label required">{{ "admin_email.drawer.test_email_label"|trans }}</label>
             {{ ui.input('configTestEmailInput', 'email', 'admin_email.drawer.test_email_placeholder'|trans, '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'required': 'required', 'style': 'width: 100%;'}) }}
         </div>
     {% endset %}
@@ -568,10 +568,10 @@
     {% set testConnectionFooter %}
         <div class="ef-space ef-space-horizontal ef-space-align-center" style="justify-content: flex-end; width: 100%;">
             <div class="ef-space-item" style="margin-right: 8px;">
-                <button class="btn outline medium" type="button" onclick="closeTestConnectionModal()">{{ 'action.cancel'|trans }}</button>
+                <button class="btn outline medium" type="button" onclick="closeTestConnectionModal()">{{ "action.cancel"|trans }}</button>
             </div>
             <div class="ef-space-item">
-                <button class="btn primary medium" type="button" onclick="executeTestConnection()" id="confirmTestConnectionBtn">{{ 'admin_email.drawer.test_conn'|trans }}</button>
+                <button class="btn primary medium" type="button" onclick="executeTestConnection()" id="confirmTestConnectionBtn">{{ "admin_email.drawer.test_conn"|trans }}</button>
             </div>
         </div>
     {% endset %}
@@ -584,7 +584,7 @@
     {# Test Template Email Modal #}
     {% set testTemplateEmailBody %}
         <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label required">{{ 'admin_email.drawer.test_email_label'|trans }}</label>
+            <label class="form-label required">{{ "admin_email.drawer.test_email_label"|trans }}</label>
             {{ ui.input('templateTestEmailInput', 'email', 'admin_email.drawer.test_email_placeholder'|trans, '', 'ef-input-wrapper-full-width ef-input-rounded', 'ef-input-size-medium', {'required': 'required', 'style': 'width: 100%;'}) }}
         </div>
     {% endset %}
@@ -592,10 +592,10 @@
     {% set testTemplateEmailFooter %}
         <div class="ef-space ef-space-horizontal ef-space-align-center" style="justify-content: flex-end; width: 100%;">
             <div class="ef-space-item" style="margin-right: 8px;">
-                <button class="btn outline medium" type="button" onclick="closeTestTemplateEmailModal()">{{ 'action.cancel'|trans }}</button>
+                <button class="btn outline medium" type="button" onclick="closeTestTemplateEmailModal()">{{ "action.cancel"|trans }}</button>
             </div>
             <div class="ef-space-item">
-                <button class="btn primary medium" type="button" onclick="executeTestTemplateEmail()" id="confirmTestTemplateEmailBtn">{{ 'admin_email.btn.send_test'|trans }}</button>
+                <button class="btn primary medium" type="button" onclick="executeTestTemplateEmail()" id="confirmTestTemplateEmailBtn">{{ "admin_email.btn.send_test"|trans }}</button>
             </div>
         </div>
     {% endset %}
@@ -615,14 +615,14 @@
 
         class InsertVariableMenu {
             constructor() {
-                this.title = '插入变量';
+                this.title = t('emailIndex.js1');
                 this.iconSvg = '<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"/><path d="M686.7 348.7c-3.1-3.1-8.2-3.1-11.3 0L512 512.1l-163.4-163.4c-3.1-3.1-8.2-3.1-11.3 0l-42.4 42.4c-3.1 3.1-3.1 8.2 0 11.3L458.3 565.8c3.1 3.1 8.2 3.1 11.3 0L686.7 402.4c3.1-3.1 3.1-8.2 0-11.3l-42.4-42.4z"/></svg>';
                 this.tag = 'select';
                 this.width = 140;
             }
             getOptions(editor) {
                 if (typeof templateVariables === 'undefined' || templateVariables.length === 0) {
-                    return [{ value: '', text: '暂无变量' }];
+                    return [{ value: '', text: t('emailIndex.js2') }];
                 }
                 return templateVariables.map(v => ({
                     value: v.name,
@@ -657,7 +657,7 @@
                 selector: '#editor-text-container',
                 html: '',
                 config: {
-                    placeholder: '请输入内容...',
+                    placeholder: t('emailIndex.js3'),
                     onChange(editor) {
                         document.getElementById('templateBody').value = editor.getHtml();
                     }
@@ -743,13 +743,13 @@
             document.getElementById('configSenderName').value = senderName;
             document.getElementById('configSenderAddress').value = senderAddress;
 
-            document.getElementById('configDrawerTitle').innerText = id ? '{{ 'admin_email.drawer.edit_title'|trans }}' : '{{ 'admin_email.drawer.add_title'|trans }}';
+            document.getElementById('configDrawerTitle').innerText = id ? '{{ "admin_email.drawer.edit_title"|trans }}' : '{{ "admin_email.drawer.add_title"|trans }}';
             $().showDrawer('configDrawer');
         }
 
         {% verbatim %}
         const presetTemplates = {
-            welcome: '<div style="max-width:680px;margin:0 auto;padding:24px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;"><div style="font-size:18px;font-weight:600;color:#111827;margin-bottom:8px;">欢迎加入我们</div><div style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:16px;">您好，欢迎加入我们的团队！以下是常用入口与指引，请您尽快完成账号设置。</div><div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:12px 16px;margin-bottom:12px;"><div style="font-size:14px;color:#111827;">初始账号：{{ username }}</div><div style="font-size:14px;color:#111827;">首次登录地址：{{ login_url }}</div></div><div style="font-size:12px;color:#6b7280;">如果有问题，请联系 HR 或 IT 支持。</div></div>',
+            welcome: '<div style="max-width:680px;margin:0 auto;padding:24px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;"><div style="font-size:18px;font-weight:600;color:#111827;margin-bottom:8px;">{{ "emailIndex.welcome"|trans }}</div><div style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:16px;">{{ "emailIndex.welcomeBody"|trans }}</div><div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:12px 16px;margin-bottom:12px;"><div style="font-size:14px;color:#111827;">{{ "emailIndex.initialAccount"|trans }}{{ username }}</div><div style="font-size:14px;color:#111827;">首次登录地址：{{ login_url }}</div></div><div style="font-size:12px;color:#6b7280;">如果有问题，请联系 HR 或 IT 支持。</div></div>',
             verification_code: '<div style="max-width:680px;margin:0 auto;padding:24px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;"><div style="font-size:18px;font-weight:600;color:#111827;margin-bottom:8px;">验证码</div><div style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:16px;">您好，您正在进行安全验证，以下是您的一次性验证码：</div><div style="font-size:28px;font-weight:700;color:#111827;letter-spacing:4px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:12px 16px;margin-bottom:12px;text-align:center;">{{ code }}</div><div style="font-size:12px;color:#6b7280;">该验证码有效期 {{ expire_minutes }} 分钟，请勿泄露。</div></div>',
             password_reset: '<div style="max-width:680px;margin:0 auto;padding:24px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;"><div style="font-size:18px;font-weight:600;color:#111827;margin-bottom:8px;">密码重置</div><div style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:16px;">您好，您申请了重置密码，请点击以下链接完成操作：</div><a href="{{ reset_url }}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;padding:10px 16px;font-size:14px;">重置密码</a><div style="font-size:12px;color:#6b7280;margin-top:12px;">如果不是您本人操作，请忽略本邮件。</div></div>',
             announcement: '<div style="max-width:680px;margin:0 auto;padding:24px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;"><div style="font-size:18px;font-weight:600;color:#111827;margin-bottom:8px;">公告通知</div><div style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:16px;">{{ announcement_title }}</div><div style="font-size:14px;color:#374151;line-height:1.7;">{{ announcement_body }}</div></div>'
@@ -818,7 +818,7 @@
                 
                 const textSpan = document.createElement('span');
                 textSpan.innerText = v.name + (v.desc ? ` (${v.desc})` : '');
-                textSpan.title = '点击插入到编辑器';
+                textSpan.title = t('emailIndex.js4');
                 textSpan.onclick = () => insertVariableIntoEditor(v.name);
                 
                 const delBtn = document.createElement('i');
@@ -878,14 +878,14 @@
 
             if (testEmail.trim() === '') {
                 let alert = new Alert($('#testConnectionModal .ef-modal-body'));
-                alert.error('{{ 'admin_email.flash.test_email_required'|trans }}', { percent: '90%', title: "{{ 'admin_email.flash.error'|trans }}", closable: true });
+                alert.error('{{ "admin_email.flash.test_email_required"|trans }}', { percent: '90%', title: "{{ "admin_email.flash.error"|trans }}", closable: true });
                 return;
             }
             
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(testEmail.trim())) {
                 let alert = new Alert($('#testConnectionModal .ef-modal-body'));
-                alert.error('{{ 'admin_email.flash.invalid_email'|trans }}', { percent: '90%', title: "{{ 'admin_email.flash.error'|trans }}", closable: true });
+                alert.error('{{ "admin_email.flash.invalid_email"|trans }}', { percent: '90%', title: "{{ "admin_email.flash.error"|trans }}", closable: true });
                 return;
             }
 
@@ -896,7 +896,7 @@
             
             const btn = document.getElementById('confirmTestConnectionBtn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> {{ 'admin_email.flash.testing'|trans }}';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> {{ "admin_email.flash.testing"|trans }}';
             btn.disabled = true;
 
             ajax({
@@ -911,17 +911,17 @@
                     if (response.code === 200) {
                         closeTestConnectionModal();
                         let alert = new Alert($('#configDrawer .ef-drawer-body'));
-                        alert.success(response.message || '{{ 'admin_email.flash.test_success'|trans }}', { percent: '90%', title: "{{ 'admin_email.flash.success'|trans }}", closable: true });
+                        alert.success(response.message || '{{ "admin_email.flash.test_success"|trans }}', { percent: '90%', title: "{{ "admin_email.flash.success"|trans }}", closable: true });
                     } else {
                         let alert = new Alert($('#testConnectionModal .ef-modal-body'));
-                        alert.error(response.message || '{{ 'admin_email.flash.test_failed'|trans }}', { percent: '90%', title: "{{ 'admin_email.flash.error'|trans }}", closable: true });
+                        alert.error(response.message || '{{ "admin_email.flash.test_failed"|trans }}', { percent: '90%', title: "{{ "admin_email.flash.error"|trans }}", closable: true });
                     }
                 },
                 error: function (xhr, status, errorMsg) {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     let alert = new Alert($('#testConnectionModal .ef-modal-body'));
-                    alert.error(errorMsg || '{{ 'admin_email.flash.ajax_error'|trans }}', { percent: '90%', title: "{{ 'admin_email.flash.error'|trans }}", closable: true });
+                    alert.error(errorMsg || '{{ "admin_email.flash.ajax_error"|trans }}', { percent: '90%', title: "{{ "admin_email.flash.error"|trans }}", closable: true });
                 }
             });
         }
@@ -949,7 +949,7 @@
             
             if (testEmail.trim() === '') {
                 let alert = new Alert($('#testTemplateEmailModal .modal-body'));
-                alert.error('{{ 'admin_email.flash.test_email_required'|trans }}', { percent: '90%', title: "{{ 'admin_email.flash.error'|trans }}", closable: true });
+                alert.error('{{ "admin_email.flash.test_email_required"|trans }}', { percent: '90%', title: "{{ "admin_email.flash.error"|trans }}", closable: true });
                 return;
             }
             
@@ -957,7 +957,7 @@
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(testEmail.trim())) {
                 let alert = new Alert($('#testTemplateEmailModal .modal-body'));
-                alert.error('{{ 'admin_email.flash.invalid_email'|trans }}', { percent: '90%', title: "{{ 'admin_email.flash.error'|trans }}", closable: true });
+                alert.error('{{ "admin_email.flash.invalid_email"|trans }}', { percent: '90%', title: "{{ "admin_email.flash.error"|trans }}", closable: true });
                 return;
             }
 
@@ -974,7 +974,7 @@
             
             const btn = document.getElementById('confirmTestTemplateEmailBtn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> {{ 'admin_email.flash.sending'|trans }}';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> {{ "admin_email.flash.sending"|trans }}';
             btn.disabled = true;
 
             ajax({
@@ -989,17 +989,17 @@
                     if (response.code === 200) {
                         closeTestTemplateEmailModal();
                         let alert = new Alert($('#templateDrawer .ef-drawer-body'));
-                        alert.success(response.message || '{{ 'admin_email.flash.send_success'|trans }}', { percent: '90%', title: "{{ 'admin_email.flash.success'|trans }}", closable: true });
+                        alert.success(response.message || '{{ "admin_email.flash.send_success"|trans }}', { percent: '90%', title: "{{ "admin_email.flash.success"|trans }}", closable: true });
                     } else {
                         let alert = new Alert($('#testTemplateEmailModal .modal-body'));
-                        alert.error(response.message || '{{ 'admin_email.flash.send_failed'|trans }}', { percent: '90%', title: "{{ 'admin_email.flash.error'|trans }}", closable: true });
+                        alert.error(response.message || '{{ "admin_email.flash.send_failed"|trans }}', { percent: '90%', title: "{{ "admin_email.flash.error"|trans }}", closable: true });
                     }
                 },
                 error: function (xhr, status, errorMsg) {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     let alert = new Alert($('#testTemplateEmailModal .modal-body'));
-                    alert.error(errorMsg || '{{ 'admin_email.flash.ajax_error'|trans }}', { percent: '90%', title: "{{ 'admin_email.flash.error'|trans }}", closable: true });
+                    alert.error(errorMsg || '{{ "admin_email.flash.ajax_error"|trans }}', { percent: '90%', title: "{{ "admin_email.flash.error"|trans }}", closable: true });
                 }
             });
         }

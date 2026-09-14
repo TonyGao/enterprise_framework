@@ -4,7 +4,6 @@ namespace App\Entity\Organization;
 
 use App\Repository\Organization\PositionRepository;
 use App\Annotation\Ef;
-use App\Annotation\EfGroup;
 use App\Entity\Platform\OptionValue;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -27,22 +26,16 @@ class Position
     private $id;
 
     /**
-     * 岗位名称
-     * @Ef(
-     *     group="position_base_info",
-     *     isBF=true
-     * )
+     * 岗位名称 / Position name
      */
+    #[Ef(group: 'position_base_info', isBF: true)]
     #[ORM\Column(type: 'string', length: 180)]
     private $name;
 
     /**
-     * 岗位编码
-     * @Ef(
-     *     group="position_base_info",
-     *     isBF=true
-     * )
+     * 岗位编码 / Position code
      */
+    #[Ef(group: 'position_base_info', isBF: true)]
     #[ORM\Column(type: "string", length: 80, nullable: true)]
     private $code;
 
@@ -50,66 +43,48 @@ class Position
     private $alias;
 
     /**
-     * 所属部门
-     * @Ef(
-     *     group="position_base_info",
-     *     isBF=true
-     * )
+     * 所属部门 / Department
      */
+    #[Ef(group: 'position_base_info', isBF: true)]
     #[ORM\ManyToOne(targetEntity: Department::class)]
     #[ORM\JoinColumn(name: 'department_id', referencedColumnName: 'id')]
     private $department;
 
     /**
      * 岗位类型 (如：管理岗、技术岗、业务岗等)
-     * @Ef(
-     *     group="position_base_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'position_base_info', isBF: true)]
     #[ORM\OneToOne(targetEntity: 'App\Entity\Platform\OptionValue')]
     #[ORM\JoinColumn(name: "type_id", referencedColumnName: "id", nullable: true)]
     private $type = null;
 
     /**
-     * 岗位级别
-     * @Ef(
-     *     group="position_base_info",
-     *     isBF=true
-     * )
+     * 岗位级别 / Position level
      */
+    #[Ef(group: 'position_base_info', isBF: true)]
     #[ORM\ManyToOne(targetEntity: PositionLevel::class)]
     #[ORM\JoinColumn(name: 'level_id', referencedColumnName: 'id')]
     private $level;
 
     /**
-     * 上级岗位
-     * @Ef(
-     *     group="position_base_info",
-     *     isBF=true
-     * )
+     * 上级岗位 / Parent position
      */
+    #[Ef(group: 'position_base_info', isBF: true)]
     #[ORM\ManyToOne(targetEntity: Position::class)]
     #[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', nullable: true)]
     private $parent;
 
     /**
-     * 岗位职责
-     * @Ef(
-     *     group="position_detail_info",
-     *     isBF=true
-     * )
+     * 岗位职责 / Responsibilities
      */
+    #[Ef(group: 'position_detail_info', isBF: true)]
     #[ORM\Column(type: 'text', nullable: true)]
     private $responsibility;
 
     /**
-     * 任职要求
-     * @Ef(
-     *     group="position_detail_info",
-     *     isBF=true
-     * )
+     * 任职要求 / Requirements
      */
+    #[Ef(group: 'position_detail_info', isBF: true)]
     #[ORM\Column(type: 'text', nullable: true)]
     private $requirement;
 
@@ -117,42 +92,30 @@ class Position
     private $description;
 
     /**
-     * 编制人数
-     * @Ef(
-     *     group="position_detail_info",
-     *     isBF=true
-     * )
+     * 编制人数 / Headcount
      */
+    #[Ef(group: 'position_detail_info', isBF: true)]
     #[ORM\Column(type: 'integer', nullable: true)]
     private $headcount;
 
     /**
-     * 状态 (启用/停用)
-     * @Ef(
-     *     group="position_base_info",
-     *     isBF=true
-     * )
+     * 状态 (启用/停用) / Status (enabled/disabled)
      */
+    #[Ef(group: 'position_base_info', isBF: true)]
     #[ORM\Column(type: 'boolean', options: ['default' => 1])]
     private $state = true;
 
     /**
-     * 排序号
-     * @Ef(
-     *     group="position_base_info",
-     *     isBF=true
-     * )
+     * 排序号 / Sort order
      */
+    #[Ef(group: 'position_base_info', isBF: true)]
     #[ORM\Column(type: 'integer', nullable: true)]
     private $sortOrder;
 
     /**
-     * 备注
-     * @Ef(
-     *     group="position_detail_info",
-     *     isBF=true
-     * )
+     * 备注 / Remark
      */
+    #[Ef(group: 'position_detail_info', isBF: true)]
     #[ORM\Column(type: 'text', nullable: true)]
     private $remark;
 

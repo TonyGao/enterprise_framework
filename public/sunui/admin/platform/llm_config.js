@@ -47,12 +47,12 @@ $(document).ready(function () {
     'lmstudio': 'LM Studio',
     'deepseek': 'DeepSeek',
     'moonshot': 'Moonshot',
-    'qwen': '通义千问',
-    'glm': '智谱 GLM',
-    'ernie': '百度文心',
-    'doubao': '字节豆包',
-    'baichuan': '百川',
-    'yi': '零一万物',
+    'qwen': t('llmConfigJs.js1'),
+    'glm': t('llmConfigJs.js2'),
+    'ernie': t('llmConfigJs.js3'),
+    'doubao': t('llmConfigJs.js4'),
+    'baichuan': t('llmConfigJs.js5'),
+    'yi': t('llmConfigJs.js6'),
     'siliconflow': 'SiliconFlow',
     'custom': '',
   };
@@ -147,7 +147,7 @@ $(document).ready(function () {
     const $card = $btn.closest('.llm-provider-card');
     const $status = $card.find('.test-status');
 
-    $btn.prop('disabled', true).text('测试中...');
+    $btn.prop('disabled', true).text(t('llmConfigJs.js7'));
     $status.html('<i class="fa-solid fa-spinner fa-spin"></i>');
 
     $.post('/admin/platform/llm-config/provider/' + providerId + '/test')
@@ -160,7 +160,7 @@ $(document).ready(function () {
         );
       })
       .fail(function (xhr) {
-        var err = (xhr.responseJSON && xhr.responseJSON.error) || '连接失败';
+        var err = (xhr.responseJSON && xhr.responseJSON.error) || t('llmConfigJs.js8');
         $status.html(
           '<span class="text-danger">' +
           '<i class="fa-solid fa-times-circle"></i> ' +
@@ -169,7 +169,7 @@ $(document).ready(function () {
         );
       })
       .always(function () {
-        $btn.prop('disabled', false).text('测试连接');
+        $btn.prop('disabled', false).text(t('llmConfigJs.js9'));
       });
   });
 
@@ -186,7 +186,7 @@ $(document).ready(function () {
         $checkbox.prop('checked', !$checkbox.prop('checked'));
         var $card = $checkbox.closest('.llm-provider-card');
         $card.find('.test-status').html(
-          '<span class="text-danger"><i class="fa-solid fa-times-circle"></i> 切换失败</span>'
+          t('llmConfigJs.js10')
         );
       });
   });

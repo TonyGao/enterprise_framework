@@ -21,11 +21,11 @@ $(function () {
     // 底部：平铺视图 + 新建版本（悬停右侧弹出二级菜单）
     html += '<div class="editor-version-menu-sep"></div>';
     html += '<div class="editor-version-menu-item editor-version-tiles-item" id="editor-version-tiles">' +
-              '<i class="fa-solid fa-table-cells-large"></i> 平铺视图' +
+              t('editorToolbar.js1') +
             '</div>';
     html += '<div class="editor-version-menu-sep"></div>';
     html += '<div class="editor-version-new" id="editor-version-new">' +
-              '<i class="fa-solid fa-plus"></i> 新建' +
+              t('editorToolbar.js2') +
               '<i class="fa-solid fa-chevron-right editor-version-new-arrow"></i>' +
             '</div>';
     $menu.html(html);
@@ -34,8 +34,8 @@ $(function () {
   // 二级菜单（悬停右侧弹出），挂到 body 用 fixed 定位避免被裁剪
   var $newToggle = $('#editor-version-new');
   var $flyout = $('<div class="editor-version-flyout" id="editor-version-new-flyout" style="display:none;">' +
-    '<div class="editor-version-menu-item editor-version-new-option" data-new="copy"><i class="fa-solid fa-copy"></i> 从当前活跃版本复制</div>' +
-    '<div class="editor-version-menu-item editor-version-new-option" data-new="blank"><i class="fa-solid fa-file-circle-plus"></i> 新建空白视图</div>' +
+    '<div class="editor-version-new-option" data-new="blank">' + t('editorToolbar.js3') + '</div>' +
+    '<div class="editor-version-new-option" data-new="fragment">' + t('editorToolbar.js4') + '</div>' +
   '</div>').appendTo(document.body);
 
   function positionNewFlyout() {
@@ -65,7 +65,7 @@ $(function () {
   function createVersion(fromVersion) {
     var viewId = window.__VIEW_ID__;
     if (!viewId) return;
-    var label = fromVersion === 'blank' ? '新版本' : '从 v' + fromVersion + ' 复制';
+    var label = fromVersion === 'blank' ? t('editorToolbar.js5') : t('editorToolbar.js6') + fromVersion + t('editorToolbar.js7');
     $menu.hide();
     $flyout.hide();
     fetch('/api/admin/platform/view/' + viewId + '/versions', {
@@ -81,10 +81,10 @@ $(function () {
         params.set('version', newVersion);
         window.location.href = window.location.pathname + '?' + params.toString();
       } else {
-        alert('创建版本失败: ' + (json.message || '未知错误'));
+        alert(t('editorToolbar.js8') + (json.message || t('editorToolbar.js9')));
       }
     })
-    .catch(function () { alert('创建版本失败，网络错误'); });
+    .catch(function () { alert(t('editorToolbar.js10')); });
   }
 
   $flyout.on('click', '.editor-version-new-option', function (e) {
@@ -141,7 +141,7 @@ $(function () {
 
   // 表单形态切换（page 独立整页 / fragment 可复用片段）：仅表单视图显示
   if (window.__FORM_VIEW__) {
-    var modeLabel = { page: '整页', fragment: '片段' };
+    var modeLabel = { page: t('editorToolbar.js11'), fragment: t('editorToolbar.js12') };
     var curMode = window.__RENDER_MODE__ || 'page';
     $('#editor-render-mode').show().css('display', 'inline-flex');
     $('#editor-render-mode-divider').show();
@@ -160,10 +160,10 @@ $(function () {
         if (json && json.ok) {
           window.location.reload();
         } else {
-          alert('切换形态失败: ' + ((json && json.error) || '未知错误'));
+          alert(t('editorToolbar.js13') + ((json && json.error) || t('editorToolbar.js9')));
         }
       })
-      .catch(function () { alert('切换形态失败，网络错误'); });
+      .catch(function () { alert(t('editorToolbar.js14')); });
     });
   }
 
@@ -182,7 +182,7 @@ $(function () {
       if (json.code === 200) {
         window.location.reload();
       } else {
-        alert((action === 'undo' ? '撤销' : '重做') + '失败: ' + (json.message || ''));
+        alert((action === 'undo' ? t('editorToolbar.js15') : t('editorToolbar.js16')) + t('editorToolbar.js17') + (json.message || ''));
         btn.prop('disabled', false);
       }
     })
@@ -276,41 +276,52 @@ $(function () {
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
     padding: 6px;
   }
-  .editor-version-new-option { color: #475569; }
-  .editor-version-new-option:hover { color: #4f46e5; }
+  .editor-version-new-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #475569;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .editor-version-new-option:hover { background: #f1f5f9; color: #4f46e5; }
+  .editor-version-new-option i { color: #6366f1; }
 </style>
 
 <section class="app-toolbar">
 	<div class="editor-toolbar">
 	  <!-- 保存按钮 -->
-		  <button class="toolbar-btn" title="保存" id="save-view-button">
+		  <button class="toolbar-btn" title="{{ "editorToolbar.1"|trans }}" id="save-view-button">
 			  <i class="fa-solid fa-floppy-disk"></i>
 		  </button>
 	  <!-- 当前编辑版本（点击切换） -->
 	  <div class="toolbar-divider"></div>
-	  <div class="editor-version-badge editor-version-switch" id="editor-version-switch" title="点击切换版本">
+	  <div class="editor-version-badge editor-version-switch" id="editor-version-switch" title="{{ "editorToolbar.2"|trans }}">
 		  <i class="fa-solid fa-code-branch"></i>
-		  <span id="editor-version-current-label">版本 {{ activeVersion|default('1_0') }}</span>
+		  <span id="editor-version-current-label">{{ "editorToolbar.27"|trans }} {{ activeVersion|default('1_0') }}</span>
 		  <i class="fa-solid fa-chevron-down" style="font-size: 10px; margin-left: 2px;"></i>
 		  <div class="editor-version-menu" id="editor-version-menu" style="display: none;"></div>
 	  </div>
 	  <div class="toolbar-divider"></div>
 	  <!-- 表单形态切换（仅表单视图显示） -->
-	  <button class="toolbar-btn" id="editor-render-mode" title="切换表单形态（独立成页 / 可复用片段）" style="display:none;">
+	  <button class="toolbar-btn" id="editor-render-mode" title="{{ "editorToolbar.3"|trans }}" style="display:none;">
 		  <i class="fa-solid fa-layer-group"></i>
-		  <span id="editor-render-mode-label">页面</span>
+		  <span id="editor-render-mode-label">{{ "editorToolbar.28"|trans }}</span>
 	  </button>
 	  <div class="toolbar-divider" id="editor-render-mode-divider" style="display:none;"></div>
 		  <!-- 预览按钮 -->
-		  <button class="toolbar-btn" title="预览">
+		  <button class="toolbar-btn" title="{{ "editorToolbar.4"|trans }}">
 			  <i class="fa-solid fa-eye"></i>
 		  </button>
 		<!-- 撤销/重做 -->
 		<div class="toolbar-group">
-			<button class="toolbar-btn previous-step" title="上一步">
+			<button class="toolbar-btn previous-step" title="{{ "editorToolbar.5"|trans }}">
 				<i class="fa-solid fa-rotate-left"></i>
 			</button>
-			<button class="toolbar-btn next-step" title="下一步">
+			<button class="toolbar-btn next-step" title="{{ "editorToolbar.6"|trans }}">
 				<i class="fa-solid fa-rotate-right"></i>
 			</button>
 		</div>
@@ -319,12 +330,12 @@ $(function () {
 
 		<!-- 文本格式化 -->
 		<div class="toolbar-group">
-			<button class="toolbar-btn font-selector-btn" title="选择字体" id="fontSelectorTrigger">
+			<button class="toolbar-btn font-selector-btn" title="{{ "editorToolbar.7"|trans }}" id="fontSelectorTrigger">
 				<i class="fa-solid fa-font"></i>
-				<span class="font-selector-text">选择字体</span>
+				<span class="font-selector-text">{{ "editorToolbar.7"|trans }}</span>
 			</button>
 
-			<select class="toolbar-select font-size-select" title="字号选择">
+			<select class="toolbar-select font-size-select" title="{{ "editorToolbar.8"|trans }}">
 				<option value="8">8px</option>
 				<option value="9">9px</option>
 				<option value="10">10px</option>
@@ -343,26 +354,26 @@ $(function () {
 				<option value="36">36px</option>
 				<option value="42">42px</option>
 				<option value="48">48px</option>
-				<option value="custom">自定义...</option>
+				<option value="custom">{{ "editorToolbar.29"|trans }}</option>
 			</select>
 			
 			<!-- 自定义字号输入框 -->
 			<div class="custom-font-size-container" style="display: none; margin-left: 5px;">
-				<input type="number" class="custom-font-size-input" placeholder="输入字号" min="6" max="200" style="width: 60px; height: 28px; border: 1px solid #ccc; border-radius: 3px; padding: 0 5px;">
-				<button class="apply-custom-font-size" style="height: 28px; margin-left: 2px; padding: 0 8px; border: 1px solid #ccc; border-radius: 3px; background: #f5f5f5; cursor: pointer;">确定</button>
-				<button class="cancel-custom-font-size" style="height: 28px; margin-left: 2px; padding: 0 8px; border: 1px solid #ccc; border-radius: 3px; background: #f5f5f5; cursor: pointer;">取消</button>
+				<input type="number" class="custom-font-size-input" placeholder="{{ "editorToolbar.9"|trans }}" min="6" max="200" style="width: 60px; height: 28px; border: 1px solid #ccc; border-radius: 3px; padding: 0 5px;">
+				<button class="apply-custom-font-size" style="height: 28px; margin-left: 2px; padding: 0 8px; border: 1px solid #ccc; border-radius: 3px; background: #f5f5f5; cursor: pointer;">{{ "editorToolbar.30"|trans }}</button>
+				<button class="cancel-custom-font-size" style="height: 28px; margin-left: 2px; padding: 0 8px; border: 1px solid #ccc; border-radius: 3px; background: #f5f5f5; cursor: pointer;">{{ "editorToolbar.31"|trans }}</button>
 			</div>
 
-			<button class="toolbar-btn font-bold" title="粗体">
+			<button class="toolbar-btn font-bold" title="{{ "editorToolbar.10"|trans }}">
 				<i class="fa-solid fa-bold"></i>
 			</button>
-			<button class="toolbar-btn font-italic" title="斜体">
+			<button class="toolbar-btn font-italic" title="{{ "editorToolbar.11"|trans }}">
 				<i class="fa-solid fa-italic"></i>
 			</button>
-			<button class="toolbar-btn font-underline" title="下划线">
+			<button class="toolbar-btn font-underline" title="{{ "editorToolbar.12"|trans }}">
 				<i class="fa-solid fa-underline"></i>
 			</button>
-			<button class="toolbar-btn font-palette" title="字体颜色">
+			<button class="toolbar-btn font-palette" title="{{ "editorToolbar.13"|trans }}">
 				<i class="fa-solid fa-palette"></i>
 			</button>
 		</div>
@@ -371,25 +382,25 @@ $(function () {
 
 		<!-- 文本对齐 -->
 		<div class="toolbar-group">
-			<button class="toolbar-btn font-align-left" title="左对齐">
+			<button class="toolbar-btn font-align-left" title="{{ "editorToolbar.14"|trans }}">
 				<i class="fa-solid fa-align-left"></i>
 			</button>
-			<button class="toolbar-btn font-align-center" title="居中对齐">
+			<button class="toolbar-btn font-align-center" title="{{ "editorToolbar.15"|trans }}">
 				<i class="fa-solid fa-align-center"></i>
 			</button>
-			<button class="toolbar-btn font-align-right" title="右对齐">
+			<button class="toolbar-btn font-align-right" title="{{ "editorToolbar.16"|trans }}">
 				<i class="fa-solid fa-align-right"></i>
 			</button>
-			<button class="toolbar-btn font-align-justify" title="两端对齐">
+			<button class="toolbar-btn font-align-justify" title="{{ "editorToolbar.17"|trans }}">
 				<i class="fa-solid fa-align-justify"></i>
 			</button>
-			<button class="toolbar-btn font-align-vertical-top" title="顶部对齐">
+			<button class="toolbar-btn font-align-vertical-top" title="{{ "editorToolbar.18"|trans }}">
 				<i class="fa-solid fa-align-left fa-rotate-90"></i>
 			</button>
-			<button class="toolbar-btn font-align-vertical-center" title="垂直居中">
+			<button class="toolbar-btn font-align-vertical-center" title="{{ "editorToolbar.19"|trans }}">
 				<i class="fa-solid fa-align-center fa-rotate-90"></i>
 			</button>
-			<button class="toolbar-btn font-align-vertical-bottom" title="底部对齐">
+			<button class="toolbar-btn font-align-vertical-bottom" title="{{ "editorToolbar.20"|trans }}">
 				<i class="fa-solid fa-align-right fa-rotate-90"></i>
 			</button>
 		</div>
@@ -398,22 +409,22 @@ $(function () {
 
 		<!-- 表格编辑 -->
 		<div class="toolbar-group">
-			<button class="toolbar-btn cell-background-color" title="表格背景颜色">
+			<button class="toolbar-btn cell-background-color" title="{{ "editorToolbar.21"|trans }}">
 				<i class="fa-solid fa-fill-drip"></i>
 			</button>
-			<button class="toolbar-btn cell-border" title="表格边框">
+			<button class="toolbar-btn cell-border" title="{{ "editorToolbar.22"|trans }}">
 				<i class="fa-solid fa-border-all"></i>
 			</button>
-			<button class="toolbar-btn merge-cells" title="合并单元格">
+			<button class="toolbar-btn merge-cells" title="{{ "editorToolbar.23"|trans }}">
 				<i class="fa-solid fa-arrows-to-dot"></i>
 			</button>
-			<button class="toolbar-btn split-cells" title="拆分单元格">
+			<button class="toolbar-btn split-cells" title="{{ "editorToolbar.24"|trans }}">
 				<i class="fa-solid fa-table-columns"></i>
 			</button>
-			<button class="toolbar-btn newline" title="内容自动换行">
+			<button class="toolbar-btn newline" title="{{ "editorToolbar.25"|trans }}">
 				<i class="fa-solid fa-arrow-turn-down"></i>
 			</button>
-			{# <button class="toolbar-btn" title="横版/竖版切换">
+			{# <button class="toolbar-btn" title="{{ "editorToolbar.26"|trans }}">
 				<i class="fa-solid fa-arrows-left-right-to-line"></i>
 			</button> #}
 		</div>
@@ -422,7 +433,7 @@ $(function () {
 		<div class="toolbar-separator"></div>
 		<div class="page-properties">
 			<div class="page-property-item">
-				<label>页面宽度</label>
+				<label>{{ "editorToolbar.32"|trans }}</label>
 				<div class="property-control slider-with-input">
 					<div class="slider-container">
 						<input type="range" id="page-width-slider" min="800" max="3000" value="1200" class="property-slider">

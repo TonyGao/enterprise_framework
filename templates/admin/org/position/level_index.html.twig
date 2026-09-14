@@ -2,7 +2,7 @@
 {% import 'components/datagrid.html.twig' as grid %}
 {% import 'ui/template/ui.html.twig' as ui %}
 
-{% block title %}岗位级别管理{% endblock %}
+{% block title %}{{ "posLevelIndex.title1"|trans }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -37,7 +37,7 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Error loading position level drawer:', error);
-                    alert('加载岗位级别详情失败，请重试');
+                    alert(t('posLevelIndex.js1'));
                 }
             });
         }
@@ -66,7 +66,7 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Error loading position level edit drawer:', error);
-                    alert('加载岗位级别编辑失败，请重试');
+                    alert(t('posLevelIndex.js2'));
                 }
             });
         }
@@ -92,7 +92,7 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Error loading position level create drawer:', error);
-                    alert('加载新增岗位级别失败，请重试');
+                    alert(t('posLevelIndex.js3'));
                 }
             });
         }
@@ -137,11 +137,11 @@
 
                 if (!isSelectAll && ids.length === 0) {
                     let alert = new Alert($('.ef-card-body'));
-                    alert.warning('请至少选择一项进行删除', { percent: '40%', title: "提示", closable: true });
+                    alert.warning(t('posLevelIndex.js4'), { percent: '40%', title: t('posLevelIndex.js5'), closable: true });
                     return;
                 }
                 
-                if (confirm('确认要删除选中的岗位级别吗？此操作不可恢复。')) {
+                if (confirm(t('posLevelIndex.js6'))) {
                     let alert = new Alert($('.ef-card-body'));
                     ajax({
                         url: "{{ path('api_org_position_level_batch_delete') }}",
@@ -154,19 +154,19 @@
                         contentType: 'application/json',
                         success: function(res) {
                             if (res.code === 200) {
-                                alert.success(res.message || '删除成功', {
+                                alert.success(res.message || t('posLevelIndex.js7'), {
                                     percent: '40%',
                                     callback: function () {
                                         window.location.reload();
                                     }
                                 });
                             } else {
-                                alert.error(res.message || '删除失败', { percent: '40%', title: "错误", closable: true });
+                                alert.error(res.message || t('posLevelIndex.js8'), { percent: '40%', title: t('posLevelIndex.js9'), closable: true });
                             }
                         },
                         error: function(xhr, status, error) {
                              let errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : error;
-                            alert.error('请求失败：' + errorMessage, { percent: '40%', title: "错误", closable: true });
+                            alert.error(t('posLevelIndex.js10') + errorMessage, { percent: '40%', title: t('posLevelIndex.js9'), closable: true });
                         }
                     });
                 }
@@ -194,7 +194,7 @@
                 const tr = $(this).closest('tr');
                 const id = tr.data('id');
                 
-                if (id && confirm('确认要删除该岗位级别吗？')) {
+                if (id && confirm(t('posLevelIndex.js11'))) {
                     let alert = new Alert($('.ef-card-body'));
                     ajax({
                         url: "{{ path('api_org_position_level_batch_delete') }}",
@@ -205,18 +205,18 @@
                         contentType: 'application/json',
                         success: function(res) {
                              if (res.code === 200) {
-                                alert.success(res.message || '删除成功', {
+                                alert.success(res.message || t('posLevelIndex.js7'), {
                                     callback: function () {
                                         window.location.reload();
                                     }
                                 });
                             } else {
-                                alert.error(res.message || '删除失败');
+                                alert.error(res.message || t('posLevelIndex.js8'));
                             }
                         },
                         error: function(xhr, status, error) {
                              let errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : error;
-                            alert.error('请求失败：' + errorMessage, { percent: '40%', title: "错误", closable: true });
+                            alert.error(t('posLevelIndex.js10') + errorMessage, { percent: '40%', title: t('posLevelIndex.js9'), closable: true });
                         }
                     });
                 }
@@ -241,7 +241,7 @@
         <div class="ef-ai-search-container" style="display: flex; height: 500px; padding: 0;">
             {# Left Sidebar: Available Fields #}
             <div class="ef-ai-search-sidebar" style="width: 200px; border-right: 1px solid #eee; padding: 15px; background: #fafafa; overflow-y: auto;">
-                <div style="font-weight: bold; margin-bottom: 10px; color: #666;">可用字段</div>
+                <div style="font-weight: bold; margin-bottom: 10px; color: #666;">{{ "posLevelIndex.2"|trans }}</div>
                 <div class="ef-field-list">
                     {% for col in columns %}
                         {% if col.field is defined %}
@@ -263,8 +263,8 @@
                             <i class="fa-solid fa-robot" style="color: #1890ff;"></i>
                         </div>
                         <div class="ai-content" style="background: #f0f2f5; padding: 8px 12px; border-radius: 8px; max-width: 80%;">
-                            你好！我是您的 AI 搜索助手。请告诉我您想查找什么？<br>
-                            例如：“查找薪资大于20000的级别”
+                            {{ "posLevelIndex.3"|trans }}<br>
+                            {{ "posLevelIndex.4"|trans }}
                         </div>
                     </div>
                 </div>
@@ -273,17 +273,17 @@
                 <div class="ef-ai-input-area" style="display: flex; margin-bottom: 15px;">
                     <textarea id="ai-search-input" class="ef-input clear-btn-disabled" 
                         style="flex: 1; height: 60px; padding: 10px; resize: none; border-radius: 8px 0 0 8px; border-right: none;" 
-                        placeholder="请输入您的搜索条件..."></textarea>
+                        placeholder="{{ "posLevelIndex.1"|trans }}"></textarea>
                     <button id="ai-send-btn" class="ef-button ef-button-primary" style="height: 60px; border-radius: 0 8px 8px 0; padding: 0 20px;" onclick="executeAiSearch()">
-                        <i class="fa-solid fa-paper-plane"></i> 发送
+                        <i class="fa-solid fa-paper-plane"></i> {{ "posLevelIndex.5"|trans }}
                     </button>
                 </div>
 
                 {# Current Filters Display #}
                 <div class="ef-ai-current-filters" style="border-top: 1px solid #eee; padding-top: 10px;">
-                    <div style="font-size: 13px; color: #999; margin-bottom: 5px;">当前已识别条件 (待确认):</div>
+                    <div style="font-size: 13px; color: #999; margin-bottom: 5px;">{{ "posLevelIndex.6"|trans }} ({{ "posLevelIndex.7"|trans }}):</div>
                     <div id="ai-filter-tags" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 30px; align-items: center;">
-                        <span style="color: #ccc; font-size: 12px; line-height: 30px;">(暂无条件)</span>
+                        <span style="color: #ccc; font-size: 12px; line-height: 30px;">({{ "posLevelIndex.8"|trans }})</span>
                     </div>
                 </div>
             </div>
@@ -330,12 +330,12 @@
                 container.empty();
                 
                 if (currentAiFilters.length === 0) {
-                    container.html('<span style="color: #ccc; font-size: 12px; line-height: 30px;">(暂无条件)</span>');
+                    container.html('<span style="color: #ccc; font-size: 12px; line-height: 30px;">{{ "posLevelIndex.noCond"|trans }}</span>');
                     return;
                 }
                 
                 // Clear All Button
-                container.append('<button class="ef-button small danger" style="margin-right: 10px; padding: 0 8px; height: 24px; line-height: 22px; font-size: 12px; border-radius: 4px; border: 1px solid #ffccc7; background: #fff1f0; color: #ff4d4f; cursor: pointer;" onclick="currentAiFilters=[]; renderAiFilters(); appendMessage(\'ai\', \'已清空所有条件。\');">清空</button>');
+                container.append('<button class="ef-button small danger" style="margin-right: 10px; padding: 0 8px; height: 24px; line-height: 22px; font-size: 12px; border-radius: 4px; border: 1px solid #ffccc7; background: #fff1f0; color: #ff4d4f; cursor: pointer;" onclick="currentAiFilters=[]; renderAiFilters(); appendMessage(\'ai\', \'' + t('posLevelIndex.cleared') + '\');">{{ "posLevelIndex.clear"|trans }}</button>');
 
                 container.append(renderRecursive(currentAiFilters, 'AND', []));
             }
@@ -390,17 +390,17 @@
                 const map = {
                     'equals': '=',
                     'not_equals': '!=',
-                    'contains': '包含',
-                    'not_contains': '不包含',
-                    'begins_with': '开头是',
-                    'ends_with': '结尾是',
+                    'contains': t('posLevelIndex.js12'),
+                    'not_contains': t('posLevelIndex.js13'),
+                    'begins_with': t('posLevelIndex.js14'),
+                    'ends_with': t('posLevelIndex.js15'),
                     'greater_than': '>',
                     'less_than': '<',
                     'greater_than_or_equal': '>=',
                     'less_than_or_equal': '<=',
-                    'is_null': '为空',
-                    'is_not_null': '不为空',
-                    'in': '是'
+                    'is_null': t('posLevelIndex.js16'),
+                    'is_not_null': t('posLevelIndex.js17'),
+                    'in': t('posLevelIndex.js18')
                 };
                 return map[op] || op;
             }
@@ -425,7 +425,7 @@
                 }
                 
                 renderAiFilters();
-                appendMessage('ai', '已移除该条件。');
+                appendMessage('ai', t('posLevelIndex.js19'));
             }
 
             // Main Action
@@ -461,18 +461,18 @@
                             
                             // Show thought process if available
                             if (response.thought_process) {
-                                appendMessage('ai', '<div style="color: #666; font-style: italic; font-size: 12px; margin-bottom: 5px; border-left: 2px solid #ccc; padding-left: 8px;">' + response.thought_process + '</div>已更新搜索条件，请确认。');
+                                appendMessage('ai', '<div style="color: #666; font-style: italic; font-size: 12px; margin-bottom: 5px; border-left: 2px solid #ccc; padding-left: 8px;">' + response.thought_process + '</div>');
                             } else {
-                                appendMessage('ai', '已更新搜索条件，请确认。');
+                                appendMessage('ai', t('posLevelIndex.js21'));
                             }
                         } else {
-                            appendMessage('ai', '未能识别出有效的查询条件，请换个说法试试。');
+                            appendMessage('ai', t('posLevelIndex.js22'));
                         }
                     },
                     error: function(xhr) {
                          $btn.prop('disabled', false).html(originalText);
-                         const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : '未知错误';
-                         appendMessage('ai', '解析失败: ' + errorMsg);
+                         const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : t('posLevelIndex.js23');
+                         appendMessage('ai', t('posLevelIndex.js24') + errorMsg);
                     }
                 });
             }
@@ -480,7 +480,7 @@
             // Confirm & Apply
             function applyAiFilters() {
                 if (currentAiFilters.length === 0) {
-                     new Alert().warning('当前没有有效的搜索条件');
+                     new Alert().warning(t('posLevelIndex.js25'));
                      return;
                 }
 
@@ -504,10 +504,12 @@
     {% endmacro %}
 
     {% set modalContent = _self.filterBodyContent(columns|default([])) %}
-    {% set modalFooter = '<button class="btn secondary small" type="button" onclick="closeModal(\'modallevel-grid\')">取消</button>
-                      <button id="ai-apply-btn" class="btn primary small" type="button" onclick="applyAiFilters()">
-                        <i class="fa-solid fa-check"></i> 确认并搜索
-                      </button>' %}
+    {% set modalFooter %}
+<button class="btn secondary small" type="button" onclick="closeModal('modallevel-grid')">{{ "posLevelIndex.cancel"|trans }}</button>
+<button id="ai-apply-btn" class="btn primary small" type="button" onclick="applyAiFilters()">
+  <i class="fa-solid fa-check"></i> {{ "posLevelIndex.confirmSearch"|trans }}
+</button>
+    {% endset %}
     {% set modalOptions = {
         zIndex: 1002,
         wrapperClass: 'ai-search-modal-wrapper',
@@ -517,7 +519,7 @@
 
     {{ ui.modal(
         'modallevel-grid',
-        '高级搜索 (AI 助手)',
+        'posLevelIndex.aiSearch'|trans,
         modalContent,
         modalFooter,
         modalOptions
@@ -536,15 +538,15 @@
                 viewUrlPrefix: '#',
                 deleteUrlPrefix: '#',
                 toolbarButtons: [
-                    { type: 'create', text: '新增级别', icon: 'fa-solid fa-plus-circle', id: 'add-level-button' },
-                    { type: 'delete', text: '批量删除', icon: 'fa-solid fa-minus-circle', id: 'batch-delete-button' },
-                    { type: 'filter', text: '高级搜索', icon: 'fa-solid fa-filter', id: 'filter-button', classes: 'search' }
+                    { type: 'create', text: 'posLevelIndex.newLevel'|trans, icon: 'fa-solid fa-plus-circle', id: 'add-level-button' },
+                    { type: 'delete', text: 'posLevelIndex.batchDelete'|trans, icon: 'fa-solid fa-minus-circle', id: 'batch-delete-button' },
+                    { type: 'filter', text: 'posLevelIndex.advancedSearch'|trans, icon: 'fa-solid fa-filter', id: 'filter-button', classes: 'search' }
                 ],
                 actionButtons: [
-                    { type: 'edit', text: '编辑', icon: 'fa-solid fa-edit', classes: 'edit-button' },
-                    { type: 'delete', text: '删除', icon: 'fa-solid fa-trash', classes: 'delete-button' }
+                    { type: 'edit', text: 'posLevelIndex.edit'|trans, icon: 'fa-solid fa-edit', classes: 'edit-button' },
+                    { type: 'delete', text: 'posLevelIndex.delete'|trans, icon: 'fa-solid fa-trash', classes: 'delete-button' }
                 ],
-                emptyText: '暂无岗位级别数据',
+                emptyText: 'posLevelIndex.emptyData'|trans,
                 sortable: true,
                 serverSide: true,
                 pagination: true,

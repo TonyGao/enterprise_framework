@@ -7,6 +7,7 @@ use App\Entity\Platform\View;
 use App\Service\AI\Tool\ChromeDevToolsToolProvider;
 use App\Service\AI\Tool\ViewEditorToolProvider;
 use App\Service\AI\Tool\ViewFileToolProvider;
+use App\Service\Platform\View\ViewPathResolver;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -25,8 +26,30 @@ class ViewSubAgentChatRouter
         private readonly ViewFileToolProvider $viewFileToolProvider,
         private readonly ViewEditorToolProvider $viewEditorToolProvider,
         private readonly ChromeDevToolsToolProvider $cdpToolProvider,
+        private readonly ViewPathResolver $pathResolver,
         private readonly EntityManagerInterface $em,
     ) {}
+
+    /**
+     * 视图设计源码是否为"自定义 Twig 表单设计"（含 form_start/form_widget 等）。
+     * 这类视图画布只是渲染预览，保存会被保护拦截——因此必须走文件重写，不能走 CDP。
+     */
+    private function isCustomTwigForm(?View $view): bool
+    {
+        if (!$view) {
+            return false;
+        }
+        $version = $this->pathResolver->currentVersion($view);
+        $designFile = $this->pathResolver->designFile($view, $version);
+        if (!$designFile || !file_exists($designFile)) {
+            return false;
+        }
+
+        return (bool) preg_match(
+            '/\{(form_start|form_end|form_rest|form_widget|form_label|form_errors|form_row)\}|\{\{\s*(form\b|form_)|form_start\(|form_end\(|form_widget\(|form_label\(|form_errors\(/',
+            (string) file_get_contents($designFile),
+        );
+    }
 
     /**
      * 对当前消息做一次 LLM 意图判定。
@@ -40,6 +63,27 @@ class ViewSubAgentChatRouter
     public function classifyTurn(string $message, string $contextId, AiChatSession $session): array
     {
         $view = $this->loadView($contextId);
+
+        // 风格模仿：消息中含 http(s) 链接 → 抓取该网页并模仿其风格重构当前视图 /
+        // style-mimic: if the message contains an http(s) URL, fetch that page and mimic its style
+        if (preg_match('#https?://[^\s<>"\'，。；、]+#i', $message, $urlMatch)) {
+            $url = rtrim($urlMatch[0], '.,;!?');
+            $session->setIntent('general');
+            $session->setMode('style_mimic');
+            $this->em->persist($session);
+
+            $agent = $this->orchestrator->resolveForIntent('general');
+
+            return [
+                'systemPrompt' => $agent->systemPromptForStyleMimic($url),
+                'tools' => [$this->viewFileToolProvider, $this->viewEditorToolProvider, $this->cdpToolProvider],
+                'needsClarification' => false,
+                'clarificationQuestion' => null,
+                'clarificationOptions' => [],
+                'redesignApplied' => true,
+            ];
+        }
+
         $result = $this->intentAgent->classify($view, $message);
 
         if (($result['needsClarification'] ?? false) === true) {
@@ -66,11 +110,24 @@ class ViewSubAgentChatRouter
 
         $agent = $this->orchestrator->resolveForIntent($intent);
 
-        if ($redesign) {
+        // 自定义 Twig 表单设计：画布不可保存 → 无论重构还是微调，都走文件重写 /
+        // custom Twig form design: canvas save is blocked → always use file rewrite
+        $forceFileMode = $this->isCustomTwigForm($view);
+
+        if ($redesign || $forceFileMode) {
             // 表单视图与其它视图一致走"文件重写"：AI 用 viewfile_writeDesign 生成完全自定义的
             // Twig 表单设计（Symfony form + inline 样式），不再受 ef-form 控件布局约束。
+            // 把用户的设计规格（design_spec）+ 执行要点（plan）动态注入，避免子代理从自然语言里猜。
+            // 非重构（forceFileMode 下的微调）用"就地修改"工作流，避免全量重排。
+            $prompt = (!$redesign && $forceFileMode)
+                ? $agent->systemPromptForFileRefine()
+                : $agent->systemPromptForFileRedesign(
+                    $result['design_spec'] ?? null,
+                    $result['plan'] ?? null,
+                );
+
             return [
-                'systemPrompt' => $agent->systemPromptForFileRedesign(),
+                'systemPrompt' => $prompt,
                 'tools' => [$this->viewFileToolProvider, $this->viewEditorToolProvider],
                 'needsClarification' => false,
                 'clarificationQuestion' => null,

@@ -7,6 +7,7 @@ use App\Repository\System\EmailConfigRepository;
 use App\Repository\System\EmailTemplateRepository;
 use App\Repository\System\EmailFunctionBindingRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mime\Email;
@@ -19,26 +20,29 @@ class MailService
     private EmailFunctionBindingRepository $bindingRepository;
     private Environment $twig;
     private EntityManagerInterface $em;
+    private RequestStack $requestStack;
 
     public function __construct(
         EmailConfigRepository $configRepository,
         EmailTemplateRepository $templateRepository,
         EmailFunctionBindingRepository $bindingRepository,
         Environment $twig,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        RequestStack $requestStack,
     ) {
         $this->configRepository = $configRepository;
         $this->templateRepository = $templateRepository;
         $this->bindingRepository = $bindingRepository;
         $this->twig = $twig;
         $this->em = $em;
+        $this->requestStack = $requestStack;
     }
 
     /**
      * Sends an email based on the configured functional binding.
      * Throws \DomainException if the function is not bound to a template.
      */
-    public function sendForFunction(string $to, string $functionCode, array $context = []): void
+    public function sendForFunction(string $to, string $functionCode, array $context = [], ?string $locale = null): void
     {
         $binding = $this->bindingRepository->findOneBy(['functionCode' => $functionCode]);
         if (!$binding) {
@@ -50,19 +54,39 @@ class MailService
             throw new \DomainException(sprintf('Email function "%s" has no template bound to it.', $functionCode));
         }
 
+        // 按语言解析模板：绑定模板的 code + 当前语言（缺则回退）/
+        // Resolve template by locale using the bound template's code
+        $locale = $locale ?: $this->currentLocale();
+        $localized = $this->templateRepository->findByCodeLocalized((string) $template->getCode(), $locale);
+
         $config = $binding->getEmailConfig();
-        
-        $this->executeSend($to, $template, $config, $context);
+
+        $this->executeSend($to, $localized ?: $template, $config, $context);
     }
 
-    public function send(string $to, string $templateCode, array $context = []): void
+    public function send(string $to, string $templateCode, array $context = [], ?string $locale = null): void
     {
-        $template = $this->templateRepository->findOneBy(['code' => $templateCode]);
+        $locale = $locale ?: $this->currentLocale();
+        $template = $this->templateRepository->findByCodeLocalized($templateCode, $locale);
         if (!$template) {
             throw new \RuntimeException(sprintf('Email template "%s" not found.', $templateCode));
         }
         $config = $template->getEmailConfig();
         $this->executeSend($to, $template, $config, $context);
+    }
+
+    /**
+     * 当前请求语言，无请求时回退默认语言 /
+     * Current request locale, falling back to the default locale.
+     */
+    private function currentLocale(): string
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        if ($request) {
+            return $request->getLocale();
+        }
+
+        return 'zh_CN';
     }
 
     private function executeSend(string $to, \App\Entity\System\EmailTemplate $template, ?\App\Entity\System\EmailConfig $config, array $context = []): void

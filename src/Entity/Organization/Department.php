@@ -30,34 +30,25 @@ class Department implements GedmoNode
 	private $id;
 
 	/**
-	 * 部门全称
-	 * @Ef(
-	 *     group="department_base_info",
-	 *     isBF=true
-	 * )
+	 * 部门全称 / Department full name
 	 */
+	#[Ef(group: 'department_base_info', isBF: true)]
 	#[Groups(['api'])]
 	#[ORM\Column(type: 'string', length: 180)]
 	private $name;
 
 	/**
-	 * 部门简称
-	 * @Ef(
-	 *     group="department_base_info",
-	 *     isBF=true
-	 * )
+	 * 部门简称 / Department short name
 	 */
+	#[Ef(group: 'department_base_info', isBF: true)]
 	#[Groups(['api'])]
 	#[ORM\Column(type: 'string', length: 80, nullable: true)]
 	private $alias;
 
 	/**
-	 * 部门显示名称
-	 * @Ef(
-	 *     group="department_base_info_displayname",
-	 *     isBF=true
-	 * )
+	 * 部门显示名称 / Department display name
 	 */
+	#[Ef(group: 'department_base_info_displayname', isBF: true)]
 	#[Groups(['api'])]
 	#[ORM\Column(type: 'string', length: 200, nullable: true)]
 	private $displayName;
@@ -71,12 +62,9 @@ class Department implements GedmoNode
 	private $path;
 
 	/**
-	 * 所属公司
-	 * @Ef(
-	 *   group="department_base_info",
-	 *   isBF=true
-	 * )
+	 * 所属公司 / Company
 	 */
+	#[Ef(group: 'department_base_info', isBF: true)]
 	#[Groups(['api'])]
 	#[ORM\ManyToOne(targetEntity: Company::class)]
 	#[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id')]
@@ -91,43 +79,31 @@ class Department implements GedmoNode
 	private $type = 'department';
 
 	/**
-	 * 部门负责人
-	 * @Ef(
-	 *     group="department_management_info",
-	 *     isBF=true
-	 * )
+	 * 部门负责人 / Department head
 	 */
+	#[Ef(group: 'department_management_info', isBF: true)]
 	#[ORM\ManyToMany(targetEntity: Employee::class, mappedBy: 'managedDepartments')]
 	private $manager;
 
 	/**
-	 * 编码
-	 * @Ef(
-	 *    group="department_base_info",
-	 *    isBF=true
-	 * )
+	 * 编码 / Code
 	 */
+	#[Ef(group: 'department_base_info', isBF: true)]
 	#[Groups(['api'])]
 	#[ORM\Column(type: 'string', length: 180, nullable: true)]
 	private $code;
 
 	/**
 	 * 状态: 启用、停用
-	 * @Ef(
-	 *     group="department_base_info",
-	 *     isBF=true
-	 * )
 	 */
+	#[Ef(group: 'department_base_info', isBF: true)]
 	#[ORM\Column(type: 'boolean', options: ['default' => 1])]
 	private $state = true;
 
 	/**
-	 * 上级部门(树状)
-	 * @Ef(
-	 *     group="department_associated_info",
-	 *     isBF=true
-	 * )
+	 * 上级部门(树状) / Parent department (tree)
 	 */
+	#[Ef(group: 'department_associated_info', isBF: true)]
 	#[Gedmo\TreeParent]
 	#[ORM\ManyToOne(targetEntity: Department::class, inversedBy: 'children')]
 	#[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', onDelete: 'CASCADE')]

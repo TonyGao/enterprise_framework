@@ -1,7 +1,7 @@
 {% extends 'admin/layout.html.twig' %}
 {% import 'components/datagrid.html.twig' as grid %}
 
-{% block title %}存储配置管理{% endblock %}
+{% block title %}{{ "storageIndex.title1"|trans }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -22,23 +22,23 @@
                 toolbarButtons: [
                     { 
                         type: 'create', 
-                        text: '新建配置', 
+                        text: 'storageIndex.newConfig'|trans, 
                         icon: 'fa-solid fa-plus', 
                         attributes: { 'onclick': "openStorageCreateDrawer()" } 
                     },
                     { 
                         type: 'delete', 
-                        text: '批量删除', 
+                        text: 'storageIndex.batchDelete'|trans, 
                         icon: 'fa-solid fa-trash', 
                         id: 'batch-delete-button' 
                     }
                 ],
                 actionButtons: [
-                    { type: 'view', text: '查看', icon: 'fa-solid fa-eye' },
-                    { type: 'edit', text: '编辑', icon: 'fa-solid fa-edit' },
-                    { type: 'delete', text: '删除', icon: 'fa-solid fa-trash' }
+                    { type: 'view', text: 'storageIndex.view'|trans, icon: 'fa-solid fa-eye' },
+                    { type: 'edit', text: 'storageIndex.edit'|trans, icon: 'fa-solid fa-edit' },
+                    { type: 'delete', text: 'storageIndex.delete'|trans, icon: 'fa-solid fa-trash' }
                 ],
-                emptyText: '暂无存储配置',
+                emptyText: 'storageIndex.empty'|trans,
                 gridId: 'storage-config-grid',
                 pagination: true,
                 serverSide: true,
@@ -91,7 +91,7 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Error loading drawer:', error);
-                    alert('加载失败，请重试');
+                    alert(t('storageIndex.js1'));
                 }
             });
         }
@@ -117,11 +117,11 @@
         $('#batch-delete-button').click(function() {
             const selectedIds = $().getGridSelectedIds('storage-config-grid');
             if (selectedIds.length === 0) {
-                alert('请先选择要删除的配置');
+                alert(t('storageIndex.js2'));
                 return;
             }
 
-            if (!confirm('确认要删除选中的 ' + selectedIds.length + ' 个配置吗？')) {
+            if (!confirm(t('storageIndex.js3') + selectedIds.length + t('storageIndex.js4'))) {
                 return;
             }
             
@@ -137,14 +137,14 @@
                 },
                 success: function(response) {
                     if (response.status === 'success') {
-                        alert('删除成功');
+                        alert(t('storageIndex.js5'));
                         window.location.reload();
                     } else {
-                        alert(response.message || '删除失败');
+                        alert(response.message || t('storageIndex.js6'));
                     }
                 },
                 error: function() {
-                    alert('系统错误，请重试');
+                    alert(t('storageIndex.js7'));
                 }
             });
         });

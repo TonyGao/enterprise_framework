@@ -1,19 +1,35 @@
 <div id="ai-chat-panel" class="ai-chat-panel" style="display: none;">
     <div class="ai-chat-resize-handle" id="ai-chat-resize-handle"></div>
     <div class="ai-chat-header">
-        <span>AI 助手</span>
+        <span>{{ "aiChat.2"|trans }}</span>
         <button class="ai-chat-close" id="ai-chat-close" type="button">
             <i class="fa-solid fa-xmark"></i>
         </button>
     </div>
     <div class="ai-chat-messages" id="ai-chat-messages">
         <div class="ai-message ai-assistant">
-            <div class="ai-message-content">你好！我是你的 AI 助手，可以帮你完成当前页面的操作。随时向我提问！</div>
+            <div class="ai-message-content">{{ "aiChat.3"|trans }}</div>
         </div>
     </div>
-    <div class="ai-chat-quick" id="ai-chat-quick" style="display: none; padding: 0 12px 8px; display: none; flex-wrap: wrap; gap: 6px;"></div>
+    <div class="ai-chat-attachment" id="ai-chat-attachment" style="display:none;">
+        <div class="ai-chat-attachment-body">
+            <i class="fa-solid fa-cube"></i>
+            <span class="ai-chat-attachment-name" id="ai-chat-attachment-name"></span>
+        </div>
+        <button class="ai-chat-attachment-line" id="ai-chat-attachment-line" type="button" title="{{ "aiChat.attach.line"|trans }}"><i class="fa-solid fa-crosshairs"></i></button>
+        <button class="ai-chat-attachment-remove" id="ai-chat-attachment-remove" type="button" title="{{ "aiChat.attachmentRemove"|trans }}"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="ai-chat-images" id="ai-chat-images" style="display:none;"></div>
+    <div class="ai-chat-upload-hint" id="ai-chat-upload-hint">
+        <i class="fa-solid fa-image"></i>
+        <span>{{ "aiChat.uploadHint"|trans }}</span>
+    </div>
     <div class="ai-chat-input-area">
-        <textarea class="ai-chat-input" id="ai-chat-input" placeholder="输入你的问题..." rows="2"></textarea>
+        <input type="file" id="ai-chat-file-input" accept="image/*" multiple style="display:none;" />
+        <button class="ai-chat-attach" id="ai-chat-attach" type="button" title="{{ "aiChat.uploadHint"|trans }}">
+            <i class="fa-solid fa-paperclip"></i>
+        </button>
+        <textarea class="ai-chat-input" id="ai-chat-input" placeholder="{{ "aiChat.1"|trans }}" rows="2"></textarea>
         <button class="ai-chat-send" id="ai-chat-send" type="button" disabled>
             <i class="fa-solid fa-paper-plane"></i>
         </button>
@@ -123,9 +139,127 @@
         font-size: 11px;
         color: #94a3b8;
     }
+
+    /* 选中 DOM 作为聊天附件 / selected DOM as a chat attachment */
+    .ai-chat-attachment {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 12px 8px;
+        padding: 6px 8px 6px 10px;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        border-radius: 10px;
+        font-size: 12px;
+        color: #3730a3;
+    }
+    .ai-chat-attachment-body {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .ai-chat-attachment-body i { color: #6366f1; flex-shrink: 0; }
+    .ai-chat-attachment-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+    }
+    .ai-chat-attachment-remove {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        color: #6366f1;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background .15s;
+    }
+    .ai-chat-attachment-remove:hover { background: #dbe3fe; }
+
+    /* 连线按钮 / connect-line button */
+    .ai-chat-attachment-line {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        color: #6366f1;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background .15s, color .15s;
+    }
+    .ai-chat-attachment-line:hover { background: #dbe3fe; }
+    .ai-chat-attachment-line.active { background: #6366f1; color: #fff; }
+
+    /* LeaderLine 连线置于聊天面板之上 / keep LeaderLine above the chat panel */
+    .leader-line { z-index: 10002 !important; }
+
+    /* 用户消息内的元素目标 chip / element-target chip inside a user message */
+    .ai-chat-msg-target {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 6px;
+        padding: 3px 8px;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 8px;
+        font-size: 11px;
+        color: #3730a3;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .ai-chat-msg-target i { color: #6366f1; }
+
+    /* 拖拽上传的图片缩略图区 / attached image thumbnails */
+    .ai-chat-images {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 0 12px 8px;
+    }
+    .ai-chat-image {
+        position: relative;
+        width: 72px;
+        height: 72px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 8px rgba(15,23,42,.08);
+    }
+    .ai-chat-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ai-chat-image-remove {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 18px;
+        height: 18px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(15,23,42,.55);
+        color: #fff;
+        cursor: pointer;
+        font-size: 11px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .ai-chat-image-remove:hover { background: rgba(15,23,42,.8); }
 </style>
 
-<button class="toggle-ai-chat" id="toggle-ai-chat" type="button" title="AI 助手">    <i class="fa-solid fa-robot"></i>
+<button class="toggle-ai-chat" id="toggle-ai-chat" type="button" title="{{ "aiChat.2"|trans }}">    <i class="fa-solid fa-robot"></i>
 </button>
 
 <script src="{{ asset('lib/marked/marked.min.js') }}"></script>
@@ -137,6 +271,109 @@
     var messagesEl = document.getElementById('ai-chat-messages');
     var inputEl = document.getElementById('ai-chat-input');
     var sendBtn = document.getElementById('ai-chat-send');
+
+    // ── 图片拖拽/粘贴上传 ──────────────────────────────────────────────
+    var uploadedImages = [];   // [{id, name}]
+    var imagesEl = document.getElementById('ai-chat-images');
+
+    function renderUploadedImages() {
+        if (!imagesEl) return;
+        imagesEl.innerHTML = '';
+        if (!uploadedImages.length) { imagesEl.style.display = 'none'; return; }
+        imagesEl.style.display = 'flex';
+        uploadedImages.forEach(function (img, idx) {
+            var wrap = document.createElement('div');
+            wrap.className = 'ai-chat-image';
+            var image = document.createElement('img');
+            image.src = img.url;
+            wrap.appendChild(image);
+            var rm = document.createElement('button');
+            rm.className = 'ai-chat-image-remove';
+            rm.type = 'button';
+            rm.innerHTML = '&times;';
+            rm.title = t('aiChat.imageRemove');
+            rm.addEventListener('click', function () {
+                uploadedImages.splice(idx, 1);
+                renderUploadedImages();
+            });
+            wrap.appendChild(rm);
+            imagesEl.appendChild(wrap);
+        });
+    }
+
+    function uploadImages(files) {
+        var imageFiles = Array.prototype.filter.call(files || [], function (f) {
+            return f && f.type && String(f.type).indexOf('image/') === 0;
+        });
+        imageFiles.forEach(function (file) {
+            var fd = new FormData();
+            fd.append('file', file);
+            fd.append('name', file.name || 'image.png');
+            fetch('/api/admin/ai/chat/upload', { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (json) {
+                    if (json.code === 200 && json.data && json.data.imageId) {
+                        uploadedImages.push({ id: json.data.imageId, name: json.data.name || file.name, url: URL.createObjectURL(file) });
+                        renderUploadedImages();
+                    } else {
+                        console.warn('image upload failed', json);
+                    }
+                })
+                .catch(function (e) { console.warn('image upload error', e); });
+        });
+    }
+
+    // 拖拽上传
+    var panelEl = document.getElementById('ai-chat-panel');
+    var inputAreaEl = document.querySelector('.ai-chat-input-area');
+    function setDragover(on) {
+        if (panelEl) panelEl.classList.toggle('ai-chat-dragover', on);
+        if (inputAreaEl) inputAreaEl.classList.toggle('ai-chat-dragover', on);
+    }
+    ['dragenter', 'dragover'].forEach(function (ev) {
+        (panelEl || document).addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); setDragover(true); });
+    });
+    ['dragleave', 'dragend'].forEach(function (ev) {
+        (panelEl || document).addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); setDragover(false); });
+    });
+    (panelEl || document).addEventListener('drop', function (e) {
+        e.preventDefault(); e.stopPropagation(); setDragover(false);
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+            uploadImages(e.dataTransfer.files);
+        }
+    });
+
+    // 附件按钮 → 打开文件选择器（让用户知道可点可拖）
+    var attachBtn = document.getElementById('ai-chat-attach');
+    var fileInput = document.getElementById('ai-chat-file-input');
+    if (attachBtn && fileInput) {
+        attachBtn.addEventListener('click', function () { fileInput.click(); });
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files && fileInput.files.length) {
+                uploadImages(fileInput.files);
+                fileInput.value = '';
+            }
+        });
+    }
+
+    // 粘贴上传（剪贴板里的图片）
+    inputEl.addEventListener('paste', function (e) {
+        var items = (e.clipboardData || window.clipboardData) && e.clipboardData.items;
+        if (!items) return;
+        var found = false;
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].kind === 'file' && items[i].type && String(items[i].type).indexOf('image/') === 0) {
+                var file = items[i].getAsFile();
+                if (file) { found = true; uploadImages([file]); }
+            }
+        }
+        if (found) e.preventDefault();
+    });
+
+    function clearUploadedImages() {
+        uploadedImages = [];
+        if (imagesEl) { imagesEl.innerHTML = ''; imagesEl.style.display = 'none'; }
+    }
 
     var isSending = false;
     var currentSessionId = null;
@@ -265,7 +502,7 @@
         return text;
     }
 
-    function addMessage(role, content, messageId) {
+    function addMessage(role, content, messageId, elementLabel) {
         var div = document.createElement('div');
         div.className = 'ai-message ' + (role === 'user' ? 'ai-user' : 'ai-assistant');
         if (messageId) div.setAttribute('data-message-id', messageId);
@@ -274,12 +511,58 @@
         if (role === 'assistant') {
             contentDiv.innerHTML = renderMarkdown(content);
         } else {
-            contentDiv.textContent = content;
+            if (elementLabel) {
+                var chip = document.createElement('div');
+                chip.className = 'ai-chat-msg-target';
+                chip.innerHTML = '<i class="fa-solid fa-cube"></i> <span></span>';
+                chip.querySelector('span').textContent = elementLabel;
+                contentDiv.appendChild(chip);
+                var textDiv = document.createElement('div');
+                textDiv.textContent = content;
+                contentDiv.appendChild(textDiv);
+            } else {
+                contentDiv.textContent = content;
+            }
         }
         div.appendChild(contentDiv);
         messagesEl.appendChild(div);
         messagesEl.scrollTop = messagesEl.scrollHeight;
         return div;
+    }
+
+    // 解析消息开头内嵌的元素上下文块（兼容新格式与旧的中/英文格式）/
+    // parse the element-context block embedded at the start of a message (new format + legacy zh/en)
+    function parseElementContext(content) {
+        if (typeof content !== 'string') return null;
+        var m = content.match(/^\[Element\]:\s*([^\n]*)\n\[Selector\]:\s*([^\n]*)\n\[Style\]:\s*([^\n]*)\n*[\s]*\n*/)
+            || content.match(/^\[当前选中元素:([^\n]*)\]\n\[内联样式:([^\n]*)\]\s*\n*/)
+            || content.match(/^\[Currently selected element:([^\n]*)\]\n\[Inline style:([^\n]*)\]\s*\n*/);
+        if (!m) return null;
+        var label = m[1].trim();
+        // 旧格式只有 <tag> 摘要，无法还原文本；按 tag 推导可读类型名（如 <div> → "区域"）/
+        // legacy format only has a <tag> summary; derive a readable type name (e.g. <div> → "区域")
+        if (/^<[a-zA-Z][a-zA-Z0-9]*/.test(label)) {
+            label = describeFromSummary(label);
+        }
+        return { label: label, style: m[2].trim(), text: content.substring(m[0].length) };
+    }
+
+    // 从旧格式摘要 <tag...> 推导类型名 / derive a type name from a legacy <tag...> summary
+    function describeFromSummary(summary) {
+        var m = String(summary).match(/^<([a-zA-Z0-9]+)/);
+        var tag = m ? m[1].toLowerCase() : '';
+        if (tag === 'button') return t('aiChat.attach.type.button');
+        if (tag === 'input') return t('aiChat.attach.type.input');
+        if (tag === 'select') return t('aiChat.attach.type.select');
+        if (tag === 'textarea') return t('aiChat.attach.type.textarea');
+        if (tag === 'a') return t('aiChat.attach.type.link');
+        if (tag === 'img') return t('aiChat.attach.type.image');
+        if (/^h[1-6]$/.test(tag)) return t('aiChat.attach.type.heading');
+        if (tag === 'table') return t('aiChat.attach.type.table');
+        if (tag === 'form') return t('aiChat.attach.type.form');
+        if (tag === 'label') return t('aiChat.attach.type.label');
+        if (tag === 'section') return t('aiChat.attach.type.section');
+        return t('aiChat.attach.type.element');
     }
 
     // 视图编辑器消息级回退：在消息内容尾部挂一个小图标按钮，hover 提示"回退到此"
@@ -291,10 +574,10 @@
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'ai-chat-rollback';
-        btn.title = '回退到此：将视图恢复到这条消息时的状态';
+        btn.title = t('aiChat.js1');
         btn.innerHTML = '<i class="fa-solid fa-rotate-left"></i>';
         btn.addEventListener('click', function () {
-            if (!confirm('将视图恢复到这条消息时的状态吗？')) return;
+            if (!confirm(t('aiChat.js2'))) return;
             btn.disabled = true;
             var viewId = window.__VIEW_ID__;
             var version = window.__ACTIVE_VERSION__;
@@ -305,7 +588,7 @@
                     if (json.code === 200) {
                         window.location.reload();
                     } else {
-                        alert('回退失败: ' + (json.message || ''));
+                        alert(t('aiChat.js3') + (json.message || ''));
                         btn.disabled = false;
                     }
                 })
@@ -387,7 +670,7 @@
             var contentDiv = document.createElement('div');
             contentDiv.className = 'ai-message-content rounded-lg';
             var html = '<div class="ai-clarify">';
-            html += '<div class="ai-clarify-question">' + renderMarkdown(clarify.question || '请确认你的需求') + '</div>';
+            html += '<div class="ai-clarify-question">' + renderMarkdown(clarify.question || t('aiChat.js4')) + '</div>';
             if (clarify.options && clarify.options.length) {
                 html += '<div class="ai-clarify-options">';
                 for (var i = 0; i < clarify.options.length; i++) {
@@ -398,7 +681,7 @@
             // 用户当时的选择 = 紧跟该澄清消息之后的用户消息（静默发送的选择已入库）
             var nextMsg = allMsgs[idx + 1];
             if (nextMsg && nextMsg.role === 'user' && nextMsg.content) {
-                html += '<div class="ai-clarify-chosen">✓ 已选择：' + escHtml(nextMsg.content) + '</div>';
+                html += '<div class="ai-clarify-chosen">' + t('aiChat.selected') + escHtml(nextMsg.content) + '</div>';
             }
             html += '</div>';
             contentDiv.innerHTML = html;
@@ -408,7 +691,13 @@
             return;
         }
 
-        var el = addMessage(msg.role, msg.content, msg.id);
+        var el;
+        if (msg.role === 'user') {
+            var parsed = parseElementContext(msg.content);
+            el = parsed ? addMessage('user', parsed.text, msg.id, parsed.label) : addMessage('user', msg.content, msg.id);
+            return;
+        }
+        el = addMessage(msg.role, msg.content, msg.id);
         if (msg.role === 'assistant' && el && meta) {
             var contentEl = el.querySelector('.ai-message-content');
             if (!contentEl) return;
@@ -416,14 +705,14 @@
                 var metaEl = document.createElement('div');
                 metaEl.className = 'ai-chat-meta';
                 var secs = Math.round(meta.elapsedMs / 1000);
-                metaEl.textContent = '⏱ 耗时 ' + secs + ' 秒 · 执行 ' + (meta.toolCount || 0) + ' 次工具操作';
+                metaEl.textContent = t('aiChat.elapsed') + secs + t('aiChat.js5') + (meta.toolCount || 0) + t('aiChat.js6');
                 contentEl.appendChild(metaEl);
             }
             if (meta.redesignApplied) {
                 var viewBtn = document.createElement('button');
                 viewBtn.type = 'button';
                 viewBtn.className = 'ai-chat-viewresult';
-                viewBtn.innerHTML = '<i class="fa-solid fa-eye"></i> 查看重构结果';
+                viewBtn.innerHTML = t('aiChat.js7');
                 viewBtn.addEventListener('click', function () { window.location.reload(); });
                 contentEl.appendChild(viewBtn);
             }
@@ -438,7 +727,7 @@
         var contentDiv = document.createElement('div');
         contentDiv.className = 'ai-message-content rounded-lg';
         var html = '<div class="ai-clarify">';
-        html += '<div class="ai-clarify-question">' + renderMarkdown(question || '请确认你的需求') + '</div>';
+        html += '<div class="ai-clarify-question">' + renderMarkdown(question || t('aiChat.js4')) + '</div>';
         if (options && options.length) {
             html += '<div class="ai-clarify-options">';
             for (var i = 0; i < options.length; i++) {
@@ -447,8 +736,8 @@
             html += '</div>';
         }
         html += '<div class="ai-clarify-free">';
-        html += '<input type="text" class="ai-clarify-input" placeholder="或输入你的具体要求…">';
-        html += '<button type="button" class="ai-clarify-submit">确认</button>';
+        html += '<input class="ai-clarify-input" type="text" placeholder="' + escAttr(t('aiChat.js8')) + '">';
+        html += '<button class="ai-clarify-submit" type="button">' + escHtml(t('aiChat.freeSubmit')) + '</button>';
         html += '</div></div>';
         contentDiv.innerHTML = html;
         div.appendChild(contentDiv);
@@ -464,7 +753,7 @@
             if (mark) mark.remove();
             mark = document.createElement('div');
             mark.className = 'ai-clarify-chosen';
-            mark.textContent = '✓ 已选择：' + trimmed;
+            mark.textContent = t('aiChat.selected') + trimmed;
             div.querySelector('.ai-clarify').appendChild(mark);
             // 静默发送选择（不渲染为用户消息，避免重复与混淆）
             inputEl.value = trimmed;
@@ -476,10 +765,13 @@
             btn.addEventListener('click', function () { submitChoice(btn.getAttribute('data-choice')); });
         });
         var input = div.querySelector('.ai-clarify-input');
-        div.querySelector('.ai-clarify-submit').addEventListener('click', function () { submitChoice(input.value); });
-        input.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') { e.preventDefault(); submitChoice(input.value); }
-        });
+        var submitBtn = div.querySelector('.ai-clarify-submit');
+        if (input && submitBtn) {
+            submitBtn.addEventListener('click', function () { submitChoice(input.value); });
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); submitChoice(input.value); }
+            });
+        }
     }
 
     function escHtml(s) {
@@ -497,7 +789,7 @@
         contentDiv.innerHTML =
             '<div class="ai-loading-row">' +
                 '<span class="ai-loading-spinner"></span>' +
-                '<span class="ai-loading-status" id="ai-loading-status">AI 正在分析并执行…</span>' +
+                t('aiChat.js10') +
                 '<span class="ai-loading-timer" id="ai-loading-timer">0s</span>' +
             '</div>' +
             '<div class="ai-loading-progress"><div class="ai-loading-progress-bar"></div></div>';
@@ -556,13 +848,13 @@
         var statusEl = document.getElementById('ai-loading-status');
         if (!statusEl) return;
         if (data.status === 'tool') {
-            statusEl.textContent = '正在执行：' + (data.tool || '工具操作') + '…';
+            statusEl.textContent = t('aiChat.js11') + (data.tool || t('aiChat.js12')) + '…';
         } else if (data.status === 'tool_error') {
-            statusEl.textContent = '某步骤出错，AI 正在调整重试…';
+            statusEl.textContent = t('aiChat.js13');
         } else if (data.status === 'started') {
-            statusEl.textContent = 'AI 正在分析并执行…';
+            statusEl.textContent = t('aiChat.js14');
         } else if (data.status === 'done') {
-            statusEl.textContent = '处理完成，即将返回…';
+            statusEl.textContent = t('aiChat.js15');
         }
     }
 
@@ -616,10 +908,142 @@
         var ctx = getContext();
         if (ctx && ctx._selectedElement) {
             var sel = ctx._selectedElement;
-            return '[当前选中元素: ' + sel.summary + ']\n[内联样式: ' + (sel.style || '(无)') + ']\n\n';
+            // 优先用选中时缓存的人类可读描述；否则用 describeElement；再退回 summary /
+            // prefer the described label cached at selection time; else describeElement; else raw summary
+            var label = sel.describedLabel
+                || ((window.CssProperties && window.CssProperties.getSelectedElement())
+                    ? describeElement(window.CssProperties.getSelectedElement())
+                    : (sel.summary || sel.tag || 'element'));
+            return '[Element]: ' + label + '\n[Selector]: ' + (sel.summary || '') + '\n[Style]: ' + (sel.style || t('aiChat.js16')) + '\n\n';
         }
         return '';
     }
+
+    // 选中 DOM 作为聊天附件：随画布选中态显示/隐藏，可移除后不针对该元素聊天 /
+    // selected DOM as a chat attachment: shown/hidden with canvas selection; removable to chat without targeting it
+    var activeAttachmentElement = null;
+    var activeLine = null;
+    var attachmentLineBtn = document.getElementById('ai-chat-attachment-line');
+
+    // 生成人类可读的元素描述（文本/属性 + 类型），如 "「编辑模式」区域" /
+    // produce a human-readable element description (text/attr + type), e.g. "「编辑模式」区域"
+    function elementTypeName(tag, el) {
+        if (tag === 'button' || (el.classList && el.classList.contains('btn'))) return t('aiChat.attach.type.button');
+        if (tag === 'input') return t('aiChat.attach.type.input');
+        if (tag === 'select') return t('aiChat.attach.type.select');
+        if (tag === 'textarea') return t('aiChat.attach.type.textarea');
+        if (tag === 'a') return t('aiChat.attach.type.link');
+        if (tag === 'img') return t('aiChat.attach.type.image');
+        if (/^h[1-6]$/.test(tag)) return t('aiChat.attach.type.heading');
+        if (tag === 'table') return t('aiChat.attach.type.table');
+        if (tag === 'form') return t('aiChat.attach.type.form');
+        if (tag === 'label') return t('aiChat.attach.type.label');
+        if (tag === 'section' || (el.classList && el.classList.contains('section'))) return t('aiChat.attach.type.section');
+        return t('aiChat.attach.type.element');
+    }
+
+    function describeElement(el) {
+        if (!el || !el.tagName) return t('aiChat.attach.element');
+        var tag = el.tagName.toLowerCase();
+        // 取直接文本节点，忽略子元素文本（避免拼接整块内容）
+        var direct = '';
+        for (var i = 0; i < el.childNodes.length; i++) {
+            if (el.childNodes[i].nodeType === 3) direct += el.childNodes[i].textContent;
+        }
+        direct = direct.replace(/\s+/g, ' ').trim();
+        // 清理图标/符号前缀（如 ● ◆ → 等）
+        direct = direct.replace(/^[\u2190-\u21ff\u25a0-\u25ff\u2600-\u27bf\u2b00-\u2bff\uf000-\uf8ff\u2022\u00b7]+/, '').trim();
+        var text = direct;
+        if (!text && el.getAttribute) {
+            text = String(el.getAttribute('title') || el.getAttribute('aria-label') || el.getAttribute('placeholder') || el.getAttribute('alt') || '').trim();
+        }
+        text = text.substring(0, 40);
+        var type = elementTypeName(tag, el);
+        return text ? t('aiChat.attach.format', {text: text, type: type}) : type;
+    }
+
+    function syncLine() {
+        if (activeLine) { try { activeLine.position(); } catch (e) {} }
+    }
+
+    function updateLineBtnState(active) {
+        if (!attachmentLineBtn) return;
+        attachmentLineBtn.classList.toggle('active', active);
+        attachmentLineBtn.title = active ? t('aiChat.attach.unline') : t('aiChat.attach.line');
+    }
+
+    function destroyLine() {
+        if (activeLine) {
+            try { activeLine.remove(); } catch (e) {}
+            activeLine = null;
+        }
+        updateLineBtnState(false);
+    }
+
+    function renderAttachment(e) {
+        var ctx = getContext();
+        var sel = ctx && ctx._selectedElement;
+        var el = document.getElementById('ai-chat-attachment');
+        if (!el) return;
+        var targetEl = (e && e.detail && e.detail.element) || (window.CssProperties && window.CssProperties.getSelectedElement()) || null;
+        if (targetEl !== activeAttachmentElement) {
+            destroyLine();
+            activeAttachmentElement = targetEl;
+        }
+        if (sel) {
+            var nameEl = document.getElementById('ai-chat-attachment-name');
+            if (nameEl) nameEl.textContent = describeElement(targetEl || sel);
+            // 缓存描述标签，保证发送/历史记录里用一致的可读文案 /
+            // cache the described label so sent messages & history use the same readable text
+            if (targetEl) sel.describedLabel = describeElement(targetEl);
+            el.style.display = 'flex';
+        } else {
+            el.style.display = 'none';
+            destroyLine();
+            activeAttachmentElement = null;
+        }
+    }
+
+    var attachmentRemoveBtn = document.getElementById('ai-chat-attachment-remove');
+    if (attachmentRemoveBtn) {
+        attachmentRemoveBtn.addEventListener('click', function() {
+            // 同时清除画布选中（触发 cssElementDeselected → 同步清空 _selectedElement 与附件）
+            if (window.CssProperties && window.CssProperties.clearSelection) {
+                window.CssProperties.clearSelection();
+            } else {
+                var ctx = getContext();
+                if (ctx && ctx._selectedElement) delete ctx._selectedElement;
+                renderAttachment();
+            }
+        });
+    }
+    if (attachmentLineBtn) {
+        attachmentLineBtn.addEventListener('click', function() {
+            if (activeLine) { destroyLine(); return; }
+            var target = (window.CssProperties && window.CssProperties.getSelectedElement());
+            var startEl = document.getElementById('ai-chat-attachment');
+            if (!target || !startEl || typeof LeaderLine === 'undefined') return;
+            try {
+                activeLine = new LeaderLine(startEl, target, {
+                    color: '#6366f1',
+                    size: 2,
+                    startPlug: 'disc',
+                    endPlug: 'arrow1',
+                    startSocket: 'auto',
+                    endSocket: 'auto',
+                    outline: true,
+                    outlineColor: '#ffffff',
+                    outlineSize: 0.2
+                });
+                updateLineBtnState(true);
+            } catch (err) {}
+        });
+    }
+    document.addEventListener('cssElementSelected', renderAttachment);
+    document.addEventListener('cssElementDeselected', renderAttachment);
+    var canvasEl = document.getElementById('canvas');
+    if (canvasEl) canvasEl.addEventListener('scroll', syncLine);
+    window.addEventListener('resize', syncLine);
 
     // sendMessage(opts) 支持 opts.silent=true：不把消息渲染为用户气泡（用于澄清选项等系统交互）
     function sendMessage(opts) {
@@ -631,7 +1055,7 @@
         if (!ctx) {
             addMessage('user', text);
             inputEl.value = '';
-            addMessage('assistant', '当前页面未注册 AI 上下文，无法提供服务。');
+            addMessage('assistant', t('aiChat.js17'));
             return;
         }
 
@@ -640,9 +1064,11 @@
         var fullMessage = opts.silent ? text : (selContext + text);
 
         if (!opts.silent) {
-            addMessage('user', text);
+            var liveEl = (window.CssProperties && window.CssProperties.getSelectedElement());
+            addMessage('user', text, null, liveEl ? describeElement(liveEl) : null);
         }
         inputEl.value = '';
+        clearUploadedImages();
         sendBtn.disabled = true;
         inputEl.disabled = true;
         isSending = true;
@@ -660,6 +1086,7 @@
                 context_id: contextId,
                 message: fullMessage,
                 session_id: currentSessionId,
+                image_ids: uploadedImages.map(function (img) { return img.id; }),
             }),
         })
         .then(function(res) { return res.json(); })
@@ -671,7 +1098,7 @@
                     renderClarification(json.data.question, json.data.options || [], json.data.assistantMessageId);
                     return;
                 }
-                var reply = (json.data && json.data.reply) ? json.data.reply : '抱歉，我没有理解你的意思。';
+                var reply = (json.data && json.data.reply) ? json.data.reply : t('aiChat.js18');
                 var msgEl = addMessage('assistant', reply, json.data && json.data.assistantMessageId);
                 if (json.data && json.data.sessionId) {
                     currentSessionId = json.data.sessionId;
@@ -682,7 +1109,7 @@
                     var metaEl = document.createElement('div');
                     metaEl.className = 'ai-chat-meta';
                     var secs = Math.round(json.data.elapsedMs / 1000);
-                    metaEl.textContent = '⏱ 耗时 ' + secs + ' 秒 · 执行 ' + (json.data.toolCount || 0) + ' 次工具操作';
+                    metaEl.textContent = t('aiChat.elapsed') + secs + t('aiChat.js5') + (json.data.toolCount || 0) + t('aiChat.js6');
                     var contentEl = msgEl.querySelector('.ai-message-content');
                     if (contentEl) contentEl.appendChild(metaEl);
                 }
@@ -693,7 +1120,7 @@
                     var viewBtn = document.createElement('button');
                     viewBtn.type = 'button';
                     viewBtn.className = 'ai-chat-viewresult';
-                    viewBtn.innerHTML = '<i class="fa-solid fa-eye"></i> 查看重构结果';
+                    viewBtn.innerHTML = t('aiChat.js7');
                     viewBtn.addEventListener('click', function () { window.location.reload(); });
                     var contentEl = msgEl.querySelector('.ai-message-content');
                     if (contentEl) contentEl.appendChild(viewBtn);
@@ -701,12 +1128,12 @@
                     setTimeout(function () { window.location.reload(); }, 1500);
                 }
             } else {
-                addMessage('assistant', '出错了: ' + (json.message || '未知错误'));
+                addMessage('assistant', t('aiChat.js19') + (json.message || t('aiChat.js20')));
             }
         })
         .catch(function(err) {
             removeLoading(loadingEl);
-            addMessage('assistant', '网络错误: ' + err.message);
+            addMessage('assistant', t('aiChat.js21') + err.message);
         })
         .finally(function() {
             isSending = false;
@@ -735,32 +1162,6 @@
     inputEl.addEventListener('input', function() {
         sendBtn.disabled = !this.value.trim() || isSending;
     });
-
-    // 表单视图快捷指令
-    (function() {
-        var quickEl = document.getElementById('ai-chat-quick');
-        if (!quickEl || !window.__FORM_VIEW__) return;
-        var commands = [
-            '把表单分组成卡片，双列布局，换个清爽主题',
-            '改成整页：加个标题区和说明区',
-            '切换为可复用表单片段',
-            '把必填字段标清楚并优化占位提示'
-        ];
-        var css = 'padding:5px 10px;font-size:12px;color:#4f46e5;background:#eef2ff;border:1px solid #c7d2fe;border-radius:14px;cursor:pointer;';
-        commands.forEach(function(cmd) {
-            var b = document.createElement('button');
-            b.type = 'button';
-            b.setAttribute('style', css);
-            b.textContent = cmd;
-            b.addEventListener('click', function() {
-                inputEl.value = cmd;
-                inputEl.focus();
-                sendMessage();
-            });
-            quickEl.appendChild(b);
-        });
-        quickEl.style.display = 'flex';
-    })();
 
     // Restore saved panel width
     try {

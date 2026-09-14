@@ -44,31 +44,22 @@ class EntityPropertyGroup implements GedmoNode
  
     /**
      * 分组名称
-     * @Ef(
-     *     group="epg_base_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'epg_base_info', isBF: true)]
     #[ORM\Column('group_name', type: 'string', length: 64, nullable: true)]
     private $name = null;
 
     /**
      * 是否为默认分组，此属性只在 type 为 group 时有意义
-     * @Ef(
-     *     group="epg_base_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'epg_base_info', isBF: true)]
     #[ORM\Column('is_default', type: 'boolean', nullable: true)]
     private $isDefault = false;
 
     /**
      * 分组标签
-     * @Ef(
-     *     group="epg_base_info",
-     *     isBF=true
-     * )
      */
+    #[Ef(group: 'epg_base_info', isBF: true)]
     #[ORM\Column('group_label', type: 'string', length: 64, nullable: true)]
     private $label = null;
 

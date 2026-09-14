@@ -50,12 +50,12 @@ scrollBtnDisplay = sideMenuState == 'shrunk' ? 'flex' : 'none' %}
               <ul class="tabs">
                 <li class="tabs-first tabs-selected" id="{{ tabId1 }}">
                   <span class="tabs-inner">
-                    <span class="tabs-title">组件库</span>
+                    <span class="tabs-title">{{ "editorComponents.2"|trans }}</span>
                   </span>
                 </li>
                 <li class="tabs-last" id="{{ tabId2 }}">
                   <span class="tabs-inner">
-                    <span class="tabs-title">数据源</span>
+                    <span class="tabs-title">{{ "editorComponents.3"|trans }}</span>
                   </span>
                 </li>
               </ul>
@@ -80,13 +80,13 @@ scrollBtnDisplay = sideMenuState == 'shrunk' ? 'flex' : 'none' %}
               <div class="panel-body panel-body-noheader panel-body-noborder">
                 <div class="datasource-content">
                   {% if formEntity is defined and formEntity %}
-                  <div style="font-size:15px;font-weight:500;color:#3370ff;text-align:center;padding:8px;background:rgba(51,112,255,0.1);border-radius:6px;margin-bottom:16px;">已绑定模型：{{ formEntity.name|replace({'.php': ''}) }}</div>
+                  <div style="font-size:15px;font-weight:500;color:#3370ff;text-align:center;padding:8px;background:rgba(51,112,255,0.1);border-radius:6px;margin-bottom:16px;">{{ "editorComponents.4"|trans }}{{ formEntity.name|replace({'.php': ''}) }}</div>
                   <div class="model-properties">
                     <table style="width:100%;border-collapse:collapse;font-size:13px;color:#495057;">
                       <thead>
                         <tr>
-                          <th style="background:#f8f9fa;color:#495057;font-weight:600;padding:6px 8px;border-bottom:2px solid #dee2e6;text-align:left;">标签</th>
-                          <th style="background:#f8f9fa;color:#495057;font-weight:600;padding:6px 8px;border-bottom:2px solid #dee2e6;text-align:left;">值</th>
+                          <th style="background:#f8f9fa;color:#495057;font-weight:600;padding:6px 8px;border-bottom:2px solid #dee2e6;text-align:left;">{{ "editorComponents.5"|trans }}</th>
+                          <th style="background:#f8f9fa;color:#495057;font-weight:600;padding:6px 8px;border-bottom:2px solid #dee2e6;text-align:left;">{{ "editorComponents.6"|trans }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -100,7 +100,7 @@ scrollBtnDisplay = sideMenuState == 'shrunk' ? 'flex' : 'none' %}
                     </table>
                   </div>
                   {% else %}
-                  <div style="font-size:15px;font-weight:500;color:#3370ff;text-align:center;padding:8px;background:rgba(51,112,255,0.1);border-radius:6px;margin-bottom:16px;">暂未绑定模型</div>
+                  <div style="font-size:15px;font-weight:500;color:#3370ff;text-align:center;padding:8px;background:rgba(51,112,255,0.1);border-radius:6px;margin-bottom:16px;">{{ "editorComponents.7"|trans }}</div>
                   {% endif %}
                 </div>
               </div>
@@ -110,7 +110,7 @@ scrollBtnDisplay = sideMenuState == 'shrunk' ? 'flex' : 'none' %}
       </div>
     </div>
   </aside>
-  <div class="side-menu-resizer" id="side-menu-resizer" title="拖拽调整侧栏宽度" style="display: {{ sideDisplay }};"></div>
+  <div class="side-menu-resizer" id="side-menu-resizer" title="{{ "editorComponents.1"|trans }}" style="display: {{ sideDisplay }};"></div>
 </section>
 
 <script>

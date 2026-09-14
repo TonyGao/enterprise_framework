@@ -16,7 +16,7 @@
         <div class="ef-drawer-body" style="padding: 20px; overflow-y: auto;">
             {{ form_start(form, {'attr': {'class': 'ef-form', 'id': 'position-form-' ~ position.id}}) }}
                 <div class="ef-form-section">
-                    <div class="ef-form-section-title">基本信息</div>
+                    <div class="ef-form-section-title">{{ "posFormDrawer.1"|trans }}</div>
                     <div class="ef-form-row">
                         <div class="ef-form-col">
                             {{ form_row(form.name) }}
@@ -57,7 +57,7 @@
                 </div>
 
                 <div class="ef-form-section">
-                    <div class="ef-form-section-title">详细信息</div>
+                    <div class="ef-form-section-title">{{ "posFormDrawer.2"|trans }}</div>
                     <div class="ef-form-row">
                         <div class="ef-form-col">
                             {{ form_row(form.responsibility) }}
@@ -77,8 +77,8 @@
             {{ form_end(form, {'render_rest': false}) }}
         </div>
         <div class="ef-drawer-footer">
-            <button class="cancelDrawer btn secondary medium" type="button">取消</button>
-            <button class="btn primary medium" type="button" onclick="submitPositionForm({{ position.id }})">保存</button>
+            <button class="cancelDrawer btn secondary medium" type="button">{{ "posFormDrawer.3"|trans }}</button>
+            <button class="btn primary medium" type="button" onclick="submitPositionForm({{ position.id }})">{{ "posFormDrawer.4"|trans }}</button>
         </div>
     </div>
 </div>
@@ -114,7 +114,7 @@ function submitPositionForm(positionId) {
         })
         .catch(error => {
             console.error('Error:', error);
-            showMessage('提交失败，请重试', 'error');
+            showMessage(t('posFormDrawer.js1'), 'error');
         });
     }
 }
@@ -124,7 +124,7 @@ function showMessage(message, type) {
     // 这里可以根据你的UI框架来实现消息显示
     // 暂时使用alert
     if (type === 'error') {
-        alert('错误: ' + message);
+        alert(t('posFormDrawer.js2') + message);
     } else {
         alert(message);
     }

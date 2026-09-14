@@ -4,7 +4,7 @@
         <div class="ef-drawer-header">
             <div class="ef-drawer-title">
                 <i class="fa-solid fa-edit" style="margin-right: 12px; font-size: 18px;"></i>
-                编辑存储配置
+                {{ "storageEdit.1"|trans }}
             </div>
             <div tabindex="-1" role="button" aria-label="Close" class="ef-drawer-close-btn" onclick="closeDrawer('{{ drawerId }}')">
                 <span class="ef-icon-hover">
@@ -20,7 +20,7 @@
                 {{ form_start(form, {'attr': {'id': 'storage-config-edit-form', 'class': 'ef-form'}}) }}
                     
                     <div class="ef-card" style="border: 1px solid #e5e6eb; border-radius: 4px; padding: 20px; margin-bottom: 20px;">
-                        <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">基本信息</h4>
+                        <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">{{ "storageEdit.2"|trans }}</h4>
                         {{ form_row(form.name) }}
                         {{ form_row(form.adapterType) }}
                         {{ form_row(form.isDefault) }}
@@ -29,13 +29,13 @@
 
                     <div class="ef-card" id="storage-config-details-card" style="border: 1px solid #e5e6eb; border-radius: 4px; padding: 20px; display: none;">
                         <div id="local-config-section-drawer" style="display: none;">
-                            <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">Local 配置</h4>
+                            <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">{{ "storageEdit.3"|trans }}</h4>
                             {{ form_row(form.directory_strategy) }}
                             {{ form_row(form.directory) }}
                         </div>
 
                         <div id="s3-config-section-drawer" style="margin-top: 30px; display: none;">
-                            <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">S3 配置</h4>
+                            <h4 style="margin-bottom: 20px; font-size: 16px; font-weight: 600;">{{ "storageEdit.4"|trans }}</h4>
                             {{ form_row(form.endpoint) }}
                             {{ form_row(form.region) }}
                             {{ form_row(form.bucket) }}
@@ -48,10 +48,10 @@
                         <div class="ef-col">
                             <div class="ef-space ef-space-horizontal">
                                 <div class="ef-space-item">
-                                    <button class="btn primary medium" type="submit">保存</button>
+                                    <button class="btn primary medium" type="submit">{{ "storageEdit.5"|trans }}</button>
                                 </div>
                                 <div class="ef-space-item">
-                                    <button class="btn secondary medium" type="button" onclick="closeDrawer('{{ drawerId }}')">取消</button>
+                                    <button class="btn secondary medium" type="button" onclick="closeDrawer('{{ drawerId }}')">{{ "storageEdit.6"|trans }}</button>
                                 </div>
                             </div>
                         </div>
@@ -142,7 +142,7 @@
             const submitBtn = form.find('button[type="submit"]');
             const originalBtnText = submitBtn.text();
             
-            submitBtn.prop('disabled', true).text('提交中...');
+            submitBtn.prop('disabled', true).text(t('storageEdit.js1'));
 
             $.ajax({
                 url: form.attr('action'),
@@ -188,7 +188,7 @@
                         }
                     } else {
                         console.error('Submission error:', xhr);
-                        alert('系统错误，请稍后重试');
+                        alert(t('storageEdit.js2'));
                     }
                 }
             });

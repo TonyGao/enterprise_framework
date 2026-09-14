@@ -45,14 +45,14 @@ class BorderStylePicker {
     
     // 边框样式选项及其显示名称
     this.borderStyles = [
-      {value: 'solid', name: '实线'},
-      {value: 'dashed', name: '虚线'},
-      {value: 'dotted', name: '点线'},
-      {value: 'double', name: '双线'},
-      {value: 'groove', name: '凹槽'},
-      {value: 'ridge', name: '凸槽'},
-      {value: 'inset', name: '内嵌'},
-      {value: 'outset', name: '外凸'}
+      {value: 'solid', name: t('borderStylePickerJs.js1')},
+      {value: 'dashed', name: t('borderStylePickerJs.js2')},
+      {value: 'dotted', name: t('borderStylePickerJs.js3')},
+      {value: 'double', name: t('borderStylePickerJs.js4')},
+      {value: 'groove', name: t('borderStylePickerJs.js5')},
+      {value: 'ridge', name: t('borderStylePickerJs.js6')},
+      {value: 'inset', name: t('borderStylePickerJs.js7')},
+      {value: 'outset', name: t('borderStylePickerJs.js8')}
     ];
     
     // 绑定方法到实例
@@ -110,7 +110,7 @@ class BorderStylePicker {
     // 创建标题
     const title = document.createElement('div');
     title.className = 'border-style-picker-title';
-    title.textContent = '边框样式设置';
+    title.textContent = t('borderStylePickerJs.js9');
     this.element.appendChild(title);
     
     // 创建预览区域（提前创建，用于边框方向选择）
@@ -119,7 +119,7 @@ class BorderStylePicker {
     
     const previewLabel = document.createElement('div');
     previewLabel.className = 'option-label';
-    previewLabel.textContent = '边框方向:';
+    previewLabel.textContent = t('borderStylePickerJs.js10');
     previewContainer.appendChild(previewLabel);
     
     // 创建预览框，用于显示边框效果和选择边框方向
@@ -128,10 +128,10 @@ class BorderStylePicker {
     
     // 创建四个边框方向的选择区域
     const directions = [
-      { name: 'top', label: '上边框' },
-      { name: 'right', label: '右边框' },
-      { name: 'bottom', label: '下边框' },
-      { name: 'left', label: '左边框' }
+      { name: 'top', label: t('borderStylePickerJs.js11') },
+      { name: 'right', label: t('borderStylePickerJs.js12') },
+      { name: 'bottom', label: t('borderStylePickerJs.js13') },
+      { name: 'left', label: t('borderStylePickerJs.js14') }
     ];
     
     // 创建预览内容
@@ -169,7 +169,7 @@ class BorderStylePicker {
     
     const styleLabel = document.createElement('div');
     styleLabel.className = 'option-label';
-    styleLabel.textContent = '边框样式:';
+    styleLabel.textContent = t('borderStylePickerJs.js15');
     styleContainer.appendChild(styleLabel);
     
     const styleOptions = document.createElement('div');
@@ -215,7 +215,7 @@ class BorderStylePicker {
     
     const widthLabel = document.createElement('div');
     widthLabel.className = 'option-label';
-    widthLabel.textContent = '边框宽度:';
+    widthLabel.textContent = t('borderStylePickerJs.js16');
     widthContainer.appendChild(widthLabel);
     
     const widthOptions = document.createElement('div');
@@ -273,7 +273,7 @@ class BorderStylePicker {
     
     const colorLabel = document.createElement('div');
     colorLabel.className = 'option-label';
-    colorLabel.textContent = '边框颜色:';
+    colorLabel.textContent = t('borderStylePickerJs.js17');
     colorContainer.appendChild(colorLabel);
     
     const colorGrid = document.createElement('div');
@@ -317,7 +317,7 @@ class BorderStylePicker {
     
     const customColorLabel = document.createElement('div');
     customColorLabel.className = 'option-label';
-    customColorLabel.textContent = '自定义颜色:';
+    customColorLabel.textContent = t('borderStylePickerJs.js18');
     customColorContainer.appendChild(customColorLabel);
     
     const customColorInputContainer = document.createElement('div');
@@ -356,7 +356,7 @@ class BorderStylePicker {
     const customColorPreview = document.createElement('div');
     customColorPreview.className = 'custom-color-preview';
     customColorPreview.style.backgroundColor = this.customColor;
-    customColorPreview.setAttribute('title', '点击选择颜色');
+    customColorPreview.setAttribute('title', t('borderStylePickerJs.js19'));
     this.customColorPreview = customColorPreview;
     
     // 点击颜色预览区域时弹出颜色选择器
@@ -444,7 +444,7 @@ class BorderStylePicker {
     
     const borderPreviewLabel = document.createElement('div');
     borderPreviewLabel.className = 'option-label';
-    borderPreviewLabel.textContent = '预览:';
+    borderPreviewLabel.textContent = t('borderStylePickerJs.js20');
     borderPreviewContainer.appendChild(borderPreviewLabel);
     
     const preview = document.createElement('div');
@@ -461,13 +461,13 @@ class BorderStylePicker {
     
     const confirmButton = document.createElement('button');
     confirmButton.className = 'confirm-button';
-    confirmButton.textContent = '确定';
+    confirmButton.textContent = t('borderStylePickerJs.js21');
     confirmButton.addEventListener('click', this.handleConfirm);
     buttonContainer.appendChild(confirmButton);
     
     const cancelButton = document.createElement('button');
     cancelButton.className = 'cancel-button';
-    cancelButton.textContent = '取消';
+    cancelButton.textContent = t('borderStylePickerJs.js22');
     cancelButton.addEventListener('click', this.handleCancel);
     buttonContainer.appendChild(cancelButton);
     
